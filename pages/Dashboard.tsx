@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VitalityScore from '../components/dashboard/VitalityScore';
 import JourneyTimeline from '../components/dashboard/JourneyTimeline';
-import UpcomingAppointments from '../components/dashboard/UpcomingAppointments';
+import UpcomingAppointment from '../components/dashboard/UpcomingAppointment';
 import HealthReport from '../components/dashboard/HealthReport';
 import LabResults from '../components/dashboard/LabResults';
-import DoctorRecommendations from '../components/dashboard/DoctorRecommendations';
+import DoctorRecommendation from '../components/dashboard/DoctorRecommendation';
 import DiagnosticHistory from '../components/dashboard/DiagnosticHistory';
 import RemindersWidget from '../components/dashboard/RemindersWidget';
 import AIAssistantToday from '../components/dashboard/AIAssistantToday';
@@ -190,7 +190,7 @@ export default function Dashboard() {
                         <JourneyTimeline events={userHealth?.timeline_events} />
 
                         {/* Upcoming Appointments */}
-                        <UpcomingAppointments appointments={appointments} />
+                        <UpcomingAppointment appointments={appointments} />
 
                         {/* Diagnostic History */}
                         <DiagnosticHistory results={diagnosticHistory} />
@@ -238,7 +238,7 @@ export default function Dashboard() {
                         <LabResults results={labResults} />
 
                         {/* Doctor Recommendations */}
-                        <DoctorRecommendations recommendations={recommendations} />
+                        <DoctorRecommendation recommendations={recommendations} />
                     </>
                 )}
 
@@ -248,7 +248,7 @@ export default function Dashboard() {
                         <RemindersWidget reminders={reminders} />
 
                         {/* Upcoming Appointments */}
-                        <UpcomingAppointments appointments={appointments} />
+                        <UpcomingAppointment appointments={appointments} />
 
                         {/* Supplement Schedule */}
                         <div className="glass rounded-3xl p-5 shadow-lg">
