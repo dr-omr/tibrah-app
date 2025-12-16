@@ -13,7 +13,48 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
-const defaultCourse = {
+// TypeScript interfaces
+interface Course {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    thumbnail_url: string;
+    price: number;
+    is_free: boolean;
+    duration_hours: number;
+    lessons_count: number;
+    rating: number;
+    reviews_count: number;
+    enrolled_count: number;
+    level: string;
+    instructor_name: string;
+    features?: string[];
+    requirements?: string[];
+}
+
+interface Lesson {
+    id: string;
+    title: string;
+    duration_minutes: number;
+    is_free_preview: boolean;
+    order: number;
+}
+
+interface Enrollment {
+    id?: string;
+    course_id: string;
+    progress_percentage: number;
+    completed_lessons: string[];
+}
+
+const levelLabels: Record<string, string> = {
+    beginner: 'مبتدئ',
+    intermediate: 'متوسط',
+    advanced: 'متقدم'
+};
+
+const defaultCourse: Course = {
     id: '1',
     title: 'أساسيات الطب الوظيفي',
     description: 'مقدمة شاملة لفهم جسمك وكيف يعمل بشكل متكامل. ستتعلم في هذه الدورة المبادئ الأساسية للطب الوظيفي وكيف تنظر لجسمك كنظام متكامل.',
@@ -41,7 +82,7 @@ const defaultCourse = {
     ]
 };
 
-const defaultLessons = [
+const defaultLessons: Lesson[] = [
     { id: '1', title: 'مقدمة في الطب الوظيفي', duration_minutes: 15, is_free_preview: true, order: 1 },
     { id: '2', title: 'الفرق بين الطب التقليدي والوظيفي', duration_minutes: 20, is_free_preview: true, order: 2 },
     { id: '3', title: 'فهم الجسم كنظام متكامل', duration_minutes: 25, is_free_preview: false, order: 3 },
@@ -66,30 +107,30 @@ export default function CourseDetails() {
     const [expandedModules, setExpandedModules] = useState({ module1: true });
     const [isFavorite, setIsFavorite] = useState(false);
 
-    const { data: course = defaultCourse } = useQuery({
+    const { data: course = defaultCourse } = useQuery<Course>({
         queryKey: ['course', courseId],
-        queryFn: async () => {
-            const courses = await base44.entities.Course.filter({ id: courseId });
+        queryFn: async (): Promise<Course> => {
+            const courses = await base44.entities.Course.filter({ id: courseId }) as unknown as Course[];
             return courses[0] || defaultCourse;
         },
     });
 
-    const { data: lessons = defaultLessons } = useQuery({
+    const { data: lessons = defaultLessons } = useQuery<Lesson[]>({
         queryKey: ['lessons', courseId],
-        queryFn: async () => {
-            const data = await base44.entities.Lesson.filter({ course_id: courseId });
+        queryFn: async (): Promise<Lesson[]> => {
+            const data = await base44.entities.Lesson.filter({ course_id: courseId }) as unknown as Lesson[];
             return data.length > 0 ? data.sort((a, b) => a.order - b.order) : defaultLessons;
         },
     });
 
-    const { data: enrollment } = useQuery({
+    const { data: enrollment } = useQuery<Enrollment | undefined>({
         queryKey: ['enrollment', courseId],
-        queryFn: async () => {
+        queryFn: async (): Promise<Enrollment | undefined> => {
             const user = await base44.auth.me();
             const enrollments = await base44.entities.CourseEnrollment.filter({
                 course_id: courseId,
                 created_by: user.email
-            });
+            }) as unknown as Enrollment[];
             return enrollments[0];
         },
     });
@@ -103,16 +144,10 @@ export default function CourseDetails() {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['enrollment', courseId]);
+            queryClient.invalidateQueries({ queryKey: ['enrollment', courseId] });
             toast.success('تم التسجيل في الدورة بنجاح!');
         },
     });
-
-    const levelLabels = {
-        beginner: 'مبتدئ',
-        intermediate: 'متوسط',
-        advanced: 'متقدم'
-    };
 
     const handleEnroll = () => {
         if (course.is_free) {

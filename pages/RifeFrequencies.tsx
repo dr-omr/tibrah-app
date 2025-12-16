@@ -12,6 +12,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AdvancedRifePlayer from '../components/frequencies/AdvancedRifePlayer';
 
+// TypeScript interface
+interface RifeFrequency {
+    id: string;
+    name: string;
+    name_en: string;
+    frequencies: number[];
+    category: string;
+    target_condition: string;
+    duration_minutes: number;
+    research_source: string;
+    description: string;
+    precautions?: string[];
+}
+
 const categories = [
     { id: 'all', label: 'الكل', icon: Sparkles, color: 'from-slate-500 to-slate-600' },
     { id: 'pathogen_bacteria', label: 'البكتيريا', icon: Bug, color: 'from-green-500 to-emerald-500' },
@@ -327,18 +341,18 @@ const defaultRifeFrequencies = [
 export default function RifeFrequencies() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
-    const [selectedFrequency, setSelectedFrequency] = useState(null);
+    const [selectedFrequency, setSelectedFrequency] = useState<RifeFrequency | null>(null);
     const [showDisclaimer, setShowDisclaimer] = useState(true);
 
-    const { data: rifeFrequencies = defaultRifeFrequencies } = useQuery({
+    const { data: rifeFrequencies = defaultRifeFrequencies } = useQuery<RifeFrequency[]>({
         queryKey: ['rife-frequencies'],
-        queryFn: async () => {
-            const data = await base44.entities.RifeFrequency.list();
+        queryFn: async (): Promise<RifeFrequency[]> => {
+            const data = await base44.entities.RifeFrequency.list() as unknown as RifeFrequency[];
             return data.length > 0 ? data : defaultRifeFrequencies;
         },
     });
 
-    const filteredFrequencies = rifeFrequencies.filter(freq => {
+    const filteredFrequencies = rifeFrequencies.filter((freq: RifeFrequency) => {
         const matchesSearch = freq.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             freq.name_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             freq.target_condition?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -346,7 +360,7 @@ export default function RifeFrequencies() {
         return matchesSearch && matchesCategory;
     });
 
-    const getCategoryInfo = (catId) => categories.find(c => c.id === catId) || categories[0];
+    const getCategoryInfo = (catId: string) => categories.find(c => c.id === catId) || categories[0];
 
     return (
         <div className="min-h-screen pb-24">

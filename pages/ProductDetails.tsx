@@ -13,6 +13,30 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import CommentsSection from '../components/common/CommentsSection';
 
+// TypeScript interfaces
+interface Product {
+    id: string;
+    name: string;
+    name_en?: string;
+    description?: string;
+    price: number;
+    original_price?: number;
+    category: string;
+    image_url?: string;
+    featured?: boolean;
+    in_stock?: boolean;
+    benefits?: string[];
+}
+
+interface CartItem {
+    id: string;
+    product_id: string;
+    product_name: string;
+    price: number;
+    quantity: number;
+    image_url?: string;
+}
+
 export default function ProductDetails() {
     const router = useRouter();
     const productId = router.query.id as string;
@@ -25,23 +49,25 @@ export default function ProductDetails() {
     const [quantity, setQuantity] = useState(1);
     const queryClient = useQueryClient();
 
-    const { data: product, isLoading } = useQuery({
+    const { data: product, isLoading } = useQuery<Product | null>({
         queryKey: ['product', productId],
-        queryFn: async () => {
-            const products = await base44.entities.Product.filter({ id: productId });
-            return products[0];
+        queryFn: async (): Promise<Product | null> => {
+            const products = await base44.entities.Product.filter({ id: productId }) as unknown as Product[];
+            return products[0] || null;
         },
         enabled: !!productId,
     });
 
-    const { data: cartItems = [] } = useQuery({
+    const { data: cartItems = [] } = useQuery<CartItem[]>({
         queryKey: ['cart'],
-        queryFn: () => base44.entities.CartItem.list(),
+        queryFn: async (): Promise<CartItem[]> => {
+            return base44.entities.CartItem.list() as unknown as CartItem[];
+        },
     });
 
     const addToCartMutation = useMutation({
         mutationFn: async () => {
-            const existingItem = cartItems.find(item => item.product_id === productId);
+            const existingItem = cartItems.find((item: CartItem) => item.product_id === productId);
             if (existingItem) {
                 return base44.entities.CartItem.update(existingItem.id, {
                     quantity: existingItem.quantity + quantity
@@ -49,10 +75,10 @@ export default function ProductDetails() {
             }
             return base44.entities.CartItem.create({
                 product_id: productId,
-                product_name: product.name,
-                price: product.price,
+                product_name: product?.name || '',
+                price: product?.price || 0,
                 quantity: quantity,
-                image_url: product.image_url
+                image_url: product?.image_url || ''
             });
         },
         onSuccess: () => {

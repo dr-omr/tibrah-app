@@ -190,12 +190,12 @@ export default function Courses() {
     const [priceFilter, setPriceFilter] = useState('all');
     const [levelFilter, setLevelFilter] = useState('all');
 
-    const { data: apiCourses, isLoading, isError, refetch } = useQuery({
+    const { data: apiCourses, isLoading, isError, refetch } = useQuery<Course[]>({
         queryKey: ['courses'],
-        queryFn: async () => {
+        queryFn: async (): Promise<Course[]> => {
             try {
                 const data = await base44.entities.Course.filter({ status: 'published' });
-                return data as Course[];
+                return data as unknown as Course[];
             } catch {
                 return [] as Course[];
             }
