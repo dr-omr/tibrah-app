@@ -35,72 +35,140 @@ import UserManagement from '../components/admin/UserManagement';
 import SystemConfig from '../components/admin/SystemConfig';
 import ThemeSettings from '../components/admin/ThemeSettings';
 
+// TypeScript interfaces
+interface User {
+    id: string;
+    email: string;
+    name?: string;
+    role?: string;
+    [key: string]: unknown;
+}
+
+interface Product {
+    id: string;
+    name: string;
+    price: number;
+    category?: string;
+    status?: string;
+    image_url?: string;
+    in_stock?: boolean;
+    [key: string]: unknown;
+}
+
+interface Course {
+    id: string;
+    title: string;
+    price?: number;
+    is_free?: boolean;
+    status?: string;
+    category?: string;
+    thumbnail_url?: string;
+    enrolled_count?: number;
+    lessons_count?: number;
+    [key: string]: unknown;
+}
+
+interface Appointment {
+    id: string;
+    patient_name: string;
+    patient_phone?: string;
+    date: string;
+    time_slot?: string;
+    status: string;
+    session_type?: string;
+    health_concern?: string;
+    [key: string]: unknown;
+}
+
+interface HealthProgram {
+    id: string;
+    name: string;
+    [key: string]: unknown;
+}
+
+interface KnowledgeArticle {
+    id: string;
+    title: string;
+    status?: string;
+    views?: number;
+    created_date?: string;
+    image_url?: string;
+    type?: string;
+    summary?: string;
+    [key: string]: unknown;
+}
+
+interface UpdateMutationParams {
+    id: string;
+    data: Record<string, unknown>;
+}
+
 export default function AdminDashboard() {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState('overview');
-    const [editItem, setEditItem] = useState(null);
-    const [editType, setEditType] = useState(null);
+    const [editItem, setEditItem] = useState<Record<string, unknown> | null>(null);
+    const [editType, setEditType] = useState<string | null>(null);
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        base44.auth.me().then(setUser).catch(() => { });
+        base44.auth.me().then((u) => setUser(u as User)).catch(() => { });
     }, []);
 
     // Check admin access
     const isAdmin = user?.role === 'admin' || user?.email === 'dr.omar@tibrah.com';
 
     // Fetch all data
-    const { data: users = [] } = useQuery({
+    const { data: users = [] } = useQuery<User[]>({
         queryKey: ['admin-users'],
-        queryFn: () => base44.entities.User.list(),
+        queryFn: async (): Promise<User[]> => base44.entities.User.list() as unknown as User[],
         enabled: isAdmin,
     });
 
-    const { data: products = [], refetch: refetchProducts } = useQuery({
+    const { data: products = [], refetch: refetchProducts } = useQuery<Product[]>({
         queryKey: ['admin-products'],
-        queryFn: () => base44.entities.Product.list(),
+        queryFn: async (): Promise<Product[]> => base44.entities.Product.list() as unknown as Product[],
         enabled: isAdmin,
     });
 
-    const { data: courses = [], refetch: refetchCourses } = useQuery({
+    const { data: courses = [], refetch: refetchCourses } = useQuery<Course[]>({
         queryKey: ['admin-courses'],
-        queryFn: () => base44.entities.Course.list(),
+        queryFn: async (): Promise<Course[]> => base44.entities.Course.list() as unknown as Course[],
         enabled: isAdmin,
     });
 
-    const { data: appointments = [], refetch: refetchAppointments } = useQuery({
+    const { data: appointments = [], refetch: refetchAppointments } = useQuery<Appointment[]>({
         queryKey: ['admin-appointments'],
-        queryFn: () => base44.entities.Appointment.list('-created_date'),
+        queryFn: async (): Promise<Appointment[]> => base44.entities.Appointment.list('-created_date') as unknown as Appointment[],
         enabled: isAdmin,
     });
 
-    const { data: enrollments = [] } = useQuery({
+    const { data: enrollments = [] } = useQuery<Record<string, unknown>[]>({
         queryKey: ['admin-enrollments'],
-        queryFn: () => base44.entities.CourseEnrollment.list(),
+        queryFn: async (): Promise<Record<string, unknown>[]> => base44.entities.CourseEnrollment.list() as unknown as Record<string, unknown>[],
         enabled: isAdmin,
     });
 
-    const { data: frequencies = [], refetch: refetchFrequencies } = useQuery({
+    const { data: frequencies = [], refetch: refetchFrequencies } = useQuery<Record<string, unknown>[]>({
         queryKey: ['admin-frequencies'],
-        queryFn: () => base44.entities.Frequency.list(),
+        queryFn: async (): Promise<Record<string, unknown>[]> => base44.entities.Frequency.list() as unknown as Record<string, unknown>[],
         enabled: isAdmin,
     });
 
-    const { data: programs = [], refetch: refetchPrograms } = useQuery({
+    const { data: programs = [], refetch: refetchPrograms } = useQuery<HealthProgram[]>({
         queryKey: ['admin-programs'],
-        queryFn: () => base44.entities.HealthProgram.list(),
+        queryFn: async (): Promise<HealthProgram[]> => base44.entities.HealthProgram.list() as unknown as HealthProgram[],
         enabled: isAdmin,
     });
 
-    const { data: articles = [], refetch: refetchArticles } = useQuery({
+    const { data: articles = [], refetch: refetchArticles } = useQuery<KnowledgeArticle[]>({
         queryKey: ['admin-articles'],
-        queryFn: () => base44.entities.KnowledgeArticle.list('-created_date'),
+        queryFn: async (): Promise<KnowledgeArticle[]> => base44.entities.KnowledgeArticle.list('-created_date') as unknown as KnowledgeArticle[],
         enabled: isAdmin,
     });
 
     // Mutations
     const updateProductMutation = useMutation({
-        mutationFn: ({ id, data }) => base44.entities.Product.update(id, data),
+        mutationFn: ({ id, data }: UpdateMutationParams) => base44.entities.Product.update(id, data as Record<string, unknown>),
         onSuccess: () => {
             refetchProducts();
             toast.success('تم تحديث المنتج');
@@ -109,7 +177,7 @@ export default function AdminDashboard() {
     });
 
     const deleteProductMutation = useMutation({
-        mutationFn: (id) => base44.entities.Product.delete(id),
+        mutationFn: (id: string) => base44.entities.Product.delete(id),
         onSuccess: () => {
             refetchProducts();
             toast.success('تم حذف المنتج');
@@ -117,7 +185,7 @@ export default function AdminDashboard() {
     });
 
     const updateCourseMutation = useMutation({
-        mutationFn: ({ id, data }) => base44.entities.Course.update(id, data),
+        mutationFn: ({ id, data }: UpdateMutationParams) => base44.entities.Course.update(id, data as Record<string, unknown>),
         onSuccess: () => {
             refetchCourses();
             toast.success('تم تحديث الدورة');
@@ -126,7 +194,7 @@ export default function AdminDashboard() {
     });
 
     const updateAppointmentMutation = useMutation({
-        mutationFn: ({ id, data }) => base44.entities.Appointment.update(id, data),
+        mutationFn: ({ id, data }: UpdateMutationParams) => base44.entities.Appointment.update(id, data as Record<string, unknown>),
         onSuccess: () => {
             refetchAppointments();
             toast.success('تم تحديث الموعد');
@@ -134,7 +202,7 @@ export default function AdminDashboard() {
     });
 
     const createProductMutation = useMutation({
-        mutationFn: (data) => base44.entities.Product.create(data),
+        mutationFn: (data: Record<string, unknown>) => base44.entities.Product.create(data),
         onSuccess: () => {
             refetchProducts();
             toast.success('تم إضافة المنتج');
@@ -143,7 +211,7 @@ export default function AdminDashboard() {
     });
 
     const createCourseMutation = useMutation({
-        mutationFn: (data) => base44.entities.Course.create(data),
+        mutationFn: (data: Record<string, unknown>) => base44.entities.Course.create(data),
         onSuccess: () => {
             refetchCourses();
             toast.success('تم إضافة الدورة');
@@ -152,7 +220,7 @@ export default function AdminDashboard() {
     });
 
     const updateArticleMutation = useMutation({
-        mutationFn: ({ id, data }) => base44.entities.KnowledgeArticle.update(id, data),
+        mutationFn: ({ id, data }: UpdateMutationParams) => base44.entities.KnowledgeArticle.update(id, data as Record<string, unknown>),
         onSuccess: () => {
             refetchArticles();
             toast.success('تم تحديث المقال');
@@ -161,7 +229,7 @@ export default function AdminDashboard() {
     });
 
     const createArticleMutation = useMutation({
-        mutationFn: (data) => base44.entities.KnowledgeArticle.create(data),
+        mutationFn: (data: Record<string, unknown>) => base44.entities.KnowledgeArticle.create(data),
         onSuccess: () => {
             refetchArticles();
             toast.success('تم إضافة المقال');
@@ -170,7 +238,7 @@ export default function AdminDashboard() {
     });
 
     const deleteArticleMutation = useMutation({
-        mutationFn: (id) => base44.entities.KnowledgeArticle.delete(id),
+        mutationFn: (id: string) => base44.entities.KnowledgeArticle.delete(id),
         onSuccess: () => {
             refetchArticles();
             toast.success('تم حذف المقال');
@@ -584,7 +652,7 @@ export default function AdminDashboard() {
                             product={editItem}
                             onSave={(data) => {
                                 if (editItem.id) {
-                                    updateProductMutation.mutate({ id: editItem.id, data });
+                                    updateProductMutation.mutate({ id: String(editItem.id), data });
                                 } else {
                                     createProductMutation.mutate(data);
                                 }
@@ -599,7 +667,7 @@ export default function AdminDashboard() {
                             course={editItem}
                             onSave={(data) => {
                                 if (editItem.id) {
-                                    updateCourseMutation.mutate({ id: editItem.id, data });
+                                    updateCourseMutation.mutate({ id: String(editItem.id), data });
                                 } else {
                                     createCourseMutation.mutate(data);
                                 }
@@ -614,7 +682,7 @@ export default function AdminDashboard() {
                             article={editItem}
                             onSave={(data) => {
                                 if (editItem.id) {
-                                    updateArticleMutation.mutate({ id: editItem.id, data });
+                                    updateArticleMutation.mutate({ id: String(editItem.id), data });
                                 } else {
                                     createArticleMutation.mutate(data);
                                 }
