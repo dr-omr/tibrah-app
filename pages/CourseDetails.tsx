@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, Play, Clock, Users, Star, BookOpen, CheckCircle, Lock,
@@ -52,9 +53,15 @@ const defaultLessons = [
 ];
 
 export default function CourseDetails() {
+    const router = useRouter();
+    const courseId = (router.query.id as string) || '1';
+
+    // Guard: Wait for router to be ready
+    if (!router.isReady) {
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+    }
+
     const queryClient = useQueryClient();
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('id') || '1';
 
     const [expandedModules, setExpandedModules] = useState({ module1: true });
     const [isFavorite, setIsFavorite] = useState(false);

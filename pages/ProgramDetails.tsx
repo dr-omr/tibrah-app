@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, Check, Crown, Zap, Flame,
@@ -11,7 +12,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-const programs = {
+const programs: Record<string, {
+    title: string;
+    subtitle: string;
+    duration: string;
+    price: string;
+    icon: React.ElementType;
+    color: string;
+    description: string;
+    features: string[];
+    includes: { text: string; included: boolean }[];
+    testimonials: { name: string; text: string; rating: number }[];
+    featured?: boolean;
+    trial?: boolean;
+}> = {
     weekly: {
         title: 'البرنامج الأسبوعي',
         subtitle: 'بداية رحلتك',
@@ -106,10 +120,15 @@ const programs = {
 };
 
 export default function ProgramDetails() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const programId = urlParams.get('id') || '21_days';
-    const program = programs[programId];
+    const router = useRouter();
+    const programId = (router.query.id as string) || '21_days';
 
+    // Guard: Wait for router to be ready
+    if (!router.isReady) {
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+    }
+
+    const program = programs[programId];
     const [trialStarted, setTrialStarted] = useState(false);
     const queryClient = useQueryClient();
 

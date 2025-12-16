@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, Clock, Eye, Share2, Bookmark,
@@ -597,8 +598,13 @@ const realArticles = {
 };
 
 export default function ArticleDetails() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const articleId = urlParams.get('id') || '1';
+    const router = useRouter();
+    const articleId = (router.query.id as string) || '1';
+
+    // Guard: Wait for router to be ready
+    if (!router.isReady) {
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+    }
 
     const article = realArticles[articleId] || realArticles['1'];
 

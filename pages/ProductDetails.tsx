@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, ShoppingCart, Heart, Star, Check,
@@ -13,8 +14,13 @@ import { toast } from "sonner";
 import CommentsSection from '../components/common/CommentsSection';
 
 export default function ProductDetails() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
+    const router = useRouter();
+    const productId = router.query.id as string;
+
+    // Guard: Wait for router to be ready
+    if (!router.isReady) {
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+    }
 
     const [quantity, setQuantity] = useState(1);
     const queryClient = useQueryClient();
