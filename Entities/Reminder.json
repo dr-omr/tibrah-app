@@ -1,0 +1,61 @@
+{
+    "name": "Reminder",
+        "type": "object",
+            "properties": {
+        "title": {
+            "type": "string",
+                "description": "عنوان التذكير"
+        },
+        "type": {
+            "type": "string",
+                "enum": [
+                    "appointment",
+                    "medication",
+                    "supplement",
+                    "frequency",
+                    "water",
+                    "exercise",
+                    "custom"
+                ],
+                    "description": "نوع التذكير"
+        },
+        "time": {
+            "type": "string",
+                "description": "وقت التذكير"
+        },
+        "days": {
+            "type": "array",
+                "items": {
+                "type": "string",
+                    "enum": [
+                        "sunday",
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday"
+                    ]
+            },
+            "description": "أيام التذكير"
+        },
+        "is_active": {
+            "type": "boolean",
+                "default": true,
+                    "description": "التذكير مفعل"
+        },
+        "notes": {
+            "type": "string",
+                "description": "ملاحظات إضافية"
+        },
+        "related_item": {
+            "type": "string",
+                "description": "العنصر المرتبط"
+        }
+    },
+    "required": [
+        "title",
+        "type",
+        "time"
+    ]
+}

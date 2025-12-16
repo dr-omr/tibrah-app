@@ -1,0 +1,64 @@
+{
+    "name": "Product",
+        "type": "object",
+            "properties": {
+        "name": {
+            "type": "string",
+                "description": "اسم المنتج"
+        },
+        "name_en": {
+            "type": "string",
+                "description": "اسم المنتج بالإنجليزية"
+        },
+        "description": {
+            "type": "string",
+                "description": "وصف المنتج"
+        },
+        "price": {
+            "type": "number",
+                "description": "السعر بالريال"
+        },
+        "original_price": {
+            "type": "number",
+                "description": "السعر الأصلي قبل الخصم"
+        },
+        "category": {
+            "type": "string",
+                "enum": [
+                    "vitamins",
+                    "minerals",
+                    "supplements",
+                    "dmso",
+                    "personal_care",
+                    "detox"
+                ],
+                    "description": "فئة المنتج"
+        },
+        "image_url": {
+            "type": "string",
+                "description": "رابط صورة المنتج"
+        },
+        "benefits": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "فوائد المنتج"
+        },
+        "in_stock": {
+            "type": "boolean",
+                "default": true,
+                    "description": "متوفر في المخزون"
+        },
+        "featured": {
+            "type": "boolean",
+                "default": false,
+                    "description": "منتج مميز"
+        }
+    },
+    "required": [
+        "name",
+        "price",
+        "category"
+    ]
+}

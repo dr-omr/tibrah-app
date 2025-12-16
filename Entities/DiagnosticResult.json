@@ -1,0 +1,49 @@
+{
+    "name": "DiagnosticResult",
+        "type": "object",
+            "properties": {
+        "quiz_id": {
+            "type": "string",
+                "description": "Unique identifier for the quiz or diagnostic tool"
+        },
+        "quiz_title": {
+            "type": "string",
+                "description": "Display title of the quiz"
+        },
+        "result_summary": {
+            "type": "string",
+                "description": "Brief summary of the diagnostic result"
+        },
+        "score": {
+            "type": "number",
+                "description": "Numerical score or percentage"
+        },
+        "detailed_data": {
+            "type": "object",
+                "description": "Full JSON object containing detailed answers and analysis",
+                    "additionalProperties": true
+        },
+        "recommendations": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "List of specific recommendations based on the result"
+        },
+        "severity_level": {
+            "type": "string",
+                "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                ],
+                    "default": "low",
+                        "description": "Severity level indicated by the diagnostic"
+        }
+    },
+    "required": [
+        "quiz_id",
+        "result_summary"
+    ]
+}

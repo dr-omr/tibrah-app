@@ -1,0 +1,73 @@
+{
+    "name": "Lesson",
+        "type": "object",
+            "properties": {
+        "course_id": {
+            "type": "string",
+                "description": "معرف الدورة"
+        },
+        "title": {
+            "type": "string",
+                "description": "عنوان الدرس"
+        },
+        "description": {
+            "type": "string",
+                "description": "وصف الدرس"
+        },
+        "video_url": {
+            "type": "string",
+                "description": "رابط الفيديو"
+        },
+        "video_type": {
+            "type": "string",
+                "enum": [
+                    "upload",
+                    "youtube",
+                    "vimeo"
+                ],
+                    "default": "youtube",
+                        "description": "نوع الفيديو"
+        },
+        "duration_minutes": {
+            "type": "number",
+                "description": "مدة الدرس بالدقائق"
+        },
+        "order": {
+            "type": "number",
+                "default": 0,
+                    "description": "ترتيب الدرس"
+        },
+        "is_free_preview": {
+            "type": "boolean",
+                "default": false,
+                    "description": "معاينة مجانية"
+        },
+        "resources": {
+            "type": "array",
+                "items": {
+                "type": "object",
+                    "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "description": "موارد الدرس"
+        },
+        "has_quiz": {
+            "type": "boolean",
+                "default": false,
+                    "description": "يحتوي على اختبار"
+        }
+    },
+    "required": [
+        "course_id",
+        "title"
+    ]
+}

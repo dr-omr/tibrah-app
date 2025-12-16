@@ -1,0 +1,58 @@
+{
+    "name": "DoctorRecommendation",
+        "type": "object",
+            "properties": {
+        "title": {
+            "type": "string",
+                "description": "عنوان التوصية"
+        },
+        "description": {
+            "type": "string",
+                "description": "وصف التوصية التفصيلي"
+        },
+        "category": {
+            "type": "string",
+                "enum": [
+                    "nutrition",
+                    "supplement",
+                    "lifestyle",
+                    "exercise",
+                    "sleep",
+                    "detox",
+                    "frequency",
+                    "followup"
+                ],
+                    "description": "فئة التوصية"
+        },
+        "priority": {
+            "type": "string",
+                "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                ],
+                    "default": "medium",
+                        "description": "أهمية التوصية"
+        },
+        "status": {
+            "type": "string",
+                "enum": [
+                    "pending",
+                    "in_progress",
+                    "completed"
+                ],
+                    "default": "pending",
+                        "description": "حالة تنفيذ التوصية"
+        },
+        "due_date": {
+            "type": "string",
+                "format": "date",
+                    "description": "تاريخ الاستحقاق"
+        }
+    },
+    "required": [
+        "title",
+        "category",
+        "priority"
+    ]
+}

@@ -1,0 +1,73 @@
+{
+    "name": "LabResult",
+        "type": "object",
+            "properties": {
+        "test_name": {
+            "type": "string",
+                "description": "اسم الفحص"
+        },
+        "test_name_en": {
+            "type": "string",
+                "description": "اسم الفحص بالإنجليزية"
+        },
+        "category": {
+            "type": "string",
+                "enum": [
+                    "blood",
+                    "hormones",
+                    "vitamins",
+                    "minerals",
+                    "liver",
+                    "kidney",
+                    "thyroid",
+                    "sugar",
+                    "lipids",
+                    "other"
+                ],
+                    "description": "فئة الفحص"
+        },
+        "value": {
+            "type": "number",
+                "description": "قيمة النتيجة"
+        },
+        "unit": {
+            "type": "string",
+                "description": "وحدة القياس"
+        },
+        "reference_min": {
+            "type": "number",
+                "description": "الحد الأدنى الطبيعي"
+        },
+        "reference_max": {
+            "type": "number",
+                "description": "الحد الأقصى الطبيعي"
+        },
+        "status": {
+            "type": "string",
+                "enum": [
+                    "normal",
+                    "low",
+                    "high",
+                    "critical"
+                ],
+                    "description": "حالة النتيجة"
+        },
+        "test_date": {
+            "type": "string",
+                "format": "date",
+                    "description": "تاريخ الفحص"
+        },
+        "notes": {
+            "type": "string",
+                "description": "ملاحظات الطبيب"
+        }
+    },
+    "required": [
+        "test_name",
+        "category",
+        "value",
+        "unit",
+        "status",
+        "test_date"
+    ]
+}

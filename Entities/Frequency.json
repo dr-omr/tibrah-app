@@ -1,0 +1,59 @@
+{
+    "name": "Frequency",
+        "type": "object",
+            "properties": {
+        "name": {
+            "type": "string",
+                "description": "اسم التردد"
+        },
+        "name_en": {
+            "type": "string",
+                "description": "الاسم بالإنجليزية"
+        },
+        "frequency_hz": {
+            "type": "number",
+                "description": "التردد بالهيرتز"
+        },
+        "category": {
+            "type": "string",
+                "enum": [
+                    "solfeggio",
+                    "brainwave",
+                    "chakra",
+                    "organ",
+                    "angel_numbers",
+                    "planetary"
+                ],
+                    "description": "فئة التردد"
+        },
+        "description": {
+            "type": "string",
+                "description": "وصف التردد وفوائده"
+        },
+        "benefits": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "الفوائد العلاجية"
+        },
+        "color": {
+            "type": "string",
+                "description": "اللون المرتبط بالتردد"
+        },
+        "duration_minutes": {
+            "type": "number",
+                "default": 15,
+                    "description": "المدة الموصى بها بالدقائق"
+        },
+        "icon": {
+            "type": "string",
+                "description": "أيقونة التردد"
+        }
+    },
+    "required": [
+        "name",
+        "frequency_hz",
+        "category"
+    ]
+}

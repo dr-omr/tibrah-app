@@ -1,0 +1,75 @@
+{
+    "name": "KnowledgeArticle",
+        "type": "object",
+            "properties": {
+        "title": {
+            "type": "string",
+                "description": "عنوان المقال"
+        },
+        "summary": {
+            "type": "string",
+                "description": "ملخص قصير"
+        },
+        "content": {
+            "type": "string",
+                "description": "محتوى المقال"
+        },
+        "type": {
+            "type": "string",
+                "enum": [
+                    "article",
+                    "video",
+                    "study",
+                    "podcast"
+                ],
+                    "description": "نوع المحتوى"
+        },
+        "category": {
+            "type": "string",
+                "enum": [
+                    "functional_medicine",
+                    "frequencies",
+                    "nutrition",
+                    "lifestyle",
+                    "detox",
+                    "supplements",
+                    "mental_health"
+                ],
+                    "description": "فئة المحتوى"
+        },
+        "image_url": {
+            "type": "string",
+                "description": "صورة الغلاف"
+        },
+        "video_url": {
+            "type": "string",
+                "description": "رابط الفيديو"
+        },
+        "duration_minutes": {
+            "type": "number",
+                "description": "مدة القراءة أو المشاهدة"
+        },
+        "tags": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "الكلمات المفتاحية"
+        },
+        "featured": {
+            "type": "boolean",
+                "default": false,
+                    "description": "محتوى مميز"
+        },
+        "views": {
+            "type": "number",
+                "default": 0,
+                    "description": "عدد المشاهدات"
+        }
+    },
+    "required": [
+        "title",
+        "type",
+        "category"
+    ]
+}

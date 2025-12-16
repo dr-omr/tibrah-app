@@ -1,0 +1,86 @@
+{
+    "name": "DailyLog",
+        "type": "object",
+            "properties": {
+        "date": {
+            "type": "string",
+                "format": "date",
+                    "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u064a\u0648\u0645"
+        },
+        "mood": {
+            "type": "number",
+                "minimum": 1,
+                    "maximum": 5,
+                        "description": "\u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0632\u0627\u062c\u064a\u0629"
+        },
+        "energy_level": {
+            "type": "number",
+                "minimum": 1,
+                    "maximum": 5,
+                        "description": "\u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u0637\u0627\u0642\u0629"
+        },
+        "sleep_quality": {
+            "type": "number",
+                "minimum": 1,
+                    "maximum": 5,
+                        "description": "\u062c\u0648\u062f\u0629 \u0627\u0644\u0646\u0648\u0645"
+        },
+        "stress_level": {
+            "type": "number",
+                "minimum": 1,
+                    "maximum": 5,
+                        "description": "\u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u062a\u0648\u062a\u0631"
+        },
+        "meals": {
+            "type": "array",
+                "items": {
+                "type": "object",
+                    "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "time": {
+                        "type": "string"
+                    }
+                }
+            },
+            "description": "\u0627\u0644\u0648\u062c\u0628\u0627\u062a"
+        },
+        "medications_taken": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "\u0627\u0644\u0623\u062f\u0648\u064a\u0629 \u0627\u0644\u0645\u062a\u0646\u0627\u0648\u0644\u0629"
+        },
+        "supplements_taken": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "\u0627\u0644\u0645\u0643\u0645\u0644\u0627\u062a \u0627\u0644\u0645\u062a\u0646\u0627\u0648\u0644\u0629"
+        },
+        "exercise": {
+            "type": "object",
+                "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "number"
+                }
+            },
+            "description": "\u0627\u0644\u062a\u0645\u0627\u0631\u064a\u0646"
+        },
+        "notes": {
+            "type": "string",
+                "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u064a\u0648\u0645"
+        }
+    },
+    "required": [
+        "date"
+    ]
+}

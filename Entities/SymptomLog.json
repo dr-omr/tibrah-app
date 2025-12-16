@@ -1,0 +1,55 @@
+{
+    "name": "SymptomLog",
+        "type": "object",
+            "properties": {
+        "symptom": {
+            "type": "string",
+                "description": "اسم العرض"
+        },
+        "severity": {
+            "type": "number",
+                "minimum": 1,
+                    "maximum": 10,
+                        "description": "شدة العرض من 1 إلى 10"
+        },
+        "body_area": {
+            "type": "string",
+                "enum": [
+                    "head",
+                    "chest",
+                    "stomach",
+                    "back",
+                    "arms",
+                    "legs",
+                    "skin",
+                    "general"
+                ],
+                    "description": "منطقة الجسم المتأثرة"
+        },
+        "duration": {
+            "type": "string",
+                "description": "مدة العرض"
+        },
+        "triggers": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "المحفزات المحتملة"
+        },
+        "recorded_at": {
+            "type": "string",
+                "format": "date-time",
+                    "description": "وقت التسجيل"
+        },
+        "notes": {
+            "type": "string",
+                "description": "ملاحظات إضافية"
+        }
+    },
+    "required": [
+        "symptom",
+        "severity",
+        "recorded_at"
+    ]
+}

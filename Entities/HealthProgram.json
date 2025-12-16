@@ -1,0 +1,53 @@
+{
+    "name": "HealthProgram",
+        "type": "object",
+            "properties": {
+        "title": {
+            "type": "string",
+                "description": "عنوان البرنامج"
+        },
+        "duration": {
+            "type": "string",
+                "enum": [
+                    "weekly",
+                    "21_days",
+                    "3_months"
+                ],
+                    "description": "مدة البرنامج"
+        },
+        "description": {
+            "type": "string",
+                "description": "وصف البرنامج"
+        },
+        "price": {
+            "type": "number",
+                "description": "سعر البرنامج"
+        },
+        "features": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "مميزات البرنامج"
+        },
+        "image_url": {
+            "type": "string",
+                "description": "صورة البرنامج"
+        },
+        "featured": {
+            "type": "boolean",
+                "default": false,
+                    "description": "برنامج مميز"
+        },
+        "trial_available": {
+            "type": "boolean",
+                "default": true,
+                    "description": "تجربة مجانية متاحة"
+        }
+    },
+    "required": [
+        "title",
+        "duration",
+        "price"
+    ]
+}

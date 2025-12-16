@@ -1,0 +1,72 @@
+{
+    "name": "UserHealth",
+        "type": "object",
+            "properties": {
+        "vitality_score": {
+            "type": "number",
+                "default": 50,
+                    "description": "مؤشر الحيوية من 100"
+        },
+        "journey_stage": {
+            "type": "string",
+                "enum": [
+                    "initial",
+                    "testing",
+                    "detox",
+                    "healing",
+                    "maintenance"
+                ],
+                    "default": "initial",
+                        "description": "مرحلة الرحلة العلاجية"
+        },
+        "progress_percentage": {
+            "type": "number",
+                "default": 0,
+                    "description": "نسبة التقدم"
+        },
+        "active_program": {
+            "type": "string",
+                "description": "البرنامج النشط"
+        },
+        "program_start_date": {
+            "type": "string",
+                "format": "date",
+                    "description": "تاريخ بدء البرنامج"
+        },
+        "organs_status": {
+            "type": "object",
+                "description": "حالة الأعضاء"
+        },
+        "timeline_events": {
+            "type": "array",
+                "items": {
+                "type": "object",
+                    "properties": {
+                    "date": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "completed": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "description": "أحداث الرحلة العلاجية"
+        },
+        "trial_started": {
+            "type": "string",
+                "format": "date-time",
+                    "description": "تاريخ بدء الفترة التجريبية"
+        },
+        "trial_program": {
+            "type": "string",
+                "description": "البرنامج التجريبي"
+        }
+    },
+    "required": []
+}

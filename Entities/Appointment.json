@@ -1,0 +1,61 @@
+{
+    "name": "Appointment",
+        "type": "object",
+            "properties": {
+        "patient_name": {
+            "type": "string",
+                "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u064a\u0636"
+        },
+        "patient_email": {
+            "type": "string",
+                "description": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a"
+        },
+        "patient_phone": {
+            "type": "string",
+                "description": "\u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062a\u0641"
+        },
+        "session_type": {
+            "type": "string",
+                "enum": [
+                    "diagnostic",
+                    "followup",
+                    "consultation"
+                ],
+                    "description": "\u0646\u0648\u0639 \u0627\u0644\u062c\u0644\u0633\u0629"
+        },
+        "date": {
+            "type": "string",
+                "format": "date",
+                    "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0648\u0639\u062f"
+        },
+        "time_slot": {
+            "type": "string",
+                "description": "\u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0645\u062d\u062f\u062f"
+        },
+        "status": {
+            "type": "string",
+                "enum": [
+                    "pending",
+                    "confirmed",
+                    "completed",
+                    "cancelled"
+                ],
+                    "default": "pending",
+                        "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0648\u0639\u062f"
+        },
+        "notes": {
+            "type": "string",
+                "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0625\u0636\u0627\u0641\u064a\u0629"
+        },
+        "health_concern": {
+            "type": "string",
+                "description": "\u0627\u0644\u0634\u0643\u0648\u0649 \u0627\u0644\u0635\u062d\u064a\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629"
+        }
+    },
+    "required": [
+        "patient_name",
+        "patient_phone",
+        "session_type",
+        "date"
+    ]
+}

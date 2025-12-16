@@ -1,0 +1,62 @@
+{
+    "name": "RifeFrequency",
+        "type": "object",
+            "properties": {
+        "name": {
+            "type": "string",
+                "description": "اسم التردد"
+        },
+        "name_en": {
+            "type": "string",
+                "description": "الاسم بالإنجليزية"
+        },
+        "frequencies": {
+            "type": "array",
+                "items": {
+                "type": "number"
+            },
+            "description": "قائمة الترددات بالهيرتز"
+        },
+        "category": {
+            "type": "string",
+                "enum": [
+                    "pathogen_bacteria",
+                    "pathogen_virus",
+                    "pathogen_fungi",
+                    "pathogen_parasite",
+                    "disease_support",
+                    "organ_regeneration"
+                ],
+                    "description": "فئة التردد"
+        },
+        "target_condition": {
+            "type": "string",
+                "description": "الحالة المستهدفة"
+        },
+        "description": {
+            "type": "string",
+                "description": "وصف التردد وفوائده"
+        },
+        "duration_minutes": {
+            "type": "number",
+                "default": 15,
+                    "description": "المدة الموصى بها"
+        },
+        "precautions": {
+            "type": "array",
+                "items": {
+                "type": "string"
+            },
+            "description": "تحذيرات واحتياطات"
+        },
+        "research_source": {
+            "type": "string",
+                "description": "مصدر البحث"
+        }
+    },
+    "required": [
+        "name",
+        "frequencies",
+        "category"
+    ]
+}
