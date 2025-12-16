@@ -1,11 +1,13 @@
-import React, { useState, useEffect, ReactNode } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { ReactNode } from 'react';
 import FloatingAssistant from './components/common/FloatingAssistant';
 import OfflineBanner from './components/common/OfflineBanner';
 import LoadingScreen from './components/common/LoadingScreen';
 import BottomNav from './components/navigation/BottomNav';
 import Header from './components/navigation/Header';
 import Footer from './components/navigation/Footer';
+import { useAuth } from './contexts/AuthContext';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,7 +15,8 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, currentPageName }: LayoutProps) {
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
   // Pages that require authentication
   const protectedPages = [
@@ -26,6 +29,9 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
     'BookAppointment'
   ];
 
+  // Check if current page is protected
+  const isProtectedPage = currentPageName && protectedPages.includes(currentPageName);
+
   useEffect(() => {
     // Register Service Worker
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -37,26 +43,23 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
         });
       });
     }
+  }, []);
 
-    const checkAuth = async () => {
-      // If the page is protected, check auth
-      if (currentPageName && protectedPages.includes(currentPageName)) {
-        const isAuthenticated = await base44.auth.isAuthenticated();
-        if (!isAuthenticated) {
-          // Redirect to login and return to this page after
-          await base44.auth.redirectToLogin(window.location.href);
-          return;
-        }
-      }
-      setIsCheckingAuth(false);
-    };
-
-    checkAuth();
-  }, [currentPageName]);
+  // Redirect to login if page is protected and user is not authenticated
+  useEffect(() => {
+    if (!loading && isProtectedPage && !user) {
+      router.push('/login');
+    }
+  }, [loading, isProtectedPage, user, router]);
 
   // Show loader while checking auth on protected pages
-  if (isCheckingAuth && currentPageName && protectedPages.includes(currentPageName)) {
+  if (loading && isProtectedPage) {
     return <LoadingScreen message="جاري التحقق من تسجيل الدخول..." />;
+  }
+
+  // Don't render protected page if not authenticated
+  if (!loading && isProtectedPage && !user) {
+    return <LoadingScreen message="جاري التوجيه لتسجيل الدخول..." />;
   }
 
   // Pages where navigation should be hidden
@@ -104,4 +107,3 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
     </div>
   );
 }
-

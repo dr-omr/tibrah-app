@@ -7,6 +7,7 @@ import Head from 'next/head';
 import Layout from '../Layout';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { AuthProvider } from '../contexts/AuthContext';
 import '../styles/globals.css';
 
 // Create a client
@@ -45,14 +46,16 @@ export default function App({ Component, pageProps }: AppProps) {
                 <title>طِبرَا - العيادة الرقمية</title>
             </Head>
             <QueryClientProvider client={queryClient}>
-                <ThemeProvider>
-                    <NotificationProvider>
-                        <Layout currentPageName={currentPageName}>
-                            <Component {...pageProps} />
-                        </Layout>
-                        <Toaster position="top-center" richColors />
-                    </NotificationProvider>
-                </ThemeProvider>
+                <AuthProvider>
+                    <ThemeProvider>
+                        <NotificationProvider>
+                            <Layout currentPageName={currentPageName}>
+                                <Component {...pageProps} />
+                            </Layout>
+                            <Toaster position="top-center" richColors />
+                        </NotificationProvider>
+                    </ThemeProvider>
+                </AuthProvider>
             </QueryClientProvider>
         </>
     );

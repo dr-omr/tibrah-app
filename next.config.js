@@ -7,7 +7,12 @@ const nextConfig = {
 
     // Handle image domains
     images: {
-        domains: ['qtrypzzcjebvfcihiynt.supabase.co', 'cdn-icons-png.flaticon.com'],
+        domains: [
+            'qtrypzzcjebvfcihiynt.supabase.co',
+            'cdn-icons-png.flaticon.com',
+            'lh3.googleusercontent.com',  // Google Profile Photos
+            'firebasestorage.googleapis.com',  // Firebase Storage
+        ],
         formats: ['image/avif', 'image/webp'],
     },
 
