@@ -125,7 +125,7 @@ export default function Frequencies() {
 
             {/* Rife Banner */}
             <div className="px-6 py-4">
-                <Link href={createPageUrl('RifeFrequencies')}>
+                <Link href={createPageUrl('rife-frequencies')}>
                     <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 flex items-center justify-between group hover:shadow-glow transition-all">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">

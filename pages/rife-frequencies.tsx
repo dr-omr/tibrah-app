@@ -372,7 +372,7 @@ export default function RifeFrequencies() {
                 <div className="relative">
                     {/* Back Button */}
                     <Link
-                        href={createPageUrl('Frequencies')}
+                        href={createPageUrl('frequencies')}
                         className="inline-flex items-center gap-2 text-white/80 mb-4 hover:text-white transition-colors"
                     >
                         <ArrowRight className="w-5 h-5" />
