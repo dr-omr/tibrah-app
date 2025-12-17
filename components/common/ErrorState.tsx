@@ -2,7 +2,13 @@ import React from 'react';
 import { WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
-export default function ErrorState({ title, message, onRetry }) {
+interface ErrorStateProps {
+    title?: string;
+    message?: string;
+    onRetry: () => void;
+}
+
+export default function ErrorState({ title, message, onRetry }: ErrorStateProps) {
     return (
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center animate-in fade-in zoom-in duration-300">
             <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6">

@@ -18,16 +18,18 @@ const firebaseConfig = {
 // Initialize Firebase only once (singleton pattern for hot-reload safety)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Debug: Log environment variable status (NOT the actual values for security)
-console.log("🔥 Firebase Config Debug:", {
-    apiKeyLoaded: !!firebaseConfig.apiKey,
-    authDomainLoaded: !!firebaseConfig.authDomain,
-    projectIdLoaded: !!firebaseConfig.projectId,
-    storageBucketLoaded: !!firebaseConfig.storageBucket,
-    appIdLoaded: !!firebaseConfig.appId,
-    projectId: firebaseConfig.projectId, // Safe to log project ID
-    authDomain: firebaseConfig.authDomain, // Safe to log auth domain
-});
+// Debug: Log environment variable status only in development
+if (process.env.NODE_ENV === 'development') {
+    console.log("🔥 Firebase Config Debug:", {
+        apiKeyLoaded: !!firebaseConfig.apiKey,
+        authDomainLoaded: !!firebaseConfig.authDomain,
+        projectIdLoaded: !!firebaseConfig.projectId,
+        storageBucketLoaded: !!firebaseConfig.storageBucket,
+        appIdLoaded: !!firebaseConfig.appId,
+        projectId: firebaseConfig.projectId,
+        authDomain: firebaseConfig.authDomain,
+    });
+}
 
 // Auth
 export const auth = getAuth(app);

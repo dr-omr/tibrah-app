@@ -5,9 +5,24 @@ import { Star, User, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
-export default function CommentsSection({ targetType, targetId, showRating = true }) {
+interface Comment {
+    id: string;
+    content: string;
+    rating?: number;
+    user_name?: string;
+    created_date: string;
+}
+
+interface CommentsSectionProps {
+    targetType: string;
+    targetId: string;
+    showRating?: boolean;
+}
+
+export default function CommentsSection({ targetType, targetId, showRating = true }: CommentsSectionProps) {
     const [user, setUser] = useState(null);
     const [newComment, setNewComment] = useState('');
     const [rating, setRating] = useState(5);
@@ -18,7 +33,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
         base44.auth.me().then(setUser).catch(() => { });
     }, []);
 
-    const { data: comments = [], isLoading } = useQuery({
+    const { data: comments = [], isLoading } = useQuery<Comment[]>({
         queryKey: ['comments', targetType, targetId],
         queryFn: async () => {
             const allComments = await base44.entities.Comment.filter({
@@ -26,7 +41,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                 target_id: targetId,
                 is_approved: true
             }, '-created_date');
-            return allComments;
+            return allComments as unknown as Comment[];
         },
         enabled: !!targetId,
     });
@@ -81,7 +96,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                     key={star}
-                                    className={`w-4 h-4 ${star <= Math.round(avgRating) ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-slate-200'}`}
+                                    className={`w-4 h-4 ${star <= Math.round(Number(avgRating)) ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-slate-200'}`}
                                 />
                             ))}
                         </div>
@@ -107,8 +122,8 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                                 >
                                     <Star
                                         className={`w-7 h-7 transition-colors ${star <= (hoverRating || rating)
-                                                ? 'text-[#D4AF37] fill-[#D4AF37]'
-                                                : 'text-slate-200 hover:text-[#D4AF37]/50'
+                                            ? 'text-[#D4AF37] fill-[#D4AF37]'
+                                            : 'text-slate-200 hover:text-[#D4AF37]/50'
                                             }`}
                                     />
                                 </button>
@@ -167,7 +182,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-medium text-slate-800">{comment.user_name || 'زائر'}</span>
                                         <span className="text-xs text-slate-400">
-                                            {moment(comment.created_date).fromNow()}
+                                            {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true, locale: ar })}
                                         </span>
                                     </div>
                                     {comment.rating && (
