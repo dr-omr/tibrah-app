@@ -24,7 +24,7 @@ export default function Register() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-    const { signUpWithEmail, signInWithGoogle } = useAuth();
+    const { signUp, signInWithGoogle } = useAuth();
     const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -47,17 +47,25 @@ export default function Register() {
 
         setLoading(true);
         try {
-            await signUpWithEmail(email, password, name);
-            toast.success('تم إنشاء الحساب بنجاح!');
+            await signUp(email, password, name);
+            toast.success('تم إنشاء الحساب بنجاح! 🎉');
             router.push('/');
         } catch (error: unknown) {
-            const firebaseError = error as { code?: string };
-            if (firebaseError.code === 'auth/email-already-in-use') {
-                toast.error('البريد الإلكتروني مستخدم بالفعل');
-            } else if (firebaseError.code === 'auth/weak-password') {
-                toast.error('كلمة المرور ضعيفة جداً');
-            } else {
-                toast.error('خطأ في إنشاء الحساب');
+            const authError = error as { code?: string; message?: string };
+            console.log('Register error:', authError);
+
+            switch (authError.code) {
+                case 'auth/email-already-in-use':
+                    toast.error('البريد الإلكتروني مستخدم بالفعل');
+                    break;
+                case 'auth/weak-password':
+                    toast.error('كلمة المرور ضعيفة جداً');
+                    break;
+                case 'auth/invalid-email':
+                    toast.error('البريد الإلكتروني غير صحيح');
+                    break;
+                default:
+                    toast.error(authError.message || 'خطأ في إنشاء الحساب');
             }
         } finally {
             setLoading(false);
@@ -68,12 +76,12 @@ export default function Register() {
         setGoogleLoading(true);
         try {
             await signInWithGoogle();
-            toast.success('تم إنشاء الحساب بنجاح!');
+            toast.success('تم إنشاء الحساب بنجاح! 🎉');
             router.push('/');
         } catch (error: unknown) {
-            const firebaseError = error as { code?: string };
-            if (firebaseError.code !== 'auth/popup-closed-by-user') {
-                toast.error('خطأ في التسجيل بجوجل');
+            const authError = error as { code?: string; message?: string };
+            if (authError.code !== 'auth/popup-closed-by-user') {
+                toast.error(authError.message || 'خطأ في التسجيل بجوجل');
             }
         } finally {
             setGoogleLoading(false);

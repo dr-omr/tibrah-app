@@ -1,183 +1,305 @@
-'use client';
+/**
+ * Unified Authentication Context
+ * Supports both Local Auth and Firebase Auth
+ * Automatically falls back to Local Auth if Firebase is not configured
+ */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-    User,
-    onAuthStateChanged,
-    signInWithPopup,
-    signOut as firebaseSignOut,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    updateProfile
-} from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { localAuth, LocalUser } from '../lib/localAuth';
 
-interface UserProfile {
-    uid: string;
-    email: string | null;
-    displayName: string | null;
-    photoURL: string | null;
-    phoneNumber?: string;
+// Try to import Firebase (may fail if not configured)
+let firebaseAuth: typeof import('firebase/auth') | null = null;
+let auth: import('firebase/auth').Auth | null = null;
+let googleProvider: import('firebase/auth').GoogleAuthProvider | null = null;
+
+try {
+    // Dynamic import to prevent build errors if Firebase is not configured
+    const firebase = require('../lib/firebase');
+    auth = firebase.auth;
+    googleProvider = firebase.googleProvider;
+    firebaseAuth = require('firebase/auth');
+} catch (e) {
+    console.log('🔄 Firebase not configured, using Local Auth only');
+}
+
+// ============================================
+// Types
+// ============================================
+
+export interface UserProfile {
+    id: string;
+    email: string;
+    name: string;
+    displayName?: string;
+    photoURL?: string;
+    phone?: string;
+    role: 'user' | 'admin';
     createdAt?: string;
-    role?: 'user' | 'admin';
+    lastLoginAt?: string;
+    isVerified?: boolean;
+    authProvider: 'local' | 'firebase';
 }
 
 interface AuthContextType {
-    user: User | null;
-    userProfile: UserProfile | null;
+    user: UserProfile | null;
     loading: boolean;
-    signInWithGoogle: () => Promise<void>;
+    authProvider: 'local' | 'firebase' | 'none';
+
+    // Auth methods
+    signUp: (email: string, password: string, name: string) => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
-    signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
+    signInWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
+
+    // Profile methods
+    updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    deleteAccount: () => Promise<void>;
+
+    // Utility methods
     isAdmin: boolean;
+    isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+// ============================================
+// Provider Component
+// ============================================
+
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+    const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [authProvider, setAuthProvider] = useState<'local' | 'firebase' | 'none'>('none');
 
-    // Listen for auth state changes
+    // Check if Firebase is properly configured
+    const isFirebaseConfigured = (): boolean => {
+        if (!auth || !firebaseAuth) return false;
+        try {
+            const config = auth.app.options;
+            return !!(config.apiKey && config.authDomain && config.projectId);
+        } catch {
+            return false;
+        }
+    };
+
+    // Convert LocalUser to UserProfile
+    const localUserToProfile = (localUser: LocalUser): UserProfile => ({
+        id: localUser.id,
+        email: localUser.email,
+        name: localUser.name,
+        displayName: localUser.displayName,
+        photoURL: localUser.photoURL,
+        phone: localUser.phone,
+        role: localUser.role,
+        createdAt: localUser.createdAt,
+        lastLoginAt: localUser.lastLoginAt,
+        isVerified: localUser.isVerified,
+        authProvider: 'local',
+    });
+
+    // Convert Firebase User to UserProfile
+    const firebaseUserToProfile = (firebaseUser: import('firebase/auth').User): UserProfile => ({
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || 'مستخدم',
+        displayName: firebaseUser.displayName || undefined,
+        photoURL: firebaseUser.photoURL || undefined,
+        role: firebaseUser.email === 'dr.omar@tibrah.com' ? 'admin' : 'user',
+        authProvider: 'firebase',
+    });
+
+    // Initialize auth listener
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            setUser(user);
+        let unsubscribeLocal: (() => void) | null = null;
+        let unsubscribeFirebase: (() => void) | null = null;
 
-            if (user) {
-                // Create profile from user data (works offline too)
-                const profileFromUser: UserProfile = {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                    createdAt: new Date().toISOString(),
-                    role: 'user'
-                };
+        const setupAuth = async () => {
+            // Try Firebase first if configured
+            if (isFirebaseConfigured() && auth && firebaseAuth) {
+                console.log('🔥 Using Firebase Auth');
+                setAuthProvider('firebase');
 
-                // Try to get/save profile in Firestore (optional - works without it)
-                try {
-                    const userRef = doc(db, 'users', user.uid);
-                    const userSnap = await getDoc(userRef);
-
-                    if (userSnap.exists()) {
-                        setUserProfile(userSnap.data() as UserProfile);
+                unsubscribeFirebase = firebaseAuth.onAuthStateChanged(auth, (firebaseUser) => {
+                    if (firebaseUser) {
+                        setUser(firebaseUserToProfile(firebaseUser));
                     } else {
-                        // Create new user profile
-                        await setDoc(userRef, profileFromUser);
-                        setUserProfile(profileFromUser);
+                        setUser(null);
                     }
-                } catch (firestoreError) {
-                    console.warn('⚠️ Firestore not available, using local profile:', firestoreError);
-                    // Use profile from Firebase Auth (works without Firestore)
-                    setUserProfile(profileFromUser);
-                }
+                    setLoading(false);
+                });
             } else {
-                setUserProfile(null);
+                // Use Local Auth
+                console.log('💾 Using Local Auth');
+                setAuthProvider('local');
+
+                unsubscribeLocal = localAuth.onAuthStateChanged((localUser) => {
+                    if (localUser) {
+                        setUser(localUserToProfile(localUser));
+                    } else {
+                        setUser(null);
+                    }
+                    setLoading(false);
+                });
             }
+        };
 
-            setLoading(false);
-        });
+        setupAuth();
 
-        return () => unsubscribe();
+        return () => {
+            if (unsubscribeLocal) unsubscribeLocal();
+            if (unsubscribeFirebase) unsubscribeFirebase();
+        };
     }, []);
 
-    // Sign in with Google
-    const signInWithGoogle = async () => {
-        try {
-            setLoading(true);
-            console.log('🔐 Attempting Google Sign-in...');
-            console.log('📧 Auth Domain:', auth.app.options.authDomain);
-            const result = await signInWithPopup(auth, googleProvider);
-            console.log('✅ Google Sign-in successful:', result.user.email);
-        } catch (error: unknown) {
-            const firebaseError = error as { code?: string; message?: string };
-            console.error('❌ Google Sign-in Error Details:', {
-                code: firebaseError.code,
-                message: firebaseError.message,
-                fullError: error
-            });
+    // ============================================
+    // Auth Methods
+    // ============================================
 
-            // Provide helpful messages based on error code
-            if (firebaseError.code === 'auth/configuration-not-found') {
-                console.error('💡 FIX: Enable Google Sign-in in Firebase Console → Authentication → Sign-in method → Google');
-            } else if (firebaseError.code === 'auth/unauthorized-domain') {
-                console.error('💡 FIX: Add localhost to Authorized Domains in Firebase Console → Authentication → Settings');
-            } else if (firebaseError.code === 'auth/popup-blocked') {
-                console.error('💡 FIX: Allow popups for this site in your browser');
-            } else if (firebaseError.code === 'auth/operation-not-allowed') {
-                console.error('💡 FIX: Google Sign-in is not enabled. Go to Firebase Console → Authentication → Sign-in method → Enable Google');
+    const signUp = async (email: string, password: string, name: string): Promise<void> => {
+        setLoading(true);
+        try {
+            if (authProvider === 'firebase' && auth && firebaseAuth) {
+                // Firebase signup
+                const credential = await firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
+                if (credential.user) {
+                    await firebaseAuth.updateProfile(credential.user, { displayName: name });
+                }
+            } else {
+                // Local signup
+                await localAuth.signUp(email, password, name);
             }
-
-            throw error;
         } finally {
             setLoading(false);
         }
     };
 
-    // Sign in with email/password
-    const signInWithEmail = async (email: string, password: string) => {
+    const signInWithEmail = async (email: string, password: string): Promise<void> => {
+        setLoading(true);
         try {
-            setLoading(true);
-            await signInWithEmailAndPassword(auth, email, password);
-        } catch (error) {
-            console.error('Email sign in error:', error);
-            throw error;
+            if (authProvider === 'firebase' && auth && firebaseAuth) {
+                // Firebase signin
+                await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+            } else {
+                // Local signin
+                await localAuth.signInWithEmail(email, password);
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    // Sign up with email/password
-    const signUpWithEmail = async (email: string, password: string, name: string) => {
+    const signInWithGoogle = async (): Promise<void> => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const result = await createUserWithEmailAndPassword(auth, email, password);
-            await updateProfile(result.user, { displayName: name });
-        } catch (error) {
-            console.error('Email sign up error:', error);
-            throw error;
+            if (authProvider === 'firebase' && auth && firebaseAuth && googleProvider) {
+                // Firebase Google signin
+                await firebaseAuth.signInWithPopup(auth, googleProvider);
+            } else {
+                // Local Google signin (simulation)
+                await localAuth.signInWithGoogle();
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    // Sign out
-    const signOut = async () => {
+    const signOut = async (): Promise<void> => {
+        setLoading(true);
         try {
-            await firebaseSignOut(auth);
-            setUserProfile(null);
-        } catch (error) {
-            console.error('Sign out error:', error);
-            throw error;
+            if (authProvider === 'firebase' && auth && firebaseAuth) {
+                await firebaseAuth.signOut(auth);
+            } else {
+                await localAuth.signOut();
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
-    const isAdmin = userProfile?.role === 'admin';
+    // ============================================
+    // Profile Methods
+    // ============================================
+
+    const updateProfile = async (updates: Partial<UserProfile>): Promise<void> => {
+        if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+
+        if (authProvider === 'firebase' && auth && firebaseAuth && auth.currentUser) {
+            await firebaseAuth.updateProfile(auth.currentUser, {
+                displayName: updates.displayName || updates.name,
+                photoURL: updates.photoURL,
+            });
+            // Refresh user state
+            setUser(prev => prev ? { ...prev, ...updates } : null);
+        } else {
+            const updatedUser = await localAuth.updateProfile(updates);
+            setUser(localUserToProfile(updatedUser));
+        }
+    };
+
+    const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+        if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+
+        if (authProvider === 'firebase') {
+            throw new Error('تغيير كلمة المرور غير متاح حالياً لحسابات Firebase');
+        } else {
+            await localAuth.changePassword(currentPassword, newPassword);
+        }
+    };
+
+    const deleteAccount = async (): Promise<void> => {
+        if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+
+        if (authProvider === 'firebase' && auth && auth.currentUser) {
+            await auth.currentUser.delete();
+        } else {
+            await localAuth.deleteAccount();
+        }
+    };
+
+    // ============================================
+    // Context Value
+    // ============================================
+
+    const value: AuthContextType = {
+        user,
+        loading,
+        authProvider,
+
+        signUp,
+        signInWithEmail,
+        signInWithGoogle,
+        signOut,
+
+        updateProfile,
+        changePassword,
+        deleteAccount,
+
+        isAdmin: user?.role === 'admin' || user?.email === 'dr.omar@tibrah.com',
+        isAuthenticated: !!user,
+    };
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            userProfile,
-            loading,
-            signInWithGoogle,
-            signInWithEmail,
-            signUpWithEmail,
-            signOut,
-            isAdmin
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-export function useAuth() {
+// ============================================
+// Hook
+// ============================================
+
+export function useAuth(): AuthContextType {
     const context = useContext(AuthContext);
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
 }
+
+export default AuthContext;

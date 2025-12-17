@@ -36,16 +36,29 @@ export default function Login() {
         setLoading(true);
         try {
             await signInWithEmail(email, password);
-            toast.success('تم تسجيل الدخول بنجاح!');
+            toast.success('تم تسجيل الدخول بنجاح! 🎉');
             router.push('/');
         } catch (error: unknown) {
-            const firebaseError = error as { code?: string };
-            if (firebaseError.code === 'auth/invalid-credential') {
-                toast.error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
-            } else if (firebaseError.code === 'auth/user-not-found') {
-                toast.error('لا يوجد حساب بهذا البريد الإلكتروني');
-            } else {
-                toast.error('خطأ في تسجيل الدخول');
+            const authError = error as { code?: string; message?: string };
+            console.log('Login error:', authError);
+
+            // Handle different error codes from both Local and Firebase auth
+            switch (authError.code) {
+                case 'auth/invalid-credential':
+                case 'auth/wrong-password':
+                    toast.error('كلمة المرور غير صحيحة');
+                    break;
+                case 'auth/user-not-found':
+                    toast.error('لا يوجد حساب بهذا البريد الإلكتروني');
+                    break;
+                case 'auth/invalid-email':
+                    toast.error('البريد الإلكتروني غير صحيح');
+                    break;
+                case 'auth/too-many-requests':
+                    toast.error('محاولات كثيرة. حاول لاحقاً');
+                    break;
+                default:
+                    toast.error(authError.message || 'خطأ في تسجيل الدخول');
             }
         } finally {
             setLoading(false);
@@ -56,14 +69,18 @@ export default function Login() {
         setGoogleLoading(true);
         try {
             await signInWithGoogle();
-            toast.success('تم تسجيل الدخول بنجاح!');
+            toast.success('تم تسجيل الدخول بنجاح! 🎉');
             router.push('/');
         } catch (error: unknown) {
-            const firebaseError = error as { code?: string };
-            if (firebaseError.code === 'auth/popup-closed-by-user') {
+            const authError = error as { code?: string; message?: string };
+            console.log('Google login error:', authError);
+
+            if (authError.code === 'auth/popup-closed-by-user') {
                 // User closed popup, no error needed
+            } else if (authError.code === 'auth/unauthorized-domain') {
+                toast.error('هذا النطاق غير مصرح. سيتم استخدام تسجيل الدخول المحلي');
             } else {
-                toast.error('خطأ في تسجيل الدخول بجوجل');
+                toast.error(authError.message || 'خطأ في تسجيل الدخول بجوجل');
             }
         } finally {
             setGoogleLoading(false);
