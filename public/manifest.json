@@ -1,15 +1,19 @@
 {
     "name": "طِبرَا - العيادة الرقمية",
     "short_name": "طِبرَا",
-    "description": "العيادة الرقمية للدكتور عمر - الطب الوظيفي والعلاج الطبيعي",
+    "description": "عيادتك الرقمية للطب الوظيفي والتكاملي. اكتشف صحتك بطريقة جديدة.",
     "start_url": "/",
     "display": "standalone",
+    "orientation": "portrait",
     "background_color": "#ffffff",
     "theme_color": "#2D9B83",
-    "orientation": "portrait-primary",
-    "scope": "/",
-    "lang": "ar",
     "dir": "rtl",
+    "lang": "ar",
+    "categories": [
+        "health",
+        "medical",
+        "lifestyle"
+    ],
     "icons": [
         {
             "src": "/icons/icon-72x72.png",
@@ -60,14 +64,9 @@
             "purpose": "maskable any"
         }
     ],
-    "categories": [
-        "health",
-        "medical",
-        "lifestyle"
-    ],
     "screenshots": [
         {
-            "src": "/screenshots/home.png",
+            "src": "/screenshots/screenshot-1.png",
             "sizes": "1080x1920",
             "type": "image/png",
             "form_factor": "narrow"
@@ -76,24 +75,36 @@
     "shortcuts": [
         {
             "name": "حجز موعد",
-            "short_name": "حجز",
-            "description": "حجز موعد استشارة مع الدكتور",
-            "url": "/booking",
+            "short_name": "موعد",
+            "description": "احجز موعدك مع الدكتور",
+            "url": "/book-appointment",
             "icons": [
                 {
-                    "src": "/icons/booking-icon.png",
+                    "src": "/icons/appointment-icon.png",
                     "sizes": "96x96"
                 }
             ]
         },
         {
-            "name": "المتجر",
-            "short_name": "متجر",
-            "description": "تسوق المكملات والمنتجات الصحية",
-            "url": "/shop",
+            "name": "الترددات الشفائية",
+            "short_name": "ترددات",
+            "description": "استمع للترددات الشفائية",
+            "url": "/frequencies",
             "icons": [
                 {
-                    "src": "/icons/shop-icon.png",
+                    "src": "/icons/frequency-icon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "الدورات",
+            "short_name": "دورات",
+            "description": "تصفح الدورات التعليمية",
+            "url": "/courses",
+            "icons": [
+                {
+                    "src": "/icons/course-icon.png",
                     "sizes": "96x96"
                 }
             ]
