@@ -251,25 +251,24 @@ ${getSystemPrompt()}
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    messages: messages.slice(-10),
-                    context: contextData,
-                    knowledgeBase: knowledgeBase
+                    message: lastUserMessage
                 }),
             });
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.details || `API error: ${response.status}`);
             }
 
             const data = await response.json();
 
-            if (data.response) {
+            if (data.text) {
                 console.log('[AI Client] ✅ Got response from API');
-                conversationStore.addMessage('assistant', data.response);
-                return data.response;
+                conversationStore.addMessage('assistant', data.text);
+                return data.text;
             }
 
-            throw new Error('No response from API');
+            throw new Error('No text in response');
 
         } catch (error) {
             console.error('[AI Client] API Error:', error);
