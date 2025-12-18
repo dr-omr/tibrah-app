@@ -18,7 +18,7 @@ const initializeAI = (): boolean => {
         try {
             genAI = new GoogleGenerativeAI(apiKey);
             model = genAI.getGenerativeModel({
-                model: "gemini-pro",
+                model: "gemini-1.5-pro",
                 generationConfig: {
                     temperature: 0.7,
                     topK: 40,
@@ -242,89 +242,40 @@ ${getSystemPrompt()}
         conversationStore.startConversation();
         conversationStore.addMessage('user', lastUserMessage);
 
-        if (!isEnabled()) {
-            console.warn('[AI Client] AI is disabled. Using smart fallback responses.');
-            const response = getSmartFallback(lastUserMessage) + '\n\n⚠️ (الذكاء الاصطناعي غير متصل حالياً)';
-            conversationStore.addMessage('assistant', response);
-            return response;
-        }
-
         try {
-            const model = getModel();
-            if (!model) throw new Error('Model not initialized');
+            console.log('[AI Client] Sending request to /api/chat...');
 
-            const storedContext = conversationStore.getContext();
-            const userName = conversationStore.getUserName();
-            const currentConversation = conversationStore.getCurrentConversation();
-            const topics = currentConversation?.topics || [];
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages: messages.slice(-10),
+                    context: contextData,
+                    knowledgeBase: knowledgeBase
+                }),
+            });
 
-            const recentMessages = storedContext.length > 0 ? storedContext :
-                (Array.isArray(messages) ? messages.slice(-10) : []);
-
-            const contextString = contextData ? JSON.stringify(contextData).slice(0, 1500) : "";
-            const kbString = knowledgeBase ? JSON.stringify(knowledgeBase).slice(0, 2000) : "";
-
-            const historyString = recentMessages
-                .map(m => `${m.role === 'user' ? 'المستخدم' : 'المساعد'}: ${m.content}`)
-                .join('\n');
-
-            const topicsContext = topics.length > 0
-                ? `\n📋 المواضيع التي ناقشها المستخدم سابقاً: ${topics.join('، ')}`
-                : '';
-
-            const prompt = `
-${getSystemPrompt(userName)}
-
-${kbString ? `📚 معلومات مرجعية عن د. عمر والخدمات:
-${kbString}` : ''}
-
-${contextString ? `📍 سياق الصفحة الحالية:
-${contextString}` : ''}
-${topicsContext}
-
-💬 المحادثة:
-${historyString}
-
-⚡ تعليمات الرد:
-- أجب باللهجة اليمنية الدافئة
-- كن مختصراً ومفيداً (3-5 جمل كحد أقصى)
-- إذا كان السؤال صحي: اعطِ نصيحة عامة + اقترح الجلسة التشخيصية
-- استخدم الإيموجي باعتدال
-${userName ? `- تذكر أن اسم المستخدم هو "${userName}" واستخدمه بشكل طبيعي إن أمكن` : ''}
-
-أجب على آخر رسالة من المستخدم:
-`;
-
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const responseText = response.text();
-
-            conversationStore.addMessage('assistant', responseText);
-
-            return responseText;
-        } catch (error) {
-            console.error("AI Chat Error:", error);
-
-            try {
-                const model = getModel();
-                if (!model) throw error;
-
-                const userName = conversationStore.getUserName();
-                const greeting = userName ? `حياك الله يا ${userName}!` : '';
-                const simplePrompt = `أنت مساعد طِبرَا الصحي باللهجة اليمنية. ${greeting} المستخدم يقول: "${lastUserMessage}". أجب باختصار ولطف.`;
-
-                const result = await model.generateContent(simplePrompt);
-                const response = await result.response;
-                const responseText = response.text();
-
-                conversationStore.addMessage('assistant', responseText);
-                return responseText;
-            } catch (retryError) {
-                console.error("AI Chat Retry Error:", retryError);
-                const fallbackResponse = getSmartFallback(lastUserMessage);
-                conversationStore.addMessage('assistant', fallbackResponse);
-                return fallbackResponse;
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
             }
+
+            const data = await response.json();
+
+            if (data.response) {
+                console.log('[AI Client] ✅ Got response from API');
+                conversationStore.addMessage('assistant', data.response);
+                return data.response;
+            }
+
+            throw new Error('No response from API');
+
+        } catch (error) {
+            console.error('[AI Client] API Error:', error);
+            const fallbackResponse = getSmartFallback(lastUserMessage);
+            conversationStore.addMessage('assistant', fallbackResponse);
+            return fallbackResponse;
         }
     },
 
