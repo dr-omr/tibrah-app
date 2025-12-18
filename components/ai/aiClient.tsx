@@ -1,53 +1,9 @@
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { conversationStore } from '@/lib/ConversationStore';
 
-// Lazy initialization for client-side only
-let genAI: GoogleGenerativeAI | null = null;
-let model: GenerativeModel | null = null;
-let isInitialized = false;
-
-const initializeAI = (): boolean => {
-    if (isInitialized) return !!model;
-
-    if (typeof window === 'undefined') return false;
-
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
-    console.log('[AI Client] Initializing... API Key present:', !!apiKey, '| Length:', apiKey?.length || 0);
-
-    if (apiKey && apiKey.length > 10) {
-        try {
-            genAI = new GoogleGenerativeAI(apiKey);
-            model = genAI.getGenerativeModel({
-                model: "gemini-1.5-pro",
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024,
-                }
-            });
-            console.log('[AI Client] ✅ Successfully initialized with gemini-1.5-flash');
-            isInitialized = true;
-            return true;
-        } catch (error) {
-            console.error('[AI Client] ❌ Failed to initialize:', error);
-            isInitialized = true;
-            return false;
-        }
-    }
-
-    console.warn('[AI Client] ⚠️ No valid API key found');
-    isInitialized = true;
-    return false;
-};
-
-const getModel = (): GenerativeModel | null => {
-    initializeAI();
-    return model;
-};
-
+// AI is now server-side only via /api/chat
 const isEnabled = (): boolean => {
-    return initializeAI();
+    // Always enabled - server handles API key check
+    return true;
 };
 
 // Generate dynamic system prompt with user context
