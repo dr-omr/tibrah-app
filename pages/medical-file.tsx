@@ -65,13 +65,17 @@ export default function MedicalFile() {
     });
 
     // Load patient profile from localStorage
-    const [profile, setProfile] = useState<PatientProfile>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('patientProfile');
-            return saved ? JSON.parse(saved) : {};
+    const [profile, setProfile] = useState<PatientProfile>({});
+    const [isClient, setIsClient] = useState(false);
+
+    // Load profile on client side only
+    React.useEffect(() => {
+        setIsClient(true);
+        const saved = localStorage.getItem('patientProfile');
+        if (saved) {
+            setProfile(JSON.parse(saved));
         }
-        return {};
-    });
+    }, []);
 
     // Fetch uploaded files
     const { data: files = [], isLoading: filesLoading } = useQuery<MedicalFile[]>({
@@ -82,8 +86,11 @@ export default function MedicalFile() {
                 return (data || []) as MedicalFile[];
             } catch {
                 // Return from localStorage as fallback
-                const saved = localStorage.getItem('medicalFiles');
-                return saved ? JSON.parse(saved) : [];
+                if (typeof window !== 'undefined') {
+                    const saved = localStorage.getItem('medicalFiles');
+                    return saved ? JSON.parse(saved) : [];
+                }
+                return [];
             }
         },
     });
@@ -92,7 +99,9 @@ export default function MedicalFile() {
     const saveProfile = (updates: Partial<PatientProfile>) => {
         const newProfile = { ...profile, ...updates };
         setProfile(newProfile);
-        localStorage.setItem('patientProfile', JSON.stringify(newProfile));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('patientProfile', JSON.stringify(newProfile));
+        }
         toast.success('تم حفظ البيانات');
     };
 
@@ -143,8 +152,10 @@ export default function MedicalFile() {
             };
 
             // Save to localStorage as fallback
-            const savedFiles = JSON.parse(localStorage.getItem('medicalFiles') || '[]');
-            localStorage.setItem('medicalFiles', JSON.stringify([newFile, ...savedFiles]));
+            if (typeof window !== 'undefined') {
+                const savedFiles = JSON.parse(localStorage.getItem('medicalFiles') || '[]');
+                localStorage.setItem('medicalFiles', JSON.stringify([newFile, ...savedFiles]));
+            }
 
             queryClient.invalidateQueries({ queryKey: ['medicalFiles'] });
             toast.success('تم رفع الملف بنجاح');
@@ -158,14 +169,16 @@ export default function MedicalFile() {
 
     // Delete file
     const deleteFile = (id: string) => {
-        const savedFiles = JSON.parse(localStorage.getItem('medicalFiles') || '[]');
-        const filtered = savedFiles.filter((f: MedicalFile) => f.id !== id);
-        localStorage.setItem('medicalFiles', JSON.stringify(filtered));
+        if (typeof window !== 'undefined') {
+            const savedFiles = JSON.parse(localStorage.getItem('medicalFiles') || '[]');
+            const filtered = savedFiles.filter((f: MedicalFile) => f.id !== id);
+            localStorage.setItem('medicalFiles', JSON.stringify(filtered));
+        }
         queryClient.invalidateQueries({ queryKey: ['medicalFiles'] });
         toast.success('تم حذف الملف');
     };
 
-    const allFiles = files.length > 0 ? files : JSON.parse(localStorage.getItem('medicalFiles') || '[]');
+    const allFiles = files.length > 0 ? files : (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('medicalFiles') || '[]') : []);
 
     const toggleSection = (section: keyof typeof expandedSections) => {
         setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -541,8 +554,8 @@ function ProfileEditSheet({
                                     key={type}
                                     onClick={() => setFormData({ ...formData, blood_type: type })}
                                     className={`p-3 rounded-xl text-sm font-bold transition-all ${formData.blood_type === type
-                                            ? 'bg-red-500 text-white'
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                        ? 'bg-red-500 text-white'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                                         }`}
                                 >
                                     {type}
@@ -653,8 +666,8 @@ function AddConditionSheet({
                                     key={status.value}
                                     onClick={() => setFormData({ ...formData, status: status.value as any })}
                                     className={`p-3 rounded-xl text-sm font-medium transition-all ${formData.status === status.value
-                                            ? `${status.color} text-white`
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
+                                        ? `${status.color} text-white`
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
                                         }`}
                                 >
                                     {status.label}
@@ -735,8 +748,8 @@ function AddAllergySheet({
                                     key={a}
                                     onClick={() => setAllergy(a)}
                                     className={`px-3 py-2 rounded-xl text-sm transition-all ${allergy === a
-                                            ? 'bg-amber-500 text-white'
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                                         }`}
                                 >
                                     {a}

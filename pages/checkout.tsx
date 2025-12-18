@@ -11,17 +11,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
+interface CartItem {
+    id: string;
+    product_name: string;
+    price: number;
+    quantity: number;
+    image_url?: string;
+}
+
 export default function Checkout() {
     const [checkoutComplete, setCheckoutComplete] = useState(false);
     const queryClient = useQueryClient();
 
-    const { data: cartItems = [], isLoading } = useQuery({
+    const { data: cartItems = [], isLoading } = useQuery<CartItem[]>({
         queryKey: ['cart'],
-        queryFn: () => base44.entities.CartItem.list(),
+        queryFn: () => base44.entities.CartItem.list() as Promise<CartItem[]>,
     });
 
     const updateQuantityMutation = useMutation({
-        mutationFn: ({ id, quantity }) => {
+        mutationFn: ({ id, quantity }: { id: string; quantity: number }) => {
             if (quantity <= 0) {
                 return base44.entities.CartItem.delete(id);
             }
@@ -33,7 +41,7 @@ export default function Checkout() {
     });
 
     const deleteItemMutation = useMutation({
-        mutationFn: (id) => base44.entities.CartItem.delete(id),
+        mutationFn: (id: string) => base44.entities.CartItem.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('تم حذف المنتج');
@@ -49,12 +57,12 @@ export default function Checkout() {
         },
     });
 
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = cartItems.reduce((sum: number, item: CartItem) => sum + (item.price * item.quantity), 0);
     const shipping = subtotal >= 200 ? 0 : 25;
     const total = subtotal + shipping;
 
     const handleWhatsAppOrder = () => {
-        const orderText = cartItems.map(item =>
+        const orderText = cartItems.map((item: CartItem) =>
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
 
