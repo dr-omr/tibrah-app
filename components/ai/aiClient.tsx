@@ -1,22 +1,54 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { conversationStore } from '@/lib/ConversationStore';
 
-// Initialize Gemini - Check at runtime to handle Next.js hydration
-const getApiKey = (): string => {
-    if (typeof window !== 'undefined') {
-        return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+// Lazy initialization for client-side only
+let genAI: GoogleGenerativeAI | null = null;
+let model: GenerativeModel | null = null;
+let isInitialized = false;
+
+const initializeAI = (): boolean => {
+    if (isInitialized) return !!model;
+
+    if (typeof window === 'undefined') return false;
+
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+    console.log('[AI Client] Initializing... API Key present:', !!apiKey, '| Length:', apiKey?.length || 0);
+
+    if (apiKey && apiKey.length > 10) {
+        try {
+            genAI = new GoogleGenerativeAI(apiKey);
+            model = genAI.getGenerativeModel({
+                model: "gemini-1.5-flash",
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
+            });
+            console.log('[AI Client] ✅ Successfully initialized with gemini-1.5-flash');
+            isInitialized = true;
+            return true;
+        } catch (error) {
+            console.error('[AI Client] ❌ Failed to initialize:', error);
+            isInitialized = true;
+            return false;
+        }
     }
-    return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+
+    console.warn('[AI Client] ⚠️ No valid API key found');
+    isInitialized = true;
+    return false;
 };
 
-const API_KEY = getApiKey();
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+const getModel = (): GenerativeModel | null => {
+    initializeAI();
+    return model;
+};
 
-if (typeof window !== 'undefined') {
-    console.log('[AI Client] API Key present:', !!API_KEY, '| Length:', API_KEY?.length || 0);
-}
-
-const AI_ENABLED = !!API_KEY && API_KEY.length > 10;
+const isEnabled = (): boolean => {
+    return initializeAI();
+};
 
 // Generate dynamic system prompt with user context
 const getSystemPrompt = (userName?: string | null): string => {
@@ -118,24 +150,11 @@ const SMART_FALLBACK_RESPONSES: Record<string, string[]> = {
     ]
 };
 
-const getModel = () => {
-    if (!genAI) return null;
-    return genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-        }
-    });
-};
-
 export const aiClient = {
-    isEnabled: () => AI_ENABLED,
+    isEnabled,
 
     async generateSuggestions(context: any) {
-        if (!AI_ENABLED) {
+        if (!isEnabled()) {
             const randomIndex = Math.floor(Math.random() * FALLBACK_SUGGESTIONS.length);
             return FALLBACK_SUGGESTIONS[randomIndex];
         }
@@ -176,7 +195,7 @@ ${JSON.stringify(context)}
     },
 
     async summarize(text: string, contextType: string = 'general') {
-        if (!AI_ENABLED) {
+        if (!isEnabled()) {
             return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟";
         }
 
@@ -223,7 +242,7 @@ ${getSystemPrompt()}
         conversationStore.startConversation();
         conversationStore.addMessage('user', lastUserMessage);
 
-        if (!AI_ENABLED) {
+        if (!isEnabled()) {
             console.warn('[AI Client] AI is disabled. Using smart fallback responses.');
             const response = getSmartFallback(lastUserMessage) + '\n\n⚠️ (الذكاء الاصطناعي غير متصل حالياً)';
             conversationStore.addMessage('assistant', response);
