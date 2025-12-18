@@ -26,33 +26,22 @@ export default function ThemeToggle({ className = '', size = 'md' }: ThemeToggle
 
     useEffect(() => {
         setMounted(true);
-        // Check for saved preference or system preference
+        // Check for saved preference ONLY - default to light mode
         const savedTheme = localStorage.getItem('tibrah_theme');
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+        // Only enable dark mode if explicitly saved as 'dark'
+        if (savedTheme === 'dark') {
             setIsDark(true);
             document.documentElement.classList.add('dark');
         } else {
+            // Default to light mode - remove dark class
             setIsDark(false);
             document.documentElement.classList.remove('dark');
-        }
-
-        // Listen for system theme changes
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e: MediaQueryListEvent) => {
-            if (!localStorage.getItem('tibrah_theme')) {
-                setIsDark(e.matches);
-                if (e.matches) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
+            // If no saved preference, set to light
+            if (!savedTheme) {
+                localStorage.setItem('tibrah_theme', 'light');
             }
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
+        }
     }, []);
 
     const toggleTheme = () => {

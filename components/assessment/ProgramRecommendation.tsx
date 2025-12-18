@@ -201,8 +201,13 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
                                             return (
                                                 <div
                                                     key={option.value}
-                                                    onClick={() => handleOptionSelect(option.value)}
-                                                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
+                                                    onClick={() => {
+                                                        // Use requestAnimationFrame to prevent INP issues
+                                                        requestAnimationFrame(() => {
+                                                            handleOptionSelect(option.value);
+                                                        });
+                                                    }}
+                                                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all will-change-transform ${isSelected
                                                         ? 'border-[#2D9B83] bg-[#2D9B83]/5'
                                                         : 'border-slate-100 hover:border-[#2D9B83]/30'
                                                         }`}

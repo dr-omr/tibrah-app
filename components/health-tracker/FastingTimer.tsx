@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Play, Pause, RotateCcw, Utensils, Moon, Check, Clock } from 'lucide-react';
+import { Timer, Play, Pause, RotateCcw, Utensils, Moon, Check, Clock, Bell, BellOff, ArrowLeftRight, Settings2, ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, addHours } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { showNotification, requestNotificationPermission, isNotificationSupported } from '@/lib/pushNotifications';
 
 interface FastingPlan {
     id: string;
@@ -23,9 +25,14 @@ const FASTING_PLANS: FastingPlan[] = [
 export default function FastingTimer() {
     const [selectedPlan, setSelectedPlan] = useState<FastingPlan | null>(null);
     const [isActive, setIsActive] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
     const [isFasting, setIsFasting] = useState(true);
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
+    const [pausedElapsed, setPausedElapsed] = useState(0);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+    const [showPlanSelector, setShowPlanSelector] = useState(false);
+    const [lastNotificationHour, setLastNotificationHour] = useState(-1);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Load saved state from localStorage
@@ -40,6 +47,9 @@ export default function FastingTimer() {
                     setStartTime(new Date(state.startTime));
                     setIsFasting(state.isFasting);
                     setIsActive(true);
+                    setIsPaused(state.isPaused || false);
+                    setPausedElapsed(state.pausedElapsed || 0);
+                    setNotificationsEnabled(state.notificationsEnabled !== false);
                 }
             }
         }
@@ -47,10 +57,10 @@ export default function FastingTimer() {
 
     // Timer logic
     useEffect(() => {
-        if (isActive && startTime) {
+        if (isActive && startTime && !isPaused) {
             intervalRef.current = setInterval(() => {
                 const now = new Date();
-                const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+                const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000) + pausedElapsed;
                 setElapsedSeconds(elapsed);
 
                 // Check if phase completed
@@ -59,25 +69,61 @@ export default function FastingTimer() {
                         ? selectedPlan.fastingHours * 3600
                         : selectedPlan.eatingHours * 3600;
 
+                    // Send hourly notification
+                    const currentHour = Math.floor(elapsed / 3600);
+                    if (notificationsEnabled && currentHour > lastNotificationHour && currentHour > 0 && elapsed < targetSeconds) {
+                        const remainingHours = Math.floor((targetSeconds - elapsed) / 3600);
+                        const remainingMinutes = Math.floor(((targetSeconds - elapsed) % 3600) / 60);
+
+                        if (remainingHours > 0 || remainingMinutes >= 30) {
+                            sendFastingNotification(
+                                isFasting ? '🌙 تحديث الصيام' : '🍽️ تحديث فترة الأكل',
+                                `متبقي ${remainingHours > 0 ? remainingHours + ' ساعة و ' : ''}${remainingMinutes} دقيقة`
+                            );
+                            setLastNotificationHour(currentHour);
+                        }
+                    }
+
+                    // 30-minute warning
+                    const remainingSeconds = targetSeconds - elapsed;
+                    if (notificationsEnabled && remainingSeconds <= 1800 && remainingSeconds > 1795) {
+                        sendFastingNotification(
+                            isFasting ? '⏰ قاربت على الانتهاء!' : '⏰ فترة الأكل تنتهي قريباً!',
+                            `متبقي 30 دقيقة فقط ${isFasting ? 'على انتهاء الصيام' : 'على بدء الصيام'}`
+                        );
+                    }
+
                     if (elapsed >= targetSeconds) {
                         // Switch phase
                         const newFasting = !isFasting;
                         setIsFasting(newFasting);
                         setStartTime(new Date());
                         setElapsedSeconds(0);
+                        setPausedElapsed(0);
+                        setLastNotificationHour(-1);
 
-                        if (newFasting) {
-                            toast.success('انتهت فترة الأكل! ابدأ الصيام 🌙');
-                        } else {
-                            toast.success('أكملت الصيام! يمكنك الأكل الآن 🍽️');
+                        const message = newFasting
+                            ? 'انتهت فترة الأكل! ابدأ الصيام 🌙'
+                            : 'أكملت الصيام! يمكنك الأكل الآن 🍽️';
+
+                        toast.success(message);
+
+                        if (notificationsEnabled) {
+                            sendFastingNotification(
+                                newFasting ? '🌙 بدء فترة الصيام' : '🍽️ انتهى الصيام!',
+                                message
+                            );
                         }
 
                         // Save state
-                        localStorage.setItem('fastingState', JSON.stringify({
+                        saveFastingState({
                             startTime: new Date().toISOString(),
                             planId: selectedPlan.id,
-                            isFasting: newFasting
-                        }));
+                            isFasting: newFasting,
+                            isPaused: false,
+                            pausedElapsed: 0,
+                            notificationsEnabled
+                        });
                     }
                 }
             }, 1000);
@@ -86,7 +132,25 @@ export default function FastingTimer() {
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [isActive, startTime, selectedPlan, isFasting]);
+    }, [isActive, startTime, selectedPlan, isFasting, isPaused, pausedElapsed, notificationsEnabled, lastNotificationHour]);
+
+    const saveFastingState = (state: any) => {
+        localStorage.setItem('fastingState', JSON.stringify(state));
+    };
+
+    const sendFastingNotification = (title: string, body: string) => {
+        if (isNotificationSupported() && Notification.permission === 'granted') {
+            showNotification(title, {
+                body,
+                tag: 'fasting-timer',
+                icon: '/icons/icon-192x192.png',
+                badge: '/icons/icon-72x72.png',
+                vibrate: [200, 100, 200],
+                silent: false,
+                requireInteraction: false
+            });
+        }
+    };
 
     const formatTime = (totalSeconds: number) => {
         const hours = Math.floor(totalSeconds / 3600);
@@ -111,45 +175,181 @@ export default function FastingTimer() {
         return Math.max(targetSeconds - elapsedSeconds, 0);
     };
 
-    const startFasting = (plan: FastingPlan) => {
+    const getEndTime = () => {
+        if (!startTime || !selectedPlan) return null;
+        const targetHours = isFasting ? selectedPlan.fastingHours : selectedPlan.eatingHours;
+        const adjustedStart = new Date(startTime.getTime() - pausedElapsed * 1000);
+        return addHours(adjustedStart, targetHours);
+    };
+
+    const startFasting = async (plan: FastingPlan) => {
+        // Request notification permission
+        if (notificationsEnabled) {
+            await requestNotificationPermission();
+        }
+
         setSelectedPlan(plan);
         setStartTime(new Date());
         setIsFasting(true);
         setIsActive(true);
+        setIsPaused(false);
         setElapsedSeconds(0);
+        setPausedElapsed(0);
+        setLastNotificationHour(-1);
 
-        localStorage.setItem('fastingState', JSON.stringify({
+        saveFastingState({
             startTime: new Date().toISOString(),
             planId: plan.id,
-            isFasting: true
-        }));
+            isFasting: true,
+            isPaused: false,
+            pausedElapsed: 0,
+            notificationsEnabled
+        });
 
         toast.success(`بدأ الصيام! تنتهي بعد ${plan.fastingHours} ساعة 🌙`);
+
+        if (notificationsEnabled) {
+            sendFastingNotification(
+                '🌙 بدأ الصيام المتقطع',
+                `خطة ${plan.name} - الصيام ${plan.fastingHours} ساعة`
+            );
+        }
+    };
+
+    const togglePause = () => {
+        if (isPaused) {
+            // Resume - create new start time accounting for elapsed
+            setStartTime(new Date());
+            setPausedElapsed(elapsedSeconds);
+            setIsPaused(false);
+            toast.info('تم استئناف المؤقت ▶️');
+        } else {
+            // Pause
+            setIsPaused(true);
+            toast.info('تم إيقاف المؤقت مؤقتاً ⏸️');
+        }
+
+        saveFastingState({
+            startTime: new Date().toISOString(),
+            planId: selectedPlan?.id,
+            isFasting,
+            isPaused: !isPaused,
+            pausedElapsed: isPaused ? elapsedSeconds : elapsedSeconds,
+            notificationsEnabled
+        });
+    };
+
+    const switchPhase = () => {
+        const newFasting = !isFasting;
+        setIsFasting(newFasting);
+        setStartTime(new Date());
+        setElapsedSeconds(0);
+        setPausedElapsed(0);
+        setIsPaused(false);
+        setLastNotificationHour(-1);
+
+        saveFastingState({
+            startTime: new Date().toISOString(),
+            planId: selectedPlan?.id,
+            isFasting: newFasting,
+            isPaused: false,
+            pausedElapsed: 0,
+            notificationsEnabled
+        });
+
+        const message = newFasting ? 'بدأت فترة الصيام 🌙' : 'بدأت فترة الأكل 🍽️';
+        toast.success(message);
+
+        if (notificationsEnabled) {
+            sendFastingNotification(
+                newFasting ? '🌙 بدء فترة الصيام' : '🍽️ بدء فترة الأكل',
+                message
+            );
+        }
+    };
+
+    const changePlan = (plan: FastingPlan) => {
+        setSelectedPlan(plan);
+        setShowPlanSelector(false);
+
+        saveFastingState({
+            startTime: startTime?.toISOString(),
+            planId: plan.id,
+            isFasting,
+            isPaused,
+            pausedElapsed,
+            notificationsEnabled
+        });
+
+        toast.success(`تم تغيير الخطة إلى ${plan.name}`);
     };
 
     const stopFasting = () => {
         setIsActive(false);
         setSelectedPlan(null);
         setElapsedSeconds(0);
+        setIsPaused(false);
+        setPausedElapsed(0);
+        setLastNotificationHour(-1);
         localStorage.removeItem('fastingState');
-        toast('تم إيقاف الصيام');
+        toast('تم إنهاء الصيام');
+    };
+
+    const toggleNotifications = async () => {
+        if (!notificationsEnabled) {
+            const granted = await requestNotificationPermission();
+            if (!granted) {
+                toast.error('لم يتم منح إذن الإشعارات');
+                return;
+            }
+        }
+
+        const newValue = !notificationsEnabled;
+        setNotificationsEnabled(newValue);
+
+        if (selectedPlan) {
+            saveFastingState({
+                startTime: startTime?.toISOString(),
+                planId: selectedPlan.id,
+                isFasting,
+                isPaused,
+                pausedElapsed,
+                notificationsEnabled: newValue
+            });
+        }
+
+        toast.success(newValue ? 'تم تفعيل الإشعارات 🔔' : 'تم إيقاف الإشعارات 🔕');
     };
 
     const progress = getProgress();
     const remaining = getRemainingTime();
+    const endTime = getEndTime();
 
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-2">
-                <Timer className="w-5 h-5 text-orange-500" />
-                <h2 className="text-lg font-bold text-slate-800">الصيام المتقطع</h2>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Timer className="w-5 h-5 text-orange-500" />
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white">الصيام المتقطع</h2>
+                </div>
+                {selectedPlan && (
+                    <button
+                        onClick={toggleNotifications}
+                        className={`p-2 rounded-full transition-colors ${notificationsEnabled
+                                ? 'bg-orange-100 text-orange-600'
+                                : 'bg-slate-100 text-slate-400 dark:bg-slate-700'
+                            }`}
+                    >
+                        {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                    </button>
+                )}
             </div>
 
             {/* Plan Selection */}
             {!selectedPlan && (
                 <div className="space-y-3">
-                    <p className="text-sm text-slate-600">اختر خطة الصيام:</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">اختر خطة الصيام:</p>
                     {FASTING_PLANS.map(plan => (
                         <button
                             key={plan.id}
@@ -180,10 +380,18 @@ export default function FastingTimer() {
 
             {/* Active Timer */}
             {selectedPlan && (
-                <div className={`rounded-3xl p-6 text-center ${isFasting
-                        ? 'bg-gradient-to-br from-indigo-900 to-purple-900 text-white'
-                        : 'bg-gradient-to-br from-amber-500 to-orange-500 text-white'
+                <div className={`rounded-3xl p-6 text-center relative overflow-hidden ${isFasting
+                    ? 'bg-gradient-to-br from-indigo-900 to-purple-900 text-white'
+                    : 'bg-gradient-to-br from-amber-500 to-orange-500 text-white'
                     }`}>
+
+                    {/* Paused Indicator */}
+                    {isPaused && (
+                        <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
+                            ⏸️ متوقف مؤقتاً
+                        </div>
+                    )}
+
                     {/* Phase Indicator */}
                     <div className="flex items-center justify-center gap-2 mb-4">
                         {isFasting ? (
@@ -221,26 +429,91 @@ export default function FastingTimer() {
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-3xl font-bold">{formatTime(elapsedSeconds)}</span>
+                            <span className={`text-3xl font-bold ${isPaused ? 'animate-pulse' : ''}`}>
+                                {formatTime(elapsedSeconds)}
+                            </span>
                             <span className="text-sm opacity-80">
                                 متبقي: {formatTime(remaining)}
                             </span>
                         </div>
                     </div>
 
-                    {/* Plan Info */}
-                    <p className="text-sm opacity-80 mb-4">
-                        خطة {selectedPlan.name} • بدأ {format(startTime!, 'h:mm a', { locale: ar })}
-                    </p>
+                    {/* Plan Info & End Time */}
+                    <div className="space-y-1 mb-4">
+                        <button
+                            onClick={() => setShowPlanSelector(!showPlanSelector)}
+                            className="inline-flex items-center gap-1 text-sm opacity-80 hover:opacity-100 transition-opacity"
+                        >
+                            خطة {selectedPlan.name}
+                            <ChevronDown className={`w-4 h-4 transition-transform ${showPlanSelector ? 'rotate-180' : ''}`} />
+                        </button>
+                        {endTime && (
+                            <p className="text-xs opacity-70">
+                                ينتهي في {format(endTime, 'h:mm a', { locale: ar })}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Plan Selector Dropdown */}
+                    {showPlanSelector && (
+                        <div className="absolute left-4 right-4 top-full mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-2 z-10">
+                            {FASTING_PLANS.map(plan => (
+                                <button
+                                    key={plan.id}
+                                    onClick={() => changePlan(plan)}
+                                    className={`w-full p-3 rounded-xl text-right transition-colors ${plan.id === selectedPlan.id
+                                            ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                        }`}
+                                >
+                                    <span className="font-bold">{plan.name}</span>
+                                    <span className="text-sm opacity-70 mr-2">{plan.description}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Controls */}
-                    <div className="flex justify-center gap-3">
+                    <div className="flex justify-center gap-2 flex-wrap">
+                        {/* Pause/Resume Button */}
                         <Button
                             variant="ghost"
-                            onClick={stopFasting}
+                            size="sm"
+                            onClick={togglePause}
                             className="text-white hover:bg-white/10"
                         >
-                            <RotateCcw className="w-4 h-4 ml-2" />
+                            {isPaused ? (
+                                <>
+                                    <Play className="w-4 h-4 ml-1" />
+                                    استئناف
+                                </>
+                            ) : (
+                                <>
+                                    <Pause className="w-4 h-4 ml-1" />
+                                    إيقاف مؤقت
+                                </>
+                            )}
+                        </Button>
+
+                        {/* Switch Phase Button */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={switchPhase}
+                            className="text-white hover:bg-white/10"
+                        >
+                            <ArrowLeftRight className="w-4 h-4 ml-1" />
+                            {isFasting ? 'بدء الأكل' : 'بدء الصيام'}
+                        </Button>
+
+                        {/* End Button */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={stopFasting}
+                            className="text-white/70 hover:text-white hover:bg-white/10"
+                        >
+                            <RotateCcw className="w-4 h-4 ml-1" />
                             إنهاء
                         </Button>
                     </div>
@@ -249,9 +522,9 @@ export default function FastingTimer() {
 
             {/* Benefits */}
             {!selectedPlan && (
-                <div className="bg-orange-50 rounded-2xl p-4">
-                    <h4 className="font-medium text-orange-800 mb-2">فوائد الصيام المتقطع:</h4>
-                    <ul className="text-sm text-orange-700 space-y-1">
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-4">
+                    <h4 className="font-medium text-orange-800 dark:text-orange-300 mb-2">فوائد الصيام المتقطع:</h4>
+                    <ul className="text-sm text-orange-700 dark:text-orange-400 space-y-1">
                         <li>• يحسن حساسية الأنسولين</li>
                         <li>• يعزز الالتهام الذاتي (تجديد الخلايا)</li>
                         <li>• يساعد في إنقاص الوزن</li>

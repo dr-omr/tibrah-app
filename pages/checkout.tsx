@@ -59,7 +59,7 @@ export default function Checkout() {
         ).join('\n');
 
         const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}\n\n💰 المجموع: ${total} ر.س`;
-        window.open(`https://wa.me/966500000000?text=${encodeURIComponent(message)}`, '_blank');
+        window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
         clearCartMutation.mutate();
         setCheckoutComplete(true);
     };

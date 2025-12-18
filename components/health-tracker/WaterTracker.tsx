@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Droplets, Plus, Minus, Target, TrendingUp, History } from 'lucide-react';
+import { Droplets, Plus, Minus, Target, TrendingUp, History, Settings2, Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { format, subDays } from 'date-fns';
@@ -17,10 +17,22 @@ interface WaterLog {
 
 const GLASS_ML = 250;
 const DEFAULT_GOAL = 8;
+const GOAL_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export default function WaterTracker() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
+    const [showGoalSettings, setShowGoalSettings] = useState(false);
+    const [customAmount, setCustomAmount] = useState<number | null>(null);
+
+    // Load goal from localStorage
+    const [dailyGoal, setDailyGoal] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('waterGoal');
+            return saved ? parseInt(saved) : DEFAULT_GOAL;
+        }
+        return DEFAULT_GOAL;
+    });
 
     // Fetch today's water log
     const { data: waterLog, isLoading } = useQuery<WaterLog>({
@@ -31,9 +43,9 @@ export default function WaterTracker() {
                 if (logs && logs.length > 0) {
                     return logs[0] as unknown as WaterLog;
                 }
-                return { date: today, glasses: 0, goal: DEFAULT_GOAL, logs: [] };
+                return { date: today, glasses: 0, goal: dailyGoal, logs: [] };
             } catch {
-                return { date: today, glasses: 0, goal: DEFAULT_GOAL, logs: [] };
+                return { date: today, glasses: 0, goal: dailyGoal, logs: [] };
             }
         },
     });
@@ -55,7 +67,7 @@ export default function WaterTracker() {
     });
 
     const glasses = waterLog?.glasses || 0;
-    const goal = waterLog?.goal || DEFAULT_GOAL;
+    const goal = dailyGoal;
     const percentage = Math.min(100, Math.round((glasses / goal) * 100));
     const remaining = Math.max(0, goal - glasses);
     const totalMl = glasses * GLASS_ML;
@@ -69,13 +81,14 @@ export default function WaterTracker() {
             if (waterLog?.id) {
                 return base44.entities.WaterLog.update(waterLog.id, {
                     glasses: newGlasses,
+                    goal: dailyGoal,
                     logs: newLogs
                 });
             } else {
                 return base44.entities.WaterLog.create({
                     date: today,
                     glasses: newGlasses,
-                    goal: DEFAULT_GOAL,
+                    goal: dailyGoal,
                     logs: newLogs
                 });
             }
@@ -85,21 +98,31 @@ export default function WaterTracker() {
         },
     });
 
-    const addGlass = () => {
-        const newGlasses = glasses + 1;
+    const addGlass = (amount: number = 1) => {
+        const newGlasses = glasses + amount;
         updateWaterMutation.mutate(newGlasses);
 
-        if (newGlasses === goal) {
+        if (newGlasses >= goal && glasses < goal) {
             toast.success('🎉 أحسنت! وصلت لهدفك اليومي من الماء');
-        } else {
+        } else if (amount === 1) {
             toast.success('💧 تم إضافة كوب ماء');
+        } else {
+            toast.success(`💧 تم إضافة ${amount} أكواب`);
         }
     };
 
     const removeGlass = () => {
         if (glasses > 0) {
             updateWaterMutation.mutate(glasses - 1);
+            toast.info('تم إزالة كوب');
         }
+    };
+
+    const updateGoal = (newGoal: number) => {
+        setDailyGoal(newGoal);
+        localStorage.setItem('waterGoal', newGoal.toString());
+        setShowGoalSettings(false);
+        toast.success(`تم تحديث الهدف إلى ${newGoal} أكواب`);
     };
 
     // Calculate weekly average
@@ -110,7 +133,15 @@ export default function WaterTracker() {
     return (
         <div className="space-y-6">
             {/* Main Card - Apple Health Style */}
-            <div className="bg-gradient-to-br from-cyan-400 to-blue-500 rounded-3xl p-6 text-white shadow-xl">
+            <div className="bg-gradient-to-br from-cyan-400 to-blue-500 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                {/* Settings Button */}
+                <button
+                    onClick={() => setShowGoalSettings(!showGoalSettings)}
+                    className="absolute top-4 left-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                >
+                    <Settings2 className="w-5 h-5" />
+                </button>
+
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                         <Droplets className="w-6 h-6" />
@@ -120,6 +151,30 @@ export default function WaterTracker() {
                         <p className="text-white/80 text-sm">حافظ على ترطيب جسمك</p>
                     </div>
                 </div>
+
+                {/* Goal Settings Panel */}
+                {showGoalSettings && (
+                    <div className="absolute top-16 left-4 right-4 bg-white rounded-2xl p-4 shadow-xl z-10 text-slate-800">
+                        <h3 className="font-bold mb-3 text-center">تحديد الهدف اليومي</h3>
+                        <div className="grid grid-cols-5 gap-2">
+                            {GOAL_OPTIONS.map(g => (
+                                <button
+                                    key={g}
+                                    onClick={() => updateGoal(g)}
+                                    className={`py-2 rounded-xl font-bold transition-all ${g === dailyGoal
+                                            ? 'bg-cyan-500 text-white'
+                                            : 'bg-slate-100 hover:bg-slate-200'
+                                        }`}
+                                >
+                                    {g}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-xs text-slate-500 text-center mt-2">
+                            كل كوب = {GLASS_ML} مل
+                        </p>
+                    </div>
+                )}
 
                 {/* Water Animation Container */}
                 <div className="relative w-40 h-40 mx-auto mb-6">
@@ -142,6 +197,13 @@ export default function WaterTracker() {
                         <span className="text-4xl font-bold">{glasses}</span>
                         <span className="text-sm text-white/80">من {goal} أكواب</span>
                     </div>
+
+                    {/* Goal Badge */}
+                    {glasses >= goal && (
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
+                            <Check className="w-5 h-5 text-white" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Stats Row */}
@@ -161,37 +223,43 @@ export default function WaterTracker() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-center gap-4 mt-6">
+                <div className="flex items-center justify-center gap-3 mt-6">
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="w-14 h-14 rounded-full bg-white/20 hover:bg-white/30 text-white"
+                        className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 text-white"
                         onClick={removeGlass}
                         disabled={glasses === 0 || updateWaterMutation.isPending}
                     >
-                        <Minus className="w-6 h-6" />
+                        <Minus className="w-5 h-5" />
                     </Button>
 
                     <Button
-                        className="w-20 h-20 rounded-full bg-white text-blue-500 hover:bg-white/90 shadow-lg"
-                        onClick={addGlass}
+                        className="w-16 h-16 rounded-full bg-white text-blue-500 hover:bg-white/90 shadow-lg"
+                        onClick={() => addGlass(1)}
                         disabled={updateWaterMutation.isPending}
                     >
-                        <Plus className="w-8 h-8" />
+                        <Plus className="w-7 h-7" />
                     </Button>
 
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="w-14 h-14 rounded-full bg-white/20 hover:bg-white/30 text-white"
-                        onClick={() => {
-                            // Quick add 2 glasses
-                            updateWaterMutation.mutate(glasses + 2);
-                            toast.success('💧💧 تم إضافة كوبين');
-                        }}
+                        className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold"
+                        onClick={() => addGlass(2)}
                         disabled={updateWaterMutation.isPending}
                     >
-                        <span className="text-lg font-bold">+2</span>
+                        +2
+                    </Button>
+
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold"
+                        onClick={() => addGlass(3)}
+                        disabled={updateWaterMutation.isPending}
+                    >
+                        +3
                     </Button>
                 </div>
             </div>
@@ -200,7 +268,7 @@ export default function WaterTracker() {
             <div className="glass rounded-3xl p-5">
                 <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-5 h-5 text-[#2D9B83]" />
-                    <h3 className="font-bold text-slate-800">إحصائيات الأسبوع</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white">إحصائيات الأسبوع</h3>
                 </div>
 
                 <div className="flex items-end justify-between gap-2 h-24">
@@ -213,23 +281,23 @@ export default function WaterTracker() {
 
                         return (
                             <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                                <div className="w-full h-20 bg-slate-100 rounded-lg relative overflow-hidden">
+                                <div className="w-full h-20 bg-slate-100 dark:bg-slate-700 rounded-lg relative overflow-hidden">
                                     <div
                                         className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all ${dayPercentage >= 100 ? 'bg-[#2D9B83]' : 'bg-cyan-400'
                                             }`}
                                         style={{ height: `${dayPercentage}%` }}
                                     />
                                 </div>
-                                <span className="text-[10px] text-slate-500">{dayName}</span>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">{dayName}</span>
                             </div>
                         );
                     })}
                 </div>
 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                     <div className="flex items-center gap-2">
                         <Target className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-600">المتوسط الأسبوعي</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">المتوسط الأسبوعي</span>
                     </div>
                     <span className="font-bold text-[#2D9B83]">{weeklyAverage} أكواب</span>
                 </div>
@@ -239,9 +307,9 @@ export default function WaterTracker() {
             <div className="glass rounded-3xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-xl">💡</span>
-                    <h3 className="font-bold text-slate-800">نصيحة اليوم</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white">نصيحة اليوم</h3>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     اشرب كوب ماء فور الاستيقاظ، فهذا يساعد على تنشيط الجسم وتحسين عملية الهضم طوال اليوم.
                 </p>
             </div>

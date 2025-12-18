@@ -186,7 +186,7 @@ function AppointmentCard({ appointment, isPast = false }: { appointment: any; is
             {/* Actions */}
             {!isPast && appointment.status === 'confirmed' && (
                 <a
-                    href={`https://wa.me/966500000000?text=مرحباً، لدي موعد بتاريخ ${appointment.date}`}
+                    href={`https://wa.me/967771447111?text=مرحباً، لدي موعد بتاريخ ${appointment.date}`}
                     target="_blank"
                     rel="noopener noreferrer"
                 >

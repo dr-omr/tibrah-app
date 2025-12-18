@@ -158,7 +158,7 @@ export default function HealthPrograms() {
                                                 <Button
                                                     className={`rounded-xl px-5 ${program.featured
                                                         ? `bg-gradient-to-r ${program.gradient} text-white hover:opacity-90 shadow-lg`
-                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                        : 'bg-[#2D9B83] text-white hover:bg-[#248a73] shadow-md'
                                                         }`}
                                                 >
                                                     {program.trial ? 'ابدأ التجربة' : 'المزيد'}

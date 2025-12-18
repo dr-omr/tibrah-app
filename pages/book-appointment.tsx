@@ -95,9 +95,11 @@ export default function BookAppointment() {
 
     const selectedSession = sessionTypes.find(s => s.id === formData.session_type);
 
-    // Generate available dates (next 14 days, excluding Fridays)
+    // Generate available dates (next 14 days including today, excluding Fridays)
     const availableDates = [];
-    for (let i = 1; i <= 14; i++) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i <= 14; i++) {
         const date = addDays(new Date(), i);
         if (date.getDay() !== 5) { // Exclude Friday
             availableDates.push(date);
@@ -204,7 +206,11 @@ export default function BookAppointment() {
                                 selected={formData.date}
                                 onSelect={(date) => setFormData({ ...formData, date })}
                                 disabled={(date) => {
-                                    return date < new Date() ||
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const checkDate = new Date(date);
+                                    checkDate.setHours(0, 0, 0, 0);
+                                    return checkDate < today ||
                                         date.getDay() === 5 ||
                                         date > addDays(new Date(), 14);
                                 }}
@@ -392,7 +398,7 @@ export default function BookAppointment() {
 
                         <div className="space-y-3">
                             <a
-                                href={`https://wa.me/966500000000?text=مرحباً، لقد حجزت ${selectedSession?.label} بتاريخ ${formData.date ? format(formData.date, 'dd/MM/yyyy') : ''}`}
+                                href={`https://wa.me/967777088577?text=مرحباً، لقد حجزت ${selectedSession?.label} بتاريخ ${formData.date ? format(formData.date, 'dd/MM/yyyy') : ''}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block"
@@ -400,6 +406,32 @@ export default function BookAppointment() {
                                 <Button className="w-full h-14 bg-green-500 hover:bg-green-600 rounded-2xl text-lg font-bold">
                                     <MessageCircle className="w-5 h-5 ml-2" />
                                     تأكيد عبر واتساب
+                                </Button>
+                            </a>
+
+                            <a
+                                href={`https://wa.me/967777088577?text=${encodeURIComponent(`📋 نسخة من بيانات الحجز
+
+👤 الاسم: ${formData.patient_name}
+📱 الجوال: ${formData.patient_phone}
+📧 البريد: ${formData.patient_email || 'غير محدد'}
+
+📌 نوع الجلسة: ${selectedSession?.label}
+📅 التاريخ: ${formData.date ? format(formData.date, 'dd MMMM yyyy', { locale: ar }) : ''}
+⏰ الوقت: ${formData.time_slot}
+💰 المبلغ: ${selectedSession?.price} ر.س
+
+💬 الشكوى الصحية:
+${formData.health_concern || 'لم تحدد'}
+
+✅ تم إرسال هذه النسخة من تطبيق طِبرَا`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block"
+                            >
+                                <Button variant="outline" className="w-full h-14 rounded-2xl text-lg font-bold border-green-500 text-green-600 hover:bg-green-50">
+                                    <MessageCircle className="w-5 h-5 ml-2" />
+                                    إرسال نسخة من بيانات الحجز
                                 </Button>
                             </a>
 

@@ -306,7 +306,7 @@ export default function ProgramDetails() {
 
                     <div className="flex-1 space-y-2">
                         <a
-                            href={`https://wa.me/966500000000?text=مرحباً، أريد الاشتراك في ${program.title}`}
+                            href={`https://wa.me/967771447111?text=مرحباً، أريد الاشتراك في ${program.title}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block"
