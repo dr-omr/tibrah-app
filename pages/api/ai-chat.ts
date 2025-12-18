@@ -16,18 +16,14 @@ const SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 - مسا
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // CORS headers
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    console.log(`[API] Request received: ${req.method} ${req.url}`);
 
     if (req.method !== "POST") {
+        console.log(`[API] Method not allowed: ${req.method}`);
         return res.status(405).json({ error: "Method not allowed" });
     }
+
+
 
     try {
         const { message } = req.body;
