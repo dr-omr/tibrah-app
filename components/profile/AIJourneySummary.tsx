@@ -10,7 +10,7 @@ export default function AIJourneySummary({ user, healthData }) {
     const [summary, setSummary] = useState(null);
 
     const generateSummary = async () => {
-        if (!isEnabled || !user) return;
+        if (!isEnabled() || !user) return;
 
         const contextText = `
       المستخدم: ${user.full_name || 'مستخدم'}
@@ -27,7 +27,7 @@ export default function AIJourneySummary({ user, healthData }) {
         generateSummary();
     }, [user, healthData]);
 
-    if (!isEnabled) return null;
+    if (!isEnabled()) return null;
 
     return (
         <div className="glass rounded-2xl p-5 border border-purple-100">

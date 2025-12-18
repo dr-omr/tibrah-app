@@ -11,7 +11,7 @@ export default function AIAssistantToday() {
     const [insights, setInsights] = useState(null);
 
     const fetchInsights = async () => {
-        if (!isEnabled) return;
+        if (!isEnabled()) return;
 
         // Gather some context (mocked or real)
         try {
@@ -34,7 +34,7 @@ export default function AIAssistantToday() {
         fetchInsights();
     }, []); // Run once on mount
 
-    if (!isEnabled) return null;
+    if (!isEnabled()) return null;
 
     return (
         <div className="glass rounded-2xl p-5 relative overflow-hidden border border-[#2D9B83]/20">

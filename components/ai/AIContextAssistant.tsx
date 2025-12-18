@@ -36,7 +36,7 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
         }
     };
 
-    if (!isEnabled) return null;
+    if (!isEnabled()) return null;
 
     return (
         <>
@@ -81,8 +81,8 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${msg.role === 'user'
-                                            ? 'bg-[#2D9B83] text-white rounded-tr-none'
-                                            : 'bg-white text-slate-700 shadow-sm rounded-tl-none'
+                                        ? 'bg-[#2D9B83] text-white rounded-tr-none'
+                                        : 'bg-white text-slate-700 shadow-sm rounded-tl-none'
                                         }`}>
                                         {msg.content}
                                     </div>

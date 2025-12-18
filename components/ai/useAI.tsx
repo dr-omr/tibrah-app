@@ -53,6 +53,6 @@ export function useAI() {
         generateSuggestions,
         summarize,
         chat,
-        isEnabled: aiClient.isEnabled()
+        isEnabled: aiClient.isEnabled
     };
 }
