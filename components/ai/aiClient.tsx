@@ -131,7 +131,7 @@ const SMART_FALLBACK_RESPONSES: Record<string, string[]> = {
 const getModel = () => {
     if (!genAI) return null;
     return genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-pro",  // Changed from gemini-1.5-flash to fix 404 error
         generationConfig: {
             temperature: 0.7,
             topK: 40,
