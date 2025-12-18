@@ -211,12 +211,12 @@ ${getSystemPrompt()}
                 }),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.details || `API error: ${response.status}`);
-            }
-
             const data = await response.json();
+
+            if (!response.ok) {
+                console.error('[AI Client] API returned error:', data);
+                throw new Error(data.details || data.error || `API error: ${response.status}`);
+            }
 
             if (data.text) {
                 console.log('[AI Client] ✅ Got response from API');
