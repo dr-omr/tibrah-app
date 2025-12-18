@@ -98,35 +98,36 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         },
     });
 
-    // Calculate values
-    const waterGlasses = waterLog?.glasses || 0;
-    const waterGoal = waterLog?.goal || 8;
+    // Calculate values with proper type casting
+    const waterGlasses = Number(waterLog?.glasses) || 0;
+    const waterGoal = Number(waterLog?.goal) || 8;
     const waterPercentage = Math.round((waterGlasses / waterGoal) * 100);
 
-    const sleepHours = sleepLog?.duration_hours || 0;
-    const sleepQuality = sleepLog?.quality || 0;
+    const sleepHours = Number(sleepLog?.duration_hours) || 0;
+    const sleepQuality = Number(sleepLog?.quality) || 0;
     const sleepPercentage = sleepHours >= 7 ? 100 : Math.round((sleepHours / 7) * 100);
 
-    const totalMeds = medications.reduce((sum: number, med: { times?: string[] }) =>
+    const totalMeds = (medications as Array<{ times?: string[] }>).reduce((sum: number, med) =>
         sum + (med.times?.length || 0), 0);
-    const takenMeds = medicationLogs.length;
+    const takenMeds = (medicationLogs as unknown[]).length;
     const medPercentage = totalMeds > 0 ? Math.round((takenMeds / totalMeds) * 100) : 0;
 
-    const moodScore = dailyLog?.mood_score || 0;
-    const energyLevel = dailyLog?.energy_level || 0;
-    const stressLevel = dailyLog?.stress_level || 0;
+    const moodScore = Number(dailyLog?.mood_score) || 0;
+    const energyLevel = Number(dailyLog?.energy_level) || 0;
+    const stressLevel = Number(dailyLog?.stress_level) || 0;
 
-    // Get latest metrics
-    const getMetricValue = (type: string) => {
-        const metric = healthMetrics.find((m: { metric_type?: string }) => m.metric_type === type);
-        return metric?.value || null;
+    // Get latest metrics with proper typing
+    const getMetricValue = (type: string): string | number | null => {
+        const metric = (healthMetrics as Array<{ metric_type?: string; value?: unknown }>)
+            .find(m => m.metric_type === type);
+        return metric?.value as string | number | null;
     };
 
-    const heartRate = getMetricValue('heart_rate') || '—';
-    const steps = getMetricValue('steps') || 0;
-    const weight = getMetricValue('weight') || '—';
-    const calories = getMetricValue('calories') || 0;
-    const bloodPressure = getMetricValue('blood_pressure') || '—';
+    const heartRate = getMetricValue('heart_rate') ?? '—';
+    const steps = Number(getMetricValue('steps')) || 0;
+    const weight = getMetricValue('weight') ?? '—';
+    const calories = Number(getMetricValue('calories')) || 0;
+    const bloodPressure = getMetricValue('blood_pressure') ?? '—';
 
     // Activity Rings calculations
     const moveProgress = Math.min(100, (Number(calories) / 500) * 100);
@@ -288,7 +289,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
                 standGoal={12}
                 currentMove={Number(calories) || 0}
                 currentExercise={energyLevel > 0 ? energyLevel * 6 : 0}
-                currentStand={sleepHours >= 7 ? 10 : Math.round(sleepHours)}
+                currentStand={sleepHours >= 7 ? 10 : Math.round(Number(sleepHours) || 0)}
             />
 
             {/* Daily Goal Progress */}

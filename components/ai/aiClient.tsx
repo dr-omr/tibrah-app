@@ -1,28 +1,32 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { conversationStore } from '@/lib/ConversationStore';
 
 // Initialize Gemini - Check at runtime to handle Next.js hydration
 const getApiKey = (): string => {
     if (typeof window !== 'undefined') {
-        // Client-side
         return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
     }
-    // Server-side
     return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 };
 
 const API_KEY = getApiKey();
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// Debug log (remove in production)
 if (typeof window !== 'undefined') {
     console.log('[AI Client] API Key present:', !!API_KEY, '| Length:', API_KEY?.length || 0);
 }
 
 const AI_ENABLED = !!API_KEY && API_KEY.length > 10;
 
-const YEMENI_SYSTEM_PROMPT = `
+// Generate dynamic system prompt with user context
+const getSystemPrompt = (userName?: string | null): string => {
+    const userGreeting = userName ? `اسم المستخدم هو "${userName}" - استخدم اسمه في المحادثة بشكل طبيعي.` : '';
+
+    return `
 أنت "مساعد طِبرَا الذكي" 🌿 - مساعد صحي ودود يعمل بنهج الطب الوظيفي.
 شخصيتك مستوحاة من اللطف والدفء اليمني الأصيل.
+
+${userGreeting}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⭐ مهمتك الرئيسية: مساعدة المستخدمين صحياً + تسويق د. عمر العماد
@@ -31,41 +35,29 @@ const YEMENI_SYSTEM_PROMPT = `
 🎯 قواعد الذهب (الأهم):
 
 1️⃣ تسويق د. عمر العماد بذكاء:
-   - عند أي سؤال صحي معقد: "يا غالي، هذا سؤال ممتاز! والله الدكتور عمر العماد هو اللي بيفيدك... متخصص في الطب الوظيفي ويعالج السبب الجذري مش بس الأعراض"
-   - عند سؤال "من هو الدكتور؟": مدح حماسي + ذكر إنجازاته (300+ مريض، نسبة نجاح 87%)
+   - عند أي سؤال صحي معقد: "يا غالي، هذا سؤال ممتاز! والله الدكتور عمر العماد هو اللي بيفيدك..."
    - دائماً اقترح حجز الجلسة التشخيصية بـ25 ر.س فقط!
 
 2️⃣ اللهجة اليمنية الدافئة:
-   - استخدم: "يا غالي"، "يا خبير"، "حياك الله"، "ما عليك"، "أبشر"، "والله عاد"، "ما شاء الله"
-   - تجنب الفصحى الجامدة - كن كأنك صديق يمني يهتم بصحة صاحبه
+   - استخدم: "يا غالي"، "يا خبير"، "حياك الله"، "ما عليك"
    - استخدم الإيموجي بشكل معتدل 🌿💪
 
 3️⃣ الحلول العملية المحلية:
-   - اقترح أشياء متوفرة في اليمن: الحلبة، العسل، الحبة السوداء، الزنجبيل
+   - اقترح أشياء متوفرة: الحلبة، العسل، الحبة السوداء، الزنجبيل
    - نصائح بسيطة: المشي، النوم المبكر، الماء الدافئ
-   - لا تقترح مكملات غالية أو غير متوفرة
 
 4️⃣ الأمان والمسؤولية:
    - أنت لست طبيباً - لا تشخص ولا تصف أدوية أبداً
    - دائماً قل: "هذا رأي تثقيفي، والدكتور عمر هو اللي يقدر يشخصك بالضبط"
-   - حالات الطوارئ: وجههم فوراً للمستشفى
 
-5️⃣ أسلوب الرد:
-   - ابدأ بترحيب دافئ أو تعاطف
-   - اعطِ معلومة مفيدة قصيرة
-   - اختم بتشجيع أو دعوة للحجز
-
-مثال على الرد المثالي:
-"يا غالي حياك الله! 🌿
-هذا اللي تحكي عنه شكله من أعراض القولون العصبي...
-جرب تشرب ماء دافئ مع ليمون على الريق، وامشِ 20 دقيقة يومياً.
-بس والله ما أقدر أجزم لك من هنا - الدكتور عمر العماد هو اللي بيشخصك من الآخر.
-الجلسة التشخيصية عنده بـ25 ر.س بس، وبتريح بالك! 💪"
+5️⃣ تذكر المحادثات السابقة:
+   - إذا ذكر المستخدم اسمه سابقاً، استخدمه
+   - تذكر المواضيع التي ناقشتموها
 `;
+};
 
 const DISCLAIMER = "هذا محتوى توعوي/تثقيفي، ولا يغني عن استشارة الطبيب أو المختص.";
 
-// Enhanced Fallback responses - more intelligent and contextual
 const FALLBACK_SUGGESTIONS = [
     {
         focus_text: "يومك عافية يا بطل! 🌿 ركز اليوم على راحة بالك وتغذيتك.",
@@ -101,37 +93,35 @@ const FALLBACK_SUGGESTIONS = [
     }
 ];
 
-// Enhanced chat responses based on keywords
 const SMART_FALLBACK_RESPONSES: Record<string, string[]> = {
     'ألم|وجع|يؤلم': [
-        "يا غالي، الألم هذا مزعج والله! 🌿 جرب الراحة والماء الدافئ، وإذا استمر أكثر من يومين، الدكتور عمر العماد يقدر يساعدك - الجلسة التشخيصية بـ25 ر.س بس!",
-        "حياك الله يا خبير! 💪 الألم شيء ما لازم تتحمله لحالك. جرب كمادات دافئة، وإذا ما تحسن، تواصل مع الدكتور عمر العماد - متخصص بيشخص السبب الجذري."
+        "يا غالي، الألم هذا مزعج والله! 🌿 جرب الراحة والماء الدافئ، وإذا استمر أكثر من يومين، الدكتور عمر العماد يقدر يساعدك!",
+        "حياك الله يا خبير! 💪 الألم شيء ما لازم تتحمله لحالك. جرب كمادات دافئة، وإذا ما تحسن، تواصل مع الدكتور عمر العماد."
     ],
     'نوم|أرق|أنام': [
-        "يا غالي، النوم مهم جداً للشفاء! 😴 جرب تشرب شاي البابونج قبل النوم، وابتعد عن الجوال ساعة قبل ما تنام. وإذا الأرق مستمر، الدكتور عمر عنده حلول طبيعية ممتازة!",
-        "ما عليك يا بطل! 🌙 للنوم الصحي: غرفة مظلمة، بدون شاشات، ونوم بوقت ثابت. جرب ملعقة عسل مع ماء دافئ قبل النوم - سر يمني قديم!"
+        "يا غالي، النوم مهم جداً للشفاء! 😴 جرب تشرب شاي البابونج قبل النوم، وابتعد عن الجوال ساعة قبل ما تنام.",
+        "ما عليك يا بطل! 🌙 للنوم الصحي: غرفة مظلمة، بدون شاشات، ونوم بوقت ثابت."
     ],
     'هضم|معدة|بطن|قولون': [
-        "يا غالي، مشاكل الهضم منتشرة كثير! 🌿 جرب الحلبة على الريق، وتجنب الأكل الدسم. الدكتور عمر العماد متخصص في علاج السبب الجذري لمشاكل الهضم.",
-        "أبشر يا خبير! 💪 القولون يحتاج صبر وتغيير نمط الحياة. الماء الدافئ مع الليمون، والابتعاد عن التوتر، والمشي بعد الأكل - كلها تساعد!"
+        "يا غالي، مشاكل الهضم منتشرة كثير! 🌿 جرب الحلبة على الريق، وتجنب الأكل الدسم.",
+        "أبشر يا خبير! 💪 القولون يحتاج صبر وتغيير نمط الحياة. الماء الدافئ مع الليمون يساعد!"
     ],
     'طاقة|تعب|إرهاق': [
-        "يا غالي، التعب له أسباب كثيرة! ☀️ تأكد إنك تشرب ماء كافي، وتنام 7-8 ساعات، وتاكل فطور صحي. وإذا مستمر، الدكتور عمر يقدر يفحص الأسباب.",
-        "ما عليك يا بطل! 💪 الطاقة تيجي من النوم الجيد، الأكل الصحي، والحركة. جرب المشي 20 دقيقة يومياً - بتحس بفرق كبير!"
+        "يا غالي، التعب له أسباب كثيرة! ☀️ تأكد إنك تشرب ماء كافي، وتنام 7-8 ساعات.",
+        "ما عليك يا بطل! 💪 الطاقة تيجي من النوم الجيد، الأكل الصحي، والحركة."
     ],
     'default': [
-        "يا غالي حياك الله! 🌿 أنا مساعد طِبرَا الذكي، موجود لمساعدتك في أي سؤال صحي. كيف أخدمك اليوم؟",
-        "أهلاً وسهلاً يا خبير! 💚 سعيد إنك تواصلت معنا. اسألني أي شي عن صحتك وأنا حاضر أفيدك.",
-        "مرحباً يا غالي! 🌟 أنا هنا عشان أساعدك. قولي شو اللي يشغل بالك وأنا معاك.",
-        "حياك الله يا بطل! 💪 أنا مساعدك الصحي. إذا عندك أي سؤال عن الصحة أو التغذية أو نمط الحياة، أنا جاهز أفيدك."
+        "يا غالي حياك الله! 🌿 أنا مساعد طِبرَا الذكي، موجود لمساعدتك في أي سؤال صحي.",
+        "أهلاً وسهلاً يا خبير! 💚 سعيد إنك تواصلت معنا. اسألني أي شي عن صحتك.",
+        "مرحباً يا غالي! 🌟 أنا هنا عشان أساعدك. قولي شو اللي يشغل بالك.",
+        "حياك الله يا بطل! 💪 أنا مساعدك الصحي. إذا عندك أي سؤال، أنا جاهز أفيدك."
     ]
 };
 
-// Get Gemini model
 const getModel = () => {
     if (!genAI) return null;
     return genAI.getGenerativeModel({
-        model: "gemini-pro",  // Changed from gemini-1.5-flash to fix 404 error
+        model: "gemini-pro",
         generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -155,7 +145,7 @@ export const aiClient = {
             if (!model) throw new Error('Model not initialized');
 
             const prompt = `
-${YEMENI_SYSTEM_PROMPT}
+${getSystemPrompt()}
 
 بناءً على بيانات المستخدم:
 ${JSON.stringify(context)}
@@ -172,7 +162,6 @@ ${JSON.stringify(context)}
             const response = await result.response;
             const text = response.text();
 
-            // Parse JSON from response
             const jsonMatch = text.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 return JSON.parse(jsonMatch[0]);
@@ -188,7 +177,7 @@ ${JSON.stringify(context)}
 
     async summarize(text: string, contextType: string = 'general') {
         if (!AI_ENABLED) {
-            return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟 استمرارك في المتابعة هو نصف العلاج.";
+            return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟";
         }
 
         try {
@@ -196,7 +185,7 @@ ${JSON.stringify(context)}
             if (!model) throw new Error('Model not initialized');
 
             const prompt = `
-${YEMENI_SYSTEM_PROMPT}
+${getSystemPrompt()}
 
 قم بتلخيص النص التالي في سياق ${contextType}:
 "${text}"
@@ -212,12 +201,11 @@ ${YEMENI_SYSTEM_PROMPT}
             return response.text();
         } catch (error) {
             console.error("AI Summarize Error:", error);
-            return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟 استمرارك في المتابعة هو نصف العلاج.";
+            return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟";
         }
     },
 
     async chat(messages: Array<{ role: string, content: string }>, contextData?: any, knowledgeBase?: any) {
-        // Smart fallback - match message content to get relevant response
         const getSmartFallback = (userMessage: string): string => {
             for (const [pattern, responses] of Object.entries(SMART_FALLBACK_RESPONSES)) {
                 if (pattern === 'default') continue;
@@ -230,18 +218,30 @@ ${YEMENI_SYSTEM_PROMPT}
             return defaults[Math.floor(Math.random() * defaults.length)];
         };
 
+        const lastUserMessage = messages[messages.length - 1]?.content || '';
+
+        conversationStore.startConversation();
+        conversationStore.addMessage('user', lastUserMessage);
+
         if (!AI_ENABLED) {
-            console.warn('[AI Client] AI is disabled. Using smart fallback responses. Check NEXT_PUBLIC_GEMINI_API_KEY in .env.local');
-            const lastMessage = messages[messages.length - 1]?.content || '';
-            return getSmartFallback(lastMessage) + '\n\n⚠️ (الذكاء الاصطناعي غير متصل حالياً)';
+            console.warn('[AI Client] AI is disabled. Using smart fallback responses.');
+            const response = getSmartFallback(lastUserMessage) + '\n\n⚠️ (الذكاء الاصطناعي غير متصل حالياً)';
+            conversationStore.addMessage('assistant', response);
+            return response;
         }
 
         try {
             const model = getModel();
             if (!model) throw new Error('Model not initialized');
 
-            // Build chat history
-            const recentMessages = Array.isArray(messages) ? messages.slice(-6) : [];
+            const storedContext = conversationStore.getContext();
+            const userName = conversationStore.getUserName();
+            const currentConversation = conversationStore.getCurrentConversation();
+            const topics = currentConversation?.topics || [];
+
+            const recentMessages = storedContext.length > 0 ? storedContext :
+                (Array.isArray(messages) ? messages.slice(-10) : []);
+
             const contextString = contextData ? JSON.stringify(contextData).slice(0, 1500) : "";
             const kbString = knowledgeBase ? JSON.stringify(knowledgeBase).slice(0, 2000) : "";
 
@@ -249,14 +249,19 @@ ${YEMENI_SYSTEM_PROMPT}
                 .map(m => `${m.role === 'user' ? 'المستخدم' : 'المساعد'}: ${m.content}`)
                 .join('\n');
 
+            const topicsContext = topics.length > 0
+                ? `\n📋 المواضيع التي ناقشها المستخدم سابقاً: ${topics.join('، ')}`
+                : '';
+
             const prompt = `
-${YEMENI_SYSTEM_PROMPT}
+${getSystemPrompt(userName)}
 
 ${kbString ? `📚 معلومات مرجعية عن د. عمر والخدمات:
 ${kbString}` : ''}
 
 ${contextString ? `📍 سياق الصفحة الحالية:
 ${contextString}` : ''}
+${topicsContext}
 
 💬 المحادثة:
 ${historyString}
@@ -266,33 +271,50 @@ ${historyString}
 - كن مختصراً ومفيداً (3-5 جمل كحد أقصى)
 - إذا كان السؤال صحي: اعطِ نصيحة عامة + اقترح الجلسة التشخيصية
 - استخدم الإيموجي باعتدال
+${userName ? `- تذكر أن اسم المستخدم هو "${userName}" واستخدمه بشكل طبيعي إن أمكن` : ''}
 
 أجب على آخر رسالة من المستخدم:
 `;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
-            return response.text();
+            const responseText = response.text();
+
+            conversationStore.addMessage('assistant', responseText);
+
+            return responseText;
         } catch (error) {
             console.error("AI Chat Error:", error);
 
-            // Try with simpler prompt
             try {
                 const model = getModel();
                 if (!model) throw error;
 
-                const lastMessage = messages[messages.length - 1]?.content || "";
-                const simplePrompt = `أنت مساعد طِبرَا الصحي باللهجة اليمنية. المستخدم يقول: "${lastMessage}". أجب باختصار ولطف.`;
+                const userName = conversationStore.getUserName();
+                const greeting = userName ? `حياك الله يا ${userName}!` : '';
+                const simplePrompt = `أنت مساعد طِبرَا الصحي باللهجة اليمنية. ${greeting} المستخدم يقول: "${lastUserMessage}". أجب باختصار ولطف.`;
 
                 const result = await model.generateContent(simplePrompt);
                 const response = await result.response;
-                return response.text();
+                const responseText = response.text();
+
+                conversationStore.addMessage('assistant', responseText);
+                return responseText;
             } catch (retryError) {
                 console.error("AI Chat Retry Error:", retryError);
-                const lastMessage = messages[messages.length - 1]?.content || '';
-                return getSmartFallback(lastMessage);
+                const fallbackResponse = getSmartFallback(lastUserMessage);
+                conversationStore.addMessage('assistant', fallbackResponse);
+                return fallbackResponse;
             }
         }
+    },
+
+    clearConversation() {
+        conversationStore.clearCurrentConversation();
+    },
+
+    getConversationHistory() {
+        return conversationStore.getCurrentConversation();
     }
 };
 

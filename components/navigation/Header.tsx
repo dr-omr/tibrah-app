@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { createPageUrl } from '../../utils';
 import { Home, HeartPulse, GraduationCap, ShoppingBag, User, Calendar, LogOut, Settings, ChevronDown } from 'lucide-react';
 import NotificationBell from '../notifications/NotificationBell';
+import ThemeToggle from '../common/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
@@ -28,7 +29,7 @@ export default function Header({ currentPageName }: HeaderProps) {
             {/* Desktop/Tablet Header - Hidden on Mobile */}
             <header className="hidden md:block sticky top-0 z-50">
                 {/* Glassmorphism background */}
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-slate-100/80" />
+                <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100/80 dark:border-slate-800/80" />
 
                 <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
@@ -38,8 +39,8 @@ export default function Header({ currentPageName }: HeaderProps) {
                                 <span className="text-white font-bold text-lg">ط</span>
                             </div>
                             <div className="flex flex-col">
-                                <span className="font-bold text-lg text-slate-800 leading-tight">طِبرَا</span>
-                                <span className="text-[10px] text-slate-400 font-medium -mt-0.5">العيادة الرقمية</span>
+                                <span className="font-bold text-lg text-slate-800 dark:text-white leading-tight">طِبرَا</span>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium -mt-0.5">العيادة الرقمية</span>
                             </div>
                         </Link>
 
@@ -55,7 +56,7 @@ export default function Header({ currentPageName }: HeaderProps) {
                                         href={createPageUrl(item.page)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${isActive
                                             ? 'bg-[#2D9B83]/10 text-[#2D9B83]'
-                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                                             }`}
                                     >
                                         <Icon className="w-4 h-4" strokeWidth={isActive ? 2.2 : 1.8} />
@@ -67,6 +68,9 @@ export default function Header({ currentPageName }: HeaderProps) {
 
                         {/* Actions - Right */}
                         <div className="flex items-center gap-3">
+                            {/* Theme Toggle */}
+                            <ThemeToggle size="sm" />
+
                             {/* Notification Bell */}
                             <NotificationBell variant="header" />
 

@@ -788,3 +788,495 @@ button,
 * {
     touch-action: manipulation;
 }
+
+/* ===================================================
+   SKELETON LOADING ANIMATIONS
+   =================================================== */
+
+/* Shimmer Wave Animation */
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-wave {
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-wave::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.5),
+            transparent);
+}
+
+/* Enhanced Pulse Animation */
+@keyframes skeleton-pulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ===================================================
+   iOS 18 PREMIUM DARK MODE - طِبرَا
+   Inspired by Apple Human Interface Guidelines
+   =================================================== */
+
+/* ===== Root Dark Mode Variables ===== */
+.dark {
+    /* === Primary Brand Colors (Tibrah Health Green) === */
+    --primary: #4ECDB0;
+    --primary-light: #6FE5C6;
+    --primary-dark: #3FB39A;
+    --primary-glow: rgba(78, 205, 176, 0.25);
+
+    /* === iOS System Backgrounds (Base & Elevated) === */
+    --bg-primary: #000000;
+    /* Pure black for OLED */
+    --bg-secondary: #1C1C1E;
+    /* iOS systemGray6 Dark */
+    --bg-tertiary: #2C2C2E;
+    /* iOS systemGray5 Dark */
+    --bg-quaternary: #3A3A3C;
+    /* iOS systemGray4 Dark */
+
+    /* === Elevated Backgrounds (for modals, cards) === */
+    --bg-elevated: #1C1C1E;
+    --bg-elevated-secondary: #2C2C2E;
+    --bg-elevated-tertiary: #3A3A3C;
+
+    /* === Grouped Backgrounds === */
+    --bg-grouped: #000000;
+    --bg-grouped-secondary: #1C1C1E;
+    --bg-grouped-tertiary: #2C2C2E;
+
+    /* === Text Colors (High Contrast for Medical) === */
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(235, 235, 245, 0.6);
+    /* iOS secondaryLabel */
+    --text-tertiary: rgba(235, 235, 245, 0.3);
+    /* iOS tertiaryLabel */
+    --text-quaternary: rgba(235, 235, 245, 0.18);
+
+    /* === Semantic Colors === */
+    --color-success: #30D158;
+    /* iOS Green */
+    --color-warning: #FFD60A;
+    /* iOS Yellow */
+    --color-error: #FF453A;
+    /* iOS Red */
+    --color-info: #64D2FF;
+    /* iOS Cyan */
+
+    /* === Separators & Borders === */
+    --separator: rgba(84, 84, 88, 0.65);
+    --separator-opaque: #38383A;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.04);
+
+    /* === Fill Colors === */
+    --fill-primary: rgba(120, 120, 128, 0.36);
+    --fill-secondary: rgba(120, 120, 128, 0.32);
+    --fill-tertiary: rgba(118, 118, 128, 0.24);
+    --fill-quaternary: rgba(118, 118, 128, 0.18);
+
+    /* === Overlay & Effects === */
+    --overlay-thick: rgba(0, 0, 0, 0.6);
+    --overlay-regular: rgba(0, 0, 0, 0.4);
+    --overlay-thin: rgba(0, 0, 0, 0.2);
+
+    /* === Shadows for Depth === */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 20px var(--primary-glow);
+}
+
+/* ===== Global Dark Mode Styles ===== */
+.dark body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.dark html {
+    background: var(--bg-primary);
+    color-scheme: dark;
+}
+
+/* ===== Glass Morphism (iOS Style) ===== */
+.dark .glass {
+    background: rgba(28, 28, 30, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.dark .glass-elevated {
+    background: rgba(44, 44, 46, 0.8);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Cards ===== */
+.dark .card,
+.dark .card-elevated {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.dark .card:hover {
+    background: var(--bg-elevated-secondary);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .card-gradient {
+    background: linear-gradient(145deg,
+            var(--bg-elevated) 0%,
+            var(--bg-elevated-secondary) 100%);
+}
+
+/* ===== Navigation (iOS Tab Bar Style) ===== */
+.dark .bottom-nav,
+.dark nav[class*="fixed bottom"] {
+    background: rgba(28, 28, 30, 0.92) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 0.5px solid var(--separator);
+}
+
+.dark header {
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 0.5px solid var(--separator);
+}
+
+/* ===== Form Controls ===== */
+.dark input,
+.dark select,
+.dark textarea {
+    background: var(--fill-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    caret-color: var(--primary);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    background: var(--fill-secondary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+    outline: none;
+}
+
+/* ===== Buttons ===== */
+.dark .btn-primary,
+.dark [class*="bg-[#2D9B83]"],
+.dark [class*="from-[#2D9B83]"] {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+    box-shadow: var(--shadow-glow);
+}
+
+.dark .btn-secondary {
+    background: var(--fill-primary);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+/* ===== Text Colors ===== */
+.dark .text-slate-900,
+.dark .text-slate-800 {
+    color: var(--text-primary) !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600 {
+    color: var(--text-secondary) !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400 {
+    color: var(--text-tertiary) !important;
+}
+
+.dark .text-slate-300 {
+    color: var(--text-quaternary) !important;
+}
+
+/* ===== Background Overrides ===== */
+.dark .bg-white {
+    background-color: var(--bg-elevated) !important;
+}
+
+.dark .bg-slate-50 {
+    background-color: var(--bg-secondary) !important;
+}
+
+.dark .bg-slate-100 {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.dark .bg-slate-200 {
+    background-color: var(--bg-quaternary) !important;
+}
+
+.dark [class*="bg-gradient-to"] {
+    background: linear-gradient(180deg,
+            var(--bg-primary) 0%,
+            var(--bg-secondary) 100%) !important;
+}
+
+/* ===== Borders ===== */
+.dark .border-slate-100,
+.dark .border-slate-200 {
+    border-color: var(--separator) !important;
+}
+
+.dark .border-slate-300 {
+    border-color: var(--separator-opaque) !important;
+}
+
+.dark .divide-slate-100>*+*,
+.dark .divide-slate-200>*+* {
+    border-color: var(--separator);
+}
+
+/* ===== Skeleton Loading ===== */
+.dark [class*="bg-slate-200"],
+.dark .skeleton {
+    background: var(--fill-tertiary) !important;
+}
+
+.dark .skeleton-wave::after {
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.08),
+            transparent);
+}
+
+.dark .animate-pulse {
+    animation: dark-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes dark-pulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ===== Scrollbar (iOS Thin Style) ===== */
+.dark::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.dark::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dark::-webkit-scrollbar-thumb {
+    background: var(--separator);
+    border-radius: 3px;
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+/* ===== Selection ===== */
+.dark ::selection {
+    background: rgba(78, 205, 176, 0.35);
+    color: var(--text-primary);
+}
+
+/* ===== Links ===== */
+.dark a:not([class]) {
+    color: var(--primary);
+}
+
+.dark a:not([class]):hover {
+    color: var(--primary-light);
+}
+
+/* ===== Dividers & HR ===== */
+.dark hr {
+    border-color: var(--separator);
+}
+
+/* ===== Shadows (Elevated Elements) ===== */
+.dark [class*="shadow-sm"] {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.dark [class*="shadow-md"] {
+    box-shadow: var(--shadow-md) !important;
+}
+
+.dark [class*="shadow-lg"],
+.dark [class*="shadow-xl"] {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* ===== Health Indicators (Semantic Colors) ===== */
+.dark .text-green-500,
+.dark .text-green-600 {
+    color: var(--color-success) !important;
+}
+
+.dark .text-yellow-500,
+.dark .text-amber-500 {
+    color: var(--color-warning) !important;
+}
+
+.dark .text-red-500,
+.dark .text-red-600 {
+    color: var(--color-error) !important;
+}
+
+.dark .text-blue-500,
+.dark .text-cyan-500 {
+    color: var(--color-info) !important;
+}
+
+.dark .bg-green-100 {
+    background: rgba(48, 209, 88, 0.15) !important;
+}
+
+.dark .bg-red-100 {
+    background: rgba(255, 69, 58, 0.15) !important;
+}
+
+.dark .bg-yellow-100,
+.dark .bg-amber-100 {
+    background: rgba(255, 214, 10, 0.15) !important;
+}
+
+.dark .bg-blue-100 {
+    background: rgba(100, 210, 255, 0.15) !important;
+}
+
+/* ===== Modals & Overlays ===== */
+.dark .modal-backdrop {
+    background: var(--overlay-thick);
+}
+
+.dark .modal-content {
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===== Progress Bars ===== */
+.dark progress::-webkit-progress-bar {
+    background: var(--fill-tertiary);
+    border-radius: 4px;
+}
+
+.dark progress::-webkit-progress-value {
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* ===== Tooltips ===== */
+.dark [data-tooltip],
+.dark .tooltip {
+    background: var(--bg-elevated-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* ===== Focus Rings === */
+.dark *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ===== Highlighted/Selected States ===== */
+.dark .selected,
+.dark [aria-selected="true"] {
+    background: rgba(78, 205, 176, 0.15);
+    border-color: var(--primary);
+}
+
+/* ===== Active States ===== */
+.dark .active\:bg-slate-100:active {
+    background: var(--fill-secondary) !important;
+}
+
+.dark .hover\:bg-slate-50:hover {
+    background: var(--fill-quaternary) !important;
+}
+
+.dark .hover\:bg-slate-100:hover {
+    background: var(--fill-tertiary) !important;
+}
+
+/* ===== Gradient Text ===== */
+.dark .gradient-text {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===== Toast Notifications ===== */
+.dark [data-sonner-toast] {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ===== Badge/Tag Components ===== */
+.dark .badge {
+    background: var(--fill-secondary);
+    color: var(--text-secondary);
+}
+
+.dark .badge-primary {
+    background: rgba(78, 205, 176, 0.2);
+    color: var(--primary);
+}
+
+/* ===== Primary Accent Backgrounds ===== */
+.dark [class*="bg-[#2D9B83]"],
+.dark [class*="bg-primary"] {
+    background-color: var(--primary-dark) !important;
+}
+
+.dark [class*="bg-[#2D9B83]/10"],
+.dark [class*="bg-primary/10"] {
+    background-color: rgba(78, 205, 176, 0.1) !important;
+}
