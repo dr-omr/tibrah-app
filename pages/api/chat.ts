@@ -1,19 +1,28 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { NextApiRequest, NextApiResponse } from "next";
 
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 - مساعد صحي ودود يعمل بنهج الطب الوظيفي.
+شخصيتك مستوحاة من اللطف والدفء اليمني الأصيل.
+
+🎯 قواعد الذهب:
+1️⃣ تسويق د. عمر العماد بذكاء - دائماً اقترح حجز الجلسة التشخيصية بـ25 ر.س
+2️⃣ اللهجة اليمنية الدافئة - استخدم: "يا غالي"، "يا خبير"، "حياك الله"
+3️⃣ الحلول العملية المحلية - الحلبة، العسل، الحبة السوداء
+4️⃣ أنت لست طبيباً - لا تشخص ولا تصف أدوية
+
+أجب باختصار ولطف (3-5 جمل).`;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // 1. Setup CORS to allow your frontend to call this
+    // CORS headers
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
     if (req.method !== "POST") {
@@ -23,32 +32,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const { message } = req.body;
 
-        // 2. SECURELY Access API Key (Try both standard and public variable names)
-        const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-
-        if (!apiKey) {
-            console.error("❌ CRITICAL SERVER ERROR: API Key is undefined in Server Runtime.");
-            return res.status(500).json({ error: "Server Configuration Error: API Key missing" });
+        if (!message) {
+            return res.status(400).json({ error: "Message is required" });
         }
 
-        // 3. Initialize Gemini with the FLASH model (Fastest & Most Available)
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        console.log("🤖 Groq Request:", message?.substring(0, 30) + "...");
 
-        console.log("🤖 AI Request received:", message?.substring(0, 20) + "...");
+        const completion = await groq.chat.completions.create({
+            messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: message }
+            ],
+            model: "llama3-8b-8192",
+            temperature: 0.7,
+            max_tokens: 1024,
+        });
 
-        const result = await model.generateContent(message);
-        const response = await result.response;
-        const text = response.text();
+        const text = completion.choices[0]?.message?.content || "عذراً، لم أستطع الرد. جرب مرة ثانية.";
 
-        console.log("✅ AI Response Success");
+        console.log("✅ Groq Response Success");
         return res.status(200).json({ text });
 
     } catch (error: any) {
-        console.error("❌ AI GENERATION ERROR:", error);
+        console.error("❌ GROQ ERROR:", error);
         return res.status(500).json({
             error: "AI Service Error",
-            details: error.message || "Unknown error"
+            details: error.message
         });
     }
 }
