@@ -398,7 +398,7 @@ export default function BookAppointment() {
 
                         <div className="space-y-3">
                             <a
-                                href={`https://wa.me/967777088577?text=مرحباً، لقد حجزت ${selectedSession?.label} بتاريخ ${formData.date ? format(formData.date, 'dd/MM/yyyy') : ''}`}
+                                href={`https://wa.me/967771447111?text=مرحباً، لقد حجزت ${selectedSession?.label} بتاريخ ${formData.date ? format(formData.date, 'dd/MM/yyyy') : ''}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block"
@@ -410,7 +410,7 @@ export default function BookAppointment() {
                             </a>
 
                             <a
-                                href={`https://wa.me/967777088577?text=${encodeURIComponent(`📋 نسخة من بيانات الحجز
+                                href={`https://wa.me/967771447111?text=${encodeURIComponent(`📋 نسخة من بيانات الحجز
 
 👤 الاسم: ${formData.patient_name}
 📱 الجوال: ${formData.patient_phone}

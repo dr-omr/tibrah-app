@@ -171,7 +171,7 @@ export default function Help() {
                 {/* Quick Actions */}
                 <div className="grid grid-cols-2 gap-3">
                     <a
-                        href="https://wa.me/967777088577"
+                        href="https://wa.me/967771447111"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center gap-3"
@@ -186,7 +186,7 @@ export default function Help() {
                     </a>
 
                     <a
-                        href="tel:+967777088577"
+                        href="tel:+967771447111"
                         className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center gap-3"
                     >
                         <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -194,7 +194,7 @@ export default function Help() {
                         </div>
                         <div>
                             <p className="font-bold text-slate-800 dark:text-white text-sm">اتصال</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">+967 777 088 577</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">+967 771 447 111</p>
                         </div>
                     </a>
                 </div>
@@ -205,8 +205,8 @@ export default function Help() {
                         <button
                             onClick={() => setSelectedCategory('all')}
                             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === 'all'
-                                    ? 'bg-[#2D9B83] text-white'
-                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                ? 'bg-[#2D9B83] text-white'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                 }`}
                         >
                             الكل
@@ -218,8 +218,8 @@ export default function Help() {
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.id)}
                                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${selectedCategory === cat.id
-                                            ? 'bg-[#2D9B83] text-white'
-                                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                        ? 'bg-[#2D9B83] text-white'
+                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -283,7 +283,7 @@ export default function Help() {
                     </div>
 
                     <a
-                        href="https://wa.me/967777088577?text=مرحباً، لدي سؤال..."
+                        href="https://wa.me/967771447111?text=مرحباً، لدي سؤال..."
                         target="_blank"
                         rel="noopener noreferrer"
                     >

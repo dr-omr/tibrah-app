@@ -143,7 +143,7 @@ export default function About() {
                     <h2 className="text-lg font-bold text-slate-800 mb-4">تواصل معنا</h2>
                     <div className="space-y-4">
                         <a
-                            href="https://wa.me/967777088577"
+                            href="https://wa.me/967771447111"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-3 p-3 bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
@@ -153,12 +153,12 @@ export default function About() {
                             </div>
                             <div>
                                 <p className="font-medium text-slate-800">واتساب</p>
-                                <p className="text-sm text-slate-500">+967 777 088 577</p>
+                                <p className="text-sm text-slate-500">+967 771 447 111</p>
                             </div>
                         </a>
 
                         <a
-                            href="https://instagram.com/tibrah.ye"
+                            href="https://instagram.com/dr.omr369"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-3 p-3 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors"
@@ -168,7 +168,7 @@ export default function About() {
                             </div>
                             <div>
                                 <p className="font-medium text-slate-800">انستغرام</p>
-                                <p className="text-sm text-slate-500">@tibrah.ye</p>
+                                <p className="text-sm text-slate-500">@dr.omr369</p>
                             </div>
                         </a>
 
