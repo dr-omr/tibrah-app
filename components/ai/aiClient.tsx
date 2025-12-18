@@ -110,74 +110,14 @@ export const aiClient = {
     isEnabled,
 
     async generateSuggestions(context: any) {
-        if (!isEnabled()) {
-            const randomIndex = Math.floor(Math.random() * FALLBACK_SUGGESTIONS.length);
-            return FALLBACK_SUGGESTIONS[randomIndex];
-        }
-
-        try {
-            const model = getModel();
-            if (!model) throw new Error('Model not initialized');
-
-            const prompt = `
-${getSystemPrompt()}
-
-بناءً على بيانات المستخدم:
-${JSON.stringify(context)}
-
-قم بتوليد:
-1. فقرة "تركيز اليوم" (يمنية محببة ودافئة، جملة أو اثنتين)
-2. 2-3 اقتراحات صحية بسيطة وعملية
-
-الرد JSON فقط بدون أي نص إضافي:
-{"focus_text": "string", "suggestions": ["string"]}
-`;
-
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
-
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                return JSON.parse(jsonMatch[0]);
-            }
-
-            throw new Error('Invalid JSON response');
-        } catch (error) {
-            console.error("AI Suggestions Error:", error);
-            const randomIndex = Math.floor(Math.random() * FALLBACK_SUGGESTIONS.length);
-            return FALLBACK_SUGGESTIONS[randomIndex];
-        }
+        // Fallback to static suggestions for now to ensure reliability
+        const randomIndex = Math.floor(Math.random() * FALLBACK_SUGGESTIONS.length);
+        return FALLBACK_SUGGESTIONS[randomIndex];
     },
 
     async summarize(text: string, contextType: string = 'general') {
-        if (!isEnabled()) {
-            return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟";
-        }
-
-        try {
-            const model = getModel();
-            if (!model) throw new Error('Model not initialized');
-
-            const prompt = `
-${getSystemPrompt()}
-
-قم بتلخيص النص التالي في سياق ${contextType}:
-"${text}"
-
-التلخيص يجب أن يكون:
-- باللهجة اليمنية الدافئة
-- مشجعاً وإيجابياً
-- جملتين أو ثلاث فقط
-`;
-
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            return response.text();
-        } catch (error) {
-            console.error("AI Summarize Error:", error);
-            return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟";
-        }
+        // Fallback summary
+        return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟 استمر في العناية بصحتك.";
     },
 
     async chat(messages: Array<{ role: string, content: string }>, contextData?: any, knowledgeBase?: any) {
@@ -199,9 +139,9 @@ ${getSystemPrompt()}
         conversationStore.addMessage('user', lastUserMessage);
 
         try {
-            console.log('[AI Client] Sending request to /api/chat...');
+            console.log('[AI Client] Sending request to /api/ai-chat...');
 
-            const response = await fetch('/api/chat', {
+            const response = await fetch('/api/ai-chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -211,7 +151,16 @@ ${getSystemPrompt()}
                 }),
             });
 
-            const data = await response.json();
+            let data;
+            const textResponse = await response.text();
+
+            try {
+                data = JSON.parse(textResponse);
+            } catch (e) {
+                console.error('[AI Client] Failed to parse JSON:', textResponse.substring(0, 200));
+                throw new Error(`Invalid server response: ${response.status} ${response.statusText}`);
+            }
+
 
             if (!response.ok) {
                 console.error('[AI Client] API returned error:', data);
