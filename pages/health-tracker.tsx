@@ -25,6 +25,12 @@ import MedicationReminder from '../components/health-tracker/MedicationReminder'
 import WaterTracker from '../components/health-tracker/WaterTracker';
 import SleepTracker from '../components/health-tracker/SleepTracker';
 import HealthSummary from '../components/health-tracker/HealthSummary';
+import ActivityRings from '../components/health-tracker/ActivityRings';
+import MoodTracker from '../components/health-tracker/MoodTracker';
+import BreathingExercises from '../components/health-tracker/BreathingExercises';
+import BloodPressureTracker from '../components/health-tracker/BloodPressureTracker';
+import WeightTracker from '../components/health-tracker/WeightTracker';
+import FastingTimer from '../components/health-tracker/FastingTimer';
 import { DOCTOR_KNOWLEDGE } from '@/components/ai/knowledge';
 import { initializeNotifications } from '@/lib/pushNotifications';
 
@@ -123,13 +129,14 @@ export default function HealthTracker() {
         queryClient.invalidateQueries({ queryKey: ['dailyLogs'] });
     };
 
-    // Navigation tabs configuration
+    // Navigation tabs configuration - More tabs for comprehensive health
     const tabs = [
         { id: 'summary', icon: Heart, label: 'ملخص' },
+        { id: 'activity', icon: Activity, label: 'النشاط' },
         { id: 'water', icon: Droplets, label: 'الماء' },
         { id: 'sleep', icon: Moon, label: 'النوم' },
         { id: 'meds', icon: Pill, label: 'الأدوية' },
-        { id: 'today', icon: Activity, label: 'اليوم' },
+        { id: 'mood', icon: Heart, label: 'المزاج' },
         { id: 'history', icon: Calendar, label: 'السجل' },
     ];
 
@@ -205,6 +212,90 @@ export default function HealthTracker() {
                 {activeTab === 'meds' && (
                     <div className="pt-6">
                         <MedicationReminder />
+                    </div>
+                )}
+
+                {/* Activity Tab - New */}
+                {activeTab === 'activity' && (
+                    <div className="space-y-6 pt-6">
+                        <ActivityRings />
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setActiveTab('weight')}
+                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
+                            >
+                                <span className="text-2xl">⚖️</span>
+                                <p className="text-sm font-medium text-slate-700 mt-1">الوزن</p>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('bp')}
+                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
+                            >
+                                <span className="text-2xl">💓</span>
+                                <p className="text-sm font-medium text-slate-700 mt-1">الضغط</p>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('fasting')}
+                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
+                            >
+                                <span className="text-2xl">⏱️</span>
+                                <p className="text-sm font-medium text-slate-700 mt-1">الصيام</p>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('breathing')}
+                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
+                            >
+                                <span className="text-2xl">🌬️</span>
+                                <p className="text-sm font-medium text-slate-700 mt-1">التنفس</p>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Mood Tab - New */}
+                {activeTab === 'mood' && (
+                    <div className="pt-6">
+                        <MoodTracker />
+                    </div>
+                )}
+
+                {/* Weight Tracker - Sub tab */}
+                {activeTab === 'weight' && (
+                    <div className="pt-6">
+                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
+                            ← العودة للنشاط
+                        </button>
+                        <WeightTracker />
+                    </div>
+                )}
+
+                {/* Blood Pressure - Sub tab */}
+                {activeTab === 'bp' && (
+                    <div className="pt-6">
+                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
+                            ← العودة للنشاط
+                        </button>
+                        <BloodPressureTracker />
+                    </div>
+                )}
+
+                {/* Fasting Timer - Sub tab */}
+                {activeTab === 'fasting' && (
+                    <div className="pt-6">
+                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
+                            ← العودة للنشاط
+                        </button>
+                        <FastingTimer />
+                    </div>
+                )}
+
+                {/* Breathing Exercises - Sub tab */}
+                {activeTab === 'breathing' && (
+                    <div className="pt-6">
+                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
+                            ← العودة للنشاط
+                        </button>
+                        <BreathingExercises />
                     </div>
                 )}
 
