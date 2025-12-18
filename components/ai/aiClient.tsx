@@ -121,7 +121,7 @@ const SMART_FALLBACK_RESPONSES: Record<string, string[]> = {
 const getModel = () => {
     if (!genAI) return null;
     return genAI.getGenerativeModel({
-        model: "gemini-pro",
+        model: "gemini-1.5-flash",
         generationConfig: {
             temperature: 0.7,
             topK: 40,
