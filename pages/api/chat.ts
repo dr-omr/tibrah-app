@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // 3. Initialize Gemini with the FLASH model (Fastest & Most Available)
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         console.log("🤖 AI Request received:", message?.substring(0, 20) + "...");
 
