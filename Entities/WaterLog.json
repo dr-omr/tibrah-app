@@ -1,0 +1,29 @@
+{
+    "name": "WaterLog",
+    "displayName": "سجل الماء",
+    "properties": {
+        "date": {
+            "type": "string",
+            "format": "date",
+            "required": true,
+            "displayName": "التاريخ"
+        },
+        "glasses": {
+            "type": "number",
+            "defaultValue": 0,
+            "displayName": "عدد الأكواب"
+        },
+        "goal": {
+            "type": "number",
+            "defaultValue": 8,
+            "displayName": "الهدف اليومي"
+        },
+        "logs": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "displayName": "توقيتات الشرب"
+        }
+    }
+}

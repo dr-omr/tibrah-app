@@ -184,7 +184,7 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
 
 // Base44 client implementation
 export const base44 = {
-    // Entity management - All 19 entities + User
+    // Entity management - All entities including new health tracking
     entities: {
         // Health & Medical
         UserHealth: createEntityOperations<EntityBase>('user_health'),
@@ -193,6 +193,14 @@ export const base44 = {
         SymptomLog: createEntityOperations<EntityBase>('symptom_logs'),
         LabResult: createEntityOperations<EntityBase>('lab_results'),
         DiagnosticResult: createEntityOperations<EntityBase>('diagnostic_results'),
+
+        // NEW: Medication Management
+        Medication: createEntityOperations<EntityBase>('medications'),
+        MedicationLog: createEntityOperations<EntityBase>('medication_logs'),
+
+        // NEW: Water & Sleep Tracking
+        WaterLog: createEntityOperations<EntityBase>('water_logs'),
+        SleepLog: createEntityOperations<EntityBase>('sleep_logs'),
 
         // Appointments & Reminders
         Appointment: createEntityOperations<EntityBase>('appointments'),

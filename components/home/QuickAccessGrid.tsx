@@ -3,12 +3,21 @@ import Link from 'next/link';
 import { createPageUrl } from '../../utils';
 import {
     Stethoscope, Radio, GraduationCap, ShoppingBag, BookOpen,
-    MessageCircle, Brain, Sparkles
+    MessageCircle, Brain, Sparkles, LucideIcon
 } from 'lucide-react';
+
+interface QuickAccessItem {
+    icon: LucideIcon;
+    label: string;
+    page: string;
+    color: string;
+    desc: string;
+    badge?: string;
+}
 
 export default function QuickAccessGrid() {
     // الأقسام الأساسية فقط - مبسطة وواضحة
-    const mainItems = [
+    const mainItems: QuickAccessItem[] = [
         { icon: Stethoscope, label: 'خدماتنا', page: 'Services', color: 'from-[#2D9B83] to-[#3FB39A]', desc: 'الجلسات والبرامج' },
         { icon: Brain, label: 'الطب الشعوري', page: 'BodyMap', color: 'from-rose-500 to-red-500', desc: 'اكتشف سبب مرضك', badge: 'جديد' },
         { icon: Radio, label: 'الترددات', page: 'Frequencies', color: 'from-purple-500 to-indigo-500', desc: 'العلاج بالصوت' },
@@ -33,21 +42,24 @@ export default function QuickAccessGrid() {
                             key={index}
                             href={createPageUrl(item.page)}
                             aria-label={item.label}
-                            className="group relative overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100 active:scale-[0.98] transition-all"
+                            className="group relative overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100 hover:shadow-lg hover:border-slate-200 active:scale-[0.97] transition-all duration-300"
                         >
                             {item.badge && (
                                 <div className="absolute top-2 left-2 z-10">
-                                    <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold">
+                                    <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
                                         {item.badge}
                                     </span>
                                 </div>
                             )}
 
+                            {/* Hover Glow Effect */}
+                            <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+
                             <div className="relative p-4">
-                                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-2 shadow-md`}>
+                                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-2 shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
                                     <Icon className="w-5 h-5 text-white" />
                                 </div>
-                                <h4 className="font-semibold text-slate-800 text-sm">{item.label}</h4>
+                                <h4 className="font-semibold text-slate-800 text-sm group-hover:text-[#2D9B83] transition-colors">{item.label}</h4>
                                 <p className="text-xs text-slate-400">{item.desc}</p>
                             </div>
                         </Link>

@@ -17,7 +17,25 @@ import FrequencyPlayer from '../components/frequencies/FrequencyPlayer';
 import { ListSkeleton } from '../components/common/Skeletons';
 import ErrorState from '../components/common/ErrorState';
 
-const categories = [
+// TypeScript Interfaces
+interface Frequency {
+    id: string;
+    name: string;
+    frequency_hz: number;
+    category: string;
+    description: string;
+    benefits: string[];
+    color?: string;
+}
+
+interface Category {
+    id: string;
+    label: string;
+    icon: string;
+    isLink?: boolean;
+}
+
+const categories: Category[] = [
     { id: 'all', label: 'الكل', icon: '✨' },
     { id: 'solfeggio', label: 'سولفيجيو', icon: '🎵' },
     { id: 'brainwave', label: 'موجات الدماغ', icon: '🧠' },
@@ -29,7 +47,7 @@ const categories = [
 ];
 
 // Default frequencies data
-const defaultFrequencies = [
+const defaultFrequencies: Frequency[] = [
     // Solfeggio
     { id: '1', name: 'تردد التحرر', frequency_hz: 174, category: 'solfeggio', description: 'يساعد على تخفيف الألم والتوتر', benefits: ['تخفيف الألم', 'الاسترخاء', 'الأمان'] },
     { id: '2', name: 'تردد الشفاء', frequency_hz: 285, category: 'solfeggio', description: 'يعزز شفاء الأنسجة', benefits: ['تجديد الخلايا', 'الشفاء', 'الطاقة'] },
@@ -63,9 +81,9 @@ const defaultFrequencies = [
 export default function Frequencies() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
-    const [currentFrequency, setCurrentFrequency] = useState(null);
+    const [currentFrequency, setCurrentFrequency] = useState<Frequency | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [selectedFrequency, setSelectedFrequency] = useState(null);
+    const [selectedFrequency, setSelectedFrequency] = useState<Frequency | null>(null);
 
     const { data: frequencies = defaultFrequencies, isLoading, isError, refetch } = useQuery({
         queryKey: ['frequencies'],

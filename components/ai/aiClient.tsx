@@ -1,10 +1,24 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini
-const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+// Initialize Gemini - Check at runtime to handle Next.js hydration
+const getApiKey = (): string => {
+    if (typeof window !== 'undefined') {
+        // Client-side
+        return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+    }
+    // Server-side
+    return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+};
+
+const API_KEY = getApiKey();
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-const AI_ENABLED = !!API_KEY;
+// Debug log (remove in production)
+if (typeof window !== 'undefined') {
+    console.log('[AI Client] API Key present:', !!API_KEY, '| Length:', API_KEY?.length || 0);
+}
+
+const AI_ENABLED = !!API_KEY && API_KEY.length > 10;
 
 const YEMENI_SYSTEM_PROMPT = `
 أنت "مساعد طِبرَا الذكي" 🌿 - مساعد صحي ودود يعمل بنهج الطب الوظيفي.
@@ -51,7 +65,7 @@ const YEMENI_SYSTEM_PROMPT = `
 
 const DISCLAIMER = "هذا محتوى توعوي/تثقيفي، ولا يغني عن استشارة الطبيب أو المختص.";
 
-// Fallback responses
+// Enhanced Fallback responses - more intelligent and contextual
 const FALLBACK_SUGGESTIONS = [
     {
         focus_text: "يومك عافية يا بطل! 🌿 ركز اليوم على راحة بالك وتغذيتك.",
@@ -76,14 +90,42 @@ const FALLBACK_SUGGESTIONS = [
             "قلل السكر والخبز الأبيض اليوم",
             "خذ 10 دقائق للتأمل أو الاسترخاء"
         ]
+    },
+    {
+        focus_text: "أهلاً وسهلاً يا خبير! 🌟 صحتك أمانة، اهتم بها.",
+        suggestions: [
+            "اشرب 8 أكواب ماء على الأقل اليوم",
+            "تجنب الأكل الثقيل قبل النوم",
+            "مارس تمارين التنفس العميق"
+        ]
     }
 ];
 
-const FALLBACK_CHAT_RESPONSES = [
-    "يا غالي حياك الله! 🌿 أنا مساعد طِبرَا الذكي، موجود لمساعدتك في أي سؤال صحي. كيف أخدمك اليوم؟",
-    "أهلاً وسهلاً يا خبير! 💚 سعيد إنك تواصلت معنا. اسألني أي شي عن صحتك وأنا حاضر أفيدك.",
-    "مرحباً يا غالي! 🌟 أنا هنا عشان أساعدك. قولي شو اللي يشغل بالك وأنا معاك."
-];
+// Enhanced chat responses based on keywords
+const SMART_FALLBACK_RESPONSES: Record<string, string[]> = {
+    'ألم|وجع|يؤلم': [
+        "يا غالي، الألم هذا مزعج والله! 🌿 جرب الراحة والماء الدافئ، وإذا استمر أكثر من يومين، الدكتور عمر العماد يقدر يساعدك - الجلسة التشخيصية بـ25 ر.س بس!",
+        "حياك الله يا خبير! 💪 الألم شيء ما لازم تتحمله لحالك. جرب كمادات دافئة، وإذا ما تحسن، تواصل مع الدكتور عمر العماد - متخصص بيشخص السبب الجذري."
+    ],
+    'نوم|أرق|أنام': [
+        "يا غالي، النوم مهم جداً للشفاء! 😴 جرب تشرب شاي البابونج قبل النوم، وابتعد عن الجوال ساعة قبل ما تنام. وإذا الأرق مستمر، الدكتور عمر عنده حلول طبيعية ممتازة!",
+        "ما عليك يا بطل! 🌙 للنوم الصحي: غرفة مظلمة، بدون شاشات، ونوم بوقت ثابت. جرب ملعقة عسل مع ماء دافئ قبل النوم - سر يمني قديم!"
+    ],
+    'هضم|معدة|بطن|قولون': [
+        "يا غالي، مشاكل الهضم منتشرة كثير! 🌿 جرب الحلبة على الريق، وتجنب الأكل الدسم. الدكتور عمر العماد متخصص في علاج السبب الجذري لمشاكل الهضم.",
+        "أبشر يا خبير! 💪 القولون يحتاج صبر وتغيير نمط الحياة. الماء الدافئ مع الليمون، والابتعاد عن التوتر، والمشي بعد الأكل - كلها تساعد!"
+    ],
+    'طاقة|تعب|إرهاق': [
+        "يا غالي، التعب له أسباب كثيرة! ☀️ تأكد إنك تشرب ماء كافي، وتنام 7-8 ساعات، وتاكل فطور صحي. وإذا مستمر، الدكتور عمر يقدر يفحص الأسباب.",
+        "ما عليك يا بطل! 💪 الطاقة تيجي من النوم الجيد، الأكل الصحي، والحركة. جرب المشي 20 دقيقة يومياً - بتحس بفرق كبير!"
+    ],
+    'default': [
+        "يا غالي حياك الله! 🌿 أنا مساعد طِبرَا الذكي، موجود لمساعدتك في أي سؤال صحي. كيف أخدمك اليوم؟",
+        "أهلاً وسهلاً يا خبير! 💚 سعيد إنك تواصلت معنا. اسألني أي شي عن صحتك وأنا حاضر أفيدك.",
+        "مرحباً يا غالي! 🌟 أنا هنا عشان أساعدك. قولي شو اللي يشغل بالك وأنا معاك.",
+        "حياك الله يا بطل! 💪 أنا مساعدك الصحي. إذا عندك أي سؤال عن الصحة أو التغذية أو نمط الحياة، أنا جاهز أفيدك."
+    ]
+};
 
 // Get Gemini model
 const getModel = () => {
@@ -175,9 +217,23 @@ ${YEMENI_SYSTEM_PROMPT}
     },
 
     async chat(messages: Array<{ role: string, content: string }>, contextData?: any, knowledgeBase?: any) {
+        // Smart fallback - match message content to get relevant response
+        const getSmartFallback = (userMessage: string): string => {
+            for (const [pattern, responses] of Object.entries(SMART_FALLBACK_RESPONSES)) {
+                if (pattern === 'default') continue;
+                const regex = new RegExp(pattern, 'i');
+                if (regex.test(userMessage)) {
+                    return responses[Math.floor(Math.random() * responses.length)];
+                }
+            }
+            const defaults = SMART_FALLBACK_RESPONSES['default'];
+            return defaults[Math.floor(Math.random() * defaults.length)];
+        };
+
         if (!AI_ENABLED) {
-            const randomIndex = Math.floor(Math.random() * FALLBACK_CHAT_RESPONSES.length);
-            return FALLBACK_CHAT_RESPONSES[randomIndex];
+            console.warn('[AI Client] AI is disabled. Using smart fallback responses. Check NEXT_PUBLIC_GEMINI_API_KEY in .env.local');
+            const lastMessage = messages[messages.length - 1]?.content || '';
+            return getSmartFallback(lastMessage) + '\n\n⚠️ (الذكاء الاصطناعي غير متصل حالياً)';
         }
 
         try {
@@ -233,8 +289,8 @@ ${historyString}
                 return response.text();
             } catch (retryError) {
                 console.error("AI Chat Retry Error:", retryError);
-                const randomIndex = Math.floor(Math.random() * FALLBACK_CHAT_RESPONSES.length);
-                return FALLBACK_CHAT_RESPONSES[randomIndex];
+                const lastMessage = messages[messages.length - 1]?.content || '';
+                return getSmartFallback(lastMessage);
             }
         }
     }

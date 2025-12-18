@@ -1,7 +1,15 @@
 import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function CardSkeleton({ className }) {
+interface CardSkeletonProps {
+    className?: string;
+}
+
+interface ListSkeletonProps {
+    count?: number;
+}
+
+export function CardSkeleton({ className = '' }: CardSkeletonProps) {
     return (
         <div className={`p-4 glass rounded-2xl ${className}`}>
             <Skeleton className="h-4 w-3/4 mb-4 bg-slate-200" />
@@ -14,7 +22,7 @@ export function CardSkeleton({ className }) {
     );
 }
 
-export function ListSkeleton({ count = 3 }) {
+export function ListSkeleton({ count = 3 }: ListSkeletonProps) {
     return (
         <div className="space-y-3">
             {[...Array(count)].map((_, i) => (
@@ -26,6 +34,59 @@ export function ListSkeleton({ count = 3 }) {
                     </div>
                 </div>
             ))}
+        </div>
+    );
+}
+
+export function QuickAccessSkeleton() {
+    return (
+        <div className="px-5 py-6">
+            <Skeleton className="h-6 w-40 mb-4 bg-slate-200" />
+            <div className="grid grid-cols-2 gap-3 mb-5">
+                {[...Array(6)].map((_, i) => (
+                    <div key={i} className="p-4 bg-white rounded-2xl border border-slate-100">
+                        <Skeleton className="w-11 h-11 rounded-xl bg-slate-200 mb-2" />
+                        <Skeleton className="h-4 w-20 bg-slate-200 mb-1" />
+                        <Skeleton className="h-3 w-16 bg-slate-100" />
+                    </div>
+                ))}
+            </div>
+            <Skeleton className="h-16 w-full rounded-2xl bg-green-100" />
+        </div>
+    );
+}
+
+export function HomeSkeleton() {
+    return (
+        <div className="min-h-screen animate-pulse">
+            {/* Doctor Intro Skeleton */}
+            <div className="px-6 py-8">
+                <div className="text-center mb-8">
+                    <Skeleton className="h-16 w-40 mx-auto mb-6 rounded-2xl bg-slate-200" />
+                    <Skeleton className="h-10 w-48 mx-auto mb-3 bg-slate-200" />
+                    <Skeleton className="h-5 w-32 mx-auto bg-slate-100" />
+                </div>
+                <div className="glass rounded-3xl p-6 mb-8">
+                    <div className="flex flex-col items-center">
+                        <Skeleton className="w-36 h-36 rounded-full bg-slate-200 mb-6" />
+                        <Skeleton className="h-8 w-40 bg-slate-200 mb-2" />
+                        <Skeleton className="h-5 w-56 bg-slate-100 mb-4" />
+                        <Skeleton className="h-4 w-full max-w-sm bg-slate-100 mb-2" />
+                        <Skeleton className="h-4 w-3/4 max-w-sm bg-slate-100 mb-5" />
+                        <Skeleton className="h-14 w-full max-w-xs rounded-2xl bg-[#2D9B83]/20" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="glass rounded-2xl p-4 text-center">
+                            <Skeleton className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-200" />
+                            <Skeleton className="h-6 w-12 mx-auto bg-slate-200 mb-1" />
+                            <Skeleton className="h-3 w-20 mx-auto bg-slate-100" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <QuickAccessSkeleton />
         </div>
     );
 }

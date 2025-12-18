@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
 import {
-    ChevronLeft, BarChart3, Calendar, FileText, LayoutDashboard, Sparkles
+    ChevronLeft, BarChart3, Calendar, FileText, LayoutDashboard, Sparkles,
+    Droplets, Moon, Pill, Activity, Heart
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
@@ -19,10 +21,29 @@ import AIContextAssistant from '../components/ai/AIContextAssistant';
 import AddMetricSheet from '../components/health-tracker/AddMetricSheet';
 import SymptomLogger from '../components/health-tracker/SymptomLogger';
 import DailyCheckIn from '../components/health-tracker/DailyCheckIn';
+import MedicationReminder from '../components/health-tracker/MedicationReminder';
+import WaterTracker from '../components/health-tracker/WaterTracker';
+import SleepTracker from '../components/health-tracker/SleepTracker';
+import HealthSummary from '../components/health-tracker/HealthSummary';
 import { DOCTOR_KNOWLEDGE } from '@/components/ai/knowledge';
+import { initializeNotifications } from '@/lib/pushNotifications';
+
+// TypeScript interfaces
+interface NavItemProps {
+    id: string;
+    icon: React.ElementType;
+    label: string;
+}
+
+interface DailyLog {
+    id?: string;
+    date: string;
+    [key: string]: unknown;
+}
 
 export default function HealthTracker() {
-    const [activeTab, setActiveTab] = useState('today');
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState('summary');
     const [showAddMetric, setShowAddMetric] = useState(false);
     const [showSymptomLogger, setShowSymptomLogger] = useState(false);
     const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
@@ -30,7 +51,20 @@ export default function HealthTracker() {
 
     const queryClient = useQueryClient();
 
-    React.useEffect(() => {
+    // Initialize notifications
+    useEffect(() => {
+        initializeNotifications();
+    }, []);
+
+    // Handle URL tab parameter
+    useEffect(() => {
+        const tab = router.query.tab as string;
+        if (tab && ['summary', 'today', 'water', 'sleep', 'meds', 'history', 'metrics', 'journal'].includes(tab)) {
+            setActiveTab(tab);
+        }
+    }, [router.query.tab]);
+
+    useEffect(() => {
         base44.auth.me().then(setUser).catch(() => { });
     }, []);
 
@@ -45,14 +79,17 @@ export default function HealthTracker() {
         queryFn: () => base44.entities.SymptomLog.list('-recorded_at', 50),
     });
 
-    const { data: dailyLogs = [] } = useQuery({
+    const { data: dailyLogs = [] } = useQuery<DailyLog[]>({
         queryKey: ['dailyLogs'],
-        queryFn: () => base44.entities.DailyLog.list('-date', 30),
+        queryFn: async () => {
+            const logs = await base44.entities.DailyLog.list('-date', 30);
+            return logs as unknown as DailyLog[];
+        },
     });
 
     // Mutations
     const addMetricMutation = useMutation({
-        mutationFn: (data) => base44.entities.HealthMetric.create(data),
+        mutationFn: (data: Record<string, unknown>) => base44.entities.HealthMetric.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['healthMetrics'] });
             setShowAddMetric(false);
@@ -60,7 +97,7 @@ export default function HealthTracker() {
     });
 
     const addSymptomMutation = useMutation({
-        mutationFn: (data) => base44.entities.SymptomLog.create(data),
+        mutationFn: (data: Record<string, unknown>) => base44.entities.SymptomLog.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['symptoms'] });
             setShowSymptomLogger(false);
@@ -68,10 +105,9 @@ export default function HealthTracker() {
     });
 
     const addDailyLogMutation = useMutation({
-        mutationFn: async (data) => {
-            // Check if log exists for date
+        mutationFn: async (data: DailyLog) => {
             const existing = dailyLogs.find(l => l.date === data.date);
-            if (existing) {
+            if (existing?.id) {
                 return base44.entities.DailyLog.update(existing.id, data);
             }
             return base44.entities.DailyLog.create(data);
@@ -87,24 +123,34 @@ export default function HealthTracker() {
         queryClient.invalidateQueries({ queryKey: ['dailyLogs'] });
     };
 
-    const NavItem = ({ id, icon: Icon, label }) => (
+    // Navigation tabs configuration
+    const tabs = [
+        { id: 'summary', icon: Heart, label: 'ملخص' },
+        { id: 'water', icon: Droplets, label: 'الماء' },
+        { id: 'sleep', icon: Moon, label: 'النوم' },
+        { id: 'meds', icon: Pill, label: 'الأدوية' },
+        { id: 'today', icon: Activity, label: 'اليوم' },
+        { id: 'history', icon: Calendar, label: 'السجل' },
+    ];
+
+    const NavItem = ({ id, icon: Icon, label }: NavItemProps) => (
         <button
             onClick={() => setActiveTab(id)}
-            className={`flex flex-col items-center justify-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === id
+            className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 min-w-[60px] ${activeTab === id
                 ? 'bg-white text-[#2D9B83] shadow-md scale-105'
                 : 'text-white/70 hover:bg-white/10'
                 }`}
         >
-            <Icon className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-bold">{label}</span>
+            <Icon className="w-5 h-5 mb-1" />
+            <span className="text-[9px] font-bold">{label}</span>
         </button>
     );
 
     return (
         <div className="min-h-screen bg-slate-50 pb-24">
             {/* Header Section */}
-            <div className="bg-gradient-to-b from-[#2D9B83] to-[#3FB39A] pb-8 pt-6 px-4 rounded-b-[2.5rem] shadow-xl relative z-10">
-                <div className="flex justify-between items-center mb-6">
+            <div className="bg-gradient-to-b from-[#2D9B83] to-[#3FB39A] pb-6 pt-6 px-4 rounded-b-[2.5rem] shadow-xl relative z-10">
+                <div className="flex justify-between items-center mb-4">
                     <Link href={createPageUrl('Dashboard')}>
                         <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 rounded-full">
                             <ChevronLeft className="w-6 h-6" />
@@ -114,19 +160,57 @@ export default function HealthTracker() {
                     <div className="w-10" />
                 </div>
 
-                {/* Top Navigation - Segmented Control style */}
-                <div className="flex justify-between items-center px-2">
-                    <NavItem id="today" icon={LayoutDashboard} label="اليوم" />
-                    <NavItem id="history" icon={Calendar} label="السجل" />
-                    <NavItem id="metrics" icon={BarChart3} label="القياسات" />
-                    <NavItem id="journal" icon={FileText} label="التدوين" />
+                {/* Scrollable Navigation */}
+                <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+                    <div className="flex gap-2 pb-2">
+                        {tabs.map(tab => (
+                            <NavItem key={tab.id} id={tab.id} icon={tab.icon} label={tab.label} />
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* Main Content Area */}
             <div className="px-4 -mt-4 relative z-20">
+                {/* Summary View */}
+                {activeTab === 'summary' && (
+                    <div className="space-y-6 pt-6">
+                        <HealthSummary />
+                        <div className="pt-4">
+                            <AIContextAssistant
+                                contextType="health_tracker"
+                                contextData={{ metrics: metrics.slice(0, 5), symptoms: symptoms.slice(0, 5) }}
+                                knowledgeBase={DOCTOR_KNOWLEDGE}
+                                title="مساعدك الصحي"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Water Tracker */}
+                {activeTab === 'water' && (
+                    <div className="pt-6">
+                        <WaterTracker />
+                    </div>
+                )}
+
+                {/* Sleep Tracker */}
+                {activeTab === 'sleep' && (
+                    <div className="pt-6">
+                        <SleepTracker />
+                    </div>
+                )}
+
+                {/* Medications */}
+                {activeTab === 'meds' && (
+                    <div className="pt-6">
+                        <MedicationReminder />
+                    </div>
+                )}
+
+                {/* Today View (Original) */}
                 {activeTab === 'today' && (
-                    <div className="space-y-6">
+                    <div className="space-y-6 pt-6">
                         <TodayView
                             metrics={metrics}
                             dailyLogs={dailyLogs}
@@ -136,8 +220,6 @@ export default function HealthTracker() {
                             onCheckIn={() => setShowDailyCheckIn(true)}
                             onAddMetric={() => setShowAddMetric(true)}
                         />
-
-                        {/* AI Analysis Section */}
                         <div className="pt-4">
                             <div className="flex items-center gap-2 mb-4 px-2">
                                 <Sparkles className="w-5 h-5 text-[#D4AF37]" />
@@ -148,39 +230,40 @@ export default function HealthTracker() {
                                 symptoms={symptoms}
                                 dailyLogs={dailyLogs}
                             />
-                            <div className="mt-4">
-                                <AIContextAssistant
-                                    contextType="health_tracker"
-                                    contextData={{ metrics: metrics.slice(0, 5), symptoms: symptoms.slice(0, 5) }}
-                                    knowledgeBase={DOCTOR_KNOWLEDGE}
-                                    title="مساعدك الصحي"
-                                />
-                            </div>
                         </div>
                     </div>
                 )}
 
+                {/* History View */}
                 {activeTab === 'history' && (
-                    <HistoryView
-                        metrics={metrics}
-                        dailyLogs={dailyLogs}
-                        symptoms={symptoms}
-                    />
+                    <div className="pt-6">
+                        <HistoryView
+                            metrics={metrics}
+                            dailyLogs={dailyLogs}
+                            symptoms={symptoms}
+                        />
+                    </div>
                 )}
 
+                {/* Metrics View */}
                 {activeTab === 'metrics' && (
-                    <MetricsView
-                        metrics={metrics}
-                        symptoms={symptoms}
-                        onAddMetric={() => setShowAddMetric(true)}
-                    />
+                    <div className="pt-6">
+                        <MetricsView
+                            metrics={metrics}
+                            symptoms={symptoms}
+                            onAddMetric={() => setShowAddMetric(true)}
+                        />
+                    </div>
                 )}
 
+                {/* Journal View */}
                 {activeTab === 'journal' && (
-                    <JournalView
-                        onSubmitLog={(data) => addDailyLogMutation.mutate(data)}
-                        onSubmitSymptom={(data) => addSymptomMutation.mutate(data)}
-                    />
+                    <div className="pt-6">
+                        <JournalView
+                            onSubmitLog={(data: DailyLog) => addDailyLogMutation.mutate(data)}
+                            onSubmitSymptom={(data: Record<string, unknown>) => addSymptomMutation.mutate(data)}
+                        />
+                    </div>
                 )}
             </div>
 
@@ -188,20 +271,22 @@ export default function HealthTracker() {
             <AddMetricSheet
                 open={showAddMetric}
                 onOpenChange={setShowAddMetric}
-                onSubmit={(data) => addMetricMutation.mutate(data)}
+                onSubmit={(data: Record<string, unknown>) => addMetricMutation.mutate(data)}
+                selectedMetric={null}
             />
 
             <SymptomLogger
                 open={showSymptomLogger}
                 onOpenChange={setShowSymptomLogger}
-                onSubmit={(data) => addSymptomMutation.mutate(data)}
+                onSubmit={(data: Record<string, unknown>) => addSymptomMutation.mutate(data)}
             />
 
             <DailyCheckIn
                 open={showDailyCheckIn}
                 onOpenChange={setShowDailyCheckIn}
-                onSubmit={(data) => addDailyLogMutation.mutate(data)}
+                onSubmit={(data: DailyLog) => addDailyLogMutation.mutate(data)}
             />
         </div>
     );
 }
+

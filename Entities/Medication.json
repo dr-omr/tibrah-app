@@ -1,0 +1,72 @@
+{
+    "name": "Medication",
+    "displayName": "الأدوية",
+    "properties": {
+        "name": {
+            "type": "string",
+            "required": true,
+            "displayName": "اسم الدواء"
+        },
+        "dosage": {
+            "type": "string",
+            "required": true,
+            "displayName": "الجرعة"
+        },
+        "unit": {
+            "type": "string",
+            "defaultValue": "حبة",
+            "displayName": "الوحدة"
+        },
+        "frequency": {
+            "type": "string",
+            "enum": [
+                "once_daily",
+                "twice_daily",
+                "three_times",
+                "as_needed",
+                "weekly"
+            ],
+            "defaultValue": "once_daily",
+            "displayName": "التكرار"
+        },
+        "times": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "displayName": "أوقات التناول"
+        },
+        "start_date": {
+            "type": "string",
+            "format": "date",
+            "displayName": "تاريخ البدء"
+        },
+        "end_date": {
+            "type": "string",
+            "format": "date",
+            "displayName": "تاريخ الانتهاء"
+        },
+        "remaining_quantity": {
+            "type": "number",
+            "displayName": "الكمية المتبقية"
+        },
+        "refill_reminder": {
+            "type": "boolean",
+            "defaultValue": true,
+            "displayName": "تذكير إعادة التعبئة"
+        },
+        "notes": {
+            "type": "string",
+            "displayName": "ملاحظات"
+        },
+        "color": {
+            "type": "string",
+            "displayName": "لون الدواء"
+        },
+        "is_active": {
+            "type": "boolean",
+            "defaultValue": true,
+            "displayName": "نشط"
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "name": "SleepLog",
+    "displayName": "سجل النوم",
+    "properties": {
+        "date": {
+            "type": "string",
+            "format": "date",
+            "required": true,
+            "displayName": "التاريخ"
+        },
+        "bedtime": {
+            "type": "string",
+            "displayName": "وقت النوم"
+        },
+        "wake_time": {
+            "type": "string",
+            "displayName": "وقت الاستيقاظ"
+        },
+        "duration_hours": {
+            "type": "number",
+            "displayName": "مدة النوم (ساعات)"
+        },
+        "quality": {
+            "type": "number",
+            "min": 1,
+            "max": 5,
+            "displayName": "جودة النوم"
+        },
+        "notes": {
+            "type": "string",
+            "displayName": "ملاحظات"
+        }
+    }
+}

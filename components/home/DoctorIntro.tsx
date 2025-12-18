@@ -1,19 +1,31 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Award, Users, Clock, Star, Verified, Sparkles, Heart, Brain, Activity, Calendar, ArrowLeft } from 'lucide-react';
+import { Award, Users, Clock, Star, Verified, Sparkles, Heart, Brain, Activity, Calendar, ArrowLeft, LucideIcon } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from '../../utils';
 
+interface StatItem {
+    icon: LucideIcon;
+    value: string;
+    label: string;
+    color: string;
+}
+
+interface Certification {
+    name: string;
+    icon: LucideIcon;
+}
+
 export default function DoctorIntro() {
-    const stats = [
+    const stats: StatItem[] = [
         { icon: Users, value: '+٣٠٠', label: 'شخص تعافى بفضل الله', color: 'from-blue-500 to-cyan-500' },
         { icon: Clock, value: '+٢٠٠٠', label: 'ساعة علم حقيقي', color: 'from-purple-500 to-pink-500' },
         { icon: Star, value: '٨٧%', label: 'نسبة التعافي والرضا', color: 'from-amber-500 to-orange-500' },
     ];
 
-    const certifications = [
+    const certifications: Certification[] = [
         { name: 'الطب الوظيفي', icon: Brain },
         { name: 'العلاج بالترددات', icon: Activity },
         { name: 'التغذية العلاجية', icon: Heart },

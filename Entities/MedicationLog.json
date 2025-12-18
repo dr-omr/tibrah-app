@@ -1,0 +1,35 @@
+{
+    "name": "MedicationLog",
+    "displayName": "سجل الأدوية",
+    "properties": {
+        "medication_id": {
+            "type": "string",
+            "required": true,
+            "displayName": "معرف الدواء"
+        },
+        "taken_at": {
+            "type": "string",
+            "format": "date-time",
+            "required": true,
+            "displayName": "وقت التناول"
+        },
+        "scheduled_time": {
+            "type": "string",
+            "displayName": "الوقت المجدول"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "taken",
+                "skipped",
+                "late"
+            ],
+            "defaultValue": "taken",
+            "displayName": "الحالة"
+        },
+        "notes": {
+            "type": "string",
+            "displayName": "ملاحظات"
+        }
+    }
+}

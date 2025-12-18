@@ -6,7 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from 'react-markdown';
 
-export default function ChatInterface({ onClose }) {
+interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+interface ChatInterfaceProps {
+    onClose: () => void;
+}
+
+export default function ChatInterface({ onClose }: ChatInterfaceProps) {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
