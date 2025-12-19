@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import FloatingAssistant from './components/common/FloatingAssistant';
 import OfflineBanner from './components/common/OfflineBanner';
 import PWAInstallPrompt from './components/common/PWAInstallPrompt';
@@ -7,8 +7,8 @@ import BottomNav from './components/navigation/BottomNav';
 import Header from './components/navigation/Header';
 import Footer from './components/navigation/Footer';
 import { useAuth } from './contexts/AuthContext';
+import { useAudio } from './contexts/AudioContext';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -17,7 +17,9 @@ interface LayoutProps {
 
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const { user, loading } = useAuth();
+  const { currentTrack } = useAudio();
   const router = useRouter();
+
 
   // Pages that require authentication
   const protectedPages = [
@@ -81,7 +83,8 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
       {/* Main Content - pb-24 for bottom nav on mobile, safe area aware */}
       <main className={`
         scroll-momentum
-        ${hideNav ? 'safe-bottom' : 'pb-24 md:pb-0'}
+        ${hideNav ? 'safe-bottom' : 'pb-24' /* Default padding for nav */}
+        ${currentTrack ? 'pb-48' : '' /* Extra padding if player is visible */}
         min-h-[calc(100vh-80px)]
       `}>
         <div className="px-4 sm:px-6 lg:px-8">

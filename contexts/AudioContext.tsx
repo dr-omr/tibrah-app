@@ -15,6 +15,7 @@ interface AudioContextType {
     currentTrack: Track | null;
     playTrack: (track: Track) => void;
     togglePlay: () => void;
+    closePlayer: () => void;
     volume: number;
     setVolume: (val: number) => void;
 }
@@ -92,14 +93,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     const playTone = useCallback((freq: number) => {
         initAudio(); // Ensure context is ready
-
-        // Don't stop previous if we are just switching frequencies in a sequence smoothly?
-        // For now, simple logic: stop then start new one.
         stopAudio();
-
-        // Wait slightly for fade out of previous (if we want super smooth, we'd use 2 oscillators)
-        // For instant response, we'll just cut (stopAudio now has 150ms delay which might lag Rife seq).
-        // Let's optimize: sequence switching shouldn't use "stopAudio" full fade out.
 
         setTimeout(() => {
             if (!audioContextRef.current) return;
@@ -139,8 +133,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         };
 
         playNext();
-        // Switch frequency every 3 minutes (180s) or faster for demo
-        // For simplicity in this global player, we'll switch every 5 seconds for now to show effect
         rifeIntervalRef.current = setInterval(playNext, 5000);
 
     }, [initAudio, stopAudio, playTone]);
@@ -176,13 +168,19 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
     }, [isPlaying, currentTrack, playTrack, stopAudio]);
 
+    const closePlayer = useCallback(() => {
+        stopAudio();
+        setIsPlaying(false);
+        setCurrentTrack(null);
+    }, [stopAudio]);
+
     // Cleanup
     useEffect(() => {
         return () => stopAudio();
     }, [stopAudio]);
 
     return (
-        <AudioContext.Provider value={{ isPlaying, currentTrack, playTrack, togglePlay, volume, setVolume }}>
+        <AudioContext.Provider value={{ isPlaying, currentTrack, playTrack, togglePlay, closePlayer, volume, setVolume }}>
             {children}
         </AudioContext.Provider>
     );
