@@ -16,33 +16,30 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once (singleton pattern for hot-reload safety)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let app: any = null;
+let auth: any = null;
+let googleProvider: any = null;
+let db: any = null;
+let storage: any = null;
 
-// Debug: Log environment variable status only in development
-if (process.env.NODE_ENV === 'development') {
-    console.log("🔥 Firebase Config Debug:", {
-        apiKeyLoaded: !!firebaseConfig.apiKey,
-        authDomainLoaded: !!firebaseConfig.authDomain,
-        projectIdLoaded: !!firebaseConfig.projectId,
-        storageBucketLoaded: !!firebaseConfig.storageBucket,
-        appIdLoaded: !!firebaseConfig.appId,
-        projectId: firebaseConfig.projectId,
-        authDomain: firebaseConfig.authDomain,
-    });
+try {
+    if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+        app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        auth = getAuth(app);
+        googleProvider = new GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        db = getFirestore(app);
+        storage = getStorage(app);
+    } else {
+        console.warn('⚠️ Firebase config missing. App will run in Offline/Local mode.');
+    }
+} catch (error) {
+    console.warn('⚠️ Firebase initialization failed:', error);
 }
 
-// Auth
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-// Add additional scopes for Google provider
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
-
-// Firestore Database
-export const db = getFirestore(app);
-
-// Storage
-export const storage = getStorage(app);
+export { auth, googleProvider, db, storage };
+export default app;
 
 // Analytics (only in browser)
 export const initAnalytics = async () => {
@@ -55,4 +52,4 @@ export const initAnalytics = async () => {
     return null;
 };
 
-export default app;
+

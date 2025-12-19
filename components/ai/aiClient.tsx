@@ -141,13 +141,22 @@ export const aiClient = {
         try {
             console.log('[AI Client] Sending request to /api/ai-chat...');
 
-            const response = await fetch('/api/ai-chat', {
+            const response = await fetch(`/api/chat-v2?ts=${Date.now()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: lastUserMessage
+                    message: lastUserMessage,
+                    context: {
+                        userName: "ضيف", // Should come from User auth
+                        healthProfile: {
+                            condition: "General Wellness", // Mock data
+                            vitalityScore: 75,
+                            program: "Detox Phase 1"
+                        },
+                        ...contextData
+                    }
                 }),
             });
 
@@ -189,6 +198,28 @@ export const aiClient = {
 
     getConversationHistory() {
         return conversationStore.getCurrentConversation();
+    },
+
+    async analyzeImage(base64: string, mimeType: string, mode: 'lab' | 'face' = 'lab') {
+        try {
+            console.log(`[AI Client] Analyzing image (Mode: ${mode})...`);
+            const response = await fetch('/api/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64, mimeType, mode })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to analyze image');
+            }
+
+            return data.text;
+        } catch (error) {
+            console.error('[AI Client] Image Analysis Error:', error);
+            throw error;
+        }
     }
 };
 

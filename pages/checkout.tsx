@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, Trash2, Plus, Minus, ShoppingBag,
-    MessageCircle, CreditCard, Truck, Check
+    MessageCircle, CreditCard, Check
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import YemeniPaymentGateways, { PaymentMethodType } from '@/components/checkout/YemeniPaymentGateways';
+import ManualPaymentModal from '@/components/checkout/ManualPaymentModal';
 
 interface CartItem {
     id: string;
@@ -21,6 +23,9 @@ interface CartItem {
 
 export default function Checkout() {
     const [checkoutComplete, setCheckoutComplete] = useState(false);
+    const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | undefined>();
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
     const queryClient = useQueryClient();
 
     const { data: cartItems = [], isLoading } = useQuery<CartItem[]>({
@@ -66,8 +71,23 @@ export default function Checkout() {
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
 
-        const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}\n\n💰 المجموع: ${total} ر.س`;
+        const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}\n\n💰 المجموع: ${total} ر.س\n📌 طريقة الدفع: عند الاستلام`;
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
+        clearCartMutation.mutate();
+        setCheckoutComplete(true);
+    };
+
+    const handlePaymentConfirm = (transactionId: string) => {
+        setIsPaymentModalOpen(false);
+
+        const orderText = cartItems.map((item: CartItem) =>
+            `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
+        ).join('\n');
+
+        const message = `✅ *تأكيد دفع إلكتروني - طِبرَا*\n\n💳 المحفظة: ${selectedMethod}\n🔢 رقم العملية: ${transactionId}\n💰 المبلغ: ${total} ر.س\n\n🛒 الطلب:\n${orderText}`;
+
+        window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
+
         clearCartMutation.mutate();
         setCheckoutComplete(true);
     };
@@ -79,8 +99,8 @@ export default function Checkout() {
                     <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-primary flex items-center justify-center shadow-glow animate-breathe">
                         <Check className="w-12 h-12 text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">تم إرسال طلبك!</h2>
-                    <p className="text-slate-500 mb-8">سنتواصل معك عبر واتساب لتأكيد الطلب</p>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">تم استلام طلبك!</h2>
+                    <p className="text-slate-500 mb-8">تم إرسال تفاصيل الدفع والطلب عبر واتساب للمراجعة</p>
                     <Link href={createPageUrl('Shop')}>
                         <Button className="gradient-primary rounded-2xl px-8">
                             متابعة التسوق
@@ -199,21 +219,17 @@ export default function Checkout() {
                         ))}
                     </div>
 
-                    {/* Promo Code */}
-                    <div className="px-6 mb-4">
-                        <div className="glass rounded-2xl p-4 flex gap-3">
-                            <Input
-                                placeholder="كود الخصم"
-                                className="flex-1 border-0 bg-white/50"
-                            />
-                            <Button variant="outline" className="border-[#2D9B83] text-[#2D9B83]">
-                                تطبيق
-                            </Button>
-                        </div>
+                    {/* Payment Methods */}
+                    <div className="px-6 mt-6">
+                        <h3 className="font-bold text-slate-800 mb-3">اختر طريقة الدفع</h3>
+                        <YemeniPaymentGateways
+                            onSelect={setSelectedMethod}
+                            selectedMethod={selectedMethod}
+                        />
                     </div>
 
                     {/* Summary */}
-                    <div className="px-6">
+                    <div className="px-6 mt-4">
                         <div className="glass rounded-2xl p-6">
                             <h3 className="font-bold text-slate-800 mb-4">ملخص الطلب</h3>
 
@@ -228,11 +244,6 @@ export default function Checkout() {
                                         {shipping === 0 ? 'مجاني' : `${shipping} ر.س`}
                                     </span>
                                 </div>
-                                {subtotal < 200 && (
-                                    <p className="text-xs text-slate-400">
-                                        أضف {200 - subtotal} ر.س للشحن المجاني
-                                    </p>
-                                )}
                                 <div className="flex justify-between pt-3 border-t">
                                     <span className="font-bold text-slate-800">الإجمالي</span>
                                     <span className="text-xl font-bold text-[#2D9B83]">{total} ر.س</span>
@@ -245,36 +256,37 @@ export default function Checkout() {
 
             {/* Fixed Bottom */}
             {cartItems.length > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 glass p-4 border-t">
+                <div className="fixed bottom-0 left-0 right-0 glass p-4 border-t z-30">
                     <div className="space-y-3">
-                        <Button
-                            onClick={handleWhatsAppOrder}
-                            className="w-full h-14 bg-green-500 hover:bg-green-600 rounded-2xl text-lg font-bold"
-                        >
-                            <MessageCircle className="w-5 h-5 ml-2" />
-                            طلب عبر واتساب
-                        </Button>
-
-                        <div className="flex gap-3">
+                        {selectedMethod ? (
                             <Button
-                                variant="outline"
-                                className="flex-1 h-12 rounded-xl"
-                                disabled
+                                onClick={() => setIsPaymentModalOpen(true)}
+                                className="w-full h-14 bg-[#2D9B83] hover:bg-[#2D9B83]/90 rounded-2xl text-lg font-bold shadow-lg shadow-green-500/20"
                             >
-                                <CreditCard className="w-4 h-4 ml-2" />
-                                الدفع الإلكتروني
+                                <CreditCard className="w-5 h-5 ml-2" />
+                                دفع إلكتروني ({total} ر.س)
                             </Button>
+                        ) : (
                             <Button
-                                variant="outline"
-                                className="flex-1 h-12 rounded-xl"
-                                disabled
+                                onClick={handleWhatsAppOrder}
+                                className="w-full h-14 bg-slate-800 hover:bg-slate-900 rounded-2xl text-lg font-bold"
                             >
-                                <Truck className="w-4 h-4 ml-2" />
+                                <MessageCircle className="w-5 h-5 ml-2" />
                                 الدفع عند الاستلام
                             </Button>
-                        </div>
+                        )}
                     </div>
                 </div>
+            )}
+
+            {selectedMethod && (
+                <ManualPaymentModal
+                    isOpen={isPaymentModalOpen}
+                    onClose={() => setIsPaymentModalOpen(false)}
+                    method={selectedMethod}
+                    amount={total}
+                    onConfirm={handlePaymentConfirm}
+                />
             )}
         </div>
     );

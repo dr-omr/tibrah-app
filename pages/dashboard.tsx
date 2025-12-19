@@ -13,6 +13,7 @@ import DoctorRecommendation from '../components/dashboard/DoctorRecommendation';
 import DiagnosticHistory from '../components/dashboard/DiagnosticHistory';
 import RemindersWidget from '../components/dashboard/RemindersWidget';
 import AIAssistantToday from '../components/dashboard/AIAssistantToday';
+import SmartRecommendations from '../components/dashboard/SmartRecommendations';
 import Link from 'next/link';
 import { createPageUrl } from '../utils';
 import PushNotificationButton from '../components/dashboard/PushNotificationButton';
@@ -179,6 +180,9 @@ export default function Dashboard() {
                     <>
                         {/* AI Assistant Today */}
                         <AIAssistantToday />
+
+                        {/* Smart Recommendations Engine */}
+                        <SmartRecommendations />
 
                         {/* Vitality Score */}
                         <VitalityScore

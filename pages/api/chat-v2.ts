@@ -16,17 +16,27 @@ const SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 - مسا
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // CORS headers
-    console.log(`[API] Request received: ${req.method} ${req.url}`);
+    // Debugging: Log the method
+    console.log(`[API] Request method: ${req.method}`);
+
+    // Handle Preflight (OPTIONS)
+    if (req.method === "OPTIONS") {
+        res.setHeader("Allow", "POST");
+        return res.status(200).end();
+    }
 
     if (req.method !== "POST") {
         console.log(`[API] Method not allowed: ${req.method}`);
-        return res.status(405).json({ error: "Method not allowed" });
+        // DEBUG: Return the method to the user to see what's happening
+        return res.status(200).json({
+            text: `⚠️ خطأ تقني: وصل الطلب بعنوان "${req.method}" بدلاً من "POST". يرجى المحاولة من متصفح آخر أو تعطيل مانع الإعلانات.`
+        });
     }
 
 
 
     try {
-        const { message } = req.body;
+        const { message, context } = req.body;
 
         if (!message) {
             return res.status(400).json({ error: "Message is required" });
@@ -34,9 +44,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         console.log("🤖 Groq Request:", message?.substring(0, 30) + "...");
 
+        // Dynamic System Prompt Construction
+        let dynamicPrompt = SYSTEM_PROMPT;
+        if (context) {
+            const healthInfo = context.healthProfile ?
+                `\n👤 ملف المستخدم الصحي:\n- الحالة: ${context.healthProfile.condition}\n- الحيوية: ${context.healthProfile.vitalityScore}%\n- البرنامج الحالي: ${context.healthProfile.program}` : '';
+
+            dynamicPrompt += `\n${healthInfo}\n\n⚠️ تذكر: استخدم هذه المعلومات لتخصيص نصائحك، لكن لا تشخص الحالة طبياً.`;
+        }
+
         const completion = await groq.chat.completions.create({
             messages: [
-                { role: "system", content: SYSTEM_PROMPT },
+                { role: "system", content: dynamicPrompt },
                 { role: "user", content: message }
             ],
             model: "llama3-8b-8192",

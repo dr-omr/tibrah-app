@@ -51,11 +51,22 @@ interface User {
     settings?: Record<string, unknown>;
 }
 
+import { db } from '@/lib/firebase';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, orderBy as firestoreOrderBy, limit as firestoreLimit } from 'firebase/firestore';
+
+// Helper to determine mode
+const isFirebaseReady = () => {
+    return !!db;
+};
+
 // Create entity operations helper
 function createEntityOperations<T extends EntityBase>(entityName: string) {
     const storageKey = `base44_${entityName}`;
+    const collectionRef = isFirebaseReady() ? collection(db, entityName) : null;
 
-    const getAll = (): T[] => {
+    // --- Local Storage Implementation (Fallback) ---
+    const getLocalAll = (): T[] => {
+        if (typeof window === 'undefined') return [];
         try {
             const data = localStorage.getItem(storageKey);
             return data ? JSON.parse(data) : [];
@@ -64,120 +75,169 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
         }
     };
 
-    const saveAll = (items: T[]) => {
-        localStorage.setItem(storageKey, JSON.stringify(items));
+    const saveLocalAll = (items: T[]) => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(storageKey, JSON.stringify(items));
+        }
     };
 
     return {
         async list(orderBy?: string, limit?: number): Promise<T[]> {
-            let items = getAll();
+            if (isFirebaseReady() && collectionRef) {
+                try {
+                    // Basic query construction
+                    // Note: Complex ordering/filtering in Firestore requires indexes.
+                    // For now, we fetch all and sort client-side to be safe, 
+                    // or implement basic optimization.
+                    const snapshot = await getDocs(collectionRef);
+                    let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
 
+                    // Client-side sort/limit for consistency without indexes
+                    if (orderBy) {
+                        const desc = orderBy.startsWith('-');
+                        const field = desc ? orderBy.slice(1) : orderBy;
+                        items.sort((a, b) => {
+                            const aVal = (a as any)[field];
+                            const bVal = (b as any)[field];
+                            if (desc) return String(bVal).localeCompare(String(aVal));
+                            return String(aVal).localeCompare(String(bVal));
+                        });
+                    }
+                    if (limit) items = items.slice(0, limit);
+                    return items;
+                } catch (e) {
+                    console.warn(`Firestore list failed for ${entityName}, falling back to local.`, e);
+                }
+            }
+
+            // Fallback to Local
+            let items = getLocalAll();
             if (orderBy) {
                 const desc = orderBy.startsWith('-');
                 const field = desc ? orderBy.slice(1) : orderBy;
                 items.sort((a, b) => {
-                    const aVal = (a as Record<string, unknown>)[field];
-                    const bVal = (b as Record<string, unknown>)[field];
-                    if (desc) {
-                        return String(bVal).localeCompare(String(aVal));
-                    }
+                    const aVal = (a as any)[field];
+                    const bVal = (b as any)[field];
+                    if (desc) return String(bVal).localeCompare(String(aVal));
                     return String(aVal).localeCompare(String(bVal));
                 });
             }
-
-            if (limit) {
-                items = items.slice(0, limit);
-            }
-
+            if (limit) items = items.slice(0, limit);
             return items;
         },
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async filter(criteria: Record<string, any>, orderBy?: string, limit?: number): Promise<T[]> {
-            let items = getAll();
+            // For simplicity in this hybrid migration, we'll list all and filter in memory.
+            // In a full production app, you'd build a structured Firestore Query here.
+            const allItems = await this.list(orderBy);
 
-            // Filter by criteria
-            items = items.filter(item => {
+            let filtered = allItems.filter(item => {
                 return Object.entries(criteria).every(([key, value]) => {
-                    const itemValue = (item as Record<string, unknown>)[key];
-
-                    // Handle special operators like $in, $ne
+                    const itemValue = (item as any)[key];
                     if (typeof value === 'object' && value !== null) {
-                        if ('$in' in value) {
-                            return (value.$in as unknown[]).includes(itemValue);
-                        }
-                        if ('$ne' in value) {
-                            return itemValue !== value.$ne;
-                        }
+                        if ('$in' in value) return (value.$in as unknown[]).includes(itemValue);
+                        if ('$ne' in value) return itemValue !== value.$ne;
                     }
-
                     return itemValue === value;
                 });
             });
 
-            // Sort by orderBy
-            if (orderBy) {
-                const desc = orderBy.startsWith('-');
-                const field = desc ? orderBy.slice(1) : orderBy;
-                items.sort((a, b) => {
-                    const aVal = (a as Record<string, unknown>)[field];
-                    const bVal = (b as Record<string, unknown>)[field];
-                    if (desc) {
-                        return String(bVal).localeCompare(String(aVal));
-                    }
-                    return String(aVal).localeCompare(String(bVal));
-                });
-            }
-
-            // Limit results
-            if (limit) {
-                items = items.slice(0, limit);
-            }
-
-            return items;
+            if (limit) filtered = filtered.slice(0, limit);
+            return filtered;
         },
 
         async get(id: string): Promise<T | null> {
-            const items = getAll();
+            if (isFirebaseReady() && db) {
+                try {
+                    const docRef = doc(db, entityName, id);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        return { id: docSnap.id, ...docSnap.data() } as T;
+                    }
+                    return null;
+                } catch (e) {
+                    console.warn(`Firestore get failed for ${entityName} ${id}`, e);
+                }
+            }
+
+            // Fallback
+            const items = getLocalAll();
             return items.find(item => item.id === id) || null;
         },
 
         async create(data: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T> {
-            const items = getAll();
             const newItem = {
                 ...data,
-                id: `${entityName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             } as T;
 
+            if (isFirebaseReady() && collectionRef) {
+                try {
+                    // Auto-generate ID if not provided logic is handled by doc()
+                    // But we want to return the ID.
+                    // Let's use a new doc ref to get ID
+                    const newDocRef = doc(collectionRef);
+                    newItem.id = newDocRef.id;
+                    await setDoc(newDocRef, newItem);
+                    return newItem;
+                } catch (e) {
+                    console.error(`Firestore create failed for ${entityName}`, e);
+                    // Continue to fallback
+                }
+            }
+
+            // Fallback
+            newItem.id = `${entityName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const items = getLocalAll();
             items.push(newItem);
-            saveAll(items);
+            saveLocalAll(items);
             return newItem;
         },
 
         async update(id: string, data: Partial<T>): Promise<T> {
-            const items = getAll();
-            const index = items.findIndex(item => item.id === id);
-
-            if (index === -1) {
-                throw new Error(`${entityName} with id ${id} not found`);
-            }
-
-            items[index] = {
-                ...items[index],
+            const updateData = {
                 ...data,
                 updated_at: new Date().toISOString()
             };
 
-            saveAll(items);
+            if (isFirebaseReady() && db) {
+                try {
+                    const docRef = doc(db, entityName, id);
+                    await updateDoc(docRef, updateData);
+                    // Return updated
+                    const updatedSnap = await getDoc(docRef);
+                    return { id: updatedSnap.id, ...updatedSnap.data() } as T;
+                } catch (e) {
+                    console.error(`Firestore update failed for ${entityName} ${id}`, e);
+                }
+            }
+
+            // Fallback
+            const items = getLocalAll();
+            const index = items.findIndex(item => item.id === id);
+            if (index === -1) throw new Error(`${entityName} with id ${id} not found`);
+
+            items[index] = { ...items[index], ...updateData };
+            saveLocalAll(items);
             return items[index];
         },
 
         async delete(id: string): Promise<void> {
-            const items = getAll();
+            if (isFirebaseReady() && db) {
+                try {
+                    await deleteDoc(doc(db, entityName, id));
+                    return;
+                } catch (e) {
+                    console.error(`Firestore delete failed for ${entityName} ${id}`, e);
+                }
+            }
+
+            // Fallback
+            const items = getLocalAll();
             const filtered = items.filter(item => item.id !== id);
-            saveAll(filtered);
+            saveLocalAll(filtered);
         }
     };
 }
@@ -237,6 +297,7 @@ export const base44 = {
     auth: {
         async me(): Promise<User | null> {
             try {
+                if (typeof window === 'undefined') return null;
                 const userData = localStorage.getItem('base44_user');
                 return userData ? JSON.parse(userData) : null;
             } catch {
@@ -250,6 +311,7 @@ export const base44 = {
         },
 
         async redirectToLogin(returnUrl?: string): Promise<void> {
+            if (typeof window === 'undefined') return;
             // Store the return URL for after login
             if (returnUrl) {
                 localStorage.setItem('base44_return_url', returnUrl);
@@ -265,7 +327,9 @@ export const base44 = {
                 ...data,
                 id: current?.id || `user_${Date.now()}`
             };
-            localStorage.setItem('base44_user', JSON.stringify(updated));
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('base44_user', JSON.stringify(updated));
+            }
             return updated;
         },
 
@@ -276,20 +340,24 @@ export const base44 = {
                 email,
                 name: email.split('@')[0]
             };
-            localStorage.setItem('base44_user', JSON.stringify(user));
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('base44_user', JSON.stringify(user));
 
-            // Check for return URL
-            const returnUrl = localStorage.getItem('base44_return_url');
-            if (returnUrl) {
-                localStorage.removeItem('base44_return_url');
-                window.location.href = returnUrl;
+                // Check for return URL
+                const returnUrl = localStorage.getItem('base44_return_url');
+                if (returnUrl) {
+                    localStorage.removeItem('base44_return_url');
+                    window.location.href = returnUrl;
+                }
             }
 
             return user;
         },
 
         async logout(): Promise<void> {
-            localStorage.removeItem('base44_user');
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('base44_user');
+            }
         }
     },
 

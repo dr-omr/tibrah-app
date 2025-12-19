@@ -1,97 +1,86 @@
 import React from 'react';
-import { Play, Pause, Info } from 'lucide-react';
+import { Play, Pause, Waves, Sparkles, Heart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useAudio } from '@/contexts/AudioContext';
 
-const categoryIcons = {
-    solfeggio: '🎵',
-    brainwave: '🧠',
-    chakra: '🌈',
-    organ: '❤️',
-    angel_numbers: '👼',
-    planetary: '🪐',
-};
+interface FrequencyCardProps {
+    frequency: any;
+    // Local props are ignored in favor of global context state
+    isPlaying?: boolean;
+    onPlay?: () => void;
+    onShowDetails: () => void;
+}
 
-const categoryColors = {
-    solfeggio: 'from-purple-500 to-indigo-600',
-    brainwave: 'from-blue-500 to-cyan-500',
-    chakra: 'from-pink-500 to-orange-500',
-    organ: 'from-red-500 to-pink-500',
-    angel_numbers: 'from-yellow-400 to-amber-500',
-    planetary: 'from-indigo-500 to-purple-600',
-};
+export default function FrequencyCard({ frequency, onShowDetails }: FrequencyCardProps) {
+    const { currentTrack, isPlaying, playTrack, togglePlay } = useAudio();
 
-export default function FrequencyCard({ frequency, isPlaying, onPlay, onShowDetails }) {
+    // Check if THIS card is the one playing globally
+    const isThisPlaying = isPlaying && currentTrack?.id === frequency.id;
+
+    const handlePlayClick = (e) => {
+        e.stopPropagation();
+        if (isThisPlaying) {
+            togglePlay();
+        } else {
+            playTrack({
+                id: frequency.id,
+                title: frequency.name,
+                description: frequency.description,
+                frequency_hz: frequency.frequency_hz,
+                type: 'tone' // For simplicity, assuming all in card list are tones
+            });
+        }
+    };
+
     return (
-        <div className={`glass rounded-2xl p-4 hover:shadow-glow transition-all duration-300 ${isPlaying ? 'ring-2 ring-[#2D9B83] shadow-glow' : ''
-            }`}>
-            <div className="flex items-start gap-4">
-                {/* Play Button */}
+        <div
+            onClick={onShowDetails}
+            className={`glass p-4 rounded-2xl transition-all duration-300 group hover:shadow-glow cursor-pointer border-l-4 ${isThisPlaying ? 'border-l-[#2D9B83] bg-white/60' : 'border-l-transparent'}`}
+        >
+            <div className="flex items-center gap-4">
+                {/* Play Button Icon */}
                 <button
-                    onClick={onPlay}
-                    className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${categoryColors[frequency.category] || 'from-[#2D9B83] to-[#3FB39A]'
-                        } flex items-center justify-center shadow-lg ${isPlaying ? 'animate-pulse-soft' : ''
+                    onClick={handlePlayClick}
+                    className={`rounded-full w-12 h-12 flex items-center justify-center transition-all ${isThisPlaying
+                        ? 'bg-[#2D9B83] text-white shadow-lg scale-110'
+                        : 'bg-slate-100 text-slate-400 group-hover:bg-[#2D9B83] group-hover:text-white'
                         }`}
                 >
-                    {isPlaying ? (
-                        <Pause className="w-6 h-6 text-white" />
+                    {isThisPlaying ? (
+                        <Pause className="w-5 h-5" />
                     ) : (
-                        <Play className="w-6 h-6 text-white mr-[-2px]" />
-                    )}
-
-                    {/* Ripple effect when playing */}
-                    {isPlaying && (
-                        <>
-                            <span className="absolute inset-0 rounded-2xl animate-ping bg-white/20" />
-                            <span className="absolute inset-0 rounded-2xl animate-pulse bg-white/10" />
-                        </>
+                        <Play className="w-5 h-5 ml-1" />
                     )}
                 </button>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">{categoryIcons[frequency.category]}</span>
-                        <h3 className="font-bold text-slate-800 truncate">{frequency.name}</h3>
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl font-bold text-gradient">
-                            {frequency.frequency_hz}
+                <div className="flex-1">
+                    <div className="flex justify-between items-start mb-1">
+                        <h3 className={`font-bold text-lg ${isThisPlaying ? 'text-[#2D9B83]' : 'text-slate-800'}`}>
+                            {frequency.name}
+                        </h3>
+                        <span className="text-xl font-bold text-slate-200 group-hover:text-[#2D9B83]/20 transition-colors">
+                            {frequency.frequency_hz} Hz
                         </span>
-                        <span className="text-sm text-slate-500">Hz</span>
                     </div>
 
-                    {frequency.description && (
-                        <p className="text-sm text-slate-500 line-clamp-2">
-                            {frequency.description}
-                        </p>
-                    )}
-                </div>
+                    <p className="text-sm text-slate-500 line-clamp-1 mb-2">
+                        {frequency.category === 'rife' ? 'تردد رايف العلاجي' : frequency.description}
+                    </p>
 
-                {/* Info Button */}
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="text-slate-400 hover:text-[#2D9B83]"
-                    onClick={onShowDetails}
-                >
-                    <Info className="w-5 h-5" />
-                </Button>
+                    {/* Tags */}
+                    <div className="flex gap-2">
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-slate-100 text-slate-500">
+                            {frequency.category}
+                        </span>
+                        {frequency.benefits?.[0] && (
+                            <span className="text-[10px] px-2 py-1 rounded-full bg-[#2D9B83]/10 text-[#2D9B83]">
+                                {frequency.benefits[0]}
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
-
-            {/* Benefits Tags */}
-            {frequency.benefits && frequency.benefits.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
-                    {frequency.benefits.slice(0, 3).map((benefit, index) => (
-                        <span
-                            key={index}
-                            className="text-xs px-2 py-1 rounded-full bg-[#2D9B83]/10 text-[#2D9B83]"
-                        >
-                            {benefit}
-                        </span>
-                    ))}
-                </div>
-            )}
         </div>
     );
 }

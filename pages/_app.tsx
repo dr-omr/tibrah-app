@@ -9,6 +9,8 @@ import { NotificationProvider } from '../contexts/NotificationContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import '../styles/globals.css';
+import { AudioProvider } from '../contexts/AudioContext';
+import GlobalPlayer from '../components/ui/GlobalPlayer';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -31,9 +33,23 @@ function getPageName(pathname: string): string {
         .join('');
 }
 
+
+
 export default function App({ Component, pageProps }: AppProps) {
     const router = useRouter();
     const currentPageName = getPageName(router.pathname);
+
+    // Force unregister service workers to fix caching issues
+    React.useEffect(() => {
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    console.log('Unregistering SW:', registration);
+                    registration.unregister();
+                }
+            });
+        }
+    }, []);
 
     return (
         <>
@@ -49,10 +65,13 @@ export default function App({ Component, pageProps }: AppProps) {
                 <AuthProvider>
                     <ThemeProvider>
                         <NotificationProvider>
-                            <Layout currentPageName={currentPageName}>
-                                <Component {...pageProps} />
-                            </Layout>
-                            <Toaster position="top-center" richColors />
+                            <AudioProvider>
+                                <Layout currentPageName={currentPageName}>
+                                    <Component {...pageProps} />
+                                    <GlobalPlayer />
+                                </Layout>
+                                <Toaster position="top-center" richColors />
+                            </AudioProvider>
                         </NotificationProvider>
                     </ThemeProvider>
                 </AuthProvider>

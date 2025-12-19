@@ -22,6 +22,11 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import InteractiveBody from '@/components/body-map/InteractiveBody';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+
+// قاعدة بيانات الطب الشعوري - العلاقة بين الأعضاء والمشاعر
 
 // قاعدة بيانات الطب الشعوري - العلاقة بين الأعضاء والمشاعر
 // مبني على أبحاث: د. أحمد الدملاوي (الطب التصنيفي)، د. جيرد هامر (الطب الجرماني الجديد)، لويز هاي
@@ -491,7 +496,7 @@ const holisticSections = [
 
 export default function BodyMap() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedArea, setSelectedArea] = useState(null);
+    const [selectedArea, setSelectedArea] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('map');
 
     // البحث في جميع المناطق
@@ -504,8 +509,27 @@ export default function BodyMap() {
             ).map(area => ({ ...area, categoryName: category.name, categoryIcon: category.icon, categoryColor: category.color }))
         ) : [];
 
+    const [viewMode, setViewMode] = useState<'front' | 'back'>('front');
+
+    // Fetch products to suggest (cached)
+    const { data: allProducts } = useQuery({
+        queryKey: ['products'],
+        queryFn: () => base44.entities.Product.list(),
+        initialData: []
+    });
+
+    const getSuggestedProducts = (partName: string) => {
+        if (!allProducts) return [];
+        // Simple keyword matching for MVP
+        return allProducts.filter((p: any) =>
+            (p.description && p.description.includes(partName)) ||
+            (p.name && p.name.includes(partName)) ||
+            (p.benefits && Array.isArray(p.benefits) && p.benefits.some((b: string) => b.includes(partName)))
+        ).slice(0, 2);
+    };
+
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <div className="relative overflow-hidden bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] px-6 py-8">
                 <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
@@ -600,12 +624,99 @@ export default function BodyMap() {
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-                        <TabsList className="grid grid-cols-2 bg-slate-100 rounded-xl p-1">
-                            <TabsTrigger value="map" className="rounded-lg">خريطة الجسم</TabsTrigger>
-                            <TabsTrigger value="pioneers" className="rounded-lg">رواد الطب الشعوري</TabsTrigger>
+                        <TabsList className="grid grid-cols-2 bg-slate-100 rounded-xl p-1 mb-8">
+                            <TabsTrigger value="map" className="rounded-lg">الخريطة التفاعلية</TabsTrigger>
+                            <TabsTrigger value="list" className="rounded-lg">القائمة الكاملة</TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="map" className="mt-6">
+                        <TabsContent value="map" className="mt-0">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                                {/* Visual Map */}
+                                <div className="glass rounded-3xl p-8 flex flex-col items-center bg-white/40">
+                                    <div className="flex justify-center mb-6">
+                                        <div className="inline-flex bg-slate-100 p-1 rounded-xl">
+                                            <button
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'front' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}
+                                                onClick={() => setViewMode('front')}
+                                            >
+                                                من الأمام
+                                            </button>
+                                            <button
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'back' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}
+                                                onClick={() => setViewMode('back')}
+                                                disabled // For MVP 1
+                                            >
+                                                من الخلف (قريباً)
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <InteractiveBody
+                                        onSelectPart={(id) => {
+                                            // Map SVG IDs to Data Keys
+                                            const keyMap: any = {
+                                                'head': emotionalMedicineData.head,
+                                                'throat': emotionalMedicineData.throat,
+                                                'chest': emotionalMedicineData.chest,
+                                                'stomach': emotionalMedicineData.stomach,
+                                                'liver': emotionalMedicineData.liver,
+                                                'joints': emotionalMedicineData.joints,
+                                                'legs': emotionalMedicineData.joints, // Map legs to joints for now
+                                            };
+                                            const data = keyMap[id];
+                                            if (data) setSelectedArea({ ...data.areas[0], categoryName: data.name, categoryIcon: data.icon, categoryColor: data.color });
+                                        }}
+                                        className="w-full max-w-sm mx-auto"
+                                    />
+
+                                    <p className="text-center text-sm text-slate-400 mt-6">
+                                        اضغط على أي جزء من الجسم للتشخيص
+                                    </p>
+                                </div>
+
+                                {/* Quick Info / Instructions */}
+                                <div className="space-y-6">
+                                    <div className="glass rounded-3xl p-6 bg-[#2D9B83]/5 border-2 border-[#2D9B83]/10">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                            <Sparkles className="w-5 h-5 text-[#2D9B83]" />
+                                            كيف يعمل التشخيص البصري؟
+                                        </h3>
+                                        <ul className="space-y-3">
+                                            {[
+                                                'حدد مكان الألم على المجسم',
+                                                'اكتشف الرسالة الشعورية (السبب الجذري)',
+                                                'احصل على تأكيدات شفائية فورية',
+                                                'تصفح المنتجات والترددات المعالجة'
+                                            ].map((step, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-slate-600 text-sm">
+                                                    <div className="w-6 h-6 rounded-full bg-white text-[#2D9B83] border border-[#2D9B83]/20 flex items-center justify-center font-bold text-xs">{i + 1}</div>
+                                                    {step}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Shortcuts */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {Object.entries(emotionalMedicineData).slice(0, 4).map(([key, cat]) => (
+                                            <div
+                                                key={key}
+                                                onClick={() => setSelectedArea({ ...cat.areas[0], categoryName: cat.name, categoryIcon: cat.icon, categoryColor: cat.color })}
+                                                className="glass p-4 rounded-xl cursor-pointer hover:bg-white/60 transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-xl group-hover:scale-110 transition-transform">{cat.icon}</span>
+                                                    <span className="font-bold text-slate-700">{cat.name}</span>
+                                                </div>
+                                                <p className="text-xs text-slate-400">{cat.areas.length} حالات</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="list" className="mt-6">
                             {/* Body Areas */}
                             <div className="space-y-4">
                                 {Object.entries(emotionalMedicineData).map(([key, category]) => (
@@ -792,20 +903,47 @@ export default function BodyMap() {
 
                                 {/* CTA */}
                                 <a
-                                    href={`https://wa.me/967771447111?text=مرحباً%20د.%20عمر،%20أعاني%20من%20${encodeURIComponent(selectedArea.name)}%20وأريد%20استشارة`}
+                                    href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر،%20أريد%20استشارة%20بخصوص%20الخريطة%20الجسمية"
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    className="block mt-6"
                                 >
-                                    <Button className="w-full gradient-primary text-white rounded-xl h-14 text-lg">
+                                    <Button className="w-full gradient-primary text-white rounded-xl h-14 text-lg font-bold shadow-lg hover:shadow-xl transition-all">
                                         <MessageCircle className="w-5 h-5 ml-2" />
-                                        استشر د. عمر عن حالتك
+                                        استشارة د. عمر العماد
                                     </Button>
                                 </a>
+
+                                {/* Suggested Products */}
+                                {getSuggestedProducts(selectedArea.name).length > 0 && (
+                                    <div className="mt-8 pt-6 border-t border-slate-100">
+                                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <ShoppingBag className="w-5 h-5 text-[#D4AF37]" />
+                                            منتجات مساعدة مقترحة
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {getSuggestedProducts(selectedArea.name).map((prod: any) => (
+                                                <Link key={prod.id} href={`/product/${prod.id}`}>
+                                                    <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-colors">
+                                                        <div className="w-16 h-16 bg-white rounded-lg overflow-hidden border border-slate-200">
+                                                            <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="font-bold text-slate-800 text-sm">{prod.name}</h5>
+                                                            <p className="text-[#2D9B83] text-sm font-bold">{prod.price} ر.س</p>
+                                                        </div>
+                                                        <Button size="sm" variant="outline" className="mr-auto">عرض</Button>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
-                </SheetContent>
-            </Sheet>
-        </div>
+                </SheetContent >
+            </Sheet >
+        </div >
     );
 }

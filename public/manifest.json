@@ -64,14 +64,6 @@
             "purpose": "maskable any"
         }
     ],
-    "screenshots": [
-        {
-            "src": "/screenshots/screenshot-1.png",
-            "sizes": "1080x1920",
-            "type": "image/png",
-            "form_factor": "narrow"
-        }
-    ],
     "shortcuts": [
         {
             "name": "حجز موعد",
@@ -80,7 +72,7 @@
             "url": "/book-appointment",
             "icons": [
                 {
-                    "src": "/icons/appointment-icon.png",
+                    "src": "/icons/icon-96x96.png",
                     "sizes": "96x96"
                 }
             ]
@@ -92,7 +84,7 @@
             "url": "/frequencies",
             "icons": [
                 {
-                    "src": "/icons/frequency-icon.png",
+                    "src": "/icons/icon-96x96.png",
                     "sizes": "96x96"
                 }
             ]
@@ -104,7 +96,7 @@
             "url": "/courses",
             "icons": [
                 {
-                    "src": "/icons/course-icon.png",
+                    "src": "/icons/icon-96x96.png",
                     "sizes": "96x96"
                 }
             ]

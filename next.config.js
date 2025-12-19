@@ -3,28 +3,10 @@ const withPWA = require('next-pwa')({
     dest: 'public',
     register: true,
     skipWaiting: true,
-    disable: process.env.NODE_ENV === 'development',
+    disable: true,
     buildExcludes: [/middleware-manifest.json$/],
-    runtimeCaching: [
-        {
-            urlPattern: /\/api\/.*/,
-            handler: 'NetworkOnly',
-            method: 'POST',
-            options: {
-                backgroundSync: {
-                    name: 'api-queue',
-                    options: {
-                        maxRetentionTime: 24 * 60,
-                    },
-                },
-            },
-        },
-        {
-            urlPattern: /\/api\/.*/,
-            handler: 'NetworkOnly',
-            method: 'GET',
-        }
-    ],
+    // Default runtime caching
+    runtimeCaching: [],
 });
 
 /** @type {import('next').NextConfig} */

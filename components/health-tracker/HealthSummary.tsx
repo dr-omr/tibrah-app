@@ -11,6 +11,9 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import AppleHealthRings from './AppleHealthRings';
 import { Button } from '@/components/ui/button';
+import { WaterWidget } from '@/components/dashboard/widgets/WaterWidget';
+import { MedicationWidget } from '@/components/dashboard/widgets/MedicationWidget';
+import { MoodWidget } from '@/components/dashboard/widgets/MoodWidget';
 
 interface HealthSummaryProps {
     className?: string;
@@ -36,7 +39,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
     const [showAllMetrics, setShowAllMetrics] = useState(false);
 
     // Fetch today's data
-    const { data: waterLog } = useQuery({
+    const { data: waterLog, refetch: refetchWater } = useQuery({
         queryKey: ['waterLog', today],
         queryFn: async () => {
             try {
@@ -56,7 +59,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         },
     });
 
-    const { data: medicationLogs = [] } = useQuery({
+    const { data: medicationLogs = [], refetch: refetchMedLogs } = useQuery({
         queryKey: ['medicationLogsToday', today],
         queryFn: async () => {
             try {
@@ -78,7 +81,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         },
     });
 
-    const { data: dailyLog } = useQuery({
+    const { data: dailyLog, refetch: refetchDaily } = useQuery({
         queryKey: ['dailyLog', today],
         queryFn: async () => {
             try {
@@ -135,62 +138,22 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
     const standProgress = sleepPercentage > 50 ? 75 : 50;
 
     // Primary cards (always visible)
-    const primaryCards: MetricCard[] = [
-        {
-            id: 'water',
-            title: 'الماء',
-            value: waterGlasses,
-            unit: `/ ${waterGoal} أكواب`,
-            icon: Droplets,
-            color: 'text-cyan-500',
-            bgColor: 'bg-cyan-500/10',
-            gradientFrom: 'from-cyan-400',
-            gradientTo: 'to-blue-500',
-            trend: waterPercentage >= 100 ? 'up' : waterPercentage >= 50 ? 'stable' : 'down',
-            trendValue: `${waterPercentage}%`,
-            href: '/health-tracker?tab=water'
-        },
-        {
-            id: 'sleep',
-            title: 'النوم',
-            value: sleepHours.toFixed(1),
-            unit: 'ساعات',
-            icon: Moon,
-            color: 'text-indigo-500',
-            bgColor: 'bg-indigo-500/10',
-            gradientFrom: 'from-indigo-400',
-            gradientTo: 'to-purple-500',
-            trend: sleepHours >= 7 ? 'up' : sleepHours >= 5 ? 'stable' : 'down',
-            href: '/health-tracker?tab=sleep'
-        },
-        {
-            id: 'medications',
-            title: 'الأدوية',
-            value: takenMeds,
-            unit: `/ ${totalMeds} جرعات`,
-            icon: Pill,
-            color: 'text-rose-500',
-            bgColor: 'bg-rose-500/10',
-            gradientFrom: 'from-rose-400',
-            gradientTo: 'to-pink-500',
-            trend: medPercentage === 100 ? 'up' : medPercentage >= 50 ? 'stable' : 'down',
-            trendValue: `${medPercentage}%`,
-            href: '/health-tracker?tab=meds'
-        },
-        {
-            id: 'mood',
-            title: 'المزاج',
-            value: moodScore > 0 ? ['😫', '😔', '😐', '😊', '😄'][moodScore - 1] : '—',
-            unit: moodScore > 0 ? ['سيء جداً', 'سيء', 'متوسط', 'جيد', 'ممتاز'][moodScore - 1] : 'سجّل مزاجك',
-            icon: Brain,
-            color: 'text-purple-500',
-            bgColor: 'bg-purple-500/10',
-            gradientFrom: 'from-purple-400',
-            gradientTo: 'to-fuchsia-500',
-            href: '/health-tracker?tab=today'
-        }
-    ];
+    // NOTE: We now use interactive widgets for Water, Meds, and Mood.
+    // Sleep remains as a card for now.
 
+    const sleepCard: MetricCard = {
+        id: 'sleep',
+        title: 'النوم',
+        value: sleepHours.toFixed(1),
+        unit: 'ساعات',
+        icon: Moon,
+        color: 'text-indigo-500',
+        bgColor: 'bg-indigo-500/10',
+        gradientFrom: 'from-indigo-400',
+        gradientTo: 'to-purple-500',
+        trend: sleepHours >= 7 ? 'up' : sleepHours >= 5 ? 'stable' : 'down',
+        href: '/health-tracker?tab=sleep'
+    };
     // Additional health metrics
     const additionalCards: MetricCard[] = [
         {
@@ -262,8 +225,8 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
     ];
 
     const displayCards = showAllMetrics
-        ? [...primaryCards, ...additionalCards]
-        : primaryCards;
+        ? additionalCards
+        : [];
 
     return (
         <div className={`space-y-6 ${className}`}>
@@ -345,14 +308,53 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
                 </div>
             </div>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Interactive Widgets */}
+                <WaterWidget
+                    initialGlasses={Number(waterLog?.glasses) || 0}
+                    goal={Number(waterLog?.goal) || 8}
+                    logId={waterLog?.id}
+                    onUpdate={refetchWater}
+                />
+
+                <MedicationWidget
+                    medications={medications as any[]}
+                    logs={medicationLogs as any[]}
+                    onUpdate={refetchMedLogs}
+                />
+
+                <Link href="/health-tracker?tab=sleep">
+                    <div className="glass rounded-2xl p-4 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden h-full">
+                        <div className={`absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 opacity-0 group-hover:opacity-5 transition-opacity`} />
+                        <div className="relative z-10">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                                    <Moon className="w-6 h-6 text-indigo-500" />
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-indigo-500">
+                                    <TrendingUp className="w-3 h-3" />
+                                    <span>{sleepPercentage}%</span>
+                                </div>
+                            </div>
+                            <div className="text-2xl font-bold text-slate-800 mb-1">{sleepHours.toFixed(1)}</div>
+                            <div className="text-xs text-slate-500">ساعات نوم</div>
+                        </div>
+                    </div>
+                </Link>
+
+                <MoodWidget
+                    currentMood={Number(dailyLog?.mood_score)}
+                    logId={dailyLog?.id}
+                    onUpdate={refetchDaily}
+                />
+
+                {/* Additional Metrics (Grid) */}
                 {displayCards.map(card => {
                     const Icon = card.icon;
                     const content = (
                         <div
                             key={card.id}
-                            className="glass rounded-2xl p-4 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                            className="glass rounded-2xl p-4 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden h-full"
                         >
                             {/* Gradient overlay on hover */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo} opacity-0 group-hover:opacity-5 transition-opacity`} />

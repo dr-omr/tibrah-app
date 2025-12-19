@@ -1,178 +1,275 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAI } from '@/components/ai/useAI';
-import { DOCTOR_KNOWLEDGE } from '@/components/ai/knowledge';
-import { Send, X, Loader2, Sparkles, User, Bot } from 'lucide-react';
+import { aiClient } from '@/components/ai/aiClient';
+import { ImageUpload } from '@/components/ai/ImageUpload';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Send, Bot, User, Sparkles, Loader2, Mic, MicOff, Trash2, StopCircle, HeartPulse } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from 'sonner';
 
-interface ChatMessage {
-    role: 'user' | 'assistant';
-    content: string;
-}
-
-interface ChatInterfaceProps {
-    onClose: () => void;
-}
-
-export default function ChatInterface({ onClose }: ChatInterfaceProps) {
-    const [messages, setMessages] = useState([
-        {
-            role: 'assistant',
-            content: 'أهلاً وسهلاً يا غالي! 🌿\n\nأنا مساعد طِبرَا الذكي، حاضر لمساعدتك في رحلتك الصحية.\n\nكيف أقدر أفيدك اليوم؟'
-        }
-    ]);
+export default function ChatInterface() {
+    const [messages, setMessages] = useState<Array<{ role: string, content: string }>>([]);
     const [input, setInput] = useState('');
-    const { chat, loading } = useAI();
-    const scrollRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [voiceMode, setVoiceMode] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<{ base64: string; mimeType: string } | null>(null);
 
-    const quickReplies = [
-        { text: 'من هو د. عمر؟', emoji: '👨‍⚕️' },
-        { text: 'عندي مشكلة في الهضم', emoji: '🫃' },
-        { text: 'كيف أحجز جلسة؟', emoji: '📅' },
-        { text: 'ما هي الترددات العلاجية؟', emoji: '🎵' }
-    ];
+    const {
+        isListening,
+        transcript,
+        startListening,
+        stopListening,
+        resetTranscript,
+        speak,
+        isSpeaking,
+        stopSpeaking
+    } = useVoiceInput();
+
+    // Sync transcript to input
+    useEffect(() => {
+        if (transcript) {
+            console.log('Transcript updated:', transcript);
+            setInput(transcript);
+        }
+    }, [transcript]);
+
+    // Auto-speak responses
+    useEffect(() => {
+        const lastMsg = messages[messages.length - 1];
+        if (voiceMode && lastMsg?.role === 'assistant' && !isLoading) {
+            speak(lastMsg.content);
+        }
+    }, [messages, voiceMode, isLoading, speak]);
+
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages]);
+        scrollToBottom();
+    }, [messages, isLoading]);
 
     const handleSend = async () => {
-        if (!input.trim() || loading) return;
+        if (!input.trim() && !transcript && !selectedImage) return;
 
-        const userMsg = { role: 'user', content: input };
-        const currentInput = input;
+        const userMsg = input || transcript;
         setInput('');
+        resetTranscript();
 
-        const newMessages = [...messages, userMsg];
+        // Handle Image Analysis
+        if (selectedImage) {
+            const tempImage = selectedImage;
+            setSelectedImage(null); // Clear immediately
+
+            // Add user message with image indicator
+            const newMessages = [...messages, {
+                role: 'user',
+                content: userMsg ? `${userMsg}\n\n[مرفق صورة طبية]` : '[مرفق صورة طبية]'
+            }];
+            setMessages(newMessages);
+            setIsLoading(true);
+
+            try {
+                const analysis = await aiClient.analyzeImage(tempImage.base64, tempImage.mimeType);
+                setMessages(prev => [...prev, { role: 'assistant', content: analysis }]);
+            } catch (error) {
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: "عذراً، لم أتمكن من تحليل الصورة. تأكد أنها واضحة وحاول مرة أخرى."
+                }]);
+                toast.error("فشل تحليل الصورة");
+            } finally {
+                setIsLoading(false);
+            }
+            return;
+        }
+
+        // Optimistic UI
+        const newMessages = [...messages, { role: 'user', content: userMsg }];
         setMessages(newMessages);
+        setIsLoading(true);
 
         try {
-            const response = await chat(newMessages, { type: 'floating_assistant' }, DOCTOR_KNOWLEDGE);
-            if (response) {
-                setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-            }
-        } catch (err) {
-            // Should be handled by aiClient fallback, but just in case
+            const aiResponse = await aiClient.chat(newMessages);
+            setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+        } catch (error) {
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: "عذراً، حدث خطأ في الاتصال. حاول مرة أخرى."
             }]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    const handleClear = () => {
+        aiClient.clearConversation();
+        setMessages([]);
+        setInput('');
+        resetTranscript();
+        stopListening();
+        stopSpeaking();
+        toast.info("تم مسح المحادثة.");
+    }
+
     return (
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="flex flex-col h-full relative z-10 text-right" dir="rtl">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] text-white rounded-t-2xl">
+            <div className={`p-4 border-b border-slate-100 flex items-center justify-between ${voiceMode ? 'bg-[#2D9B83]/10' : 'bg-white/80 backdrop-blur-md'
+                } transition-colors duration-300`}>
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
-                        <Sparkles className="w-5 h-5 text-white" />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-100 animate-pulse' : 'bg-[#2D9B83]/10'
+                        }`}>
+                        <HeartPulse className={`w-6 h-6 ${isListening ? 'text-red-500' : 'text-[#2D9B83]'}`} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-sm">مساعد طِبرَا الذكي</h3>
-                        <span className="text-xs text-white/80 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> متصل الآن
-                        </span>
+                        <h2 className="font-bold text-slate-800">مساعد طِبرَا {voiceMode && '🎤'}</h2>
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                            {isListening ? 'جاري الاستماع...' : isSpeaking ? 'جاري التحدث...' : isLoading ? 'يكتب...' : 'متاح الآن'}
+                        </p>
                     </div>
                 </div>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={onClose}>
-                    <X className="w-5 h-5" />
-                </Button>
+
+                <div className="flex gap-2">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setVoiceMode(!voiceMode)}
+                        className={`rounded-full transition-all active:scale-95 ${voiceMode ? 'bg-[#2D9B83] text-white hover:bg-[#2D9B83]/90 ring-4 ring-[#2D9B83]/20' : 'hover:bg-slate-100'
+                            }`}
+                    >
+                        {voiceMode ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5 text-slate-400" />}
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleClear}
+                        className="rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 active:scale-95 transition-transform"
+                    >
+                        <Trash2 className="w-5 h-5" />
+                    </Button>
+                </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
-                {messages.map((msg, idx) => {
-                    const isUser = msg.role === 'user';
-                    return (
-                        <div
-                            key={idx}
-                            className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} animate-in slide-in-from-bottom-2 duration-300`}
-                        >
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${isUser ? 'bg-slate-200' : 'bg-[#2D9B83]/10'
-                                }`}>
-                                {isUser ? <User className="w-4 h-4 text-slate-600" /> : <Sparkles className="w-4 h-4 text-[#2D9B83]" />}
-                            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
+                {messages.length === 0 && (
+                    <div className="text-center py-8 opacity-50">
+                        <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <Sparkles className="w-10 h-10 text-slate-400" />
+                        </div>
+                        <p>مرحباً بك! أنا مساعدك الصحي الذكي.</p>
+                        <p className="text-sm">اسألني عن صحتك، تغذيتك، أو منتجاتنا.</p>
+                    </div>
+                )}
 
-                            <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${isUser
-                                ? 'bg-[#2D9B83] text-white rounded-tr-none'
-                                : 'bg-white border border-slate-100 shadow-sm rounded-tl-none text-slate-700'
-                                }`}>
-                                {msg.role === 'assistant' ? (
-                                    <ReactMarkdown
-                                        className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2"
-                                        components={{
-                                            a: ({ node, ...props }) => <a {...props} className="text-[#2D9B83] underline font-medium" target="_blank" />,
-                                            ul: ({ node, ...props }) => <ul {...props} className="list-disc mr-4" />,
-                                            ol: ({ node, ...props }) => <ol {...props} className="list-decimal mr-4" />
-                                        }}
-                                    >
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                ) : (
-                                    msg.content
-                                )}
-                            </div>
+                {messages.map((msg, idx) => (
+                    <div
+                        key={idx}
+                        className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
+                        <div className={`
+                            w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1
+                            ${msg.role === 'user' ? 'bg-slate-800' : 'bg-[#2D9B83]'}
+                        `}>
+                            {msg.role === 'user' ? (
+                                <User className="w-4 h-4 text-white" />
+                            ) : (
+                                <Bot className="w-4 h-4 text-white" />
+                            )}
                         </div>
-                    );
-                })}
-                {loading && (
+
+                        <div className={`
+                            max-w-[85%] rounded-2xl p-3 text-sm leading-relaxed shadow-sm
+                            ${msg.role === 'user'
+                                ? 'bg-slate-800 text-white rounded-tr-none'
+                                : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none'
+                            }
+                        `}>
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                    </div>
+                ))}
+
+                {/* Loading Skeleton */}
+                {isLoading && (
                     <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#2D9B83]/10 flex items-center justify-center flex-shrink-0">
-                            <Loader2 className="w-4 h-4 text-[#2D9B83] animate-spin" />
+                        <div className="w-8 h-8 rounded-full bg-[#2D9B83] flex items-center justify-center flex-shrink-0 mt-1">
+                            <Bot className="w-4 h-4 text-white" />
                         </div>
-                        <div className="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none shadow-sm">
-                            <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
+                        <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-none p-4 shadow-sm w-[70%] space-y-2">
+                            <Skeleton className="h-4 w-[90%]" />
+                            <Skeleton className="h-4 w-[75%]" />
+                            <Skeleton className="h-4 w-[50%]" />
                         </div>
                     </div>
                 )}
+                <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Replies - shown only at start */}
-            {messages.length === 1 && !loading && (
-                <div className="px-4 pb-2 flex flex-wrap gap-2">
-                    {quickReplies.map((reply, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => {
-                                setInput(reply.text);
-                                setTimeout(() => handleSend(), 100);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600 hover:border-[#2D9B83] hover:text-[#2D9B83] transition-colors"
-                        >
-                            <span>{reply.emoji}</span>
-                            <span>{reply.text}</span>
-                        </button>
-                    ))}
-                </div>
-            )}
+            {/* Input Area */}
+            <div className="p-4 bg-white/80 backdrop-blur-md border-t border-slate-100">
+                {/* Image Upload Preview Context */}
+                {selectedImage && (
+                    <div className="mb-2 p-2 bg-slate-50 rounded-lg flex items-center justify-between animate-in slide-in-from-bottom-2">
+                        <span className="text-xs text-[#2D9B83] font-medium flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> جاري تحليل الصورة...
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedImage(null)} className="h-6 w-6 p-0 rounded-full">
+                            <Trash2 className="w-3 h-3 text-red-400" />
+                        </Button>
+                    </div>
+                )}
 
-            {/* Input */}
-            <div className="p-4 bg-white border-t border-slate-100">
                 <form
-                    onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                    className="flex items-center gap-2 bg-slate-50 p-2 rounded-full border border-slate-200 focus-within:border-[#2D9B83] focus-within:ring-1 focus-within:ring-[#2D9B83]/20 transition-all"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSend();
+                    }}
+                    className="flex gap-2"
                 >
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="اسألني عن صحتك، الدورات، أو المنتجات..."
-                        className="border-0 bg-transparent focus-visible:ring-0 px-4"
+                        placeholder={isListening ? "جاري الاستماع..." : "اكتب سؤالك هنا..."}
+                        className={`flex-1 bg-white border-slate-200 focus:border-[#2D9B83] rounded-xl h-12 ${isListening ? 'animate-pulse border-[#2D9B83] text-[#2D9B83]' : ''
+                            }`}
+                        disabled={isLoading || isListening}
                     />
+
+                    {voiceMode && (
+                        <Button
+                            type="button"
+                            size="icon"
+                            className={`h-12 w-12 rounded-xl transition-all active:scale-95 ${isListening
+                                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 animate-pulse'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                                }`}
+                            onClick={isListening ? stopListening : startListening}
+                        >
+                            {isListening ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                        </Button>
+                    )}
+
+                    <ImageUpload
+                        onImageSelected={(base64, mimeType) => setSelectedImage({ base64, mimeType })}
+                        isLoading={isLoading}
+                    />
+
                     <Button
                         type="submit"
-                        size="icon"
-                        className="rounded-full bg-[#2D9B83] hover:bg-[#2D9B83]/90 text-white shadow-md disabled:opacity-50"
-                        disabled={!input.trim() || loading}
+                        disabled={isLoading || (!input.trim() && !isListening && !selectedImage)}
+                        className="h-12 w-12 rounded-xl bg-[#2D9B83] hover:bg-[#258570] text-white shadow-lg shadow-[#2D9B83]/20 active:scale-95 transition-transform"
                     >
-                        <Send className="w-4 h-4" />
+                        {isLoading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Send className="w-5 h-5" />
+                        )}
                     </Button>
                 </form>
             </div>
