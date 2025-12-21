@@ -139,7 +139,7 @@ export const aiClient = {
         conversationStore.addMessage('user', lastUserMessage);
 
         try {
-            console.log('[AI Client] Sending request to /api/ai-chat...');
+            console.log('[AI Client] Sending request to /api/chat-v2...');
 
             const response = await fetch(`/api/chat-v2?ts=${Date.now()}`, {
                 method: 'POST',
@@ -149,12 +149,8 @@ export const aiClient = {
                 body: JSON.stringify({
                     message: lastUserMessage,
                     context: {
-                        userName: "ضيف", // Should come from User auth
-                        healthProfile: {
-                            condition: "General Wellness", // Mock data
-                            vitalityScore: 75,
-                            program: "Detox Phase 1"
-                        },
+                        userName: "ضيف", // Or fetch from contextData if available
+                        healthProfile: contextData?.healthProfile || {}, // Use real data
                         ...contextData
                     }
                 }),

@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { createPageUrl } from '../utils';
@@ -27,7 +27,7 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
 export default function MyAppointments() {
     const { data: appointments = [], isLoading, isError, refetch } = useQuery({
         queryKey: ['my-appointments'],
-        queryFn: () => base44.entities.Appointment.list('-created_date'),
+        queryFn: () => db.entities.Appointment.list('-created_date'),
     });
 
     if (isLoading) {

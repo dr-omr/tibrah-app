@@ -1,126 +1,58 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery } from '@tanstack/react-query';
 import { Search, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from "@/components/ui/input";
 import ArticleCard from '../components/library/ArticleCard';
 import LibraryFilters from '../components/library/LibraryFilters';
+import { localArticles } from '@/lib/articles';
+
+// Interface for Article
+interface Article {
+    id: string;
+    title?: string;
+    summary?: string;
+    image_url?: string;
+    category?: string;
+    type?: string;
+    views?: number;
+    featured?: boolean;
+    tags?: string[];
+    created_date?: string;
+    content?: string;
+}
 
 export default function Library() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeType, setActiveType] = useState('all');
     const [activeCategory, setActiveCategory] = useState('all');
 
-    // مقالات حقيقية ومتنوعة
-    const sampleArticles = [
-        {
-            id: '1',
-            title: 'ما هو الطب الوظيفي؟ دليلك الشامل للشفاء الجذري',
-            summary: 'تعرف على كيفية علاج الأمراض من جذورها بدلاً من الأعراض فقط - مع مراجع علمية',
-            type: 'article',
-            category: 'functional_medicine',
-            image_url: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800',
-            duration_minutes: 12,
-            views: 1250,
-            featured: true,
-            tags: ['طب وظيفي', 'شفاء جذري', 'صحة شاملة']
-        },
-        {
-            id: '2',
-            title: 'الترددات الشفائية: العلم وراء الشفاء بالصوت',
-            summary: 'اكتشف ترددات سولفيجيو التسعة وتأثيرها العلمي على الجسم والدماغ',
-            type: 'article',
-            category: 'frequencies',
-            image_url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
-            duration_minutes: 15,
-            views: 3420,
-            featured: true,
-            tags: ['ترددات شفائية', 'سولفيجيو', 'علاج صوتي']
-        },
-        {
-            id: '3',
-            title: 'دراسة: تأثير الصيام المتقطع على إصلاح الخلايا',
-            summary: 'جائزة نوبل 2016 للالتهام الذاتي - كيف يجدد الصيام خلاياك',
-            type: 'study',
-            category: 'nutrition',
-            image_url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800',
-            duration_minutes: 12,
-            views: 890,
-            tags: ['صيام متقطع', 'التهام ذاتي', 'تجديد خلايا']
-        },
-        {
-            id: '4',
-            title: 'بروتوكول ديتوكس الكبد: خطوة بخطوة',
-            summary: 'دليل عملي مفصل لتنظيف الكبد من السموم وتحسين وظائفه',
-            type: 'article',
-            category: 'detox',
-            image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
-            duration_minutes: 10,
-            views: 2100,
-            tags: ['ديتوكس', 'كبد', 'تنظيف', 'سموم']
-        },
-        {
-            id: '5',
-            title: 'أفضل 10 مكملات للطاقة والحيوية',
-            summary: 'دليل علمي شامل لأهم المكملات مع الجرعات والمصادر الموثوقة',
-            type: 'article',
-            category: 'supplements',
-            image_url: 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800',
-            duration_minutes: 8,
-            views: 3200,
-            featured: true,
-            tags: ['مكملات', 'طاقة', 'فيتامينات', 'معادن']
-        },
-        {
-            id: '6',
-            title: 'كيف يؤثر النوم على هرموناتك؟',
-            summary: 'الكورتيزول، هرمون النمو، اللبتين - كلها تتأثر بنومك',
-            type: 'article',
-            category: 'lifestyle',
-            image_url: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800',
-            duration_minutes: 10,
-            views: 1540,
-            tags: ['نوم', 'هرمونات', 'صحة']
-        },
-        {
-            id: '7',
-            title: 'التأمل والتنفس: مفتاح الصحة النفسية',
-            summary: 'تقنيات مثبتة علمياً: 4-7-8، Box Breathing، وتنفس ويم هوف',
-            type: 'article',
-            category: 'mental_health',
-            image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
-            duration_minutes: 12,
-            views: 2800,
-            tags: ['تأمل', 'تنفس', 'صحة نفسية', 'توتر']
-        },
-        {
-            id: '8',
-            title: 'صحة الأمعاء: المفتاح الذهبي للصحة الشاملة',
-            summary: 'الميكروبيوم، محور الأمعاء-الدماغ، وكيف تحسن صحتك الهضمية',
-            type: 'article',
-            category: 'nutrition',
-            image_url: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800',
-            duration_minutes: 14,
-            views: 1890,
-            tags: ['أمعاء', 'ميكروبيوم', 'هضم', 'مناعة']
-        },
-    ];
 
-    const { data: articles = [] } = useQuery({
+    const { data: dbArticles = [] } = useQuery({
         queryKey: ['articles'],
-        queryFn: () => base44.entities.KnowledgeArticle.list('-created_date', 50),
+        queryFn: async () => {
+            try {
+                const data = await db.entities.KnowledgeArticle.list('-created_date', 50);
+                return data as unknown as Article[];
+            } catch (e) {
+                console.error("Failed to fetch articles", e);
+                return [];
+            }
+        },
         initialData: [],
     });
 
-    const allArticles = articles.length > 0 ? articles : sampleArticles;
+    // Merge DB articles with Local fallback articles
+    // Prefer DB articles if IDs collide (though they shouldn't)
+    const articles = [...dbArticles, ...localArticles];
 
     // Filter articles
-    const filteredArticles = allArticles.filter(article => {
+    const filteredArticles = articles.filter((article: any) => {
         const matchesSearch =
             article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             article.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            article.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+            article.tags?.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesType = activeType === 'all' || article.type === activeType;
         const matchesCategory = activeCategory === 'all' || article.category === activeCategory;
@@ -128,8 +60,8 @@ export default function Library() {
         return matchesSearch && matchesType && matchesCategory;
     });
 
-    const featuredArticles = allArticles.filter(a => a.featured);
-    const trendingArticles = [...allArticles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 4);
+    const featuredArticles = articles.filter((a: any) => a.featured);
+    const trendingArticles = [...articles].sort((a: any, b: any) => (b.views || 0) - (a.views || 0)).slice(0, 4);
 
     return (
         <div className="min-h-screen pb-24">

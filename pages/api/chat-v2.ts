@@ -17,7 +17,7 @@ const SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 - مسا
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // CORS headers
     // Debugging: Log the method
-    console.log(`[API] Request method: ${req.method}`);
+    // console.log(`[API] Request method: ${req.method}`);
 
     // Handle Preflight (OPTIONS)
     if (req.method === "OPTIONS") {
@@ -65,14 +65,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const text = completion.choices[0]?.message?.content || "عذراً، لم أستطع الرد. جرب مرة ثانية.";
 
-        console.log("✅ Groq Response Success");
+        // console.log("✅ Groq Response Success");
         return res.status(200).json({ text });
 
     } catch (error: any) {
-        console.error("❌ GROQ ERROR:", error);
-        return res.status(500).json({
-            error: "AI Service Error",
-            details: error.message
-        });
+        console.error("❌ GROQ ERROR (Switching to Local Brain):", error);
+
+        // Local Fallback Logic
+        try {
+            const { getFallbackAdvice, getGeneralResponse } = require('../../lib/localBrain');
+            const { message, context } = req.body; // Re-read body
+
+            let fallbackResponse = "";
+
+            // Prioritize Health Context advice if available and relevant specific keywords aren't present
+            if (context?.healthProfile && (message.includes('نصيحة') || message.includes('وضع') || message.includes('تحليل'))) {
+                const healthCtx = {
+                    sleep: context.healthProfile.sleepHours, // Ensure mapping matches frontend
+                    water: context.healthProfile.waterGlasses,
+                    mood: context.healthProfile.moodScore,
+                    stress: context.healthProfile.stressLevel
+                };
+                fallbackResponse = getFallbackAdvice(healthCtx);
+            } else {
+                fallbackResponse = getGeneralResponse(message || "");
+            }
+
+            return res.status(200).json({
+                text: fallbackResponse,
+                isLocalFallback: true
+            });
+
+        } catch (localError) {
+            console.error("❌ FATAL local error:", localError);
+            return res.status(200).json({
+                text: "حياك الله يا غالي.. يبدو أن هناك مشكلة في الاتصال، لكن تذّكر دائماً: المعدة بيت الداء، والحمية رأس الدواء. طمني كيف صحتك اليوم؟"
+            });
+        }
     }
 }

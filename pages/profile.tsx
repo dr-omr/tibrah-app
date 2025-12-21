@@ -1,317 +1,535 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useRouter } from 'next/router';
-import {
-    User, FileText, TrendingUp, Heart, Settings, Bell, Shield, Palette,
-    ChevronLeft, HelpCircle, MessageCircle, Info, LogOut, Sparkles,
-    Calendar, BookOpen, Activity, Pill, Moon, Droplets
-} from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import Link from 'next/link';
-import { createPageUrl } from '../utils';
-import { ProfileSkeleton } from '../components/common/Skeletons';
+// pages/profile.tsx
+// Premium Creative Profile with Touch Interactions
 
-// TypeScript Interfaces
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchUserStats, UserStats } from '@/lib/statsService';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+import {
+    User, FileText, TrendingUp, Heart, Bell, Shield, Palette,
+    ChevronLeft, HelpCircle, MessageCircle, Info, LogOut, Sparkles,
+    Calendar, BookOpen, Activity, Pill, Moon, Droplets, Crown,
+    Star, Award, Zap, Gift, Settings, Share2, QrCode
+} from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
+import { createPageUrl } from '../utils';
+
 interface UserData {
-    id?: string;
+    id: string;
     email?: string;
     full_name?: string;
     avatar_url?: string;
-    role?: string;
-    settings?: {
-        displayName?: string;
-        notifications?: boolean;
-        darkMode?: boolean;
-        [key: string]: unknown;
-    };
+    settings?: any;
+    created_at?: string;
 }
 
-interface MenuItemProps {
-    icon: React.ElementType;
-    label: string;
-    href?: string;
-    onClick?: () => void;
-    badge?: string;
-    badgeColor?: string;
-    chevron?: boolean;
-    toggle?: boolean;
-    toggleValue?: boolean;
-    onToggle?: (value: boolean) => void;
-    danger?: boolean;
-}
-
-interface MenuSectionProps {
-    title: string;
-    children: React.ReactNode;
-}
+const ProfileSkeleton = () => (
+    <div className="p-6 space-y-4">
+        <Skeleton className="h-40 w-full rounded-3xl" />
+        <div className="grid grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-32 w-full rounded-2xl" />
+    </div>
+);
 
 export default function Profile() {
+    const { user: authUser, signOut } = useAuth();
     const [user, setUser] = useState<UserData | null>(null);
+    const [statsData, setStatsData] = useState<UserStats>({ activeDays: 0, waterCups: 0, sleepHours: 0, dosesTaken: 0 });
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState(true);
     const [darkMode, setDarkMode] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
     const router = useRouter();
 
+    // Handle Share
+    const handleShare = async () => {
+        const shareData = {
+            title: 'طِبرَا - العيادة الرقمية',
+            text: `انضم لي في تطبيق طِبرَا للصحة والعافية! ${user?.full_name || 'مستخدم'}`,
+            url: typeof window !== 'undefined' ? window.location.origin : 'https://tibrah.app',
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+                toast.success('تمت المشاركة بنجاح!');
+            } else {
+                // Fallback: Copy to clipboard
+                await navigator.clipboard.writeText(shareData.url);
+                toast.success('تم نسخ الرابط!');
+            }
+        } catch (error) {
+            console.error('Share error:', error);
+        }
+    };
+
+    // Generate QR Code using free API
+    const handleQRCode = async () => {
+        try {
+            const url = typeof window !== 'undefined' ? window.location.origin : 'https://tibrah.app';
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}&color=2D9B83`;
+            setQrCodeUrl(qrUrl);
+            setShowQRModal(true);
+        } catch (error) {
+            toast.error('حدث خطأ في إنشاء الكود');
+        }
+    };
+
     useEffect(() => {
-        base44.auth.me().then((data: UserData | null) => {
-            setUser(data);
-            setNotifications(data?.settings?.notifications !== false);
-            setDarkMode(data?.settings?.darkMode === true);
-            setLoading(false);
-        }).catch(() => {
-            setLoading(false);
-        });
-    }, []);
+        const loadData = async () => {
+            if (!authUser) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const stats = await fetchUserStats();
+                setStatsData(stats);
+
+                const dbUser = await db.entities.User.get(authUser.id) as unknown as UserData;
+                const fullUserData = {
+                    ...authUser,
+                    settings: dbUser?.settings || {},
+                };
+
+                setUser(fullUserData as UserData);
+                setNotifications(dbUser?.settings?.notifications !== false);
+                setDarkMode(dbUser?.settings?.darkMode === true);
+            } catch (e) {
+                console.error("Profile Load Error", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, [authUser]);
 
     const handleLogout = async () => {
-        await base44.auth.logout();
+        await signOut();
         router.push('/login');
+    };
+
+    const updateSetting = async (key: string, value: boolean) => {
+        if (!authUser?.id) return;
+
+        if (key === 'notifications') setNotifications(value);
+        if (key === 'darkMode') {
+            setDarkMode(value);
+            document.documentElement.classList.toggle('dark', value);
+        }
+
+        try {
+            const currentDbUser = await db.entities.User.get(authUser.id) || { id: authUser.id };
+            const newSettings = { ...((currentDbUser as any).settings || {}), [key]: value };
+
+            if ((currentDbUser as any).created_at) {
+                await db.entities.User.update(authUser.id, { settings: newSettings });
+            } else {
+                await db.entities.User.create({ ...currentDbUser, settings: newSettings });
+            }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     if (loading) return <ProfileSkeleton />;
 
-    // Reusable Menu Item Component
-    const MenuItem = ({
-        icon: Icon,
-        label,
-        href,
-        onClick,
-        badge,
-        badgeColor = 'bg-[#2D9B83]',
-        chevron = true,
-        toggle = false,
-        toggleValue = false,
-        onToggle,
-        danger = false
-    }: MenuItemProps) => {
-        const content = (
-            <div
-                className={`flex items-center gap-4 p-4 transition-colors ${danger ? 'hover:bg-red-50' : 'hover:bg-slate-50'
-                    } active:bg-slate-100`}
-                onClick={onClick}
-            >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${danger ? 'bg-red-100' : 'bg-slate-100'
-                    }`}>
-                    <Icon className={`w-5 h-5 ${danger ? 'text-red-500' : 'text-slate-600'}`} />
-                </div>
-                <span className={`flex-1 font-medium ${danger ? 'text-red-500' : 'text-slate-700'}`}>
-                    {label}
-                </span>
-                {badge && (
-                    <Badge className={`${badgeColor} text-white border-0 text-xs`}>
-                        {badge}
-                    </Badge>
-                )}
-                {toggle ? (
-                    <Switch
-                        checked={toggleValue}
-                        onCheckedChange={onToggle}
-                        className="data-[state=checked]:bg-[#2D9B83]"
-                    />
-                ) : chevron && (
-                    <ChevronLeft className="w-5 h-5 text-slate-300" />
-                )}
-            </div>
-        );
-
-        if (href) {
-            return <Link href={href}>{content}</Link>;
-        }
-        return <div className="cursor-pointer">{content}</div>;
-    };
-
-    // Menu Section Component
-    const MenuSection = ({ title, children }: MenuSectionProps) => (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-4">
-            <div className="px-4 pt-4 pb-2">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wide">{title}</h3>
-            </div>
-            <div className="divide-y divide-slate-100">
-                {children}
-            </div>
-        </div>
-    );
-
-    // Stats data
+    // Stats with pastel colors
     const stats = [
-        { label: 'الأيام النشطة', value: '12', icon: Activity, color: 'text-[#2D9B83]', bg: 'bg-[#2D9B83]/10' },
-        { label: 'الأكواب', value: '45', icon: Droplets, color: 'text-cyan-500', bg: 'bg-cyan-50' },
-        { label: 'ساعات النوم', value: '52', icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-        { label: 'الجرعات', value: '28', icon: Pill, color: 'text-rose-500', bg: 'bg-rose-50' },
+        { label: 'الأيام النشطة', value: statsData.activeDays, icon: Activity, color: '#2D9B83', bg: 'bg-emerald-50' },
+        { label: 'أكواب الماء', value: statsData.waterCups, icon: Droplets, color: '#06B6D4', bg: 'bg-cyan-50' },
+        { label: 'ساعات النوم', value: statsData.sleepHours, icon: Moon, color: '#8B5CF6', bg: 'bg-violet-50' },
+        { label: 'الجرعات', value: statsData.dosesTaken, icon: Pill, color: '#F43F5E', bg: 'bg-rose-50' },
+    ];
+
+    // Quick actions with creative icons
+    const quickActions = [
+        { icon: FileText, label: 'ملفي الطبي', href: createPageUrl('MedicalFile'), color: '#2D9B83', bg: 'bg-emerald-50' },
+        { icon: TrendingUp, label: 'متتبع الصحة', href: '/health-tracker', color: '#F59E0B', bg: 'bg-amber-50', badge: 'جديد' },
+        { icon: Calendar, label: 'مواعيدي', href: createPageUrl('MyAppointments'), color: '#3B82F6', bg: 'bg-blue-50' },
+        { icon: Heart, label: 'خريطة الجسم', href: createPageUrl('BodyMap'), color: '#EC4899', bg: 'bg-pink-50' },
+        { icon: BookOpen, label: 'دوراتي', href: createPageUrl('Courses'), color: '#8B5CF6', bg: 'bg-violet-50' },
+        { icon: Gift, label: 'المكافآت', href: '/rewards', color: '#D4AF37', bg: 'bg-amber-50', badge: 'جديد' },
+    ];
+
+    // Settings items
+    const settingsItems = [
+        { icon: User, label: 'تعديل الملف الشخصي', href: createPageUrl('Settings'), color: '#6366F1' },
+        { icon: Bell, label: 'الإشعارات', toggle: true, value: notifications, onToggle: (v: boolean) => updateSetting('notifications', v), color: '#F59E0B' },
+        { icon: Palette, label: 'الوضع الداكن', toggle: true, value: darkMode, onToggle: (v: boolean) => updateSetting('darkMode', v), color: '#8B5CF6' },
+        { icon: Shield, label: 'الأمان والخصوصية', href: createPageUrl('Settings'), color: '#10B981' },
+    ];
+
+    // Support items
+    const supportItems = [
+        { icon: HelpCircle, label: 'مركز المساعدة', href: '/help', color: '#3B82F6' },
+        { icon: MessageCircle, label: 'تواصل معنا', href: '/contact', color: '#22C55E' },
+        { icon: Info, label: 'عن طِبرَا', href: '/about', color: '#6366F1' },
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
-            {/* Profile Header */}
-            <div className="bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] pt-8 pb-20 px-6 relative overflow-hidden">
-                {/* Background Decorations */}
-                <div className="absolute top-0 right-0 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#D4AF37]/20 rounded-full blur-2xl" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
+            {/* Creative Header with Avatar */}
+            <motion.div
+                className="relative overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+            >
+                {/* Animated Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2D9B83] via-[#3FB39A] to-[#2D9B83]">
+                    <motion.div
+                        className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"
+                        animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 8 }}
+                    />
+                    <motion.div
+                        className="absolute bottom-0 left-0 w-48 h-48 bg-[#D4AF37]/20 rounded-full blur-2xl"
+                        animate={{ x: [0, -15, 0], y: [0, 15, 0] }}
+                        transition={{ repeat: Infinity, duration: 6 }}
+                    />
+                </div>
 
-                {/* Profile Info */}
-                <div className="relative flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className="relative">
-                        <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden backdrop-blur-sm border-2 border-white/30">
-                            {user?.avatar_url ? (
-                                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                                <User className="w-10 h-10 text-white" />
-                            )}
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#D4AF37] rounded-lg flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-white" />
+                <div className="relative pt-8 pb-24 px-6">
+                    {/* Top Actions */}
+                    <div className="flex justify-between items-center mb-6">
+                        <motion.button
+                            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            <Settings className="w-5 h-5 text-white" />
+                        </motion.button>
+                        <div className="flex gap-2">
+                            <motion.button
+                                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
+                                whileTap={{ scale: 0.9 }}
+                                onClick={handleShare}
+                            >
+                                <Share2 className="w-5 h-5 text-white" />
+                            </motion.button>
+                            <motion.button
+                                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
+                                whileTap={{ scale: 0.9 }}
+                                onClick={handleQRCode}
+                            >
+                                <QrCode className="w-5 h-5 text-white" />
+                            </motion.button>
                         </div>
                     </div>
 
-                    {/* User Info */}
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-xl font-bold text-white truncate">
+                    {/* Profile Card */}
+                    <motion.div
+                        className="flex flex-col items-center text-center"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                    >
+                        {/* Avatar with Ring */}
+                        <motion.div
+                            className="relative mb-4"
+                            whileTap={{ scale: 0.95, rotate: 5 }}
+                        >
+                            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center backdrop-blur-sm border-2 border-white/40 shadow-2xl overflow-hidden">
+                                {user?.avatar_url ? (
+                                    <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="w-12 h-12 text-white" />
+                                )}
+                            </div>
+                            {/* Crown Badge */}
+                            <motion.div
+                                className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] rounded-xl flex items-center justify-center shadow-lg"
+                                initial={{ scale: 0, rotate: -30 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ delay: 0.3, type: 'spring' }}
+                            >
+                                <Crown className="w-4 h-4 text-white" />
+                            </motion.div>
+                            {/* Verified Badge */}
+                            <motion.div
+                                className="absolute -bottom-1 -left-1 w-7 h-7 bg-white rounded-xl flex items-center justify-center shadow-lg"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.4, type: 'spring' }}
+                            >
+                                <Sparkles className="w-4 h-4 text-[#2D9B83]" />
+                            </motion.div>
+                        </motion.div>
+
+                        {/* User Name */}
+                        <h1 className="text-2xl font-bold text-white mb-1">
                             {user?.settings?.displayName || user?.full_name || 'مستخدم جديد'}
                         </h1>
-                        <p className="text-white/70 text-sm truncate">{user?.email || ''}</p>
-                        <Badge className="mt-2 bg-white/20 text-white border-0 text-xs backdrop-blur-sm">
-                            <Sparkles className="w-3 h-3 ml-1" />
-                            عضو مميز
-                        </Badge>
-                    </div>
-                </div>
-            </div>
+                        <p className="text-white/60 text-sm mb-3">{user?.email || ''}</p>
 
-            {/* Stats Cards - Overlapping Header */}
-            <div className="px-4 -mt-12 relative z-10">
-                <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-4">
+                        {/* Membership Badge */}
+                        <motion.div
+                            className="flex items-center gap-2 px-4 py-2 bg-white/15 rounded-full backdrop-blur-sm"
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Star className="w-4 h-4 text-[#D4AF37]" />
+                            <span className="text-white text-sm font-medium">عضو مميز</span>
+                            <Award className="w-4 h-4 text-[#D4AF37]" />
+                        </motion.div>
+                    </motion.div>
+                </div>
+            </motion.div>
+
+            {/* Stats Grid - Overlapping */}
+            <div className="px-4 -mt-16 relative z-10">
+                <motion.div
+                    className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-4"
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                >
                     <div className="grid grid-cols-4 gap-2">
                         {stats.map((stat, index) => {
                             const Icon = stat.icon;
                             return (
-                                <div key={index} className="text-center">
-                                    <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center mx-auto mb-2`}>
-                                        <Icon className={`w-5 h-5 ${stat.color}`} />
-                                    </div>
-                                    <div className="text-lg font-bold text-slate-800">{stat.value}</div>
+                                <motion.div
+                                    key={index}
+                                    className="text-center p-2"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 + index * 0.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <motion.div
+                                        className={`w-12 h-12 rounded-2xl ${stat.bg} flex items-center justify-center mx-auto mb-2`}
+                                        whileTap={{ rotate: 10 }}
+                                    >
+                                        <Icon className="w-6 h-6" style={{ color: stat.color }} strokeWidth={1.5} />
+                                    </motion.div>
+                                    <div className="text-xl font-bold text-slate-800 dark:text-white">{stat.value}</div>
                                     <div className="text-[10px] text-slate-500">{stat.label}</div>
-                                </div>
+                                </motion.div>
                             );
                         })}
                     </div>
-                </div>
+                </motion.div>
             </div>
 
-            {/* Menu Sections */}
+            {/* Quick Actions - 3 column grid */}
             <div className="px-4 pt-6">
-                {/* My Services */}
-                <MenuSection title="خدماتي">
-                    <MenuItem
-                        icon={FileText}
-                        label="ملفي الطبي"
-                        href={createPageUrl('MedicalFile')}
-                        badge="3 تقارير"
-                    />
-                    <MenuItem
-                        icon={TrendingUp}
-                        label="متتبع الصحة"
-                        href="/health-tracker"
-                        badge="جديد"
-                        badgeColor="bg-[#D4AF37]"
-                    />
-                    <MenuItem
-                        icon={Calendar}
-                        label="مواعيدي"
-                        href={createPageUrl('MyAppointments')}
-                    />
-                    <MenuItem
-                        icon={BookOpen}
-                        label="دوراتي"
-                        href={createPageUrl('Courses')}
-                        badge="2 نشطة"
-                        badgeColor="bg-amber-500"
-                    />
-                    <MenuItem
-                        icon={Heart}
-                        label="خريطة الجسم"
-                        href={createPageUrl('BodyMap')}
-                    />
-                </MenuSection>
-
-                {/* Settings */}
-                <MenuSection title="الإعدادات">
-                    <MenuItem
-                        icon={User}
-                        label="تعديل الملف الشخصي"
-                        href={createPageUrl('Settings')}
-                    />
-                    <MenuItem
-                        icon={Bell}
-                        label="الإشعارات"
-                        toggle
-                        toggleValue={notifications}
-                        onToggle={(value) => {
-                            setNotifications(value);
-                            base44.auth.updateMe({
-                                settings: { ...user?.settings, notifications: value }
-                            });
-                        }}
-                        chevron={false}
-                    />
-                    <MenuItem
-                        icon={Shield}
-                        label="الأمان والخصوصية"
-                        href={createPageUrl('Settings')}
-                    />
-                    <MenuItem
-                        icon={Palette}
-                        label="الوضع الداكن"
-                        toggle
-                        toggleValue={darkMode}
-                        onToggle={(value) => {
-                            setDarkMode(value);
-                            document.documentElement.classList.toggle('dark', value);
-                            base44.auth.updateMe({
-                                settings: { ...user?.settings, darkMode: value }
-                            });
-                        }}
-                        chevron={false}
-                    />
-                </MenuSection>
-
-                {/* Support */}
-                <MenuSection title="الدعم والمساعدة">
-                    <MenuItem
-                        icon={HelpCircle}
-                        label="مركز المساعدة"
-                        href="/help"
-                    />
-                    <MenuItem
-                        icon={MessageCircle}
-                        label="تواصل معنا"
-                        href="/contact"
-                    />
-                    <MenuItem
-                        icon={Info}
-                        label="عن طِبرَا"
-                        href="/about"
-                    />
-                </MenuSection>
-
-                {/* Logout Section */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-4">
-                    <MenuItem
-                        icon={LogOut}
-                        label="تسجيل الخروج"
-                        onClick={handleLogout}
-                        danger
-                        chevron={false}
-                    />
+                <motion.h3
+                    className="text-sm font-bold text-slate-400 uppercase tracking-wide mb-3 px-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                >
+                    خدماتي
+                </motion.h3>
+                <div className="grid grid-cols-3 gap-3">
+                    {quickActions.map((item, index) => {
+                        const Icon = item.icon;
+                        return (
+                            <Link key={index} href={item.href}>
+                                <motion.div
+                                    className="relative bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 text-center"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 + index * 0.05 }}
+                                    whileHover={{ scale: 1.03, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    {item.badge && (
+                                        <motion.span
+                                            className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold"
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ delay: 0.6, type: 'spring' }}
+                                        >
+                                            {item.badge}
+                                        </motion.span>
+                                    )}
+                                    <motion.div
+                                        className={`w-12 h-12 ${item.bg} rounded-2xl flex items-center justify-center mx-auto mb-2`}
+                                        whileTap={{ rotate: -10, scale: 0.9 }}
+                                    >
+                                        <Icon className="w-6 h-6" style={{ color: item.color }} strokeWidth={1.5} />
+                                    </motion.div>
+                                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
+                                </motion.div>
+                            </Link>
+                        );
+                    })}
                 </div>
-
-                {/* App Version */}
-                <p className="text-center text-sm text-slate-400 py-4">
-                    طِبرَا الإصدار ٢.٠.٠
-                </p>
             </div>
+
+            {/* Settings Section */}
+            <div className="px-4 pt-6">
+                <motion.h3
+                    className="text-sm font-bold text-slate-400 uppercase tracking-wide mb-3 px-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    الإعدادات
+                </motion.h3>
+                <motion.div
+                    className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    {settingsItems.map((item, index) => {
+                        const Icon = item.icon;
+                        const content = (
+                            <motion.div
+                                className="flex items-center gap-4 p-4 border-b border-slate-100 dark:border-slate-700 last:border-0"
+                                whileTap={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
+                            >
+                                <motion.div
+                                    className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center"
+                                    whileTap={{ scale: 0.9, rotate: 5 }}
+                                >
+                                    <Icon className="w-5 h-5" style={{ color: item.color }} />
+                                </motion.div>
+                                <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
+                                {item.toggle ? (
+                                    <Switch
+                                        checked={item.value}
+                                        onCheckedChange={item.onToggle}
+                                        className="data-[state=checked]:bg-[#2D9B83]"
+                                    />
+                                ) : (
+                                    <ChevronLeft className="w-5 h-5 text-slate-300" />
+                                )}
+                            </motion.div>
+                        );
+                        return item.href ? (
+                            <Link key={index} href={item.href}>{content}</Link>
+                        ) : (
+                            <div key={index}>{content}</div>
+                        );
+                    })}
+                </motion.div>
+            </div>
+
+            {/* Support Section */}
+            <div className="px-4 pt-6">
+                <motion.h3
+                    className="text-sm font-bold text-slate-400 uppercase tracking-wide mb-3 px-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                >
+                    الدعم والمساعدة
+                </motion.h3>
+                <motion.div
+                    className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                >
+                    {supportItems.map((item, index) => {
+                        const Icon = item.icon;
+                        return (
+                            <Link key={index} href={item.href}>
+                                <motion.div
+                                    className="flex items-center gap-4 p-4 border-b border-slate-100 dark:border-slate-700 last:border-0"
+                                    whileTap={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
+                                >
+                                    <motion.div
+                                        className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center"
+                                        whileTap={{ scale: 0.9, rotate: 5 }}
+                                    >
+                                        <Icon className="w-5 h-5" style={{ color: item.color }} />
+                                    </motion.div>
+                                    <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
+                                    <ChevronLeft className="w-5 h-5 text-slate-300" />
+                                </motion.div>
+                            </Link>
+                        );
+                    })}
+                </motion.div>
+            </div>
+
+            {/* Logout Button */}
+            <div className="px-4 pt-6">
+                <motion.button
+                    className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl text-red-500 font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleLogout}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                >
+                    <LogOut className="w-5 h-5" />
+                    تسجيل الخروج
+                </motion.button>
+            </div>
+
+            {/* Version & Admin */}
+            <motion.div
+                className="text-center pt-6 pb-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+            >
+                <p className="text-sm text-slate-400 mb-4">طِبرَا الإصدار ٢.٠.٠</p>
+                <Link href="/admin-dashboard" className="text-xs text-slate-300 hover:text-[#2D9B83] transition-colors flex items-center justify-center gap-1">
+                    <Shield className="w-3 h-3" />
+                    لوحة الإدارة
+                </Link>
+            </motion.div>
+
+            {/* QR Code Modal */}
+            <AnimatePresence>
+                {showQRModal && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowQRModal(false)}
+                    >
+                        <motion.div
+                            className="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full text-center"
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <QrCode className="w-8 h-8 text-emerald-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">كود التطبيق</h3>
+                            <p className="text-sm text-slate-500 mb-4">امسح الكود لمشاركة التطبيق</p>
+
+                            {qrCodeUrl && (
+                                <motion.div
+                                    className="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.2, type: 'spring' }}
+                                >
+                                    <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48 mx-auto" />
+                                </motion.div>
+                            )}
+
+                            <motion.button
+                                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl"
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowQRModal(false)}
+                            >
+                                إغلاق
+                            </motion.button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

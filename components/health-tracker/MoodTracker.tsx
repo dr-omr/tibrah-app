@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import {
     Smile, Meh, Frown, Heart, Angry,
     TrendingUp, Calendar, ChevronLeft, Plus, Sparkles
@@ -53,7 +53,7 @@ export default function MoodTracker() {
         queryKey: ['moodLog', today],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today });
                 const log = logs?.[0];
                 if (log?.mood_score) {
                     return {
@@ -79,7 +79,7 @@ export default function MoodTracker() {
                 last7Days.push(date);
             }
 
-            const logs = await base44.entities.DailyLog.filter({
+            const logs = await db.entities.DailyLog.filter({
                 date: { $in: last7Days }
             });
 
@@ -87,7 +87,7 @@ export default function MoodTracker() {
                 const log = logs?.find((l: { date: string }) => l.date === date);
                 return {
                     date,
-                    mood: log?.mood_score || 0,
+                    mood: Number(log?.mood_score) || 0,
                     day: format(new Date(date), 'EEE', { locale: ar })
                 };
             });
@@ -104,7 +104,7 @@ export default function MoodTracker() {
 
     const saveMoodMutation = useMutation({
         mutationFn: async () => {
-            const logs = await base44.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today });
             const data = {
                 mood_score: selectedMood,
                 emotions: selectedEmotions,
@@ -113,16 +113,29 @@ export default function MoodTracker() {
             };
 
             if (logs?.[0]) {
-                await base44.entities.DailyLog.update(logs[0].id as string, data);
+                await db.entities.DailyLog.update(logs[0].id as string, data);
             } else {
-                await base44.entities.DailyLog.create(data);
+                await db.entities.DailyLog.create(data);
             }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['moodLog', today] });
             queryClient.invalidateQueries({ queryKey: ['moodHistory'] });
             setShowForm(false);
-            toast.success('تم حفظ مزاجك! 🌟');
+
+            // Mood Analysis & Suggestion
+            if (selectedMood <= 2 || selectedEmotions.includes('anxious') || selectedEmotions.includes('sad') || selectedEmotions.includes('stress')) {
+                toast.success('تم حفظ مزاجك', {
+                    description: 'تشعر بضيق؟ جرب الاستماع لترددات السولفيجيو لرفع ذبذباتك.',
+                    action: {
+                        label: '🎶 استمع للشفاء',
+                        onClick: () => window.location.href = '/frequencies?id=4' // 528Hz Miracle
+                    },
+                    duration: 6000
+                });
+            } else {
+                toast.success('تم حفظ مزاجك! 🌟');
+            }
         }
     });
 
@@ -189,8 +202,8 @@ export default function MoodTracker() {
                                     key={mood.value}
                                     onClick={() => setSelectedMood(mood.value)}
                                     className={`flex flex-col items-center p-3 rounded-xl transition-all ${selectedMood === mood.value
-                                            ? 'bg-slate-100 scale-110 shadow-md'
-                                            : 'hover:bg-slate-50'
+                                        ? 'bg-slate-100 scale-110 shadow-md'
+                                        : 'hover:bg-slate-50'
                                         }`}
                                 >
                                     <span className="text-3xl">{mood.emoji}</span>
@@ -209,8 +222,8 @@ export default function MoodTracker() {
                                     key={emotion.id}
                                     onClick={() => toggleEmotion(emotion.id)}
                                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-all ${selectedEmotions.includes(emotion.id)
-                                            ? 'bg-[#2D9B83] text-white'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        ? 'bg-[#2D9B83] text-white'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                         }`}
                                 >
                                     <span>{emotion.emoji}</span>

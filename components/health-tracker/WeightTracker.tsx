@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import {
     Scale, Plus, TrendingUp, TrendingDown, Target, Minus,
-    Calendar, Ruler, Edit3, Check, X
+    Calendar, Ruler, Edit3, Check, X, Sparkles
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface WeightEntry {
     weight: number;
@@ -54,7 +55,7 @@ export default function WeightTracker() {
         queryKey: ['weightHistory'],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.DailyLog.list('-date', 30);
+                const logs = await db.entities.DailyLog.list('-date', 30);
                 return logs
                     .filter((log: Record<string, unknown>) => log.weight)
                     .map((log: Record<string, unknown>) => ({
@@ -111,12 +112,12 @@ export default function WeightTracker() {
     const saveMutation = useMutation({
         mutationFn: async () => {
             const weight = parseFloat(newWeight);
-            const logs = await base44.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today });
 
             if (logs?.[0]) {
-                await base44.entities.DailyLog.update(logs[0].id as string, { weight });
+                await db.entities.DailyLog.update(logs[0].id as string, { weight });
             } else {
-                await base44.entities.DailyLog.create({ date: today, weight });
+                await db.entities.DailyLog.create({ date: today, weight });
             }
         },
         onSuccess: () => {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import {
     Pill, Plus, Clock, Bell, Check, X, ChevronLeft,
-    AlertCircle, Calendar, Droplets, BellRing, BellOff, Trash2
+    AlertCircle, Calendar, Droplets, BellRing, BellOff, Trash2, Sparkles
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
     isNotificationSupported,
     getNotificationPermission
 } from '@/lib/pushNotifications';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // TypeScript Interfaces
 interface Medication {
@@ -158,7 +159,7 @@ export default function MedicationReminder() {
         queryKey: ['medications'],
         queryFn: async () => {
             try {
-                const data = await base44.entities.Medication.list();
+                const data = await db.entities.Medication.list();
                 return data as unknown as Medication[];
             } catch {
                 return [];
@@ -172,7 +173,7 @@ export default function MedicationReminder() {
         queryFn: async () => {
             try {
                 const today = format(new Date(), 'yyyy-MM-dd');
-                const logs = await base44.entities.MedicationLog.filter({
+                const logs = await db.entities.MedicationLog.filter({
                     taken_at: { $gte: today }
                 });
                 return logs as unknown as MedicationLog[];
@@ -185,7 +186,7 @@ export default function MedicationReminder() {
     // Log medication taken
     const logMedicationMutation = useMutation({
         mutationFn: async ({ medicationId, scheduledTime }: { medicationId: string; scheduledTime: string }) => {
-            return base44.entities.MedicationLog.create({
+            return db.entities.MedicationLog.create({
                 medication_id: medicationId,
                 taken_at: new Date().toISOString(),
                 scheduled_time: scheduledTime,
@@ -201,7 +202,7 @@ export default function MedicationReminder() {
     // Delete medication
     const deleteMedicationMutation = useMutation({
         mutationFn: async (id: string) => {
-            return base44.entities.Medication.delete(id);
+            return db.entities.Medication.delete(id);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['medications'] });
@@ -247,8 +248,8 @@ export default function MedicationReminder() {
                 <button
                     onClick={toggleNotifications}
                     className={`absolute top-4 left-4 p-2 rounded-full transition-colors ${notificationsEnabled
-                            ? 'bg-white/30 text-white'
-                            : 'bg-white/10 text-white/60'
+                        ? 'bg-white/30 text-white'
+                        : 'bg-white/10 text-white/60'
                         }`}
                 >
                     {notificationsEnabled ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
@@ -313,8 +314,8 @@ export default function MedicationReminder() {
 
                 {/* Notification Status Badge */}
                 <div className={`mt-4 text-center py-2 rounded-xl ${notificationsEnabled
-                        ? 'bg-white/20'
-                        : 'bg-white/10'
+                    ? 'bg-white/20'
+                    : 'bg-white/10'
                     }`}>
                     <span className="text-sm">
                         {notificationsEnabled
@@ -549,7 +550,7 @@ function AddMedicationSheet({
 
     const addMutation = useMutation({
         mutationFn: async (data: typeof formData) => {
-            return base44.entities.Medication.create(data);
+            return db.entities.Medication.create(data);
         },
         onSuccess: () => {
             toast.success('تم إضافة الدواء بنجاح');

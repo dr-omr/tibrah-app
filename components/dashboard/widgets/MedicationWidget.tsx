@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Pill, Check, Clock, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -77,7 +77,7 @@ export const MedicationWidget = ({ medications, logs, onUpdate }: MedicationWidg
         setLoadingId(nextDose.med.id);
 
         try {
-            await base44.entities.MedicationLog.create({
+            await db.entities.MedicationLog.create({
                 medication_id: nextDose.med.id,
                 taken_at: new Date().toISOString(),
                 status: 'taken'

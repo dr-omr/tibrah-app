@@ -1,89 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { createPageUrl } from '../utils';
-import PushNotificationButton from '../components/dashboard/PushNotificationButton';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
-    ArrowRight, Bell, Moon, Sun, Palette, Scale, Thermometer,
-    Download, Trash2, Database, Shield, Check, Loader2, User
+    User, Bell, Scale, Palette, Database, ArrowRight, Moon, Sun, Check,
+    Loader2, Download, Trash2, Shield
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import PushNotificationButton from '@/components/dashboard/PushNotificationButton';
+// ... (imports)
 
 export default function Settings() {
     const queryClient = useQueryClient();
+    const { user: authUser, updateProfile: updateAuthProfile } = useAuth();
     const [user, setUser] = useState(null);
     const [fullName, setFullName] = useState('');
     const [medicalPreferences, setMedicalPreferences] = useState('');
     const [settings, setSettings] = useState({
         notifications: {
             appointments: true,
-            medications: true,
-            supplements: true,
-            frequencies: true,
-            water: true,
-            dailyCheckIn: true,
-            tips: true,
+            // ... defaults
+            medications: true, supplements: true, frequencies: true, water: true, dailyCheckIn: true, tips: true,
         },
-        units: {
-            weight: 'kg',
-            temperature: 'celsius',
-            bloodSugar: 'mg/dL',
-            height: 'cm',
-        },
-        appearance: {
-            theme: 'light',
-            primaryColor: 'teal',
-        }
+        units: { weight: 'kg', temperature: 'celsius', bloodSugar: 'mg/dL', height: 'cm' },
+        appearance: { theme: 'light', primaryColor: 'teal' }
     });
     const [exporting, setExporting] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
-        base44.auth.me().then(userData => {
-            setUser(userData);
-            setFullName(userData.settings?.displayName || userData.full_name || '');
-            if (userData?.settings) {
-                setSettings(prev => ({ ...prev, ...userData.settings }));
-                if (userData.settings.medicalPreferences) {
-                    setMedicalPreferences(userData.settings.medicalPreferences);
+        if (!authUser) return;
+
+        const loadSettings = async () => {
+            setFullName(authUser.displayName || authUser.name || '');
+
+            // Load extended settings from DB
+            const dbUser = await db.entities.User.get(authUser.id);
+            if (dbUser && (dbUser as any).settings) {
+                const loadedSettings = (dbUser as any).settings;
+                setSettings(prev => ({ ...prev, ...loadedSettings }));
+                if (loadedSettings.medicalPreferences) {
+                    setMedicalPreferences(loadedSettings.medicalPreferences);
                 }
             }
-        }).catch(() => { });
-    }, []);
+        };
+        loadSettings();
+    }, [authUser]);
 
     const updateProfile = async () => {
+        if (!authUser) return;
         try {
+            // Update Auth Profile (Display Name)
+            await updateAuthProfile({ displayName: fullName });
+
+            // Update DB Settings
             const newSettings = {
                 ...settings,
                 medicalPreferences,
                 displayName: fullName
             };
-            await base44.auth.updateMe({
-                settings: newSettings
-            });
+
+            // Check if user exists in DB, if not create stub
+            const dbUser = await db.entities.User.get(authUser.id);
+            if (dbUser) {
+                await db.entities.User.update(authUser.id, { settings: newSettings });
+            } else {
+                await db.entities.User.create({ id: authUser.id, settings: newSettings });
+            }
+
             toast.success('تم تحديث الملف الشخصي');
         } catch (error) {
             toast.error('حدث خطأ في التحديث');
@@ -92,8 +84,14 @@ export default function Settings() {
 
     const saveSettings = async (newSettings) => {
         setSettings(newSettings);
+        if (!authUser) return;
         try {
-            await base44.auth.updateMe({ settings: newSettings });
+            const dbUser = await db.entities.User.get(authUser.id);
+            if (dbUser) {
+                await db.entities.User.update(authUser.id, { settings: newSettings });
+            } else {
+                await db.entities.User.create({ id: authUser.id, settings: newSettings });
+            }
             toast.success('تم حفظ الإعدادات');
         } catch (error) {
             toast.error('حدث خطأ في الحفظ');
@@ -128,9 +126,9 @@ export default function Settings() {
         setExporting(true);
         try {
             const [metrics, symptoms, dailyLogs] = await Promise.all([
-                base44.entities.HealthMetric.list(),
-                base44.entities.SymptomLog.list(),
-                base44.entities.DailyLog.list(),
+                db.entities.HealthMetric.list(),
+                db.entities.SymptomLog.list(),
+                db.entities.DailyLog.list(),
             ]);
 
             const exportData = {
@@ -159,15 +157,15 @@ export default function Settings() {
         setDeleting(true);
         try {
             const [metrics, symptoms, dailyLogs] = await Promise.all([
-                base44.entities.HealthMetric.list(),
-                base44.entities.SymptomLog.list(),
-                base44.entities.DailyLog.list(),
+                db.entities.HealthMetric.list(),
+                db.entities.SymptomLog.list(),
+                db.entities.DailyLog.list(),
             ]);
 
             await Promise.all([
-                ...metrics.map(m => base44.entities.HealthMetric.delete(m.id)),
-                ...symptoms.map(s => base44.entities.SymptomLog.delete(s.id)),
-                ...dailyLogs.map(l => base44.entities.DailyLog.delete(l.id)),
+                ...metrics.map(m => db.entities.HealthMetric.delete(m.id)),
+                ...symptoms.map(s => db.entities.SymptomLog.delete(s.id)),
+                ...dailyLogs.map(l => db.entities.DailyLog.delete(l.id)),
             ]);
 
             queryClient.invalidateQueries();

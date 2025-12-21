@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useAudio } from '@/contexts/AudioContext';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { db } from '@/lib/db';
+import { useQuery } from '@tanstack/react-query';
 import { createPageUrl } from '../utils';
 import { Radio, Search, Sparkles, Waves, ArrowLeft } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -81,19 +83,43 @@ const defaultFrequencies: Frequency[] = [
 export default function Frequencies() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
-    const [currentFrequency, setCurrentFrequency] = useState<Frequency | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
     const [selectedFrequency, setSelectedFrequency] = useState<Frequency | null>(null);
 
-    const { data: frequencies = defaultFrequencies, isLoading, isError, refetch } = useQuery({
+    // Global Audio Context
+    const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
+    const router = useRouter();
+
+    // Fetch from DB
+    const { data: dbFrequencies = [], isLoading } = useQuery({
         queryKey: ['frequencies'],
         queryFn: async () => {
-            const data = await base44.entities.Frequency.list();
-            return data.length > 0 ? data : defaultFrequencies;
-        },
+            if ((db.entities as any).Frequency) {
+                return (db.entities as any).Frequency.list();
+            }
+            return [];
+        }
     });
 
-    if (isError) return <ErrorState onRetry={refetch} />;
+    // Merge/Fallback Logic: Use DB results if available, else default
+    const frequencies = (dbFrequencies && dbFrequencies.length > 0) ? dbFrequencies : defaultFrequencies;
+
+    // Auto-open frequency from URL
+
+    // Auto-open frequency from URL
+    React.useEffect(() => {
+        if (router.query.id && frequencies.length > 0) {
+            const freqId = router.query.id as string;
+            const targetFreq = frequencies.find(f => f.id === freqId);
+            if (targetFreq) {
+                // Ensure audio context is ready (user interaction might be needed on some browsers, but we try)
+                handlePlay(targetFreq);
+                // Clean URL
+                router.replace('/frequencies', undefined, { shallow: true });
+            }
+        }
+    }, [router.query.id, frequencies]);
+
+
 
     const filteredFrequencies = frequencies.filter(freq => {
         const matchesSearch = freq.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -101,13 +127,20 @@ export default function Frequencies() {
         return matchesSearch && matchesCategory;
     });
 
-    const handlePlay = (frequency) => {
-        if (currentFrequency?.id === frequency.id) {
-            setIsPlaying(!isPlaying);
-        } else {
-            setCurrentFrequency(frequency);
-            setIsPlaying(true);
-        }
+    const handlePlay = (frequency: Frequency) => {
+        // Map Frequency to Track interface
+        const track = {
+            id: frequency.id,
+            title: frequency.name,
+            description: frequency.description,
+            type: (frequency.category === 'rife' ? 'rife' : 'tone') as 'rife' | 'tone',
+            frequency_hz: frequency.frequency_hz,
+            // frequencies: ... if rife 
+        };
+
+        playTrack(track);
+        // Optional: Navigate to radio
+        // router.push('/radio'); 
     };
 
     return (
@@ -193,7 +226,7 @@ export default function Frequencies() {
                         <FrequencyCard
                             key={frequency.id}
                             frequency={frequency}
-                            isPlaying={isPlaying && currentFrequency?.id === frequency.id}
+                            isPlaying={isPlaying && currentTrack?.id === frequency.id}
                             onPlay={() => handlePlay(frequency)}
                             onShowDetails={() => setSelectedFrequency(frequency)}
                         />
@@ -201,17 +234,18 @@ export default function Frequencies() {
                 )}
             </div>
 
-            {/* Player */}
-            {currentFrequency && (
-                <FrequencyPlayer
-                    frequency={currentFrequency}
-                    isPlaying={isPlaying}
-                    onTogglePlay={() => setIsPlaying(!isPlaying)}
-                    onClose={() => {
-                        setIsPlaying(false);
-                        setCurrentFrequency(null);
-                    }}
-                />
+            {/* Floating Radio Button (instead of Player) */}
+            {currentTrack && (
+                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30">
+                    <button
+                        onClick={() => router.push('/radio')}
+                        className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-full shadow-2xl hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-5"
+                    >
+                        <div className="w-2 h-2 rounded-full bg-[#2D9B83] animate-pulse" />
+                        <span className="font-bold text-sm">الراديو يعمل الآن</span>
+                        <Radio className="w-4 h-4 mr-1" />
+                    </button>
+                </div>
             )}
 
             {/* Frequency Details Sheet */}
@@ -261,7 +295,7 @@ export default function Frequencies() {
                                         }}
                                         className="w-full py-4 gradient-primary text-white rounded-2xl font-bold text-lg shadow-lg"
                                     >
-                                        {isPlaying && currentFrequency?.id === selectedFrequency.id ? 'إيقاف' : 'تشغيل الآن'}
+                                        {isPlaying && currentTrack?.id === selectedFrequency.id ? 'جاري التشغيل...' : 'تشغيل الآن'}
                                     </button>
                                 </div>
                             </div>

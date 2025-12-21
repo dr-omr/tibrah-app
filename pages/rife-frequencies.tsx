@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { createPageUrl } from '../utils';
 import {
@@ -338,19 +336,31 @@ const defaultRifeFrequencies = [
     },
 ];
 
+import { useRouter } from 'next/router';
+
+// ... (previous imports)
+
 export default function RifeFrequencies() {
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     const [selectedFrequency, setSelectedFrequency] = useState<RifeFrequency | null>(null);
     const [showDisclaimer, setShowDisclaimer] = useState(true);
 
-    const { data: rifeFrequencies = defaultRifeFrequencies } = useQuery<RifeFrequency[]>({
-        queryKey: ['rife-frequencies'],
-        queryFn: async (): Promise<RifeFrequency[]> => {
-            const data = await base44.entities.RifeFrequency.list() as unknown as RifeFrequency[];
-            return data.length > 0 ? data : defaultRifeFrequencies;
-        },
-    });
+    const rifeFrequencies = defaultRifeFrequencies;
+
+    // Auto-open frequency from URL
+    React.useEffect(() => {
+        if (router.query.id && rifeFrequencies.length > 0) {
+            const freqId = router.query.id as string;
+            const targetFreq = rifeFrequencies.find(f => f.id === freqId);
+            if (targetFreq) {
+                setSelectedFrequency(targetFreq);
+                // Clean URL
+                router.replace('/rife-frequencies', undefined, { shallow: true });
+            }
+        }
+    }, [router.query.id, rifeFrequencies]);
 
     const filteredFrequencies = rifeFrequencies.filter((freq: RifeFrequency) => {
         const matchesSearch = freq.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

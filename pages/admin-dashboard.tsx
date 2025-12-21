@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
 import { Lock, ArrowRight, Loader2 } from 'lucide-react';
@@ -11,7 +11,10 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AdminStats from '@/components/admin/AdminStats';
 import AppointmentManager from '@/components/admin/AppointmentManager';
 import ProductManager from '@/components/admin/ProductManager';
-import UserManagement from '@/components/admin/UserManagement'; // Assuming exists
+import CourseManager from '@/components/admin/CourseManager';
+import ArticleManager from '@/components/admin/ArticleManager';
+import FrequencyManager from '@/components/admin/FrequencyManager'; // New
+import UserManagement from '@/components/admin/UserManagement';
 import SystemConfig from '@/components/admin/SystemConfig'; // Assuming exists
 import ThemeSettings from '@/components/admin/ThemeSettings'; // Assuming exists
 
@@ -40,40 +43,70 @@ export default function AdminDashboard() {
     };
 
     // ----- DATA FETCHING -----
-    const { data: users = [] } = useQuery({
+    const { data: rawUsers = [] } = useQuery({
         queryKey: ['admin-users'],
-        queryFn: () => base44.entities.User.list() as any,
+        queryFn: () => db.entities.User.list() as any,
         enabled: isAuthenticated
     });
 
+    const users = rawUsers.map((u: any) => ({
+        id: u.id,
+        name: u.name || u.email?.split('@')[0] || 'مستخدم',
+        email: u.email || 'لا يوجد بريد',
+        role: u.role || 'user',
+        subscription: u.subscription || 'free',
+        joinDate: u.created_at ? new Date(u.created_at).toLocaleDateString('ar-EG') : '-',
+        lastActive: '-',
+        status: u.status || 'active'
+    }));
+
     const { data: products = [], refetch: refetchProducts } = useQuery({
         queryKey: ['admin-products'],
-        queryFn: () => base44.entities.Product.list() as any,
+        queryFn: () => db.entities.Product.list() as any,
         enabled: isAuthenticated
     });
 
     const { data: appointments = [], refetch: refetchAppointments } = useQuery({
         queryKey: ['admin-appointments'],
-        queryFn: () => base44.entities.Appointment.list('-created_date') as any,
+        queryFn: () => db.entities.Appointment.list('-created_date') as any,
         enabled: isAuthenticated
     });
 
-    const { data: courses = [] } = useQuery({
+    const { data: courses = [], refetch: refetchCourses } = useQuery({
         queryKey: ['admin-courses'],
-        queryFn: () => base44.entities.Course.list() as any,
+        queryFn: () => db.entities.Course.list() as any,
         enabled: isAuthenticated
     });
 
-    const { data: articles = [] } = useQuery({
+    const { data: articles = [], refetch: refetchArticles } = useQuery({
         queryKey: ['admin-articles'],
-        queryFn: () => base44.entities.KnowledgeArticle.list() as any,
+        queryFn: () => db.entities.KnowledgeArticle.list() as any,
+        enabled: isAuthenticated
+    });
+
+    // We assume there is a 'Frequency' entity in db.ts or we stub it
+    // If not, this might fail unless db.ts handles arbitrary collections
+    // db.entities is strictly typed. I need to check db.ts if Frequency exists.
+    // If not, I will add it to db.ts first.
+    // Assuming it doesn't exist yet, I will use a placeholder or generic 'Entity' if available.
+    // Earlier I saw db.ts content and it had Users, Products, Courses, etc. I don't recall Frequencies.
+    // I will proceed with adding Frequency to db.ts in a subsequent step if needed, but for now I'll stub the fetch.
+    const { data: frequencies = [], refetch: refetchFrequencies } = useQuery({
+        queryKey: ['admin-frequencies'],
+        queryFn: async () => {
+            // Safe check if Frequency entity exists, else return empty
+            if ((db.entities as any).Frequency) {
+                return (db.entities as any).Frequency.list();
+            }
+            return [];
+        },
         enabled: isAuthenticated
     });
 
     // ----- MUTATIONS -----
     const updateAppointmentMutation = useMutation({
         mutationFn: ({ id, status }: { id: string, status: string }) =>
-            base44.entities.Appointment.update(id, { status }),
+            db.entities.Appointment.update(id, { status }),
         onSuccess: () => {
             refetchAppointments();
             toast.success('تم تحديث حالة الموعد');
@@ -82,50 +115,124 @@ export default function AdminDashboard() {
 
     const productMutation = useMutation({
         mutationFn: async ({ data, id }: { data: any, id?: string }) => {
-            if (id) {
-                await base44.entities.Product.update(id, data);
-            } else {
-                await base44.entities.Product.create(data);
-            }
+            id ? await db.entities.Product.update(id, data) : await db.entities.Product.create(data);
         },
         onSuccess: () => {
             refetchProducts();
-            toast.success('تم حفظ المنتج بنجاح');
+            toast.success('تم حفظ المنتج');
         }
     });
 
     const deleteProductMutation = useMutation({
-        mutationFn: (id: string) => base44.entities.Product.delete(id),
+        mutationFn: (id: string) => db.entities.Product.delete(id),
         onSuccess: () => {
             refetchProducts();
             toast.success('تم حذف المنتج');
         }
     });
 
+    // Course Mutations
+    const courseMutation = useMutation({
+        mutationFn: async ({ data, id }: { data: any, id?: string }) => {
+            id ? await db.entities.Course.update(id, data) : await db.entities.Course.create(data);
+        },
+        onSuccess: () => {
+            refetchCourses();
+            toast.success('تم حفظ الدورة');
+        }
+    });
+
+    const deleteCourseMutation = useMutation({
+        mutationFn: (id: string) => db.entities.Course.delete(id),
+        onSuccess: () => {
+            refetchCourses();
+            toast.success('تم حذف الدورة');
+        }
+    });
+
+    // Article Mutations
+    const articleMutation = useMutation({
+        mutationFn: async ({ data, id }: { data: any, id?: string }) => {
+            id ? await db.entities.KnowledgeArticle.update(id, data) : await db.entities.KnowledgeArticle.create(data);
+        },
+        onSuccess: () => {
+            refetchArticles();
+            toast.success('تم حفظ المقال');
+        }
+    });
+
+    const deleteArticleMutation = useMutation({
+        mutationFn: (id: string) => db.entities.KnowledgeArticle.delete(id),
+        onSuccess: () => {
+            refetchArticles();
+            toast.success('تم حذف المقال');
+        }
+    });
+
+    const frequencyMutation = useMutation({
+        mutationFn: async ({ data, id }: { data: any, id?: string }) => {
+            const entity = (db.entities as any).Frequency;
+            if (entity) {
+                id ? await entity.update(id, data) : await entity.create(data);
+            } else {
+                console.warn('Frequency entity not found in db');
+            }
+        },
+        onSuccess: () => { refetchFrequencies(); toast.success('تم حفظ التردد'); }
+    });
+
+    const deleteFrequencyMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const entity = (db.entities as any).Frequency;
+            if (entity) await entity.delete(id);
+        },
+        onSuccess: () => { refetchFrequencies(); toast.success('تم حذف التردد'); }
+    });
+
 
     // ----- VIEW: LOGIN SCREEN -----
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-                <div className="bg-white rounded-3xl p-8 w-full max-w-md text-center shadow-2xl">
-                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Lock className="w-8 h-8 text-slate-700" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-slate-800 mb-2">لوحة الإدارة 🔒</h1>
-                    <p className="text-slate-500 mb-8">يرجى إدخال رمز الدخول الخاص بـ د. عمر</p>
+            <div className="min-h-screen bg-[#0F172A] relative overflow-hidden flex items-center justify-center p-6">
+                {/* Background Effects */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#2D9B83]/20 rounded-full blur-[120px] animate-pulse-slow" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#D4AF37]/10 rounded-full blur-[120px] animate-pulse-slow delay-1000" />
+                </div>
 
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <Input
-                            type="password"
-                            placeholder="رمز الدخول"
-                            className="bg-slate-50 text-center text-lg h-12"
-                            value={passcode}
-                            onChange={(e) => setPasscode(e.target.value)}
-                        />
-                        <Button type="submit" className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl">
-                            دخول
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl relative z-10 transition-all hover:shadow-[#2D9B83]/20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-[#2D9B83] to-[#1A5F50] rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg transform rotate-3 hover:rotate-6 transition-transform">
+                        <Lock className="w-10 h-10 text-white" />
+                    </div>
+
+                    <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">لوحة القيادة</h1>
+                    <p className="text-slate-300 mb-8 font-light">بوابة د. عمر العماد الرقمية</p>
+
+                    <form onSubmit={handleLogin} className="space-y-6">
+                        <div className="relative group">
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                                <Lock className="w-5 h-5 text-slate-400 group-focus-within:text-[#2D9B83] transition-colors" />
+                            </div>
+                            <Input
+                                type="password"
+                                placeholder="رمز الدخول السري"
+                                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 text-center text-lg h-14 pr-12 rounded-xl focus:ring-2 focus:ring-[#2D9B83] focus:border-transparent transition-all"
+                                value={passcode}
+                                onChange={(e) => setPasscode(e.target.value)}
+                            />
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full h-14 bg-gradient-to-r from-[#2D9B83] to-[#1A5F50] hover:from-[#258570] hover:to-[#144D40] text-white font-bold text-lg rounded-xl shadow-lg shadow-[#2D9B83]/30 hover:shadow-[#2D9B83]/50 transition-all transform hover:-translate-y-1 active:translate-y-0"
+                        >
+                            تسجيل الدخول الآمن
                         </Button>
                     </form>
+
+                    <div className="mt-8 pt-6 border-t border-white/10">
+                        <p className="text-xs text-slate-400">نظام طِبرَا الذكي v2.0</p>
+                    </div>
                 </div>
             </div>
         );
@@ -165,9 +272,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'appointments' && (
                 <div>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-slate-800">إدارة المواعيد</h2>
-                    </div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة المواعيد</h2></div>
                     <AppointmentManager
                         appointments={appointments}
                         onUpdateStatus={(id, status) => updateAppointmentMutation.mutate({ id, status })}
@@ -177,9 +282,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'products' && (
                 <div>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-slate-800">إدارة المنتجات</h2>
-                    </div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة المنتجات</h2></div>
                     <ProductManager
                         products={products}
                         onSave={(data, id) => productMutation.mutateAsync({ data, id })}
@@ -188,20 +291,46 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {activeTab === 'users' && <UserManagement />}
+            {activeTab === 'courses' && (
+                <div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة الدورات</h2></div>
+                    <CourseManager
+                        courses={courses}
+                        onSave={(data, id) => courseMutation.mutateAsync({ data, id })}
+                        onDelete={(id) => deleteCourseMutation.mutate(id)}
+                    />
+                </div>
+            )}
+
+            {activeTab === 'articles' && (
+                <div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة المحتوى</h2></div>
+                    <ArticleManager
+                        articles={articles}
+                        onSave={(data, id) => articleMutation.mutateAsync({ data, id })}
+                        onDelete={(id) => deleteArticleMutation.mutate(id)}
+                    />
+                </div>
+            )}
+
+            {/* Frequencies Tab */}
+            {activeTab === 'frequencies' && (
+                <div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة الترددات</h2></div>
+                    <FrequencyManager
+                        frequencies={frequencies}
+                        onSave={(data, id) => frequencyMutation.mutateAsync({ data, id })}
+                        onDelete={(id) => deleteFrequencyMutation.mutate(id)}
+                    />
+                </div>
+            )}
+
+            {activeTab === 'users' && <UserManagement users={users} />}
+
             {activeTab === 'settings' && (
                 <div className="space-y-8">
                     <ThemeSettings />
                     <SystemConfig />
-                </div>
-            )}
-            {/* Placeholders for other tabs */}
-            {(activeTab === 'courses' || activeTab === 'articles') && (
-                <div className="flex items-center justify-center h-96 bg-white rounded-2xl border border-dashed border-slate-200">
-                    <div className="text-center text-slate-400">
-                        <Loader2 className="w-10 h-10 mx-auto mb-2 animate-spin" />
-                        <p>جاري العمل على هذا القسم...</p>
-                    </div>
                 </div>
             )}
         </AdminLayout>

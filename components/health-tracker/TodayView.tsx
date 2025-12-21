@@ -12,11 +12,19 @@ export default function TodayView({ metrics, dailyLogs, symptoms, onUpdate, onLo
     const today = format(new Date(), 'yyyy-MM-dd');
     const todaysLog = dailyLogs.find(l => l.date === today);
 
+    // Helper to get mood value (handles both object and number types)
+    const getMoodValue = (log: any) => {
+        if (!log?.mood) return 0;
+        if (typeof log.mood === 'object') return log.mood.overall || 0;
+        return log.mood;
+    };
+
     // Calculate Daily Status
     const getDailyStatus = () => {
         if (!todaysLog) return { text: 'يوم جديد! كيف تشعر؟', color: 'bg-slate-100 text-slate-600', icon: Sun };
-        if (todaysLog.mood >= 4 && todaysLog.energy_level >= 4) return { text: 'يوم ممتاز ومشرق 🌟', color: 'bg-green-100 text-green-700', icon: Sun };
-        if (todaysLog.mood <= 2 || todaysLog.energy_level <= 2) return { text: 'يوم للراحة والتعافي 🌿', color: 'bg-amber-100 text-amber-700', icon: Moon };
+        const moodVal = getMoodValue(todaysLog);
+        if (moodVal >= 4 && todaysLog.energy_level >= 4) return { text: 'يوم ممتاز ومشرق 🌟', color: 'bg-green-100 text-green-700', icon: Sun };
+        if (moodVal <= 2 || todaysLog.energy_level <= 2) return { text: 'يوم للراحة والتعافي 🌿', color: 'bg-amber-100 text-amber-700', icon: Moon };
         return { text: 'يوم متوازن وطبيعي ⚖️', color: 'bg-blue-100 text-blue-700', icon: CheckCircle2 };
     };
 
@@ -59,7 +67,7 @@ export default function TodayView({ metrics, dailyLogs, symptoms, onUpdate, onLo
                     <div className="bg-slate-50 rounded-2xl p-3 text-center">
                         <Smile className="w-5 h-5 mx-auto mb-1 text-amber-500" />
                         <span className="block text-lg font-bold text-slate-700">
-                            {todaysLog?.mood ? `${todaysLog.mood}/5` : '--'}
+                            {getMoodValue(todaysLog) ? `${getMoodValue(todaysLog)}/5` : '--'}
                         </span>
                         <span className="text-[10px] text-slate-400">المزاج</span>
                     </div>

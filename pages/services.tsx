@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIContextAssistant from '@/components/ai/AIContextAssistant';
 import { DOCTOR_KNOWLEDGE } from '@/components/ai/knowledge';
+import SEO, { pageSEO } from '../components/common/SEO';
 
 export default function Services() {
     const [activeProgram, setActiveProgram] = useState('21_days');
@@ -32,11 +33,14 @@ export default function Services() {
         }
     };
 
+    // عرض الإطلاق - خصم 90%
     const mainService = {
         title: 'الجلسة التشخيصية الشاملة',
         duration: '45-60 دقيقة',
-        price_yer: '3,000',
-        price_sar: '25',
+        original_price_yer: '3,000',
+        original_price_sar: '25',
+        promo_price_yer: '300', // 10% of 3000
+        promo_price_sar: '2.5', // 10% of 25
         features: [
             'مراجعة شاملة للتاريخ الصحي',
             'تحليل الأعراض بنهج الطب الوظيفي',
@@ -114,6 +118,9 @@ export default function Services() {
 
     return (
         <div className="min-h-screen pb-24">
+            {/* SEO Meta Tags */}
+            <SEO {...pageSEO.services} />
+
             {/* Hero Section */}
             <div className="relative overflow-hidden bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] px-6 py-10">
                 <div className="relative z-10 mb-4">
@@ -218,18 +225,31 @@ export default function Services() {
                             </div>
 
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4">
+                                {/* عرض الإطلاق Badge */}
+                                <div className="flex items-center justify-center gap-2 mb-3">
+                                    <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                                        🔥 عرض إطلاق - خصم 90%
+                                    </span>
+                                </div>
+
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-white/80">السعر</span>
                                     <div className="text-left">
+                                        {/* السعر الجديد */}
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-3xl font-bold text-white">{mainService.price_yer}</span>
+                                            <span className="text-3xl font-bold text-white">{mainService.promo_price_yer}</span>
                                             <span className="text-white/80">ر.ي</span>
+                                            {/* السعر القديم مشطوب */}
+                                            <span className="text-white/50 text-lg line-through mr-2">{mainService.original_price_yer}</span>
                                         </div>
-                                        <p className="text-white/60 text-sm">أو {mainService.price_sar} ر.س</p>
+                                        <p className="text-white/60 text-sm">
+                                            أو <span className="font-bold text-white">{mainService.promo_price_sar}</span> ر.س
+                                            <span className="line-through text-white/40 mr-1">{mainService.original_price_sar}</span>
+                                        </p>
                                     </div>
                                 </div>
                                 <p className="text-white/70 text-sm text-center">
-                                    "استثمار بسيط في صحتك - نتائج حقيقية بإذن الله 💚"
+                                    "عرض لفترة محدودة - استغل الفرصة! 💡"
                                 </p>
                             </div>
 

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import {
     Activity, Plus, TrendingUp, TrendingDown, Minus,
-    Calendar, AlertTriangle, CheckCircle
+    Calendar, AlertTriangle, CheckCircle, Heart
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BPReading {
     id?: string;
@@ -51,7 +52,7 @@ export default function BloodPressureTracker() {
         queryKey: ['bloodPressure'],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.DailyLog.list('-date', 14);
+                const logs = await db.entities.DailyLog.list('-date', 14);
                 return logs
                     .filter((log: Record<string, unknown>) => log.blood_pressure)
                     .map((log: Record<string, unknown>) => ({
@@ -82,7 +83,7 @@ export default function BloodPressureTracker() {
             const dia = parseInt(diastolic);
             const pul = pulse ? parseInt(pulse) : null;
 
-            const logs = await base44.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today });
             const data = {
                 date: today,
                 blood_pressure: {
@@ -94,9 +95,9 @@ export default function BloodPressureTracker() {
             };
 
             if (logs?.[0]) {
-                await base44.entities.DailyLog.update(logs[0].id as string, data);
+                await db.entities.DailyLog.update(logs[0].id as string, data);
             } else {
-                await base44.entities.DailyLog.create(data);
+                await db.entities.DailyLog.create(data);
             }
         },
         onSuccess: () => {

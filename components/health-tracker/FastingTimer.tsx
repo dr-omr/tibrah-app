@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Play, Pause, RotateCcw, Utensils, Moon, Check, Clock, Bell, BellOff, ArrowLeftRight, Settings2, ChevronDown } from 'lucide-react';
+import { Timer, Play, Pause, RotateCcw, Utensils, Moon, Check, Clock, Bell, BellOff, ArrowLeftRight, Settings2, ChevronDown, Zap } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
 import { format, addHours } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { showNotification, requestNotificationPermission, isNotificationSupported } from '@/lib/pushNotifications';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FastingPlan {
     id: string;
@@ -337,8 +338,8 @@ export default function FastingTimer() {
                     <button
                         onClick={toggleNotifications}
                         className={`p-2 rounded-full transition-colors ${notificationsEnabled
-                                ? 'bg-orange-100 text-orange-600'
-                                : 'bg-slate-100 text-slate-400 dark:bg-slate-700'
+                            ? 'bg-orange-100 text-orange-600'
+                            : 'bg-slate-100 text-slate-400 dark:bg-slate-700'
                             }`}
                     >
                         {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
@@ -462,8 +463,8 @@ export default function FastingTimer() {
                                     key={plan.id}
                                     onClick={() => changePlan(plan)}
                                     className={`w-full p-3 rounded-xl text-right transition-colors ${plan.id === selectedPlan.id
-                                            ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                                        : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                                         }`}
                                 >
                                     <span className="font-bold">{plan.name}</span>

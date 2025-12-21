@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useAI } from '@/components/ai/useAI';
 import {
     Droplets, Moon, Activity, Flame, Plus,
@@ -64,7 +64,7 @@ export default function HabitTracker({ metrics, dailyLogs, onUpdate }) {
     const addWater = async () => {
         setLoading('water');
         try {
-            await base44.entities.HealthMetric.create({
+            await db.entities.HealthMetric.create({
                 metric_type: 'water_intake',
                 value: 0.25, // 250ml cup
                 unit: 'L',
@@ -82,7 +82,7 @@ export default function HabitTracker({ metrics, dailyLogs, onUpdate }) {
     const logSleep = async (hours) => {
         setLoading('sleep');
         try {
-            await base44.entities.HealthMetric.create({
+            await db.entities.HealthMetric.create({
                 metric_type: 'sleep_hours',
                 value: hours,
                 unit: 'hours',
@@ -104,11 +104,11 @@ export default function HabitTracker({ metrics, dailyLogs, onUpdate }) {
             const existingLog = dailyLogs.find(l => l.date === today);
 
             if (existingLog) {
-                await base44.entities.DailyLog.update(existingLog.id, {
+                await db.entities.DailyLog.update(existingLog.id, {
                     exercise: { type: 'general', duration_minutes: minutes }
                 });
             } else {
-                await base44.entities.DailyLog.create({
+                await db.entities.DailyLog.create({
                     date: today,
                     exercise: { type: 'general', duration_minutes: minutes }
                 });

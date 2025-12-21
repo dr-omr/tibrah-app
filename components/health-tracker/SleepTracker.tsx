@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Moon, Sun, Clock, Star, TrendingUp, ChevronLeft, Plus } from 'lucide-react';
+import { db } from '@/lib/db';
+import { Moon, Sun, Clock, Star, TrendingUp, ChevronLeft, Plus, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from 'sonner';
 import { format, subDays, differenceInMinutes, parse } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SleepLog {
     id?: string;
@@ -34,9 +35,9 @@ export default function SleepTracker() {
         queryFn: async () => {
             try {
                 const weekAgo = format(subDays(new Date(), 14), 'yyyy-MM-dd');
-                const logs = await base44.entities.SleepLog.filter({
+                const logs = await db.entities.SleepLog.filter({
                     date: { $gte: weekAgo }
-                }, '-date');
+                });
                 return logs as unknown as SleepLog[];
             } catch {
                 return [];
@@ -64,13 +65,26 @@ export default function SleepTracker() {
 
     return (
         <div className="space-y-6">
-            {/* Main Card - Apple Health Style */}
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl">
-                <div className="flex items-center justify-between mb-6">
+            {/* Main Card - Apple Health Style with Animation */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, type: 'spring' }}
+                className="bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden"
+            >
+                {/* Decorative stars */}
+                <div className="absolute top-4 right-4 opacity-20">
+                    <Sparkles className="w-20 h-20" />
+                </div>
+
+                <div className="flex items-center justify-between mb-6 relative z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                        <motion.div
+                            className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm"
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                        >
                             <Moon className="w-6 h-6" />
-                        </div>
+                        </motion.div>
                         <div>
                             <h2 className="text-xl font-bold">تتبع النوم</h2>
                             <p className="text-white/80 text-sm">نوم صحي = حياة صحية</p>
@@ -86,61 +100,94 @@ export default function SleepTracker() {
                     </Button>
                 </div>
 
-                {/* Sleep Ring */}
-                <div className="flex items-center justify-center py-4">
-                    <div className="relative w-36 h-36">
+                {/* Sleep Ring with Glow */}
+                <div className="flex items-center justify-center py-4 relative z-10">
+                    <motion.div
+                        className="relative w-36 h-36"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.6, type: 'spring' }}
+                    >
                         <svg className="w-full h-full transform -rotate-90">
+                            <defs>
+                                <linearGradient id="sleepGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#FFFFFF" />
+                                    <stop offset="100%" stopColor="#E0E7FF" />
+                                </linearGradient>
+                                <filter id="sleepGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                            </defs>
                             <circle
                                 cx="72"
                                 cy="72"
                                 r="64"
-                                stroke="rgba(255,255,255,0.2)"
-                                strokeWidth="12"
+                                stroke="rgba(255,255,255,0.15)"
+                                strokeWidth="14"
                                 fill="none"
                             />
                             <circle
                                 cx="72"
                                 cy="72"
                                 r="64"
-                                stroke="white"
-                                strokeWidth="12"
+                                stroke="url(#sleepGradient)"
+                                strokeWidth="14"
                                 fill="none"
                                 strokeLinecap="round"
                                 strokeDasharray={`${goalPercentage * 4.02} 402`}
-                                className="transition-all duration-500"
+                                filter="url(#sleepGlow)"
+                                style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-3xl font-bold">{lastNightHours.toFixed(1)}</span>
+                            <motion.span
+                                className="text-4xl font-bold"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
+                            >
+                                {lastNightHours.toFixed(1)}
+                            </motion.span>
                             <span className="text-sm text-white/80">ساعات</span>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
 
                 {/* Last Night Stats */}
                 {lastNight ? (
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                        <div className="bg-white/10 rounded-2xl p-3">
+                    <motion.div
+                        className="grid grid-cols-3 gap-3 text-center relative z-10"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                    >
+                        <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
                             <div className="flex items-center justify-center gap-1 mb-1">
                                 <Moon className="w-4 h-4" />
                                 <span className="text-sm">{lastNight.bedtime}</span>
                             </div>
                             <div className="text-xs text-white/70">وقت النوم</div>
                         </div>
-                        <div className="bg-white/10 rounded-2xl p-3">
+                        <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
                             <div className="flex items-center justify-center gap-1 mb-1">
                                 <Sun className="w-4 h-4" />
                                 <span className="text-sm">{lastNight.wake_time}</span>
                             </div>
                             <div className="text-xs text-white/70">الاستيقاظ</div>
                         </div>
-                        <div className="bg-white/10 rounded-2xl p-3">
-                            <div className="text-xl">{QUALITY_EMOJIS[lastNight.quality - 1]}</div>
+                        <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
+                            <motion.div
+                                className="text-xl"
+                                whileHover={{ scale: 1.2 }}
+                            >
+                                {QUALITY_EMOJIS[lastNight.quality - 1]}
+                            </motion.div>
                             <div className="text-xs text-white/70">{QUALITY_LABELS[lastNight.quality - 1]}</div>
                         </div>
-                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="text-center py-4">
+                    <div className="text-center py-4 relative z-10">
                         <p className="text-white/80 mb-3">لم تسجل نوم الليلة الماضية</p>
                         <Button
                             variant="secondary"
@@ -152,7 +199,7 @@ export default function SleepTracker() {
                         </Button>
                     </div>
                 )}
-            </div>
+            </motion.div>
 
             {/* Weekly Overview */}
             <div className="glass rounded-3xl p-5">
@@ -206,17 +253,17 @@ export default function SleepTracker() {
                             <Star
                                 key={star}
                                 className={`w-5 h-5 ${star <= averageQuality
-                                        ? 'text-amber-400 fill-amber-400'
-                                        : 'text-slate-200'
+                                    ? 'text-amber-400 fill-amber-400'
+                                    : 'text-slate-200'
                                     }`}
                             />
                         ))}
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Sleep History */}
-            <div className="glass rounded-3xl p-5">
+            < div className="glass rounded-3xl p-5" >
                 <div className="flex items-center gap-2 mb-4">
                     <Clock className="w-5 h-5 text-[#D4AF37]" />
                     <h3 className="font-bold text-slate-800">السجل الأخير</h3>
@@ -243,18 +290,19 @@ export default function SleepTracker() {
                         </div>
                     ))}
                 </div>
-            </div>
+            </div >
 
             {/* Add Sleep Sheet */}
-            <AddSleepSheet
+            < AddSleepSheet
                 open={showAddSheet}
                 onOpenChange={setShowAddSheet}
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ['sleepLogs'] });
                     setShowAddSheet(false);
-                }}
+                }
+                }
             />
-        </div>
+        </div >
     );
 }
 
@@ -297,7 +345,7 @@ function AddSleepSheet({
     const addMutation = useMutation({
         mutationFn: async () => {
             const duration = calculateDuration();
-            return base44.entities.SleepLog.create({
+            return db.entities.SleepLog.create({
                 ...formData,
                 duration_hours: duration
             });
@@ -375,8 +423,8 @@ function AddSleepSheet({
                                     key={q}
                                     onClick={() => setFormData({ ...formData, quality: q })}
                                     className={`flex-1 p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${formData.quality === q
-                                            ? 'bg-indigo-500 text-white scale-105 shadow-lg'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        ? 'bg-indigo-500 text-white scale-105 shadow-lg'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                         }`}
                                 >
                                     <span className="text-2xl">{QUALITY_EMOJIS[q - 1]}</span>

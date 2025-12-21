@@ -1,55 +1,59 @@
-import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useState, useEffect } from 'react';
+import { db } from '@/lib/db';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { createPageUrl } from '../utils';
-import {
-    ArrowRight, Calendar, Clock, Video, MessageCircle,
-    Check, User, Phone, Mail, FileText, Sparkles
-} from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { toast } from "sonner";
-import { format, addDays, isSameDay } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { Calendar as CalendarIcon, Clock, Video, Check, User, Phone, Mail, FileText, ArrowRight, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { toast } from 'sonner';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { createPageUrl } from '@/utils';
 
+// عرض الإطلاق - خصم 90%
 const sessionTypes = [
     {
-        id: 'diagnostic',
-        label: 'الجلسة التشخيصية',
-        duration: '٤٥-٦٠ دقيقة',
-        price: '٣٥٠',
-        description: 'تحليل شامل لحالتك الصحية وتحديد الأسباب الجذرية'
+        id: 'consultation',
+        label: 'استشارة طب وظيفي',
+        description: 'جلسة شاملة لتحليل التاريخ المرضي وجذور الأعراض',
+        duration: '45 دقيقة',
+        originalPrice: 350,
+        price: 35 // 10% of 350
+    },
+    {
+        id: 'therapy',
+        label: 'جلسة علاج بالترددات',
+        description: 'جلسة علاجية باستخدام تقنيات الرنين الحيوي',
+        duration: '30 دقيقة',
+        originalPrice: 200,
+        price: 20 // 10% of 200
     },
     {
         id: 'followup',
-        label: 'جلسة المتابعة',
-        duration: '٣٠ دقيقة',
-        price: '٢٠٠',
-        description: 'متابعة تقدمك وتعديل الخطة العلاجية'
-    },
-    {
-        id: 'consultation',
-        label: 'استشارة سريعة',
-        duration: '١٥ دقيقة',
-        price: '١٠٠',
-        description: 'استشارة سريعة لسؤال محدد'
-    },
+        label: 'متابعة دورية',
+        description: 'متابعة تطور الحالة وتعديل الخطة العلاجية',
+        duration: '20 دقيقة',
+        originalPrice: 150,
+        price: 15 // 10% of 150
+    }
 ];
 
 const timeSlots = [
-    '09:00 ص', '10:00 ص', '11:00 ص', '12:00 م',
-    '02:00 م', '03:00 م', '04:00 م', '05:00 م'
+    '10:00 ص', '10:30 ص', '11:00 ص', '11:30 ص',
+    '04:00 م', '04:30 م', '05:00 م', '05:30 م',
+    '06:00 م', '06:30 م', '07:00 م', '07:30 م'
 ];
 
 export default function BookAppointment() {
     const router = useRouter();
     const { notify } = useNotifications();
+    const { user } = useAuth(); // Import useAuth
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         session_type: '',
@@ -61,8 +65,20 @@ export default function BookAppointment() {
         health_concern: '',
     });
 
+    // Auto-fill from Auth
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                patient_name: user.displayName || user.name || prev.patient_name,
+                patient_email: user.email || prev.patient_email,
+                patient_phone: user.phone || prev.patient_phone
+            }));
+        }
+    }, [user]);
+
     const createAppointmentMutation = useMutation({
-        mutationFn: (data) => base44.entities.Appointment.create({
+        mutationFn: (data: any) => db.entities.Appointment.create({
             ...data,
             date: format(data.date, 'yyyy-MM-dd'),
             status: 'pending'
@@ -168,6 +184,12 @@ export default function BookAppointment() {
                                                 </span>
                                                 <span className="text-[#2D9B83] font-bold">
                                                     {session.price} ر.س
+                                                </span>
+                                                <span className="text-slate-400 text-sm line-through mr-2">
+                                                    {session.originalPrice}
+                                                </span>
+                                                <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                                                    -90%
                                                 </span>
                                             </div>
                                         </div>

@@ -12,14 +12,21 @@ export default function ArticleCard({ article }) {
         podcast: { icon: Mic, label: 'بودكاست', color: 'bg-orange-500' },
     };
 
-    const categoryLabels = {
-        functional_medicine: 'الطب الوظيفي',
-        frequencies: 'الترددات الشفائية',
+    const categoryLabels: Record<string, string> = {
+        holistic: 'الطب الشمولي',
+        emotional: 'الطب الشعوري',
+        functional: 'الطب الوظيفي',
+        orthomolecular: 'الأورثوموليكولار',
+        energy: 'الطب الطاقي',
+        herbal: 'طب الأعشاب',
+        modern: 'الطب الحديث',
+        traditional: 'الطب التقليدي',
         nutrition: 'التغذية الصحية',
-        lifestyle: 'نمط الحياة',
+        mental: 'الصحة النفسية',
         detox: 'الديتوكس',
-        supplements: 'المكملات',
-        mental_health: 'الصحة النفسية',
+        lifestyle: 'نمط الحياة',
+        science: 'علوم وطب',
+        supplements: 'المكملات'
     };
 
     const config = typeConfig[article.type] || typeConfig.article;

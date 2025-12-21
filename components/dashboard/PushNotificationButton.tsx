@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 // VAPID Public Key - This is a placeholder. 
 // In a real app, you would generate this on your backend.
 const VAPID_PUBLIC_KEY = 'BJg9qfI7_y_ZqjJj9qfI7_y_ZqjJj9qfI7_y_ZqjJj9qfI7_y_ZqjJj9qfI7_y_ZqjJ';
 
 export default function PushNotificationButton() {
+    const { user } = useAuth();
     const [permission, setPermission] = useState('default');
     const [loading, setLoading] = useState(false);
     const [isSupported, setIsSupported] = useState(false);
@@ -59,12 +62,14 @@ export default function PushNotificationButton() {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Save preference to user settings
-            await base44.auth.updateMe({
-                settings: {
-                    notificationsEnabled: true,
-                    // pushSubscription: JSON.stringify(subscription) 
-                }
-            });
+            if (user?.id) {
+                await db.users.update(user.id, {
+                    settings: {
+                        notificationsEnabled: true,
+                        // pushSubscription: JSON.stringify(subscription)
+                    }
+                });
+            }
 
             toast.success('تم تفعيل الإشعارات بنجاح');
         } catch (error) {

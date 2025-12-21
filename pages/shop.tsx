@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ShoppingBag, Search, ShoppingCart } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ export default function Shop() {
 
     const { data: apiProducts = [], isLoading, isError, refetch } = useQuery({
         queryKey: ['products'],
-        queryFn: () => base44.entities.Product.list(),
+        queryFn: () => db.entities.Product.list(),
     });
 
     // Use local products as fallback when API returns empty - cast to any for type compatibility
@@ -36,18 +36,18 @@ export default function Shop() {
 
     const { data: cartItems = [] } = useQuery({
         queryKey: ['cart'],
-        queryFn: () => base44.entities.CartItem.list(),
+        queryFn: () => db.entities.CartItem.list(),
     });
 
     const addToCartMutation = useMutation({
         mutationFn: async (product: any) => {
             const existingItem = cartItems.find((item: any) => item.product_id === product.id);
             if (existingItem) {
-                return base44.entities.CartItem.update(existingItem.id, {
+                return db.entities.CartItem.update(existingItem.id, {
                     quantity: existingItem.quantity + 1
                 });
             }
-            return base44.entities.CartItem.create({
+            return db.entities.CartItem.create({
                 product_id: product.id,
                 product_name: product.name,
                 price: product.price,

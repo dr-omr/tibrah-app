@@ -8,9 +8,9 @@ import Layout from '../Layout';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { AuthProvider } from '../contexts/AuthContext';
-import '../styles/globals.css';
 import { AudioProvider } from '../contexts/AudioContext';
-import GlobalPlayer from '../components/ui/GlobalPlayer';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+import '../styles/globals.css';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -62,19 +62,20 @@ export default function App({ Component, pageProps }: AppProps) {
                 <title>طِبرَا - العيادة الرقمية</title>
             </Head>
             <QueryClientProvider client={queryClient}>
-                <AuthProvider>
-                    <ThemeProvider>
-                        <NotificationProvider>
-                            <AudioProvider>
-                                <Layout currentPageName={currentPageName}>
-                                    <Component {...pageProps} />
-                                    <GlobalPlayer />
-                                </Layout>
-                                <Toaster position="top-center" richColors />
-                            </AudioProvider>
-                        </NotificationProvider>
-                    </ThemeProvider>
-                </AuthProvider>
+                <ErrorBoundary>
+                    <AuthProvider>
+                        <ThemeProvider>
+                            <NotificationProvider>
+                                <AudioProvider>
+                                    <Layout currentPageName={currentPageName}>
+                                        <Component {...pageProps} />
+                                    </Layout>
+                                    <Toaster position="top-center" richColors />
+                                </AudioProvider>
+                            </NotificationProvider>
+                        </ThemeProvider>
+                    </AuthProvider>
+                </ErrorBoundary>
             </QueryClientProvider>
         </>
     );

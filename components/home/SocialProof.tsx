@@ -1,5 +1,9 @@
+// components/home/SocialProof.tsx
+// Premium Design with Touch Interactions
+
 import React, { useState, useEffect } from 'react';
-import { Instagram, Youtube, Star, Quote, ChevronLeft, ChevronRight, Facebook, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Instagram, Youtube, Star, Quote, ChevronLeft, ChevronRight, Facebook, MessageCircle, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 // Custom icons for TikTok and Snapchat
@@ -51,48 +55,60 @@ export default function SocialProof() {
 
     const socialLinks = [
         {
-            icon: Youtube,
-            label: 'YouTube',
-            url: 'https://youtube.com/@dr.omr369',
-            followers: '+100K',
-            color: 'from-red-500 to-red-600'
+            icon: Facebook,
+            label: 'Facebook',
+            url: 'https://facebook.com/dr.omr369',
+            followers: '+30K',
+            gradient: 'from-blue-500 to-blue-600',
+            bgLight: 'bg-blue-50',
+            iconColor: '#1877F2'
         },
         {
             icon: Instagram,
             label: 'Instagram',
             url: 'https://instagram.com/dr.omr369',
             followers: '+50K',
-            color: 'from-pink-500 to-purple-500'
+            gradient: 'from-pink-500 via-purple-500 to-orange-400',
+            bgLight: 'bg-gradient-to-br from-pink-50 to-purple-50',
+            iconColor: '#E4405F'
         },
         {
-            icon: Facebook,
-            label: 'Facebook',
-            url: 'https://facebook.com/dr.omr369',
-            followers: '+30K',
-            color: 'from-blue-500 to-blue-600'
-        },
-        {
-            icon: TikTokIcon,
-            label: 'TikTok',
-            url: 'https://tiktok.com/@dr.omr369',
-            followers: '+80K',
-            color: 'from-slate-800 to-slate-900',
-            isCustomIcon: true
-        },
-        {
-            icon: SnapchatIcon,
-            label: 'Snapchat',
-            url: 'https://snapchat.com/add/dr.omr369',
-            followers: '+20K',
-            color: 'from-yellow-400 to-yellow-500',
-            isCustomIcon: true
+            icon: Youtube,
+            label: 'YouTube',
+            url: 'https://youtube.com/@dr.omr369',
+            followers: '+100K',
+            gradient: 'from-red-500 to-red-600',
+            bgLight: 'bg-red-50',
+            iconColor: '#FF0000'
         },
         {
             icon: MessageCircle,
             label: 'WhatsApp',
             url: 'https://wa.me/967771447111',
             followers: 'تواصل',
-            color: 'from-green-500 to-green-600'
+            gradient: 'from-green-500 to-green-600',
+            bgLight: 'bg-green-50',
+            iconColor: '#25D366'
+        },
+        {
+            icon: SnapchatIcon,
+            label: 'Snapchat',
+            url: 'https://snapchat.com/add/dr.omr369',
+            followers: '+20K',
+            gradient: 'from-yellow-400 to-yellow-500',
+            bgLight: 'bg-yellow-50',
+            iconColor: '#FFFC00',
+            isCustomIcon: true
+        },
+        {
+            icon: TikTokIcon,
+            label: 'TikTok',
+            url: 'https://tiktok.com/@dr.omr369',
+            followers: '+80K',
+            gradient: 'from-slate-800 to-slate-900',
+            bgLight: 'bg-slate-100',
+            iconColor: '#000000',
+            isCustomIcon: true
         },
     ];
 
@@ -113,99 +129,203 @@ export default function SocialProof() {
     const goToNext = () => {
         setIsAutoPlaying(false);
         setActiveIndex(prev => prev < testimonials.length - 1 ? prev + 1 : 0);
-        // Resume auto-play after 10 seconds
         setTimeout(() => setIsAutoPlaying(true), 10000);
     };
 
     const goToPrev = () => {
         setIsAutoPlaying(false);
         setActiveIndex(prev => prev > 0 ? prev - 1 : testimonials.length - 1);
-        // Resume auto-play after 10 seconds
         setTimeout(() => setIsAutoPlaying(true), 10000);
     };
 
     return (
         <section className="px-6 py-8">
-            {/* Social Media */}
+            {/* Social Media Section */}
             <div className="mb-8">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">خليك قريب وتابع جديدنا</h3>
+                {/* Title with gradient and icon */}
+                <div className="flex items-center gap-2 mb-5">
+                    <motion.div
+                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center shadow-lg"
+                        whileTap={{ scale: 0.9, rotate: -10 }}
+                    >
+                        <Sparkles className="w-5 h-5 text-white" />
+                    </motion.div>
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                            خليك قريب وتابع جديدنا
+                        </h3>
+                        <p className="text-xs text-slate-500">تابعنا على منصات التواصل</p>
+                    </div>
+                </div>
+
+                {/* Social Cards Grid */}
                 <div className="grid grid-cols-3 gap-3">
                     {socialLinks.map((social, index) => {
                         const Icon = social.icon;
                         return (
-                            <a
+                            <motion.a
                                 key={index}
                                 href={social.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="glass rounded-2xl p-3 hover:shadow-glow transition-all group text-center"
+                                className={`relative overflow-hidden rounded-2xl p-4 text-center ${social.bgLight} border border-slate-100/50`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                whileHover={{
+                                    scale: 1.05,
+                                    y: -5,
+                                    boxShadow: '0 15px 40px rgba(0,0,0,0.15)'
+                                }}
+                                whileTap={{
+                                    scale: 0.92,
+                                }}
                             >
-                                <div className={`w-10 h-10 mx-auto rounded-xl bg-gradient-to-br ${social.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
-                                    {social.isCustomIcon ? <Icon /> : <Icon className="w-5 h-5 text-white" />}
+                                {/* Gradient overlay on hover */}
+                                <motion.div
+                                    className={`absolute inset-0 bg-gradient-to-br ${social.gradient} opacity-0`}
+                                    whileHover={{ opacity: 0.1 }}
+                                />
+
+                                {/* Icon */}
+                                <motion.div
+                                    className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${social.gradient} flex items-center justify-center mb-3 shadow-lg`}
+                                    whileHover={{
+                                        rotate: [0, -10, 10, -5, 0],
+                                        scale: 1.1
+                                    }}
+                                    whileTap={{ scale: 0.85, rotate: 15 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                >
+                                    {social.isCustomIcon ? (
+                                        <div className="text-white">
+                                            <Icon />
+                                        </div>
+                                    ) : (
+                                        <Icon className="w-6 h-6 text-white" />
+                                    )}
+                                </motion.div>
+
+                                {/* Followers Count */}
+                                <motion.div
+                                    className="font-bold text-slate-800 text-base mb-0.5"
+                                    initial={{ scale: 1 }}
+                                    whileHover={{ scale: 1.1 }}
+                                >
+                                    {social.followers}
+                                </motion.div>
+
+                                {/* Platform Label */}
+                                <div className="text-[11px] text-slate-500 font-medium">
+                                    {social.label}
                                 </div>
-                                <div className="font-bold text-slate-800 dark:text-white text-sm">{social.followers}</div>
-                                <div className="text-[10px] text-slate-500 dark:text-slate-400">{social.label}</div>
-                            </a>
+
+                                {/* Decorative dot */}
+                                <motion.div
+                                    className={`absolute top-2 right-2 w-2 h-2 rounded-full bg-gradient-to-br ${social.gradient}`}
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                />
+                            </motion.a>
                         );
                     })}
                 </div>
             </div>
 
-            {/* Testimonials */}
+            {/* Testimonials Section */}
             <div>
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">ناس تعافت وارتاحت بفضل الله</h3>
+                    <div className="flex items-center gap-2">
+                        <motion.div
+                            className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg"
+                            whileTap={{ scale: 0.9, rotate: -10 }}
+                        >
+                            <Star className="w-5 h-5 text-white fill-white" />
+                        </motion.div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                            ناس تعافت وارتاحت بفضل الله
+                        </h3>
+                    </div>
                     <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="w-8 h-8 rounded-full hover:bg-[#2D9B83]/10 hover:border-[#2D9B83] transition-colors"
-                            onClick={goToPrev}
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="w-8 h-8 rounded-full hover:bg-[#2D9B83]/10 hover:border-[#2D9B83] transition-colors"
-                            onClick={goToNext}
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </Button>
+                        <motion.div whileTap={{ scale: 0.85 }} transition={{ type: 'spring', stiffness: 400, damping: 17 }}>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="w-8 h-8 rounded-full hover:bg-[#2D9B83]/10 hover:border-[#2D9B83] transition-colors"
+                                onClick={goToPrev}
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </motion.div>
+                        <motion.div whileTap={{ scale: 0.85 }} transition={{ type: 'spring', stiffness: 400, damping: 17 }}>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="w-8 h-8 rounded-full hover:bg-[#2D9B83]/10 hover:border-[#2D9B83] transition-colors"
+                                onClick={goToNext}
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                        </motion.div>
                     </div>
                 </div>
 
-                <div className="glass rounded-2xl p-5 relative overflow-hidden">
+                <motion.div
+                    className="glass rounded-2xl p-5 relative overflow-hidden"
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                >
                     <Quote className="absolute top-4 left-4 w-8 h-8 text-[#2D9B83]/20" />
 
                     <div className="flex gap-1 mb-3">
                         {[...Array(testimonials[activeIndex].rating)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                            <motion.div
+                                key={i}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: i * 0.1, type: 'spring' }}
+                            >
+                                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                            </motion.div>
                         ))}
                     </div>
 
-                    <div className="transition-all duration-300 ease-in-out">
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                            "{testimonials[activeIndex].text}"
-                        </p>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeIndex}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                                "{testimonials[activeIndex].text}"
+                            </p>
 
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-bold text-slate-800 dark:text-white">{testimonials[activeIndex].name}</p>
-                                <p className="text-xs text-slate-400">{testimonials[activeIndex].condition}</p>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-bold text-slate-800 dark:text-white">{testimonials[activeIndex].name}</p>
+                                    <p className="text-xs text-slate-400">{testimonials[activeIndex].condition}</p>
+                                </div>
+                                <div className="flex gap-1">
+                                    {testimonials.map((_, index) => (
+                                        <motion.div
+                                            key={index}
+                                            className={`h-2 rounded-full transition-all cursor-pointer ${index === activeIndex ? 'bg-[#2D9B83] w-4' : 'bg-slate-200 dark:bg-slate-600 w-2'
+                                                }`}
+                                            whileTap={{ scale: 1.5 }}
+                                            onClick={() => {
+                                                setActiveIndex(index);
+                                                setIsAutoPlaying(false);
+                                                setTimeout(() => setIsAutoPlaying(true), 10000);
+                                            }}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex gap-1">
-                                {testimonials.map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className={`w-2 h-2 rounded-full transition-all ${index === activeIndex ? 'bg-[#2D9B83] w-4' : 'bg-slate-200 dark:bg-slate-600'
-                                            }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        </motion.div>
+                    </AnimatePresence>
+                </motion.div>
             </div>
         </section>
     );

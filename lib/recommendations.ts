@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 
 export interface Recommendation {
     id: string;
@@ -17,13 +17,13 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
     const today = new Date().toISOString().split('T')[0];
 
     // 1. Fetch User Data
-    const dailyLogs = await base44.entities.DailyLog.filter({ date: today });
+    const dailyLogs = await db.entities.DailyLog.filter({ date: today });
     const log = dailyLogs[0] || null;
 
-    const sleepLogs = await base44.entities.SleepLog.list('-date', 1);
+    const sleepLogs = await db.entities.SleepLog.list('-date', 1);
     const lastSleep = sleepLogs[0] || null;
 
-    const waterLogs = await base44.entities.WaterLog.filter({ date: today });
+    const waterLogs = await db.entities.WaterLog.filter({ date: today });
     const water = waterLogs[0] || { glasses: 0 };
 
     // 2. Logic Rules
@@ -31,7 +31,7 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
     // --- Rule A: Low Energy ---
     if (log?.energy_level && Number(log.energy_level) <= 2) {
         // Fetch High Energy Products
-        const vitamins = await base44.entities.Product.filter({ category: 'vitamins' }, undefined, 1);
+        const vitamins = await db.entities.Product.filter({ category: 'vitamins' }, undefined, 1);
         if (vitamins[0]) {
             recs.push({
                 id: 'rec_energy_vit',
@@ -47,7 +47,7 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
         }
 
         // Suggest Energy Frequency
-        const freqs = await base44.entities.RifeFrequency.filter({ category: 'disease_support' }, undefined, 1);
+        const freqs = await db.entities.RifeFrequency.filter({ category: 'disease_support' }, undefined, 1);
         // Note: In real app, we'd search for "Fatigue" or "Energy" tags
         if (freqs[0]) {
             recs.push({
@@ -76,7 +76,7 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
             priority: 95
         });
 
-        const minerals = await base44.entities.Product.filter({ category: 'minerals' }, undefined, 1);
+        const minerals = await db.entities.Product.filter({ category: 'minerals' }, undefined, 1);
         if (minerals[0]) {
             recs.push({
                 id: 'rec_stress_mg',
@@ -108,7 +108,7 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
 
     // --- Rule D: Poor Sleep ---
     if (lastSleep && Number(lastSleep.duration_hours) < 5) {
-        const sleepFreq = await base44.entities.RifeFrequency.list('-created_at', 1); // Mock: get any freq
+        const sleepFreq = await db.entities.RifeFrequency.list('-created_at', 1); // Mock: get any freq
         if (sleepFreq[0]) {
             recs.push({
                 id: 'rec_sleep_freq',

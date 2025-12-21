@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { Brain, Check, ChevronRight, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -122,7 +122,7 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
       }
       `;
 
-            const result = await base44.integrations.Core.InvokeLLM({
+            const result = await db.integrations.Core.InvokeLLM({
                 prompt: prompt,
                 response_json_schema: {
                     type: "object",

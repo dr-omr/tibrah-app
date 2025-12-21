@@ -8,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { libraryCategories } from '@/lib/articles';
 
 export default function LibraryFilters({
     activeType,
@@ -23,16 +24,10 @@ export default function LibraryFilters({
         { id: 'podcast', label: 'بودكاست', icon: Mic },
     ];
 
-    const categories = [
-        { id: 'all', label: 'جميع الفئات' },
-        { id: 'functional_medicine', label: 'الطب الوظيفي' },
-        { id: 'frequencies', label: 'الترددات الشفائية' },
-        { id: 'nutrition', label: 'التغذية الصحية' },
-        { id: 'lifestyle', label: 'نمط الحياة' },
-        { id: 'detox', label: 'الديتوكس' },
-        { id: 'supplements', label: 'المكملات' },
-        { id: 'mental_health', label: 'الصحة النفسية' },
-    ];
+    const categories = libraryCategories.map(cat => ({
+        id: cat.id,
+        label: cat.name
+    }));
 
     return (
         <div className="space-y-4">
@@ -47,8 +42,8 @@ export default function LibraryFilters({
                             key={type.id}
                             onClick={() => setActiveType(type.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 ${isActive
-                                    ? 'gradient-primary text-white shadow-md'
-                                    : 'glass text-slate-600 hover:bg-[#2D9B83]/10'
+                                ? 'gradient-primary text-white shadow-md'
+                                : 'glass text-slate-600 hover:bg-[#2D9B83]/10'
                                 }`}
                         >
                             {Icon && <Icon className="w-4 h-4" />}

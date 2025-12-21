@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Droplets, Plus, Minus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -29,9 +29,9 @@ export const WaterWidget = ({ initialGlasses, goal, logId, onUpdate }: WaterWidg
 
         try {
             if (logId) {
-                await base44.entities.WaterLog.update(logId, { glasses: newAmount });
+                await db.entities.WaterLog.update(logId, { glasses: newAmount });
             } else {
-                await base44.entities.WaterLog.create({
+                await db.entities.WaterLog.create({
                     date: today,
                     glasses: newAmount,
                     goal: goal

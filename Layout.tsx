@@ -1,11 +1,13 @@
 import React, { ReactNode, useEffect } from 'react';
 import FloatingAssistant from './components/common/FloatingAssistant';
-import OfflineBanner from './components/common/OfflineBanner';
+import NetworkStatusBanner from './components/common/NetworkStatusBanner';
 import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import LoadingScreen from './components/common/LoadingScreen';
+import SkipLinks, { MainContent } from './components/common/SkipLinks';
 import BottomNav from './components/navigation/BottomNav';
 import Header from './components/navigation/Header';
 import Footer from './components/navigation/Footer';
+import GlobalMiniPlayer from './components/frequencies/GlobalMiniPlayer';
 import { useAuth } from './contexts/AuthContext';
 import { useAudio } from './contexts/AudioContext';
 import { useRouter } from 'next/router';
@@ -73,24 +75,28 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
 
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 font-cairo overscroll-bounce">
-      {/* PWA meta tags are in _document.tsx */}
+      {/* Accessibility: Skip Links */}
+      <SkipLinks />
 
-      <OfflineBanner />
+      {/* Network Status Banner (Enhanced Offline + Slow Connection) */}
+      <NetworkStatusBanner />
 
       {/* Header - shows different versions for mobile/desktop */}
       {!hideNav && <Header currentPageName={currentPageName} />}
 
       {/* Main Content - pb-24 for bottom nav on mobile, safe area aware */}
-      <main className={`
-        scroll-momentum
-        ${hideNav ? 'safe-bottom' : 'pb-24' /* Default padding for nav */}
-        ${currentTrack ? 'pb-48' : '' /* Extra padding if player is visible */}
-        min-h-[calc(100vh-80px)]
-      `}>
-        <div className="px-4 sm:px-6 lg:px-8">
-          {children}
+      <MainContent>
+        <div className={`
+          scroll-momentum
+          ${hideNav ? 'safe-bottom' : 'pb-24' /* Default padding for nav */}
+          ${currentTrack ? 'pb-48' : '' /* Extra padding if player is visible */}
+          min-h-[calc(100vh-80px)]
+        `}>
+          <div className="px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
         </div>
-      </main>
+      </MainContent>
 
       {/* Footer - Only on desktop for main pages */}
       {!hideFooter && <div className="hidden md:block"><Footer /></div>}
@@ -100,6 +106,9 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
+
+      {/* Global Mini Player */}
+      {!hideNav && <GlobalMiniPlayer />}
 
       {/* Mobile Bottom Nav - iOS Tab Bar Style with safe area */}
       {!hideNav && <BottomNav currentPageName={currentPageName} />}

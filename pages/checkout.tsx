@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { createPageUrl } from '../utils';
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import YemeniPaymentGateways, { PaymentMethodType } from '@/components/checkout/YemeniPaymentGateways';
 import ManualPaymentModal from '@/components/checkout/ManualPaymentModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CartItem {
     id: string;
@@ -25,20 +26,21 @@ export default function Checkout() {
     const [checkoutComplete, setCheckoutComplete] = useState(false);
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | undefined>();
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
+    const { user } = useAuth(); // Get User
     const queryClient = useQueryClient();
 
     const { data: cartItems = [], isLoading } = useQuery<CartItem[]>({
         queryKey: ['cart'],
-        queryFn: () => base44.entities.CartItem.list() as Promise<CartItem[]>,
+        queryFn: () => db.entities.CartItem.list() as unknown as Promise<CartItem[]>,
     });
 
     const updateQuantityMutation = useMutation({
-        mutationFn: ({ id, quantity }: { id: string; quantity: number }) => {
+        mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
             if (quantity <= 0) {
-                return base44.entities.CartItem.delete(id);
+                await db.entities.CartItem.delete(id);
+                return;
             }
-            return base44.entities.CartItem.update(id, { quantity });
+            await db.entities.CartItem.update(id, { quantity });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -46,7 +48,7 @@ export default function Checkout() {
     });
 
     const deleteItemMutation = useMutation({
-        mutationFn: (id: string) => base44.entities.CartItem.delete(id),
+        mutationFn: (id: string) => db.entities.CartItem.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('تم حذف المنتج');
@@ -55,7 +57,7 @@ export default function Checkout() {
 
     const clearCartMutation = useMutation({
         mutationFn: async () => {
-            await Promise.all(cartItems.map(item => base44.entities.CartItem.delete(item.id)));
+            await Promise.all(cartItems.map(item => db.entities.CartItem.delete(item.id)));
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -66,12 +68,17 @@ export default function Checkout() {
     const shipping = subtotal >= 200 ? 0 : 25;
     const total = subtotal + shipping;
 
+    const getUserStr = () => {
+        if (!user) return "";
+        return `\n👤 العميل: ${user.displayName || user.name || 'مجهول'}\n📞 الهاتف: ${user.phone || 'غير مسجل'}`;
+    };
+
     const handleWhatsAppOrder = () => {
         const orderText = cartItems.map((item: CartItem) =>
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
 
-        const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}\n\n💰 المجموع: ${total} ر.س\n📌 طريقة الدفع: عند الاستلام`;
+        const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}\n\n💰 المجموع: ${total} ر.س\n📌 طريقة الدفع: عند الاستلام${getUserStr()}`;
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
         clearCartMutation.mutate();
         setCheckoutComplete(true);
@@ -84,7 +91,7 @@ export default function Checkout() {
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
 
-        const message = `✅ *تأكيد دفع إلكتروني - طِبرَا*\n\n💳 المحفظة: ${selectedMethod}\n🔢 رقم العملية: ${transactionId}\n💰 المبلغ: ${total} ر.س\n\n🛒 الطلب:\n${orderText}`;
+        const message = `✅ *تأكيد دفع إلكتروني - طِبرَا*\n\n💳 المحفظة: ${selectedMethod}\n🔢 رقم العملية: ${transactionId}\n💰 المبلغ: ${total} ر.س\n\n🛒 الطلب:\n${orderText}${getUserStr()}`;
 
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
 

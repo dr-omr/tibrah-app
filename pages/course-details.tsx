@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { useAuth } from '@/contexts/AuthContext';
 
 // TypeScript interfaces
 interface Course {
@@ -96,6 +97,7 @@ const defaultLessons: Lesson[] = [
 export default function CourseDetails() {
     const router = useRouter();
     const courseId = (router.query.id as string) || '1';
+    const { user } = useAuth();
 
     // Guard: Wait for router to be ready
     if (!router.isReady) {
@@ -110,7 +112,7 @@ export default function CourseDetails() {
     const { data: course = defaultCourse } = useQuery<Course>({
         queryKey: ['course', courseId],
         queryFn: async (): Promise<Course> => {
-            const courses = await base44.entities.Course.filter({ id: courseId }) as unknown as Course[];
+            const courses = await db.entities.Course.filter({ id: courseId }) as unknown as Course[];
             return courses[0] || defaultCourse;
         },
     });
@@ -118,16 +120,17 @@ export default function CourseDetails() {
     const { data: lessons = defaultLessons } = useQuery<Lesson[]>({
         queryKey: ['lessons', courseId],
         queryFn: async (): Promise<Lesson[]> => {
-            const data = await base44.entities.Lesson.filter({ course_id: courseId }) as unknown as Lesson[];
+            const data = await db.entities.Lesson.filter({ course_id: courseId }) as unknown as Lesson[];
             return data.length > 0 ? data.sort((a, b) => a.order - b.order) : defaultLessons;
         },
     });
 
     const { data: enrollment } = useQuery<Enrollment | undefined>({
-        queryKey: ['enrollment', courseId],
+        queryKey: ['enrollment', courseId, user?.email],
+        enabled: !!user?.email,
         queryFn: async (): Promise<Enrollment | undefined> => {
-            const user = await base44.auth.me();
-            const enrollments = await base44.entities.CourseEnrollment.filter({
+            if (!user?.email) return undefined;
+            const enrollments = await db.entities.CourseEnrollment.filter({
                 course_id: courseId,
                 created_by: user.email
             }) as unknown as Enrollment[];
@@ -137,10 +140,12 @@ export default function CourseDetails() {
 
     const enrollMutation = useMutation({
         mutationFn: async () => {
-            return await base44.entities.CourseEnrollment.create({
+            if (!user?.email) throw new Error("User not logged in");
+            return await db.entities.CourseEnrollment.create({
                 course_id: courseId,
                 progress_percentage: 0,
                 completed_lessons: [],
+                created_by: user.email
             });
         },
         onSuccess: () => {

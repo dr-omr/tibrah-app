@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Brain, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -31,9 +31,9 @@ export const MoodWidget = ({ currentMood, logId, onUpdate }: MoodWidgetProps) =>
 
         try {
             if (logId) {
-                await base44.entities.DailyLog.update(logId, { mood_score: score });
+                await db.entities.DailyLog.update(logId, { mood_score: score });
             } else {
-                await base44.entities.DailyLog.create({
+                await db.entities.DailyLog.create({
                     date: today,
                     mood_score: score
                 });

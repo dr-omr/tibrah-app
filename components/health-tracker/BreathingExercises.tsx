@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Wind, Play, Pause, RotateCcw, CheckCircle, Timer, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BreathingPattern {
     id: string;

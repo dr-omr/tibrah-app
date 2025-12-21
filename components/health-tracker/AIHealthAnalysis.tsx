@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import {
     Sparkles, Brain, TrendingUp, TrendingDown, AlertTriangle, CheckCircle,
     Loader2, RefreshCw, FileText, Share2, Download, Activity, Heart,
@@ -102,7 +102,7 @@ ${logsText || 'لا توجد سجلات'}
 - كن دقيقاً علمياً ولكن بأسلوب بسيط.
 `;
 
-            const result = await base44.integrations.Core.InvokeLLM({
+            const result = await db.integrations.Core.InvokeLLM({
                 prompt,
                 response_json_schema: {
                     type: "object",

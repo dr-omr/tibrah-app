@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { Flame, Timer, PersonStanding, ChevronLeft, Plus, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -25,47 +25,85 @@ interface RingProps {
     goal: string;
 }
 
-const ActivityRing = ({ progress, color, size, strokeWidth, icon: Icon, label, value, goal }: RingProps) => {
+// Apple Watch Style Ring with Gradient
+interface GradientRingProps extends RingProps {
+    gradientId: string;
+    gradientColors: [string, string];
+}
+
+const ActivityRing = ({ progress, color, size, strokeWidth, icon: Icon, label, value, goal, gradientId, gradientColors }: GradientRingProps) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (Math.min(progress, 100) / 100) * circumference;
+    const [animatedOffset, setAnimatedOffset] = useState(circumference);
+
+    // Animate on mount
+    useEffect(() => {
+        const timer = setTimeout(() => setAnimatedOffset(offset), 100);
+        return () => clearTimeout(timer);
+    }, [offset]);
 
     return (
         <div className="flex flex-col items-center">
             <div className="relative" style={{ width: size, height: size }}>
-                {/* Background Ring */}
+                {/* SVG with Gradient Definition */}
                 <svg className="transform -rotate-90" width={size} height={size}>
+                    <defs>
+                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor={gradientColors[0]} />
+                            <stop offset="100%" stopColor={gradientColors[1]} />
+                        </linearGradient>
+                        {/* Glow filter */}
+                        <filter id={`${gradientId}-glow`} x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    {/* Background Ring */}
                     <circle
                         cx={size / 2}
                         cy={size / 2}
                         r={radius}
-                        stroke={color}
-                        strokeOpacity={0.2}
+                        stroke={gradientColors[0]}
+                        strokeOpacity={0.15}
                         strokeWidth={strokeWidth}
                         fill="none"
                     />
-                    {/* Progress Ring */}
+                    {/* Progress Ring with Gradient */}
                     <circle
                         cx={size / 2}
                         cy={size / 2}
                         r={radius}
-                        stroke={color}
+                        stroke={`url(#${gradientId})`}
                         strokeWidth={strokeWidth}
                         fill="none"
                         strokeLinecap="round"
                         strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                        className="transition-all duration-1000 ease-out"
+                        strokeDashoffset={animatedOffset}
+                        filter={`url(#${gradientId}-glow)`}
+                        style={{
+                            transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
                     />
                 </svg>
-                {/* Center Icon */}
+                {/* Center Icon with pulse */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <Icon className="w-6 h-6" style={{ color }} />
+                    <div
+                        className="p-2 rounded-full"
+                        style={{
+                            background: `linear-gradient(135deg, ${gradientColors[0]}20, ${gradientColors[1]}20)`
+                        }}
+                    >
+                        <Icon className="w-5 h-5" style={{ color: gradientColors[0] }} />
+                    </div>
                 </div>
             </div>
-            <div className="mt-2 text-center">
-                <p className="text-lg font-bold text-slate-800">{value}</p>
-                <p className="text-xs text-slate-500">{label}</p>
+            <div className="mt-3 text-center">
+                <p className="text-xl font-bold text-slate-800">{value}</p>
+                <p className="text-xs font-medium text-slate-600">{label}</p>
                 <p className="text-[10px] text-slate-400">الهدف: {goal}</p>
             </div>
         </div>
@@ -90,7 +128,7 @@ export default function ActivityRings() {
         queryKey: ['activityLog', today],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today });
                 const log = logs?.[0];
                 if (log) {
                     return {
@@ -130,9 +168,9 @@ export default function ActivityRings() {
             };
             setData({ ...data, ...updates[type] });
             // Save to backend
-            const logs = await base44.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today });
             if (logs?.[0]) {
-                await base44.entities.DailyLog.update(logs[0].id as string, {
+                await db.entities.DailyLog.update(logs[0].id as string, {
                     exercise: {
                         calories: type === 'move' ? data.moveCalories + 50 : data.moveCalories,
                         duration_minutes: type === 'exercise' ? data.exerciseMinutes + 10 : data.exerciseMinutes
@@ -140,7 +178,7 @@ export default function ActivityRings() {
                     stand_hours: type === 'stand' ? data.standHours + 1 : data.standHours
                 });
             } else {
-                await base44.entities.DailyLog.create({
+                await db.entities.DailyLog.create({
                     date: today,
                     exercise: {
                         calories: type === 'move' ? 50 : 0,
@@ -166,50 +204,87 @@ export default function ActivityRings() {
             </div>
 
             {/* Main Rings Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white">
-                {/* Concentric Rings Display */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-2xl">
+                {/* Concentric Rings Display with Gradients */}
                 <div className="flex justify-center mb-6">
                     <div className="relative" style={{ width: 200, height: 200 }}>
+                        {/* Shared gradient and filter definitions */}
+                        <svg className="absolute inset-0" width={0} height={0}>
+                            <defs>
+                                {/* Move Gradient (Red-Pink) */}
+                                <linearGradient id="moveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#FF2D55" />
+                                    <stop offset="100%" stopColor="#FF6B9D" />
+                                </linearGradient>
+                                {/* Exercise Gradient (Green-Yellow) */}
+                                <linearGradient id="exerciseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#A8FF00" />
+                                    <stop offset="100%" stopColor="#BAFF33" />
+                                </linearGradient>
+                                {/* Stand Gradient (Cyan-Blue) */}
+                                <linearGradient id="standGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#00D4FF" />
+                                    <stop offset="100%" stopColor="#00F5FF" />
+                                </linearGradient>
+                                {/* Glow Filters */}
+                                <filter id="moveGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                                <filter id="exerciseGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                                <filter id="standGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                            </defs>
+                        </svg>
+
                         {/* Outer Ring - Move */}
                         <svg className="absolute inset-0 transform -rotate-90" width={200} height={200}>
-                            <circle cx={100} cy={100} r={90} stroke="#FF2D55" strokeOpacity={0.3} strokeWidth={12} fill="none" />
+                            <circle cx={100} cy={100} r={90} stroke="#FF2D55" strokeOpacity={0.2} strokeWidth={14} fill="none" />
                             <circle
                                 cx={100} cy={100} r={90}
-                                stroke="#FF2D55"
-                                strokeWidth={12}
+                                stroke="url(#moveGradient)"
+                                strokeWidth={14}
                                 fill="none"
                                 strokeLinecap="round"
                                 strokeDasharray={2 * Math.PI * 90}
                                 strokeDashoffset={2 * Math.PI * 90 * (1 - Math.min(moveProgress, 100) / 100)}
-                                className="transition-all duration-1000"
+                                filter="url(#moveGlow)"
+                                style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
                             />
                         </svg>
                         {/* Middle Ring - Exercise */}
                         <svg className="absolute inset-0 transform -rotate-90" width={200} height={200}>
-                            <circle cx={100} cy={100} r={72} stroke="#A8FF00" strokeOpacity={0.3} strokeWidth={12} fill="none" />
+                            <circle cx={100} cy={100} r={72} stroke="#A8FF00" strokeOpacity={0.2} strokeWidth={14} fill="none" />
                             <circle
                                 cx={100} cy={100} r={72}
-                                stroke="#A8FF00"
-                                strokeWidth={12}
+                                stroke="url(#exerciseGradient)"
+                                strokeWidth={14}
                                 fill="none"
                                 strokeLinecap="round"
                                 strokeDasharray={2 * Math.PI * 72}
                                 strokeDashoffset={2 * Math.PI * 72 * (1 - Math.min(exerciseProgress, 100) / 100)}
-                                className="transition-all duration-1000"
+                                filter="url(#exerciseGlow)"
+                                style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
                             />
                         </svg>
                         {/* Inner Ring - Stand */}
                         <svg className="absolute inset-0 transform -rotate-90" width={200} height={200}>
-                            <circle cx={100} cy={100} r={54} stroke="#00D4FF" strokeOpacity={0.3} strokeWidth={12} fill="none" />
+                            <circle cx={100} cy={100} r={54} stroke="#00D4FF" strokeOpacity={0.2} strokeWidth={14} fill="none" />
                             <circle
                                 cx={100} cy={100} r={54}
-                                stroke="#00D4FF"
-                                strokeWidth={12}
+                                stroke="url(#standGradient)"
+                                strokeWidth={14}
                                 fill="none"
                                 strokeLinecap="round"
                                 strokeDasharray={2 * Math.PI * 54}
                                 strokeDashoffset={2 * Math.PI * 54 * (1 - Math.min(standProgress, 100) / 100)}
-                                className="transition-all duration-1000"
+                                filter="url(#standGlow)"
+                                style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
                             />
                         </svg>
                         {/* Center Text */}

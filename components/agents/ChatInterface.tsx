@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { db } from '@/lib/db';
 import { aiClient } from '@/components/ai/aiClient';
 import { ImageUpload } from '@/components/ai/ImageUpload';
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,36 @@ export default function ChatInterface() {
         scrollToBottom();
     }, [messages, isLoading]);
 
+    const getRealHealthContext = async () => {
+        try {
+            // const { base44 } = require('@/api/base44Client');
+            const { format } = require('date-fns');
+            const today = format(new Date(), 'yyyy-MM-dd');
+
+            // Parallel Fetching for speed
+            const [waterLogs, sleepLogs, dailyLogs] = await Promise.all([
+                db.entities.WaterLog.filter({ date: today }).catch(() => []),
+                db.entities.SleepLog.list('-date', 1).catch(() => []),
+                db.entities.DailyLog.filter({ date: today }).catch(() => [])
+            ]);
+
+            const water = waterLogs?.[0]?.glasses || 0;
+            const sleep = sleepLogs?.[0]?.duration_hours || 0;
+            const daily = dailyLogs?.[0] || {};
+
+            return {
+                waterGlasses: Number(water),
+                sleepHours: Number(sleep),
+                moodScore: Number(daily.mood_score || 0),
+                stressLevel: Number(daily.stress_level || 0),
+                energyLevel: Number(daily.energy_level || 0)
+            };
+        } catch (e) {
+            console.error("Context Fetch Error:", e);
+            return null;
+        }
+    };
+
     const handleSend = async () => {
         if (!input.trim() && !transcript && !selectedImage) return;
 
@@ -94,7 +125,10 @@ export default function ChatInterface() {
         setIsLoading(true);
 
         try {
-            const aiResponse = await aiClient.chat(newMessages);
+            // Fetch Context on Fly
+            const healthProfile = await getRealHealthContext();
+
+            const aiResponse = await aiClient.chat(newMessages, { healthProfile });
             setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         } catch (error) {
             setMessages(prev => [...prev, {

@@ -29,6 +29,7 @@ const nextConfig = {
             'cdn-icons-png.flaticon.com',
             'lh3.googleusercontent.com',  // Google Profile Photos
             'firebasestorage.googleapis.com',  // Firebase Storage
+            'images.unsplash.com', // Added for Article Images
         ],
         formats: ['image/avif', 'image/webp'],
     },

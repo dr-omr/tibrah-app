@@ -40,7 +40,7 @@ export default function Login() {
             router.push('/');
         } catch (error: unknown) {
             const authError = error as { code?: string; message?: string };
-            console.log('Login error:', authError);
+            // console.log('Login error:', authError);
 
             // Handle different error codes from both Local and Firebase auth
             switch (authError.code) {
@@ -73,7 +73,7 @@ export default function Login() {
             router.push('/');
         } catch (error: unknown) {
             const authError = error as { code?: string; message?: string };
-            console.log('Google login error:', authError);
+            // console.log('Google login error:', authError);
 
             if (authError.code === 'auth/popup-closed-by-user') {
                 // User closed popup, no error needed
@@ -144,7 +144,7 @@ export default function Login() {
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-gradient-to-br from-slate-50 via-white to-slate-50">
+            <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-gradient-to-br from-slate-50 via-white to-slate-50 overflow-y-auto h-screen">
                 {/* Background decorations */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
@@ -267,8 +267,16 @@ export default function Login() {
                             سجل الآن
                         </Link>
                     </p>
+
+                    {/* Admin Link */}
+                    <div className="mt-8 pt-6 border-t border-slate-100/50 text-center">
+                        <Link href="/admin-dashboard" className="text-xs text-slate-400 hover:text-[#2D9B83] transition-colors flex items-center justify-center gap-1 group">
+                            <Lock className="w-3 h-3" />
+                            الدخول إلى لوحة الإدارة (للموظفين فقط)
+                        </Link>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

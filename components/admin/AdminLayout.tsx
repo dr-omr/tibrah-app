@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createPageUrl } from '@/utils';
 import {
     LayoutDashboard, Users, ShoppingBag, Calendar,
-    FileText, Settings, LogOut, Menu, X, Bell, Shield
+    FileText, Settings, LogOut, Menu, X, Bell, Shield, Waves
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +25,7 @@ export default function AdminLayout({ children, activeTab, onTabChange, user }: 
         { id: 'users', label: 'المستخدمين', icon: Users },
         { id: 'courses', label: 'الدورات', icon: FileText },
         { id: 'articles', label: 'المحتوى', icon: FileText },
+        { id: 'frequencies', label: 'الترددات', icon: Waves },
         { id: 'settings', label: 'الإعدادات', icon: Settings },
     ];
 
@@ -65,8 +66,8 @@ export default function AdminLayout({ children, activeTab, onTabChange, user }: 
                                     setIsSidebarOpen(false);
                                 }}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                        ? 'bg-[#2D9B83] text-white shadow-lg shadow-[#2D9B83]/20'
-                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                    ? 'bg-[#2D9B83] text-white shadow-lg shadow-[#2D9B83]/20'
+                                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                     }`}
                             >
                                 <Icon className="w-5 h-5" />

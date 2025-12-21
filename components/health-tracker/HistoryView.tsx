@@ -13,14 +13,22 @@ export default function HistoryView({ metrics, dailyLogs, symptoms }) {
     // Generate last 30 days for horizontal calendar
     const days = Array.from({ length: 30 }, (_, i) => subDays(new Date(), i));
 
+    // Helper to get mood value (handles both object and number types)
+    const getMoodValue = (log: any) => {
+        if (!log?.mood) return 0;
+        if (typeof log.mood === 'object') return log.mood.overall || 0;
+        return log.mood;
+    };
+
     const getDayStatus = (date) => {
         const dateStr = format(date, 'yyyy-MM-dd');
         const log = dailyLogs.find(l => l.date === dateStr);
         const symptomCount = symptoms.filter(s => s.recorded_at.startsWith(dateStr)).length;
 
         if (log) {
-            if (log.mood >= 4 && symptomCount === 0) return 'good';
-            if (log.mood <= 2 || symptomCount > 0) return 'bad';
+            const moodVal = getMoodValue(log);
+            if (moodVal >= 4 && symptomCount === 0) return 'good';
+            if (moodVal <= 2 || symptomCount > 0) return 'bad';
             return 'neutral';
         }
         return 'empty';
@@ -60,8 +68,8 @@ export default function HistoryView({ metrics, dailyLogs, symptoms }) {
                                 key={date.toString()}
                                 onClick={() => setSelectedDate(date)}
                                 className={`flex flex-col items-center min-w-[50px] p-2 rounded-2xl transition-all ${isSelected
-                                        ? 'bg-[#2D9B83] text-white shadow-lg shadow-[#2D9B83]/30 scale-105'
-                                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                    ? 'bg-[#2D9B83] text-white shadow-lg shadow-[#2D9B83]/30 scale-105'
+                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                                     }`}
                             >
                                 <span className="text-xs font-medium mb-1">{format(date, 'EEE', { locale: ar })}</span>
@@ -105,7 +113,7 @@ export default function HistoryView({ metrics, dailyLogs, symptoms }) {
                                     <span className="font-bold text-slate-700">المزاج والطاقة</span>
                                 </div>
                                 <div className="flex gap-4 text-sm text-slate-600">
-                                    <span>المزاج: {selectedLog.mood}/5</span>
+                                    <span>المزاج: {getMoodValue(selectedLog)}/5</span>
                                     <span>الطاقة: {selectedLog.energy_level}/5</span>
                                     <span>النوم: {selectedLog.sleep_quality}/5</span>
                                 </div>

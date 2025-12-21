@@ -6,13 +6,20 @@ import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 export default function LongTermHealthCharts({ metrics, dailyLogs, symptoms }) {
+    // Helper to get mood value (handles both object and number types)
+    const getMoodValue = (log: any) => {
+        if (!log?.mood) return 0;
+        if (typeof log.mood === 'object') return log.mood.overall || 0;
+        return log.mood;
+    };
+
     // Prepare data for logs (Mood & Energy)
     const logsData = dailyLogs
         .slice()
         .sort((a, b) => new Date(a.date) - new Date(b.date))
         .map(log => ({
             date: format(parseISO(log.date), 'dd MMM', { locale: ar }),
-            mood: log.mood,
+            mood: getMoodValue(log),
             energy: log.energy_level,
             sleep: log.sleep_quality,
             fullDate: log.date

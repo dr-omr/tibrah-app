@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -52,7 +52,7 @@ export default function ProductDetails() {
     const { data: product, isLoading } = useQuery<Product | null>({
         queryKey: ['product', productId],
         queryFn: async (): Promise<Product | null> => {
-            const products = await base44.entities.Product.filter({ id: productId }) as unknown as Product[];
+            const products = await db.entities.Product.filter({ id: productId }) as unknown as Product[];
             return products[0] || null;
         },
         enabled: !!productId,
@@ -61,7 +61,7 @@ export default function ProductDetails() {
     const { data: cartItems = [] } = useQuery<CartItem[]>({
         queryKey: ['cart'],
         queryFn: async (): Promise<CartItem[]> => {
-            return base44.entities.CartItem.list() as unknown as CartItem[];
+            return db.entities.CartItem.list() as unknown as CartItem[];
         },
     });
 
@@ -69,11 +69,11 @@ export default function ProductDetails() {
         mutationFn: async () => {
             const existingItem = cartItems.find((item: CartItem) => item.product_id === productId);
             if (existingItem) {
-                return base44.entities.CartItem.update(existingItem.id, {
+                return db.entities.CartItem.update(existingItem.id, {
                     quantity: existingItem.quantity + quantity
                 });
             }
-            return base44.entities.CartItem.create({
+            return db.entities.CartItem.create({
                 product_id: productId,
                 product_name: product?.name || '',
                 price: product?.price || 0,

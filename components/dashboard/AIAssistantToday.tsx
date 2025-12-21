@@ -4,7 +4,7 @@ import { AI_DISCLAIMER } from '@/components/ai/aiClient';
 import { Sparkles, Lightbulb, RefreshCw, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 
 export default function AIAssistantToday() {
     const { generateSuggestions, loading, error, isEnabled } = useAI();
@@ -16,7 +16,7 @@ export default function AIAssistantToday() {
         // Gather some context (mocked or real)
         try {
             // Try to get recent logs or use a default context
-            const recentLogs = await base44.entities.DailyLog.list('-date', 3).catch(() => []);
+            const recentLogs = await db.entities.DailyLog.list('-date', 3).catch(() => []);
             const context = {
                 recentLogs: recentLogs,
                 timeOfDay: new Date().getHours() < 12 ? 'morning' : 'evening',

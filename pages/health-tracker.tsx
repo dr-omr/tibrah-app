@@ -1,59 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     ChevronLeft, BarChart3, Calendar, FileText, LayoutDashboard, Sparkles,
-    Droplets, Moon, Pill, Activity, Heart
+    Droplets, Moon, Pill, Activity, Heart, Brain, Timer, Scale, Stethoscope
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { createPageUrl } from '../utils';
-import { format } from 'date-fns';
-
-// Components
-import TodayView from '../components/health-tracker/TodayView';
-import HistoryView from '../components/health-tracker/HistoryView';
-import MetricsView from '../components/health-tracker/MetricsView';
-import JournalView from '../components/health-tracker/JournalView';
-import AIHealthAnalysis from '../components/health-tracker/AIHealthAnalysis';
-import AIContextAssistant from '../components/ai/AIContextAssistant';
-import AddMetricSheet from '../components/health-tracker/AddMetricSheet';
-import SymptomLogger from '../components/health-tracker/SymptomLogger';
-import DailyCheckIn from '../components/health-tracker/DailyCheckIn';
-import MedicationReminder from '../components/health-tracker/MedicationReminder';
-import WaterTracker from '../components/health-tracker/WaterTracker';
-import SleepTracker from '../components/health-tracker/SleepTracker';
-import HealthSummary from '../components/health-tracker/HealthSummary';
-import ActivityRings from '../components/health-tracker/ActivityRings';
-import MoodTracker from '../components/health-tracker/MoodTracker';
-import BreathingExercises from '../components/health-tracker/BreathingExercises';
-import BloodPressureTracker from '../components/health-tracker/BloodPressureTracker';
-import WeightTracker from '../components/health-tracker/WeightTracker';
-import FastingTimer from '../components/health-tracker/FastingTimer';
-import { DOCTOR_KNOWLEDGE } from '@/components/ai/knowledge';
+import HealthSummary from '@/components/health-tracker/HealthSummary';
+// Legacy components (keeping for reference)
+import WaterTracker from '@/components/health-tracker/WaterTracker';
+import SleepTracker from '@/components/health-tracker/SleepTracker';
+import MedicationReminder from '@/components/health-tracker/MedicationReminder';
+import ActivityRings from '@/components/health-tracker/ActivityRings';
+import MoodTracker from '@/components/health-tracker/MoodTracker';
+import WeightTracker from '@/components/health-tracker/WeightTracker';
+import BloodPressureTracker from '@/components/health-tracker/BloodPressureTracker';
+import FastingTimer from '@/components/health-tracker/FastingTimer';
+import BreathingExercises from '@/components/health-tracker/BreathingExercises';
+import TodayView from '@/components/health-tracker/TodayView';
+import AIHealthAnalysis from '@/components/health-tracker/AIHealthAnalysis';
+import HistoryView from '@/components/health-tracker/HistoryView';
+import HistoryViewPro from '@/components/health-tracker/HistoryViewPro';
+import MetricsView from '@/components/health-tracker/MetricsView';
+import JournalView from '@/components/health-tracker/JournalView';
+import AddMetricSheet from '@/components/health-tracker/AddMetricSheet';
+import SymptomLogger from '@/components/health-tracker/SymptomLogger';
+import DailyCheckIn from '@/components/health-tracker/DailyCheckIn';
+import AIContextAssistant from '@/components/ai/AIContextAssistant';
+import { DOCTOR_KNOWLEDGE } from '@/lib/doctorContext';
+import { DailyLog } from '@/Entities/DailyLog';
 import { initializeNotifications } from '@/lib/pushNotifications';
+import InsightCard from '@/components/health-tracker/InsightCard';
+import ActionGrid from '@/components/health-tracker/ActionGrid';
+import MoodSymptomPicker from '@/components/health-tracker/MoodSymptomPicker';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// TypeScript interfaces
+// NEW PRO COMPONENTS - Complete Rebuild
+import WaterTrackerPro from '@/components/health-tracker/WaterTrackerPro';
+import SleepTrackerPro from '@/components/health-tracker/SleepTrackerPro';
+import ActivityFitnessPro from '@/components/health-tracker/ActivityFitnessPro';
+import MentalHealthHub from '@/components/health-tracker/MentalHealthHub';
+import WeightBodyTrackerPro from '@/components/health-tracker/WeightBodyTrackerPro';
+import FastingTimerPro from '@/components/health-tracker/FastingTimerPro';
+import MedicationReminderPro from '@/components/health-tracker/MedicationReminderPro';
+
 interface NavItemProps {
     id: string;
-    icon: React.ElementType;
+    icon: any;
     label: string;
-}
-
-interface DailyLog {
-    id?: string;
-    date: string;
-    [key: string]: unknown;
 }
 
 export default function HealthTracker() {
     const router = useRouter();
+    const { user } = useAuth(); // Use Auth Context
     const [activeTab, setActiveTab] = useState('summary');
     const [showAddMetric, setShowAddMetric] = useState(false);
     const [showSymptomLogger, setShowSymptomLogger] = useState(false);
     const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
-    const [user, setUser] = useState(null);
 
     const queryClient = useQueryClient();
 
@@ -70,32 +78,28 @@ export default function HealthTracker() {
         }
     }, [router.query.tab]);
 
-    useEffect(() => {
-        base44.auth.me().then(setUser).catch(() => { });
-    }, []);
-
-    // Data Fetching
+    // Data Fetching directly from db
     const { data: metrics = [] } = useQuery({
         queryKey: ['healthMetrics'],
-        queryFn: () => base44.entities.HealthMetric.list('-recorded_at', 100),
+        queryFn: () => db.entities.HealthMetric.list('-recorded_at', 100),
     });
 
     const { data: symptoms = [] } = useQuery({
         queryKey: ['symptoms'],
-        queryFn: () => base44.entities.SymptomLog.list('-recorded_at', 50),
+        queryFn: () => db.entities.SymptomLog.list('-recorded_at', 50),
     });
 
     const { data: dailyLogs = [] } = useQuery<DailyLog[]>({
         queryKey: ['dailyLogs'],
         queryFn: async () => {
-            const logs = await base44.entities.DailyLog.list('-date', 30);
+            const logs = await db.entities.DailyLog.list('-date', 30);
             return logs as unknown as DailyLog[];
         },
     });
 
     // Mutations
     const addMetricMutation = useMutation({
-        mutationFn: (data: Record<string, unknown>) => base44.entities.HealthMetric.create(data),
+        mutationFn: (data: Record<string, unknown>) => db.entities.HealthMetric.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['healthMetrics'] });
             setShowAddMetric(false);
@@ -103,7 +107,7 @@ export default function HealthTracker() {
     });
 
     const addSymptomMutation = useMutation({
-        mutationFn: (data: Record<string, unknown>) => base44.entities.SymptomLog.create(data),
+        mutationFn: (data: Record<string, unknown>) => db.entities.SymptomLog.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['symptoms'] });
             setShowSymptomLogger(false);
@@ -114,9 +118,9 @@ export default function HealthTracker() {
         mutationFn: async (data: DailyLog) => {
             const existing = dailyLogs.find(l => l.date === data.date);
             if (existing?.id) {
-                return base44.entities.DailyLog.update(existing.id, data);
+                return db.entities.DailyLog.update(existing.id, data);
             }
-            return base44.entities.DailyLog.create(data);
+            return db.entities.DailyLog.create(data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['dailyLogs'] });
@@ -140,37 +144,117 @@ export default function HealthTracker() {
         { id: 'history', icon: Calendar, label: 'السجل' },
     ];
 
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showSearch, setShowSearch] = useState(false);
+
+    // Simple professional NavItem
     const NavItem = ({ id, icon: Icon, label }: NavItemProps) => (
         <button
             onClick={() => setActiveTab(id)}
-            className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 min-w-[60px] ${activeTab === id
-                ? 'bg-white text-[#2D9B83] shadow-md scale-105'
-                : 'text-white/70 hover:bg-white/10'
+            className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-200 min-w-[56px] ${activeTab === id
+                ? 'bg-white text-emerald-600 shadow-lg'
+                : 'text-white/80 hover:bg-white/10'
                 }`}
         >
-            <Icon className="w-5 h-5 mb-1" />
-            <span className="text-[9px] font-bold">{label}</span>
+            <Icon className={`w-5 h-5 mb-1 ${activeTab === id ? 'text-emerald-600' : ''}`} />
+            <span className={`text-[10px] font-semibold ${activeTab === id ? 'text-emerald-600' : ''}`}>{label}</span>
         </button>
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
-            {/* Header Section */}
-            <div className="bg-gradient-to-b from-[#2D9B83] to-[#3FB39A] pb-6 pt-6 px-4 rounded-b-[2.5rem] shadow-xl relative z-10">
-                <div className="flex justify-between items-center mb-4">
-                    <Link href={createPageUrl('Dashboard')}>
-                        <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 rounded-full">
-                            <ChevronLeft className="w-6 h-6" />
-                        </Button>
+        <div className="min-h-screen bg-gray-50 pb-24">
+            {/* Clean Professional Header */}
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-500 pb-4 pt-safe relative">
+                {/* Top Bar - Title & Actions */}
+                <div className="flex items-center justify-between px-4 py-3">
+                    <Link href="/">
+                        <button className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                            <ChevronLeft className="w-5 h-5 text-white" />
+                        </button>
                     </Link>
+
                     <h1 className="text-white font-bold text-lg">تتبع صحتي</h1>
-                    <div className="w-10" />
+
+                    <button
+                        onClick={() => setShowSearch(!showSearch)}
+                        className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                    >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
                 </div>
 
-                {/* Scrollable Navigation */}
-                <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                    <div className="flex gap-2 pb-2">
-                        {tabs.map(tab => (
+                {/* Search Bar - Expandable */}
+                {showSearch && (
+                    <div className="px-4 pb-3">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="ابحث في السجلات الصحية..."
+                                className="w-full bg-white/20 backdrop-blur-sm text-white placeholder-white/60 rounded-xl py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                autoFocus
+                            />
+                            <svg className="w-5 h-5 text-white/60 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                )}
+
+                {/* Quick Actions Row - Premium Pills */}
+                <div className="px-3 pb-3">
+                    <div className="flex gap-2 justify-center">
+                        <button
+                            onClick={() => setActiveTab('weight')}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${activeTab === 'weight'
+                                ? 'bg-white text-emerald-600 shadow-lg'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            <span className="text-sm">⚖️</span>
+                            <span>الوزن</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('bp')}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${activeTab === 'bp'
+                                ? 'bg-white text-emerald-600 shadow-lg'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            <span className="text-sm">💓</span>
+                            <span>الضغط</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('fasting')}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${activeTab === 'fasting'
+                                ? 'bg-white text-emerald-600 shadow-lg'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            <span className="text-sm">⏱️</span>
+                            <span>الصيام</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('breathing')}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${activeTab === 'breathing'
+                                ? 'bg-white text-emerald-600 shadow-lg'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            <span className="text-sm">🌬️</span>
+                            <span>التنفس</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Navigation Tabs - Scrollable */}
+                <div className="overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-1.5 px-3 pb-2 min-w-max">
+                        {tabs.map((tab) => (
                             <NavItem key={tab.id} id={tab.id} icon={tab.icon} label={tab.label} />
                         ))}
                     </div>
@@ -179,11 +263,68 @@ export default function HealthTracker() {
 
             {/* Main Content Area */}
             <div className="px-4 -mt-4 relative z-20">
-                {/* Summary View */}
+                {/* Summary View - Apple Style */}
                 {activeTab === 'summary' && (
-                    <div className="space-y-6 pt-6">
+                    <motion.div
+                        className="space-y-6 pt-6"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {/* Hero Insight Cards Grid */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <InsightCard
+                                title="اعرف نفسك"
+                                subtitle="اكتشف عوائق فقدان الوزن"
+                                emoji="🧠"
+                                color="purple"
+                                size="large"
+                                onClick={() => setActiveTab('mood')}
+                            />
+                            <InsightCard
+                                title="نتائج مرئية"
+                                subtitle="تابع تقدمك"
+                                emoji="📊"
+                                color="blue"
+                                size="large"
+                                onClick={() => setActiveTab('history')}
+                            />
+                        </div>
+
+                        {/* Action Grid */}
+                        <ActionGrid
+                            onActionClick={(id) => {
+                                if (id === 'water') setActiveTab('water');
+                                else if (id === 'sleep') setActiveTab('sleep');
+                                else if (id === 'meds') setActiveTab('meds');
+                                else if (id === 'weight') setActiveTab('weight');
+                                else if (id === 'workout') setActiveTab('activity');
+                                else if (id === 'heart') setActiveTab('bp');
+                            }}
+                        />
+
+                        {/* Secondary Insight Cards */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <InsightCard
+                                title="اختبار اللياقة"
+                                subtitle="اكتشف مستواك"
+                                emoji="💪"
+                                color="orange"
+                                onClick={() => setActiveTab('activity')}
+                            />
+                            <InsightCard
+                                title="تخطيط الوجبات"
+                                subtitle="خطة غذائية مخصصة"
+                                emoji="🥗"
+                                color="green"
+                            />
+                        </div>
+
+                        {/* Quick Health Summary */}
                         <HealthSummary />
-                        <div className="pt-4">
+
+                        {/* AI Assistant */}
+                        <div className="pt-2">
                             <AIContextAssistant
                                 contextType="health_tracker"
                                 contextData={{ metrics: metrics.slice(0, 5), symptoms: symptoms.slice(0, 5) }}
@@ -191,112 +332,106 @@ export default function HealthTracker() {
                                 title="مساعدك الصحي"
                             />
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
-                {/* Water Tracker */}
+                {/* Water Tracker - PRO */}
                 {activeTab === 'water' && (
-                    <div className="pt-6">
-                        <WaterTracker />
-                    </div>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <WaterTrackerPro />
+                    </motion.div>
                 )}
 
-                {/* Sleep Tracker */}
+                {/* Sleep Tracker - PRO */}
                 {activeTab === 'sleep' && (
-                    <div className="pt-6">
-                        <SleepTracker />
-                    </div>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <SleepTrackerPro />
+                    </motion.div>
                 )}
 
-                {/* Medications */}
+                {/* Medications - PRO */}
                 {activeTab === 'meds' && (
-                    <div className="pt-6">
-                        <MedicationReminder />
-                    </div>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <MedicationReminderPro />
+                    </motion.div>
                 )}
 
-                {/* Activity Tab - New */}
+                {/* Activity Tab - PRO */}
                 {activeTab === 'activity' && (
-                    <div className="space-y-6 pt-6">
-                        <ActivityRings />
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                onClick={() => setActiveTab('weight')}
-                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
-                            >
-                                <span className="text-2xl">⚖️</span>
-                                <p className="text-sm font-medium text-slate-700 mt-1">الوزن</p>
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('bp')}
-                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
-                            >
-                                <span className="text-2xl">💓</span>
-                                <p className="text-sm font-medium text-slate-700 mt-1">الضغط</p>
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('fasting')}
-                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
-                            >
-                                <span className="text-2xl">⏱️</span>
-                                <p className="text-sm font-medium text-slate-700 mt-1">الصيام</p>
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('breathing')}
-                                className="glass rounded-2xl p-4 text-center hover:shadow-md transition-shadow"
-                            >
-                                <span className="text-2xl">🌬️</span>
-                                <p className="text-sm font-medium text-slate-700 mt-1">التنفس</p>
-                            </button>
-                        </div>
-                    </div>
+                    <motion.div
+                        className="space-y-6 pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <ActivityFitnessPro />
+                    </motion.div>
                 )}
 
-                {/* Mood Tab - New */}
+                {/* Mood Tab - PRO Mental Health Hub */}
                 {activeTab === 'mood' && (
-                    <div className="pt-6">
-                        <MoodTracker />
-                    </div>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <MentalHealthHub />
+                    </motion.div>
                 )}
 
-                {/* Weight Tracker - Sub tab */}
+                {/* Weight Tracker - PRO */}
                 {activeTab === 'weight' && (
-                    <div className="pt-6">
-                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
-                            ← العودة للنشاط
-                        </button>
-                        <WeightTracker />
-                    </div>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <WeightBodyTrackerPro />
+                    </motion.div>
                 )}
 
-                {/* Blood Pressure - Sub tab */}
+                {/* Blood Pressure */}
                 {activeTab === 'bp' && (
-                    <div className="pt-6">
-                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
-                            ← العودة للنشاط
-                        </button>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
                         <BloodPressureTracker />
-                    </div>
+                    </motion.div>
                 )}
 
-                {/* Fasting Timer - Sub tab */}
+                {/* Fasting Timer - PRO */}
                 {activeTab === 'fasting' && (
-                    <div className="pt-6">
-                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
-                            ← العودة للنشاط
-                        </button>
-                        <FastingTimer />
-                    </div>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <FastingTimerPro />
+                    </motion.div>
                 )}
 
-                {/* Breathing Exercises - Sub tab */}
+                {/* Breathing Exercises */}
                 {activeTab === 'breathing' && (
-                    <div className="pt-6">
-                        <button onClick={() => setActiveTab('activity')} className="text-[#2D9B83] text-sm mb-4">
-                            ← العودة للنشاط
-                        </button>
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
                         <BreathingExercises />
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* Today View (Original) */}
@@ -325,15 +460,19 @@ export default function HealthTracker() {
                     </div>
                 )}
 
-                {/* History View */}
+                {/* History View - Premium */}
                 {activeTab === 'history' && (
-                    <div className="pt-6">
-                        <HistoryView
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <HistoryViewPro
                             metrics={metrics}
                             dailyLogs={dailyLogs}
                             symptoms={symptoms}
                         />
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* Metrics View */}

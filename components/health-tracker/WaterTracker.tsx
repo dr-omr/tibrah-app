@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { Droplets, Plus, Minus, Target, TrendingUp, History, Settings2, Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface WaterLog {
     id?: string;
@@ -39,7 +40,7 @@ export default function WaterTracker() {
         queryKey: ['waterLog', today],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.WaterLog.filter({ date: today });
+                const logs = await db.entities.WaterLog.filter({ date: today });
                 if (logs && logs.length > 0) {
                     return logs[0] as unknown as WaterLog;
                 }
@@ -56,7 +57,7 @@ export default function WaterTracker() {
         queryFn: async () => {
             try {
                 const weekAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
-                const logs = await base44.entities.WaterLog.filter({
+                const logs = await db.entities.WaterLog.filter({
                     date: { $gte: weekAgo }
                 }, '-date');
                 return logs as unknown as WaterLog[];
@@ -79,13 +80,13 @@ export default function WaterTracker() {
             const newLogs = [...(waterLog?.logs || []), logTime];
 
             if (waterLog?.id) {
-                return base44.entities.WaterLog.update(waterLog.id, {
+                return db.entities.WaterLog.update(waterLog.id, {
                     glasses: newGlasses,
                     goal: dailyGoal,
                     logs: newLogs
                 });
             } else {
-                return base44.entities.WaterLog.create({
+                return db.entities.WaterLog.create({
                     date: today,
                     glasses: newGlasses,
                     goal: dailyGoal,
@@ -162,8 +163,8 @@ export default function WaterTracker() {
                                     key={g}
                                     onClick={() => updateGoal(g)}
                                     className={`py-2 rounded-xl font-bold transition-all ${g === dailyGoal
-                                            ? 'bg-cyan-500 text-white'
-                                            : 'bg-slate-100 hover:bg-slate-200'
+                                        ? 'bg-cyan-500 text-white'
+                                        : 'bg-slate-100 hover:bg-slate-200'
                                         }`}
                                 >
                                     {g}

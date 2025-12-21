@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Star, User, Send, MessageCircle, Loader2, ThumbsUp, Reply,
@@ -44,7 +45,7 @@ interface CommentsSectionProps {
 }
 
 export default function CommentsSection({ targetType, targetId, showRating = true }: CommentsSectionProps) {
-    const [user, setUser] = useState<UserData | null>(null);
+    // const [user, setUser] = useState<UserData | null>(null); // Removed to avoid collision with useAuth
     const [newComment, setNewComment] = useState('');
     const [rating, setRating] = useState(5);
     const [hoverRating, setHoverRating] = useState(0);
@@ -53,23 +54,23 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
     const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
     const queryClient = useQueryClient();
 
+    const { user } = useAuth();
+
     useEffect(() => {
-        base44.auth.me().then((userData: unknown) => {
-            setUser(userData as UserData);
-        }).catch(() => { });
+        // user is already handled by useAuth
 
         // Load liked comments from localStorage
         const saved = localStorage.getItem(`liked_comments_${targetId}`);
         if (saved) {
             setLikedComments(new Set(JSON.parse(saved)));
         }
-    }, [targetId]);
+    }, [targetId, user]);
 
     const { data: comments = [], isLoading, isError, refetch } = useQuery<Comment[]>({
         queryKey: ['comments', targetType, targetId],
         queryFn: async () => {
             try {
-                const allComments = await base44.entities.Comment.filter({
+                const allComments = await db.entities.Comment.filter({
                     target_type: targetType,
                     target_id: targetId,
                     is_approved: true
@@ -87,12 +88,12 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
 
     const addCommentMutation = useMutation({
         mutationFn: async () => {
-            return base44.entities.Comment.create({
+            return db.entities.Comment.create({
                 content: newComment,
                 rating: showRating ? rating : null,
                 target_type: targetType,
                 target_id: targetId,
-                user_name: user?.full_name || 'زائر',
+                user_name: user?.name || user?.full_name || 'زائر',
                 user_email: user?.email || '',
                 is_approved: true,
                 likes: 0
@@ -205,7 +206,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                     </div>
                     <div>
                         <p className="font-medium text-slate-700">
-                            {user?.full_name || 'زائر'}
+                            {user?.name || user?.full_name || 'زائر'}
                         </p>
                         <p className="text-xs text-slate-400">اكتب تعليقك</p>
                     </div>

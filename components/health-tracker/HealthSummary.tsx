@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import {
     Droplets, Moon, Pill, Heart, Brain, Footprints,
     TrendingUp, ChevronLeft, Sparkles, Calendar, Activity,
@@ -43,7 +43,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         queryKey: ['waterLog', today],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.WaterLog.filter({ date: today });
+                const logs = await db.entities.WaterLog.filter({ date: today });
                 return logs?.[0] || { glasses: 0, goal: 8 };
             } catch { return { glasses: 0, goal: 8 }; }
         },
@@ -53,7 +53,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         queryKey: ['sleepLogLast'],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.SleepLog.list('-date', 1);
+                const logs = await db.entities.SleepLog.list('-date', 1);
                 return logs?.[0] || null;
             } catch { return null; }
         },
@@ -63,7 +63,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         queryKey: ['medicationLogsToday', today],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.MedicationLog.filter({
+                const logs = await db.entities.MedicationLog.filter({
                     taken_at: { $gte: today }
                 });
                 return logs || [];
@@ -75,7 +75,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         queryKey: ['medicationsActive'],
         queryFn: async () => {
             try {
-                const meds = await base44.entities.Medication.filter({ is_active: true });
+                const meds = await db.entities.Medication.filter({ is_active: true });
                 return meds || [];
             } catch { return []; }
         },
@@ -85,7 +85,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         queryKey: ['dailyLog', today],
         queryFn: async () => {
             try {
-                const logs = await base44.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today });
                 return logs?.[0] || null;
             } catch { return null; }
         },
@@ -95,7 +95,7 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
         queryKey: ['healthMetricsRecent'],
         queryFn: async () => {
             try {
-                const metrics = await base44.entities.HealthMetric.list('-recorded_at', 10);
+                const metrics = await db.entities.HealthMetric.list('-recorded_at', 10);
                 return metrics || [];
             } catch { return []; }
         },

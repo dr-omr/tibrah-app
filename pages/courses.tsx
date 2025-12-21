@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/lib/db';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { createPageUrl } from '../utils';
-import {
-    BookOpen, Search, Play, Clock, Users, Star, Filter,
-    GraduationCap, Trophy, CheckCircle, Award, TrendingUp
-} from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -17,172 +12,61 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ListSkeleton } from '../components/common/Skeletons';
+import {
+    BookOpen,
+    Users,
+    Star,
+    CheckCircle,
+    Clock,
+    Trophy,
+    Award,
+    Play,
+    Filter,
+    TrendingUp,
+    GraduationCap,
+    Search
+} from 'lucide-react';
+import { createPageUrl } from '@/utils';
+import { ListSkeleton } from '@/components/common/Skeletons'; // Assuming this exists or I'll stub it if not
 
-// Course Type Definition
+// Interfaces
 interface Course {
     id: string;
     title: string;
     description: string;
-    category: string;
     thumbnail_url: string;
-    price: number;
-    is_free: boolean;
     duration_hours: number;
     lessons_count: number;
-    rating: number;
-    reviews_count: number;
     enrolled_count: number;
+    rating: number;
+    is_free: boolean;
+    price: number;
     level: 'beginner' | 'intermediate' | 'advanced';
-    status: string;
-    instructor?: string;
-    updated_at?: string;
+    category: string;
+    reviews_count: number;
+    status: 'published' | 'draft';
 }
 
 const categories = [
-    { id: 'all', label: 'جميع الدورات', icon: '📚' },
-    { id: 'functional_medicine', label: 'الطب الوظيفي', icon: '🏥' },
-    { id: 'nutrition', label: 'التغذية العلاجية', icon: '🥗' },
-    { id: 'detox', label: 'الديتوكس', icon: '🧹' },
-    { id: 'hormones', label: 'الهرمونات', icon: '⚖️' },
-    { id: 'digestive', label: 'الجهاز الهضمي', icon: '🫄' },
-    { id: 'lab_analysis', label: 'التحاليل الطبية', icon: '🔬' },
-    { id: 'frequencies', label: 'الترددات', icon: '🎵' },
+    { id: 'all', label: 'الكل', icon: '🔹' },
+    { id: 'functional_medicine', label: 'الطب الوظيفي', icon: '🌿' },
+    { id: 'nutrition', label: 'التغذية العلاجية', icon: '🍎' },
+    { id: 'lifestyle', label: 'نمط الحياة', icon: '🧘‍♂️' }
 ];
 
-const defaultCourses: Course[] = [
-    {
-        id: '1',
-        title: 'أساسيات الطب الوظيفي',
-        description: 'مقدمة شاملة لفهم جسمك وكيف يعمل بشكل متكامل. تعلم كيف تقرأ إشارات جسمك وتفهم الأسباب الجذرية للأمراض.',
-        category: 'functional_medicine',
-        thumbnail_url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400',
-        price: 0,
-        is_free: true,
-        duration_hours: 8,
-        lessons_count: 16,
-        rating: 4.9,
-        reviews_count: 234,
-        enrolled_count: 1520,
-        level: 'beginner',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-    {
-        id: '2',
-        title: 'ديتوكس شامل في 21 يوم',
-        description: 'برنامج تنظيف السموم خطوة بخطوة مع خطة عملية مفصلة. يشمل وصفات، جداول، ومتابعة يومية.',
-        category: 'detox',
-        thumbnail_url: 'https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400',
-        price: 199,
-        is_free: false,
-        duration_hours: 12,
-        lessons_count: 24,
-        rating: 4.8,
-        reviews_count: 156,
-        enrolled_count: 890,
-        level: 'intermediate',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-    {
-        id: '3',
-        title: 'إصلاح الجهاز الهضمي',
-        description: 'علاج القولون العصبي والانتفاخ ومشاكل الهضم من الجذور. برنامج علاجي متكامل مع نظام غذائي.',
-        category: 'digestive',
-        thumbnail_url: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=400',
-        price: 249,
-        is_free: false,
-        duration_hours: 15,
-        lessons_count: 30,
-        rating: 4.9,
-        reviews_count: 312,
-        enrolled_count: 1200,
-        level: 'intermediate',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-    {
-        id: '4',
-        title: 'موازنة الهرمونات طبيعياً',
-        description: 'للرجال والنساء - فهم وعلاج الاختلالات الهرمونية بطرق طبيعية. يشمل الغدة الدرقية والكظرية.',
-        category: 'hormones',
-        thumbnail_url: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=400',
-        price: 299,
-        is_free: false,
-        duration_hours: 18,
-        lessons_count: 36,
-        rating: 4.7,
-        reviews_count: 198,
-        enrolled_count: 756,
-        level: 'advanced',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-    {
-        id: '5',
-        title: 'التغذية العلاجية للأمراض المزمنة',
-        description: 'كيف تستخدم الغذاء كدواء لعلاج الأمراض المزمنة مثل السكري والضغط والكوليسترول.',
-        category: 'nutrition',
-        thumbnail_url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400',
-        price: 179,
-        is_free: false,
-        duration_hours: 10,
-        lessons_count: 20,
-        rating: 4.8,
-        reviews_count: 267,
-        enrolled_count: 1100,
-        level: 'beginner',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-    {
-        id: '6',
-        title: 'فهم التحاليل الطبية',
-        description: 'كيف تقرأ تحاليلك بنفسك وتفهم ما يقوله جسمك. تعلم تفسير كل مؤشر وما يعنيه لصحتك.',
-        category: 'lab_analysis',
-        thumbnail_url: 'https://images.unsplash.com/photo-1579165466741-7f35e4755660?w=400',
-        price: 0,
-        is_free: true,
-        duration_hours: 6,
-        lessons_count: 12,
-        rating: 4.9,
-        reviews_count: 445,
-        enrolled_count: 2300,
-        level: 'beginner',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-    {
-        id: '7',
-        title: 'الترددات الشفائية',
-        description: 'تعلم كيف تستخدم الترددات الصوتية للشفاء وتحسين الصحة النفسية والجسدية.',
-        category: 'frequencies',
-        thumbnail_url: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400',
-        price: 149,
-        is_free: false,
-        duration_hours: 5,
-        lessons_count: 10,
-        rating: 4.8,
-        reviews_count: 89,
-        enrolled_count: 450,
-        level: 'beginner',
-        status: 'published',
-        instructor: 'د. عمر العماد'
-    },
-];
-
-const levelLabels: Record<string, string> = {
+const levelLabels = {
     beginner: 'مبتدئ',
     intermediate: 'متوسط',
     advanced: 'متقدم'
 };
 
-const levelColors: Record<string, string> = {
-    beginner: 'bg-green-100 text-green-700 border-green-200',
-    intermediate: 'bg-amber-100 text-amber-700 border-amber-200',
-    advanced: 'bg-purple-100 text-purple-700 border-purple-200'
+const levelColors = {
+    beginner: 'bg-green-100 text-green-700',
+    intermediate: 'bg-blue-100 text-blue-700',
+    advanced: 'bg-purple-100 text-purple-700'
 };
+
+const defaultCourses: Course[] = []; // Empty fallback or could add mock data
 
 export default function Courses() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -194,13 +78,14 @@ export default function Courses() {
         queryKey: ['courses'],
         queryFn: async (): Promise<Course[]> => {
             try {
-                const data = await base44.entities.Course.filter({ status: 'published' });
+                const data = await db.entities.Course.filter({ status: 'published' });
                 return data as unknown as Course[];
             } catch {
                 return [] as Course[];
             }
         },
     });
+    // ...
 
     // Use API courses if available, otherwise fallback to default
     const courses: Course[] = apiCourses && apiCourses.length > 0 ? apiCourses : defaultCourses;

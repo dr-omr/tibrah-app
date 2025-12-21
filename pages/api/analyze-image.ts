@@ -80,9 +80,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } catch (error: any) {
         console.error("Gemini Vision Error:", error);
+
+        let errorMessage = "فشل تحليل الصورة، يرجى المحاولة مرة أخرى.";
+        if (error.message?.includes("413") || error.message?.includes("too large")) {
+            errorMessage = "حجم الصورة كبير جداً. يرجى استخدام صورة أصغر.";
+        } else if (error.message?.includes("API_KEY")) {
+            errorMessage = "خطأ في إعدادات النظام (API Key).";
+        }
+
         return res.status(500).json({
             error: "Failed to analyze image",
-            details: error.message
+            details: errorMessage,
+            raw: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 }

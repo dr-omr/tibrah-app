@@ -1,17 +1,16 @@
 /**
- * Base44 Client - API client for health platform
- * This provides integration with the Base44 backend for:
- * - Entity management (HealthMetric, DailyLog, Comment)
- * - Authentication (auth.me, auth.updateMe)
- * - AI/LLM integration (Core.InvokeLLM)
+ * Tibrah Database Client
+ * Provides integration with Firebase Firestore with automatic Local Storage fallback.
  */
+
+import { db as firestoreDb } from '@/lib/firebase';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 // Types for entity operations
 interface EntityBase {
     id?: string;
     created_at?: string;
     updated_at?: string;
-    // Allow any additional properties
     [key: string]: unknown;
 }
 
@@ -44,25 +43,22 @@ interface Comment extends EntityBase {
     user_name?: string;
 }
 
-interface User {
-    id: string;
+interface User extends EntityBase {
     email?: string;
     name?: string;
     settings?: Record<string, unknown>;
 }
 
-import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, orderBy as firestoreOrderBy, limit as firestoreLimit } from 'firebase/firestore';
 
 // Helper to determine mode
 const isFirebaseReady = () => {
-    return !!db;
+    return !!firestoreDb;
 };
 
 // Create entity operations helper
 function createEntityOperations<T extends EntityBase>(entityName: string) {
-    const storageKey = `base44_${entityName}`;
-    const collectionRef = isFirebaseReady() ? collection(db, entityName) : null;
+    const storageKey = `tibrah_db_${entityName}`;
+    const collectionRef = isFirebaseReady() ? collection(firestoreDb, entityName) : null;
 
     // --- Local Storage Implementation (Fallback) ---
     const getLocalAll = (): T[] => {
@@ -85,10 +81,6 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
         async list(orderBy?: string, limit?: number): Promise<T[]> {
             if (isFirebaseReady() && collectionRef) {
                 try {
-                    // Basic query construction
-                    // Note: Complex ordering/filtering in Firestore requires indexes.
-                    // For now, we fetch all and sort client-side to be safe, 
-                    // or implement basic optimization.
                     const snapshot = await getDocs(collectionRef);
                     let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
 
@@ -128,8 +120,6 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async filter(criteria: Record<string, any>, orderBy?: string, limit?: number): Promise<T[]> {
-            // For simplicity in this hybrid migration, we'll list all and filter in memory.
-            // In a full production app, you'd build a structured Firestore Query here.
             const allItems = await this.list(orderBy);
 
             let filtered = allItems.filter(item => {
@@ -148,9 +138,9 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
         },
 
         async get(id: string): Promise<T | null> {
-            if (isFirebaseReady() && db) {
+            if (isFirebaseReady() && firestoreDb) {
                 try {
-                    const docRef = doc(db, entityName, id);
+                    const docRef = doc(firestoreDb, entityName, id);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         return { id: docSnap.id, ...docSnap.data() } as T;
@@ -175,16 +165,12 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
 
             if (isFirebaseReady() && collectionRef) {
                 try {
-                    // Auto-generate ID if not provided logic is handled by doc()
-                    // But we want to return the ID.
-                    // Let's use a new doc ref to get ID
                     const newDocRef = doc(collectionRef);
                     newItem.id = newDocRef.id;
                     await setDoc(newDocRef, newItem);
                     return newItem;
                 } catch (e) {
                     console.error(`Firestore create failed for ${entityName}`, e);
-                    // Continue to fallback
                 }
             }
 
@@ -202,11 +188,10 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 updated_at: new Date().toISOString()
             };
 
-            if (isFirebaseReady() && db) {
+            if (isFirebaseReady() && firestoreDb) {
                 try {
-                    const docRef = doc(db, entityName, id);
+                    const docRef = doc(firestoreDb, entityName, id);
                     await updateDoc(docRef, updateData);
-                    // Return updated
                     const updatedSnap = await getDoc(docRef);
                     return { id: updatedSnap.id, ...updatedSnap.data() } as T;
                 } catch (e) {
@@ -225,9 +210,9 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
         },
 
         async delete(id: string): Promise<void> {
-            if (isFirebaseReady() && db) {
+            if (isFirebaseReady() && firestoreDb) {
                 try {
-                    await deleteDoc(doc(db, entityName, id));
+                    await deleteDoc(doc(firestoreDb, entityName, id));
                     return;
                 } catch (e) {
                     console.error(`Firestore delete failed for ${entityName} ${id}`, e);
@@ -242,166 +227,102 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
     };
 }
 
-// Base44 client implementation
-export const base44 = {
-    // Entity management - All entities including new health tracking
+// Tibrah Database Client
+export const db = {
+    // Entities
+    users: createEntityOperations<User>('users'),
+    healthMetrics: createEntityOperations<HealthMetric>('health_metrics'),
+    dailyLogs: createEntityOperations<DailyLog>('daily_logs'),
+    symptomLogs: createEntityOperations<EntityBase>('symptom_logs'),
+    appointments: createEntityOperations<EntityBase>('appointments'),
+    products: createEntityOperations<EntityBase>('products'),
+    cartItems: createEntityOperations<EntityBase>('cart_items'),
+    comments: createEntityOperations<Comment>('comments'),
+
+    // Explicit entity names for compatibility during migration (optional, but helpful)
     entities: {
-        // Health & Medical
-        UserHealth: createEntityOperations<EntityBase>('user_health'),
+        User: createEntityOperations<User>('users'),
         HealthMetric: createEntityOperations<HealthMetric>('health_metrics'),
         DailyLog: createEntityOperations<DailyLog>('daily_logs'),
         SymptomLog: createEntityOperations<EntityBase>('symptom_logs'),
-        LabResult: createEntityOperations<EntityBase>('lab_results'),
-        DiagnosticResult: createEntityOperations<EntityBase>('diagnostic_results'),
-
-        // NEW: Medication Management
-        Medication: createEntityOperations<EntityBase>('medications'),
-        MedicationLog: createEntityOperations<EntityBase>('medication_logs'),
-
-        // NEW: Water & Sleep Tracking
-        WaterLog: createEntityOperations<EntityBase>('water_logs'),
-        SleepLog: createEntityOperations<EntityBase>('sleep_logs'),
-
-        // Appointments & Reminders
         Appointment: createEntityOperations<EntityBase>('appointments'),
-        Reminder: createEntityOperations<EntityBase>('reminders'),
-        DoctorRecommendation: createEntityOperations<EntityBase>('doctor_recommendations'),
-
-        // Courses & Learning
+        Product: createEntityOperations<EntityBase>('products'),
+        CartItem: createEntityOperations<EntityBase>('cart_items'),
+        Comment: createEntityOperations<Comment>('comments'),
         Course: createEntityOperations<EntityBase>('courses'),
         Lesson: createEntityOperations<EntityBase>('lessons'),
         CourseEnrollment: createEntityOperations<EntityBase>('course_enrollments'),
-
-        // Frequencies
+        KnowledgeArticle: createEntityOperations<EntityBase>('knowledge_articles'),
+        LabResult: createEntityOperations<EntityBase>('lab_results'),
+        DiagnosticResult: createEntityOperations<EntityBase>('diagnostic_results'),
+        Medication: createEntityOperations<EntityBase>('medications'),
+        MedicationLog: createEntityOperations<EntityBase>('medication_logs'),
+        WaterLog: createEntityOperations<EntityBase>('water_logs'),
+        SleepLog: createEntityOperations<EntityBase>('sleep_logs'),
+        Reminder: createEntityOperations<EntityBase>('reminders'),
+        DoctorRecommendation: createEntityOperations<EntityBase>('doctor_recommendations'),
+        HealthProgram: createEntityOperations<EntityBase>('health_programs'),
+        // Frequencies (kept for legacy data if needed, but not used in frontend anymore)
         Frequency: createEntityOperations<EntityBase>('frequencies'),
         RifeFrequency: createEntityOperations<EntityBase>('rife_frequencies'),
-
-        // Library
-        KnowledgeArticle: createEntityOperations<EntityBase>('knowledge_articles'),
-
-        // Shop
-        Product: createEntityOperations<EntityBase>('products'),
-        CartItem: createEntityOperations<EntityBase>('cart_items'),
-
-        // Programs
-        HealthProgram: createEntityOperations<EntityBase>('health_programs'),
-
-        // Comments
-        Comment: createEntityOperations<Comment>('comments'),
-
-        // Users
-        User: createEntityOperations<EntityBase>('users')
     },
 
-    // Authentication
-    auth: {
-        async me(): Promise<User | null> {
-            try {
-                if (typeof window === 'undefined') return null;
-                const userData = localStorage.getItem('base44_user');
-                return userData ? JSON.parse(userData) : null;
-            } catch {
-                return null;
-            }
-        },
-
-        async isAuthenticated(): Promise<boolean> {
-            const user = await this.me();
-            return user !== null;
-        },
-
-        async redirectToLogin(returnUrl?: string): Promise<void> {
-            if (typeof window === 'undefined') return;
-            // Store the return URL for after login
-            if (returnUrl) {
-                localStorage.setItem('base44_return_url', returnUrl);
-            }
-            // Redirect to login page
-            window.location.href = '/login';
-        },
-
-        async updateMe(data: Partial<User>): Promise<User> {
-            const current = await this.me();
-            const updated = {
-                ...current,
-                ...data,
-                id: current?.id || `user_${Date.now()}`
-            };
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('base44_user', JSON.stringify(updated));
-            }
-            return updated;
-        },
-
-        async login(email: string, password: string): Promise<User> {
-            // Mock login - in production this would hit an API
-            const user: User = {
-                id: `user_${Date.now()}`,
-                email,
-                name: email.split('@')[0]
-            };
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('base44_user', JSON.stringify(user));
-
-                // Check for return URL
-                const returnUrl = localStorage.getItem('base44_return_url');
-                if (returnUrl) {
-                    localStorage.removeItem('base44_return_url');
-                    window.location.href = returnUrl;
-                }
-            }
-
-            return user;
-        },
-
-        async logout(): Promise<void> {
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('base44_user');
-            }
-        }
-    },
-
-    // Integrations (AI/LLM)
+    // AI Integrations (Simplified)
     integrations: {
         Core: {
-            async InvokeLLM(options: {
-                prompt: string;
-                response_json_schema?: object;
-            }): Promise<unknown> {
-                // In production, this would call an actual LLM API
-                // For now, return mock responses or throw an error
-                // that the aiClient can handle with fallbacks
+            async InvokeLLM(options: { prompt: string; response_json_schema?: object }): Promise<unknown> {
+                try {
+                    const response = await fetch('/api/llm-invoke', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(options)
+                    });
 
-                console.log('[Base44] InvokeLLM called with:', options.prompt.slice(0, 100) + '...');
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
 
-                // If we have a schema, return a mock object
-                if (options.response_json_schema) {
-                    const schema = options.response_json_schema as Record<string, unknown>;
-                    if (schema.properties) {
-                        const props = schema.properties as Record<string, { type: string }>;
-                        const result: Record<string, unknown> = {};
+                    return await response.json();
+                } catch (e) {
+                    console.error('[TibrahDB] InvokeLLM Failed:', e);
+                    // Fallback client-side safety if fetch completely fails
+                    return {
+                        error: "Connection failed",
+                        fallback_data: true
+                    };
+                }
+            },
+            async UploadFile(options: { file: File }): Promise<{ file_url: string }> {
+                console.log('[TibrahDB] UploadFile:', options.file.name);
 
-                        for (const [key, propDef] of Object.entries(props)) {
-                            if (propDef.type === 'string') {
-                                result[key] = 'مثال نص عربي';
-                            } else if (propDef.type === 'number') {
-                                result[key] = 75;
-                            } else if (propDef.type === 'array') {
-                                result[key] = [];
-                            } else if (propDef.type === 'object') {
-                                result[key] = {};
-                            }
-                        }
+                // Try Firebase Storage if available
+                if (isFirebaseReady() && firestoreDb) {
+                    try {
+                        // Dynamic import to avoid SSR issues if used there
+                        const { ref, uploadBytes, getDownloadURL, getStorage } = await import('firebase/storage');
+                        const storage = getStorage(firestoreDb.app);
 
-                        return result;
+                        const storageRef = ref(storage, `uploads/${Date.now()}_${options.file.name}`);
+                        const snapshot = await uploadBytes(storageRef, options.file);
+                        const url = await getDownloadURL(snapshot.ref);
+                        return { file_url: url };
+                    } catch (e) {
+                        console.error('[TibrahDB] Firebase Upload Failed:', e);
+                        // Fallthrough to local fallback
                     }
                 }
 
-                // Return a default text response
-                return "يا غالي، هذا رد تجريبي من النظام.";
+                // Fallback: Create local blob URL (temporary)
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            file_url: URL.createObjectURL(options.file)
+                        });
+                    }, 1000);
+                });
             }
         }
     }
 };
 
-export default base44;
+export default db;
