@@ -4,6 +4,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserData, setUserData } from '@/lib/userDataService';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
     Droplets, Plus, Minus, Target, TrendingUp, Clock,
@@ -42,19 +44,26 @@ interface WaterLog {
 export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: number }) {
     const today = format(new Date(), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id || null;
 
     // State
     const [showSettings, setShowSettings] = useState(false);
     const [isAddingWater, setIsAddingWater] = useState(false);
     const [lastAddedAmount, setLastAddedAmount] = useState(0);
     const [showCelebration, setShowCelebration] = useState(false);
-    const [dailyGoal, setDailyGoal] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('waterGoalMl');
-            return saved ? parseInt(saved) : Math.round(userWeight * 35);
-        }
-        return 2500;
-    });
+    const [dailyGoal, setDailyGoal] = useState(Math.round(userWeight * 35));
+    const [goalLoaded, setGoalLoaded] = useState(false);
+
+    // Load user-specific goal from cloud/localStorage
+    useEffect(() => {
+        const loadGoal = async () => {
+            const savedGoal = await getUserData(userId, 'waterGoalMl', Math.round(userWeight * 35));
+            setDailyGoal(savedGoal);
+            setGoalLoaded(true);
+        };
+        loadGoal();
+    }, [userId, userWeight]);
 
     // Animated values
     const animatedProgress = useMotionValue(0);
@@ -184,9 +193,9 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
         },
     });
 
-    const updateGoal = (newGoal: number) => {
+    const updateGoal = async (newGoal: number) => {
         setDailyGoal(newGoal);
-        localStorage.setItem('waterGoalMl', newGoal.toString());
+        await setUserData(userId, 'waterGoalMl', newGoal);
         toast.success(`تم تحديث الهدف إلى ${(newGoal / 1000).toFixed(1)} لتر`);
         setShowSettings(false);
     };

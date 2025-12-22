@@ -17,6 +17,8 @@ import FrequencyManager from '@/components/admin/FrequencyManager'; // New
 import UserManagement from '@/components/admin/UserManagement';
 import SystemConfig from '@/components/admin/SystemConfig'; // Assuming exists
 import ThemeSettings from '@/components/admin/ThemeSettings'; // Assuming exists
+import FoodManager from '@/components/admin/FoodManager'; // Meal Planner Admin
+import RecipeManager from '@/components/admin/RecipeManager'; // Recipe Admin
 
 export default function AdminDashboard() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -322,6 +324,20 @@ export default function AdminDashboard() {
                         onSave={(data, id) => frequencyMutation.mutateAsync({ data, id })}
                         onDelete={(id) => deleteFrequencyMutation.mutate(id)}
                     />
+                </div>
+            )}
+
+            {/* Meal Planner / Foods Tab */}
+            {activeTab === 'foods' && (
+                <div>
+                    <FoodManager />
+                </div>
+            )}
+
+            {/* Recipes Tab */}
+            {activeTab === 'recipes' && (
+                <div>
+                    <RecipeManager />
                 </div>
             )}
 

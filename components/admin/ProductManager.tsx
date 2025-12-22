@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Package, Plus, Edit, Trash2, Search, Filter, Loader2, Image } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, Filter, Loader2, Image, UploadCloud } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { localProducts } from '@/lib/products';
 
 interface Product {
     id: string;
@@ -30,6 +32,7 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [importing, setImporting] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -71,6 +74,30 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
         }
     };
 
+    const handleBulkImport = async () => {
+        const confirm = window.confirm(`هل أنت متأكد من استيراد ${localProducts.length} منتج؟`);
+        if (!confirm) return;
+
+        setImporting(true);
+        let count = 0;
+        try {
+            for (const product of localProducts) {
+                const { id, ...data } = product;
+                try {
+                    await onSave(data);
+                    count++;
+                } catch (e) {
+                    console.error(`Failed to import ${product.name}`, e);
+                }
+            }
+            toast.success(`تم استيراد ${count} منتج بنجاح! 📦`);
+        } catch (error) {
+            toast.error('فشل الاستيراد');
+        } finally {
+            setImporting(false);
+        }
+    };
+
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -88,10 +115,21 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button onClick={handleCreate} className="bg-[#2D9B83] hover:bg-[#258570]">
-                    <Plus className="w-4 h-4 ml-2" />
-                    إضافة منتج جديد
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleBulkImport}
+                        disabled={importing}
+                        className="bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    >
+                        {importing ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <UploadCloud className="w-4 h-4 ml-2" />}
+                        استيراد المنتجات
+                    </Button>
+                    <Button onClick={handleCreate} className="bg-[#2D9B83] hover:bg-[#258570]">
+                        <Plus className="w-4 h-4 ml-2" />
+                        إضافة منتج جديد
+                    </Button>
+                </div>
             </div>
 
             {/* Grid */}

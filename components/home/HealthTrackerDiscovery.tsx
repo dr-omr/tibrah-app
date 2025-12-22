@@ -140,7 +140,7 @@ export default function HealthTrackerDiscovery() {
                         <TrendingUp className="w-6 h-6 text-white" />
                     </motion.div>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800 dark:text-white">متتبع صحتك 📊</h2>
+                        <h2 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">متتبع صحتك 📊</h2>
                         <p className="text-xs text-slate-500">راقب صحتك يومياً بذكاء</p>
                     </div>
                 </div>
@@ -297,8 +297,8 @@ export default function HealthTrackerDiscovery() {
                             <motion.button
                                 key={index}
                                 className={`rounded-full transition-all ${index === currentIndex
-                                        ? 'w-6 h-2 bg-gradient-to-r from-emerald-500 to-teal-500'
-                                        : 'w-2 h-2 bg-slate-300'
+                                    ? 'w-6 h-2 bg-gradient-to-r from-emerald-500 to-teal-500'
+                                    : 'w-2 h-2 bg-slate-300'
                                     }`}
                                 whileHover={{ scale: 1.2 }}
                                 whileTap={{ scale: 0.9 }}
@@ -350,36 +350,99 @@ export default function HealthTrackerDiscovery() {
                 </div>
             </div>
 
-            {/* Quick Feature Icons */}
-            <div className="grid grid-cols-6 gap-2 mt-5">
-                {trackerSlides.map((feature, index) => {
-                    const FeatureIcon = feature.icon;
-                    const isActive = index === currentIndex;
-                    return (
+            {/* Quick Feature Icons - Grid Layout (4 columns) */}
+            <div className="bg-white rounded-3xl p-5 shadow-lg shadow-black/5 mt-6">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">إجراءات سريعة</h3>
+
+                <motion.div
+                    className="grid grid-cols-4 gap-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ staggerChildren: 0.05, delayChildren: 0.1 }}
+                >
+                    {[
+                        { id: 'water', icon: Droplets, label: 'متتبع الماء', color: '#3B82F6', bgColor: 'bg-blue-50' },
+                        { id: 'weight', icon: TrendingUp, label: 'الوزن', color: '#8B5CF6', bgColor: 'bg-purple-50' },
+                        { id: 'calories', icon: Apple, label: 'السعرات', color: '#EF4444', bgColor: 'bg-red-50' },
+                        { id: 'meals', icon: Apple, label: 'خطة الوجبات', color: '#22C55E', bgColor: 'bg-green-50' },
+                        { id: 'workout', icon: Activity, label: 'التمارين', color: '#F97316', bgColor: 'bg-orange-50' },
+                        { id: 'sleep', icon: Moon, label: 'النوم', color: '#6366F1', bgColor: 'bg-indigo-50' },
+                        { id: 'heart', icon: Brain, label: 'معدل القلب', color: '#EC4899', bgColor: 'bg-pink-50' },
+                        { id: 'meds', icon: Timer, label: 'الأدوية', color: '#14B8A6', bgColor: 'bg-teal-50' },
+                    ].map((action) => (
                         <motion.button
-                            key={index}
-                            className={`relative p-3 rounded-2xl text-center transition-all ${isActive
-                                    ? 'bg-gradient-to-br ' + feature.gradient + ' shadow-lg'
-                                    : 'bg-white dark:bg-slate-800 border border-slate-100'
-                                }`}
-                            whileHover={{ scale: 1.05, y: -2 }}
-                            whileTap={{ scale: 0.92 }}
-                            onClick={() => goToSlide(index)}
+                            key={action.id}
+                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            whileHover={{ scale: 1.08, y: -3 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => goToSlide(trackerSlides.findIndex(s => s.id === action.id) >= 0 ? trackerSlides.findIndex(s => s.id === action.id) : 0)}
+                            className={`${action.bgColor} flex flex-col items-center justify-center p-3 rounded-2xl transition-shadow hover:shadow-md`}
                         >
-                            <FeatureIcon
-                                className={`w-5 h-5 mx-auto ${isActive ? 'text-white' : ''}`}
-                                style={{ color: isActive ? undefined : feature.iconColor }}
-                            />
-                            {isActive && (
-                                <motion.div
-                                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"
-                                    layoutId="activeIndicator"
+                            <motion.div
+                                initial={{ rotate: 0 }}
+                                whileHover={{ rotate: [0, -10, 10, 0] }}
+                                transition={{ duration: 0.4 }}
+                            >
+                                <action.icon
+                                    className="w-7 h-7 mb-2"
+                                    style={{ color: action.color }}
                                 />
-                            )}
+                            </motion.div>
+                            <span className="text-[10px] font-semibold text-slate-600 text-center leading-tight">
+                                {action.label}
+                            </span>
                         </motion.button>
-                    );
-                })}
+                    ))}
+                </motion.div>
+            </div>
+
+            {/* Feature Cards - Meal Planning & Fitness Test */}
+            <div className="grid grid-cols-2 gap-3 mt-5">
+                {/* Meal Planning Card */}
+                <Link href="/meal-planner">
+                    <motion.div
+                        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 p-4 min-h-[120px]"
+                        whileHover={{ scale: 1.02, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        {/* Decorative Icon */}
+                        <div className="absolute top-3 left-3">
+                            <span className="text-3xl">🥗</span>
+                        </div>
+                        {/* Live Indicator */}
+                        <div className="absolute top-4 right-4 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        </div>
+                        {/* Content */}
+                        <div className="mt-auto pt-10">
+                            <h4 className="text-lg font-bold text-emerald-800">تخطيط الوجبات</h4>
+                            <p className="text-xs text-emerald-600">خطة غذائية مخصصة</p>
+                        </div>
+                    </motion.div>
+                </Link>
+
+                {/* Fitness Test Card */}
+                <Link href="/health-tracker?tab=activity">
+                    <motion.div
+                        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-orange-50 p-4 min-h-[120px]"
+                        whileHover={{ scale: 1.02, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        {/* Decorative Icon */}
+                        <div className="absolute top-3 left-3">
+                            <span className="text-3xl">💪</span>
+                        </div>
+                        {/* Content */}
+                        <div className="mt-auto pt-10">
+                            <h4 className="text-lg font-bold text-amber-800">اختبار اللياقة</h4>
+                            <p className="text-xs text-amber-600">اكتشف مستواك</p>
+                        </div>
+                    </motion.div>
+                </Link>
             </div>
         </section>
     );
 }
+

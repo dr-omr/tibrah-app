@@ -238,6 +238,8 @@ export const db = {
     products: createEntityOperations<EntityBase>('products'),
     cartItems: createEntityOperations<EntityBase>('cart_items'),
     comments: createEntityOperations<Comment>('comments'),
+    foods: createEntityOperations<EntityBase>('foods'),
+    recipes: createEntityOperations<EntityBase>('recipes'),
 
     // Explicit entity names for compatibility during migration (optional, but helpful)
     entities: {
@@ -262,6 +264,8 @@ export const db = {
         Reminder: createEntityOperations<EntityBase>('reminders'),
         DoctorRecommendation: createEntityOperations<EntityBase>('doctor_recommendations'),
         HealthProgram: createEntityOperations<EntityBase>('health_programs'),
+        Food: createEntityOperations<EntityBase>('foods'),
+        Recipe: createEntityOperations<EntityBase>('recipes'),
         // Frequencies (kept for legacy data if needed, but not used in frontend anymore)
         Frequency: createEntityOperations<EntityBase>('frequencies'),
         RifeFrequency: createEntityOperations<EntityBase>('rife_frequencies'),

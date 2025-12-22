@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import {
     Moon, Sun, Clock, Star, TrendingUp, Sparkles,
@@ -58,6 +59,8 @@ export default function SleepTrackerPro() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
 
     // Form state
     const [bedtime, setBedtime] = useState('23:00');
@@ -68,13 +71,14 @@ export default function SleepTrackerPro() {
     // Animated score
     const animatedScore = useMotionValue(0);
 
-    // Fetch sleep data
+    // Fetch sleep data (user-specific)
     const { data: sleepLogs = [] } = useQuery<SleepEntry[]>({
-        queryKey: ['sleepLogsPro'],
+        queryKey: ['sleepLogsPro', userId],
         queryFn: async () => {
+            if (!userId) return [];
             try {
                 const twoWeeksAgo = format(subDays(new Date(), 14), 'yyyy-MM-dd');
-                const logs = await db.entities.SleepLog.filter({ date: { $gte: twoWeeksAgo } });
+                const logs = await db.entities.SleepLog.filter({ date: { $gte: twoWeeksAgo }, user_id: userId });
                 return logs.map((log: any) => ({
                     ...log,
                     duration_hours: log.duration_hours || 0,
@@ -84,6 +88,7 @@ export default function SleepTrackerPro() {
                 return [];
             }
         },
+        enabled: !!userId,
     });
 
     const lastNightSleep = sleepLogs.find(log => log.date === yesterday);
@@ -147,7 +152,8 @@ export default function SleepTrackerPro() {
                 wake_time: wakeTime,
                 duration_hours: duration,
                 quality,
-                notes: selectedFactors.join(',')
+                notes: selectedFactors.join(','),
+                user_id: userId
             };
 
             const existing = await db.entities.SleepLog.filter({ date: yesterday });

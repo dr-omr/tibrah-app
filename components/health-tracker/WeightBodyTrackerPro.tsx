@@ -4,6 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserData, setUserData } from '@/lib/userDataService';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import {
     Scale, TrendingUp, TrendingDown, Target, Plus,
@@ -33,22 +35,25 @@ interface WeightEntry {
 export default function WeightBodyTrackerPro() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id || null;
 
     // State
     const [showAddSheet, setShowAddSheet] = useState(false);
     const [newWeight, setNewWeight] = useState(70);
-    const [height, setHeight] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return parseInt(localStorage.getItem('userHeight') || '170');
-        }
-        return 170;
-    });
-    const [goalWeight, setGoalWeight] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return parseInt(localStorage.getItem('goalWeight') || '70');
-        }
-        return 70;
-    });
+    const [height, setHeight] = useState(170);
+    const [goalWeight, setGoalWeight] = useState(70);
+
+    // Load user-specific data from cloud
+    useEffect(() => {
+        const loadUserData = async () => {
+            const savedHeight = await getUserData(userId, 'userHeight', 170);
+            const savedGoal = await getUserData(userId, 'goalWeight', 70);
+            setHeight(savedHeight);
+            setGoalWeight(savedGoal);
+        };
+        loadUserData();
+    }, [userId]);
 
     // Animated BMI needle
     const bmiRotation = useMotionValue(-90);
@@ -95,8 +100,9 @@ export default function WeightBodyTrackerPro() {
     // Save weight mutation
     const saveWeightMutation = useMutation({
         mutationFn: async () => {
-            localStorage.setItem('userHeight', height.toString());
-            localStorage.setItem('goalWeight', goalWeight.toString());
+            // Save to cloud
+            await setUserData(userId, 'userHeight', height);
+            await setUserData(userId, 'goalWeight', goalWeight);
 
             const existing = await db.entities.WeightLog.filter({ date: today });
             if (existing?.[0]) {
@@ -212,8 +218,8 @@ export default function WeightBodyTrackerPro() {
                     {/* Weight change indicator */}
                     <motion.div
                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${weightChange < 0 ? 'bg-green-500/30 text-green-200' :
-                                weightChange > 0 ? 'bg-red-500/30 text-red-200' :
-                                    'bg-white/20 text-white/80'
+                            weightChange > 0 ? 'bg-red-500/30 text-red-200' :
+                                'bg-white/20 text-white/80'
                             }`}
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}

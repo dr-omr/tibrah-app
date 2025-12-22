@@ -317,6 +317,7 @@ export default function HealthTracker() {
                                 subtitle="خطة غذائية مخصصة"
                                 emoji="🥗"
                                 color="green"
+                                onClick={() => router.push('/meal-planner')}
                             />
                         </div>
 

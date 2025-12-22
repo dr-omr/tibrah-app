@@ -5,7 +5,6 @@ import QuickAccessGrid from '../components/home/QuickAccessGrid';
 import HealthTrackerDiscovery from '../components/home/HealthTrackerDiscovery';
 import SocialProof from '../components/home/SocialProof';
 import CredentialsSection from '../components/home/CredentialsSection';
-import ServicesHighlight from '../components/home/ServicesHighlight';
 import SEO, { pageSEO } from '../components/common/SEO';
 import { HomeStructuredData } from '../components/common/StructuredData';
 
@@ -23,20 +22,18 @@ export default function HomePage() {
             {/* 2. البرامج العلاجية - أهم شيء يشوفه الزبون! */}
             <HealthPrograms />
 
-            {/* 3. خدماتنا - كاروسيل احترافي */}
-            <ServicesHighlight />
-
-            {/* 4. الأقسام الرئيسية */}
+            {/* 3. الأقسام الرئيسية */}
             <QuickAccessGrid />
 
-            {/* 5. اكتشف متتبع الصحة */}
+            {/* 4. اكتشف متتبع الصحة */}
             <HealthTrackerDiscovery />
 
-            {/* 6. آراء العملاء */}
+            {/* 5. آراء العملاء */}
             <SocialProof />
 
-            {/* 7. الخبرات والشهادات */}
+            {/* 6. الخبرات والشهادات */}
             <CredentialsSection />
         </div>
     );
 }
+

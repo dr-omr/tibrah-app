@@ -87,7 +87,7 @@ export default function HealthPrograms() {
             if (!isPaused && !isHovered) {
                 setCurrentIndex((prev) => (prev + 1) % programs.length);
             }
-        }, 5000); // 5 seconds per slide
+        }, 3000); // 3 seconds per slide (faster)
     }, [isPaused, isHovered, programs.length]);
 
     useEffect(() => {
@@ -150,7 +150,7 @@ export default function HealthPrograms() {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 onTouchStart={() => setIsPaused(true)}
-                onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
+                onTouchEnd={() => setTimeout(() => setIsPaused(false), 2000)}
             >
                 {/* Cards Carousel */}
                 <div className="px-6">
@@ -345,7 +345,7 @@ export default function HealthPrograms() {
                             initial={{ width: '0%' }}
                             animate={{ width: isPaused || isHovered ? `${((currentIndex + 1) / programs.length) * 100}%` : '100%' }}
                             transition={{
-                                duration: isPaused || isHovered ? 0.3 : 5,
+                                duration: isPaused || isHovered ? 0.3 : 3,
                                 ease: 'linear',
                                 repeat: isPaused || isHovered ? 0 : 0
                             }}

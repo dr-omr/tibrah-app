@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { createPageUrl } from '../utils';
 import {
-    ArrowRight, Search, Heart, Brain, Activity, Sparkles, ShoppingBag, Star, MessageCircle
+    ArrowRight, Search, Heart, Brain, Activity, Sparkles, ShoppingBag, Star, MessageCircle, BookOpen
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import InteractiveBody from '@/components/body-map/InteractiveBody';
 import { useQuery } from '@tanstack/react-query';
+import { emotionalDiseases } from '@/data/emotionalMedicineData';
 
 const holisticSections = [
     { name: 'الطب الشعوري', description: 'افهم رسائل جسمك', page: 'emotional-medicine', icon: Heart, color: 'from-pink-500 to-rose-500' },
@@ -288,6 +289,39 @@ export default function BodyMap() {
                                         ردد هذا التأكيد 3 مرات يومياً أمام المرآة بإيمان وثقة
                                     </p>
                                 </div>
+
+                                {/* Related Diseases from Emotional Medicine Database */}
+                                {(() => {
+                                    const organKeywords = [selectedArea.name.toLowerCase()];
+                                    const relatedDiseases = emotionalDiseases.filter(d =>
+                                        organKeywords.some(kw => d.targetOrgan.includes(kw) || d.symptom.includes(kw))
+                                    ).slice(0, 3);
+
+                                    if (relatedDiseases.length > 0) {
+                                        return (
+                                            <div className="mt-6 pt-4 border-t border-slate-100">
+                                                <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                                    <BookOpen className="w-5 h-5 text-pink-500" />
+                                                    أمراض مرتبطة بـ {selectedArea.name}
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {relatedDiseases.map((disease, idx) => (
+                                                        <div key={idx} className="bg-pink-50 rounded-xl p-3">
+                                                            <p className="font-medium text-slate-800 text-sm">{disease.symptom}</p>
+                                                            <p className="text-xs text-slate-500 line-clamp-1">{disease.emotionalConflict}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <Link href="/emotional-medicine" className="mt-3 block">
+                                                    <Button variant="outline" className="w-full text-pink-600 border-pink-200 hover:bg-pink-50">
+                                                        عرض جميع الأمراض والمشاعر
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
 
                                 {/* CTA */}
                                 <a

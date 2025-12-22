@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createPageUrl } from '@/utils';
 import {
     LayoutDashboard, Users, ShoppingBag, Calendar,
-    FileText, Settings, LogOut, Menu, X, Bell, Shield, Waves
+    FileText, Settings, LogOut, Menu, X, Bell, Shield, Waves, Utensils, ChefHat
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,8 @@ export default function AdminLayout({ children, activeTab, onTabChange, user }: 
         { id: 'overview', label: 'لوحة التحكم', icon: LayoutDashboard },
         { id: 'appointments', label: 'المواعيد', icon: Calendar },
         { id: 'products', label: 'المنتجات', icon: ShoppingBag },
+        { id: 'foods', label: 'الأطعمة', icon: Utensils },
+        { id: 'recipes', label: 'الوصفات', icon: ChefHat },
         { id: 'users', label: 'المستخدمين', icon: Users },
         { id: 'courses', label: 'الدورات', icon: FileText },
         { id: 'articles', label: 'المحتوى', icon: FileText },

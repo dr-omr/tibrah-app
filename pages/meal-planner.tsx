@@ -22,9 +22,9 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-    foodDatabase, categories, getFoodById, searchFoods,
+    foodDatabase, categories, searchFoods,
     calculateTotalNutrition, healthConditions, getSafeFoodsForCondition,
-    FoodItem, NutritionInfo, MealPlan
+    FoodItem, NutritionInfo, MealPlan, recipeDatabase, Recipe
 } from '@/lib/mealDatabase';
 
 // Types
@@ -107,12 +107,55 @@ export default function MealPlanner() {
         return calculateTotalNutrition(items);
     }, [savedMeals]);
 
+    // State for custom foods/recipes from Firebase
+    const [customFoods, setCustomFoods] = useState<FoodItem[]>([]);
+    const [customRecipes, setCustomRecipes] = useState<Recipe[]>([]);
+
+    // Load custom foods/recipes from Firebase on mount
+    useEffect(() => {
+        const loadCustomData = async () => {
+            try {
+                const { db } = await import('@/lib/db');
+
+                // Load custom foods
+                const firebaseFoods = await db.foods.list();
+                if (firebaseFoods.length > 0) {
+                    setCustomFoods(firebaseFoods as unknown as FoodItem[]);
+                }
+
+                // Load custom recipes
+                const firebaseRecipes = await db.recipes.list();
+                if (firebaseRecipes.length > 0) {
+                    setCustomRecipes(firebaseRecipes as unknown as Recipe[]);
+                }
+            } catch (e) {
+                console.error('Failed to load from Firebase:', e);
+            }
+        };
+
+        loadCustomData();
+    }, []);
+
+    // Combine default + custom foods
+    const allFoods = useMemo(() => {
+        return [...foodDatabase, ...customFoods];
+    }, [customFoods]);
+
+    // Combine default + custom recipes
+    const allRecipes = useMemo(() => {
+        return [...recipeDatabase, ...customRecipes];
+    }, [customRecipes]);
+
     // Filter foods based on search and category
     const filteredFoods = useMemo(() => {
-        let foods = foodDatabase;
+        let foods = allFoods;
 
         if (searchQuery) {
-            foods = searchFoods(searchQuery);
+            const query = searchQuery.toLowerCase();
+            foods = foods.filter(f =>
+                f.nameAr.includes(searchQuery) ||
+                f.name.toLowerCase().includes(query)
+            );
         }
 
         if (selectedCategory !== 'all') {
@@ -130,7 +173,12 @@ export default function MealPlanner() {
         }
 
         return foods;
-    }, [searchQuery, selectedCategory, healthProfile.conditions]);
+    }, [searchQuery, selectedCategory, healthProfile.conditions, allFoods]);
+
+    // Local getFoodById that includes custom foods from admin
+    const getFood = useCallback((id: string): FoodItem | undefined => {
+        return allFoods.find(f => f.id === id);
+    }, [allFoods]);
 
     // Get week dates
     const weekDates = useMemo(() => {
@@ -407,7 +455,7 @@ export default function MealPlanner() {
                                             {mealItems.length > 0 ? (
                                                 <div className="space-y-2">
                                                     {mealItems.map((item, idx) => {
-                                                        const food = getFoodById(item.foodId);
+                                                        const food = getFood(item.foodId);
                                                         if (!food) return null;
                                                         const safety = getFoodSafety(food);
                                                         const multiplier = item.amount / food.servingSize;

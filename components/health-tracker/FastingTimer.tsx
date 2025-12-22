@@ -7,6 +7,8 @@ import { format, addHours } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { showNotification, requestNotificationPermission, isNotificationSupported } from '@/lib/pushNotifications';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserData, setUserData, deleteUserData } from '@/lib/userDataService';
 
 interface FastingPlan {
     id: string;
@@ -24,6 +26,9 @@ const FASTING_PLANS: FastingPlan[] = [
 ];
 
 export default function FastingTimer() {
+    const { user } = useAuth();
+    const userId = user?.id || null;
+
     const [selectedPlan, setSelectedPlan] = useState<FastingPlan | null>(null);
     const [isActive, setIsActive] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
@@ -36,25 +41,25 @@ export default function FastingTimer() {
     const [lastNotificationHour, setLastNotificationHour] = useState(-1);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Load saved state from localStorage
+    // Load saved state from cloud
     useEffect(() => {
-        const saved = localStorage.getItem('fastingState');
-        if (saved) {
-            const state = JSON.parse(saved);
-            if (state.startTime && state.planId) {
-                const plan = FASTING_PLANS.find(p => p.id === state.planId);
+        const loadState = async () => {
+            const saved = await getUserData<any>(userId, 'fastingState', null);
+            if (saved && saved.startTime && saved.planId) {
+                const plan = FASTING_PLANS.find(p => p.id === saved.planId);
                 if (plan) {
                     setSelectedPlan(plan);
-                    setStartTime(new Date(state.startTime));
-                    setIsFasting(state.isFasting);
+                    setStartTime(new Date(saved.startTime));
+                    setIsFasting(saved.isFasting);
                     setIsActive(true);
-                    setIsPaused(state.isPaused || false);
-                    setPausedElapsed(state.pausedElapsed || 0);
-                    setNotificationsEnabled(state.notificationsEnabled !== false);
+                    setIsPaused(saved.isPaused || false);
+                    setPausedElapsed(saved.pausedElapsed || 0);
+                    setNotificationsEnabled(saved.notificationsEnabled !== false);
                 }
             }
-        }
-    }, []);
+        };
+        loadState();
+    }, [userId]);
 
     // Timer logic
     useEffect(() => {
@@ -135,8 +140,8 @@ export default function FastingTimer() {
         };
     }, [isActive, startTime, selectedPlan, isFasting, isPaused, pausedElapsed, notificationsEnabled, lastNotificationHour]);
 
-    const saveFastingState = (state: any) => {
-        localStorage.setItem('fastingState', JSON.stringify(state));
+    const saveFastingState = async (state: any) => {
+        await setUserData(userId, 'fastingState', state);
     };
 
     const sendFastingNotification = (title: string, body: string) => {
@@ -292,7 +297,7 @@ export default function FastingTimer() {
         setIsPaused(false);
         setPausedElapsed(0);
         setLastNotificationHour(-1);
-        localStorage.removeItem('fastingState');
+        deleteUserData(userId, 'fastingState');
         toast('تم إنهاء الصيام');
     };
 
