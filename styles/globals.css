@@ -97,6 +97,100 @@
     --z-tooltip: 500;
 }
 
+/* === Dark Mode Overrides === */
+.dark {
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    --shadow-soft: 0 4px 30px rgba(0, 0, 0, 0.2);
+    --shadow-glow: 0 0 40px rgba(45, 155, 131, 0.25);
+}
+
+.dark body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+.dark .card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+.dark .card-elevated {
+    background: #1e293b;
+}
+
+.dark .glass {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(51, 65, 85, 0.5);
+}
+
+.dark .glass-dark {
+    background: rgba(45, 155, 131, 0.15);
+    border-color: rgba(45, 155, 131, 0.3);
+}
+
+.dark .btn-secondary {
+    background: #334155;
+    color: #cbd5e1;
+}
+
+.dark .btn-secondary:hover {
+    background: #475569;
+}
+
+.dark .input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+.dark .input:focus {
+    background: #0f172a;
+}
+
+.dark .text-caption {
+    color: #94a3b8;
+}
+
+.dark .text-tiny {
+    color: #64748b;
+}
+
+.dark .text-readable {
+    color: #e2e8f0;
+}
+
+.dark .text-readable-secondary {
+    color: #94a3b8;
+}
+
+.dark .gradient-subtle {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+.dark .divider {
+    background: #334155;
+}
+
+.dark .divider-vertical {
+    background: #334155;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.dark ::selection {
+    background: rgba(45, 155, 131, 0.3);
+    color: #e2e8f0;
+}
+
+.dark .card-clickable:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 /* === Base Styles === */
 * {
     margin: 0;

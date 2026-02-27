@@ -3,10 +3,42 @@ const withPWA = require('next-pwa')({
     dest: 'public',
     register: true,
     skipWaiting: true,
-    disable: true,
+    disable: process.env.NODE_ENV === 'development',
     buildExcludes: [/middleware-manifest.json$/],
-    // Default runtime caching
-    runtimeCaching: [],
+    runtimeCaching: [
+        {
+            urlPattern: /^https:\/\/fonts\.(?:gstatic|googleapis)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+                cacheName: 'google-fonts',
+                expiration: { maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+        },
+        {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif|ico)$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+                cacheName: 'images',
+                expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+        },
+        {
+            urlPattern: /\.(?:js|css)$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+                cacheName: 'static-resources',
+                expiration: { maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 },
+            },
+        },
+        {
+            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+                cacheName: 'firebase-storage',
+                expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
+            },
+        },
+    ],
 });
 
 /** @type {import('next').NextConfig} */
@@ -14,12 +46,12 @@ const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
 
-    // Ignore TypeScript and ESLint errors during build (for Vercel deployment)
+    // TypeScript: all errors fixed ✅
     typescript: {
-        ignoreBuildErrors: true,
+        ignoreBuildErrors: false,
     },
     eslint: {
-        ignoreDuringBuilds: true,
+        ignoreDuringBuilds: false,
     },
 
     // Handle image domains

@@ -271,8 +271,8 @@ export default function SymptomAnalysis() {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setSelectedCategory(category.id)}
                             className={`px-4 py-2.5 rounded-2xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${selectedCategory === category.id
-                                    ? 'text-white shadow-lg'
-                                    : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-teal-200'
+                                ? 'text-white shadow-lg'
+                                : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-teal-200'
                                 }`}
                             style={{
                                 background: selectedCategory === category.id
@@ -292,7 +292,7 @@ export default function SymptomAnalysis() {
 
             {/* Results Count */}
             <div className="px-6 mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <Search className="w-5 h-5 text-teal-500" />
                     النتائج ({filteredDiseases.length})
                 </h2>
@@ -335,7 +335,7 @@ export default function SymptomAnalysis() {
                                         {getSystemIcon(disease.organSystemEn)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-slate-800 mb-1">{disease.symptom}</h3>
+                                        <h3 className="font-bold text-slate-800 dark:text-white mb-1">{disease.symptom}</h3>
                                         <p className="text-xs text-slate-500 mb-2">
                                             {disease.targetOrgan} • {disease.organSystem}
                                         </p>
@@ -368,7 +368,7 @@ export default function SymptomAnalysis() {
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="flex items-center gap-2">
                                                         <Heart className="w-4 h-4 text-red-500" />
-                                                        <h4 className="font-bold text-slate-800 text-sm">السبب الشعوري</h4>
+                                                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">السبب الشعوري</h4>
                                                     </div>
                                                     <Button
                                                         variant="ghost"
@@ -386,7 +386,7 @@ export default function SymptomAnalysis() {
                                             <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Brain className="w-4 h-4 text-blue-500" />
-                                                    <h4 className="font-bold text-slate-800 text-sm">الغرض البيولوجي</h4>
+                                                    <h4 className="font-bold text-slate-800 dark:text-white text-sm">الغرض البيولوجي</h4>
                                                 </div>
                                                 <p className="text-slate-700 text-sm leading-relaxed">{disease.biologicalPurpose}</p>
                                             </div>
@@ -396,7 +396,7 @@ export default function SymptomAnalysis() {
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="flex items-center gap-2">
                                                         <Zap className="w-4 h-4 text-amber-600" />
-                                                        <h4 className="font-bold text-slate-800 text-sm">التأكيد الشفائي</h4>
+                                                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">التأكيد الشفائي</h4>
                                                     </div>
                                                     <div className="flex gap-1">
                                                         <Button
@@ -459,7 +459,7 @@ export default function SymptomAnalysis() {
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Search className="w-10 h-10 text-slate-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">لا توجد نتائج</h3>
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">لا توجد نتائج</h3>
                         <p className="text-slate-500 mb-4">جرب وصف الأعراض بشكل مختلف</p>
                         <Button
                             variant="outline"
@@ -474,7 +474,7 @@ export default function SymptomAnalysis() {
 
             {/* Related Resources */}
             <div className="px-6 mt-10">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-teal-500" />
                     استكشف المزيد
                 </h3>

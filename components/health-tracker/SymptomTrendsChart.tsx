@@ -6,7 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Activity, AlertCircle } from 'lucide-react';
 
-export default function SymptomTrendsChart({ symptoms }) {
+export default function SymptomTrendsChart({ symptoms }: { symptoms: any[] }) {
     if (!symptoms || symptoms.length === 0) return null;
 
     // Process data for Frequency Chart (Top 5 symptoms)
@@ -17,7 +17,7 @@ export default function SymptomTrendsChart({ symptoms }) {
 
     const frequencyData = Object.entries(symptomCounts)
         .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
+        .sort((a: any, b: any) => (b.count as number) - (a.count as number))
         .slice(0, 5);
 
     // Process data for Severity Scatter Chart
@@ -29,7 +29,7 @@ export default function SymptomTrendsChart({ symptoms }) {
         body_area: s.body_area
     })).sort((a, b) => a.date - b.date);
 
-    const CustomTooltip = ({ active, payload }) => {
+    const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (

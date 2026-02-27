@@ -1,7 +1,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 
-export default function MetricCard({ metric, latestValue, previousValue, onClick }) {
+export default function MetricCard({ metric, latestValue, previousValue, onClick }: { metric: string; latestValue: number; previousValue: number; onClick?: () => void }) {
     const metricConfig = {
         weight: {
             name: 'الوزن',
@@ -140,7 +140,7 @@ export default function MetricCard({ metric, latestValue, previousValue, onClick
                     {trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500" />}
                     {trend === 'stable' && <Minus className="w-4 h-4 text-slate-400" />}
                     <span className={trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-slate-500'}>
-                        {change > 0 ? '+' : ''}{change}%
+                        {Number(change) > 0 ? '+' : ''}{change}%
                     </span>
                 </div>
             )}

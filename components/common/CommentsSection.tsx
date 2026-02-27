@@ -93,7 +93,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                 rating: showRating ? rating : null,
                 target_type: targetType,
                 target_id: targetId,
-                user_name: user?.name || user?.full_name || 'زائر',
+                user_name: user?.name || (user as any)?.full_name || 'زائر',
                 user_email: user?.email || '',
                 is_approved: true,
                 likes: 0
@@ -206,7 +206,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                     </div>
                     <div>
                         <p className="font-medium text-slate-700">
-                            {user?.name || user?.full_name || 'زائر'}
+                            {user?.name || (user as any)?.full_name || 'زائر'}
                         </p>
                         <p className="text-xs text-slate-400">اكتب تعليقك</p>
                     </div>

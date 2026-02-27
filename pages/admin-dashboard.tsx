@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 // Modular Components
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminStats from '@/components/admin/AdminStats';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
+import ActivityLog from '@/components/admin/ActivityLog';
 import AppointmentManager from '@/components/admin/AppointmentManager';
 import ProductManager from '@/components/admin/ProductManager';
 import CourseManager from '@/components/admin/CourseManager';
@@ -246,8 +248,8 @@ export default function AdminDashboard() {
             {activeTab === 'overview' && (
                 <>
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">نظرة عامة</h2>
-                        <p className="text-slate-500">مرحباً بك مرة أخرى، د. عمر 👋</p>
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">نظرة عامة</h2>
+                        <p className="text-slate-500 dark:text-slate-400">مرحباً بك مرة أخرى، د. عمر 👋</p>
                     </div>
                     <AdminStats
                         usersCount={users.length}
@@ -256,10 +258,26 @@ export default function AdminDashboard() {
                         articlesCount={articles.length}
                     />
 
+                    {/* Advanced Analytics Charts */}
+                    <AnalyticsDashboard
+                        usersCount={users.length}
+                        productsCount={products.length}
+                        coursesCount={courses.length}
+                        articlesCount={articles.length}
+                        appointmentsCount={appointments.length}
+                    />
+
+                    {/* Real-time Activity Log */}
+                    <ActivityLog
+                        users={users}
+                        appointments={appointments}
+                        products={products}
+                        courses={courses}
+                    />
                     {/* Recent Appointments Preview */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-800">آخر المواعيد</h3>
+                            <h3 className="font-bold text-slate-800 dark:text-white">آخر المواعيد</h3>
                             <Button variant="ghost" onClick={() => setActiveTab('appointments')}>
                                 عرض الكل <ArrowRight className="w-4 h-4 mr-2" />
                             </Button>
@@ -274,7 +292,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'appointments' && (
                 <div>
-                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة المواعيد</h2></div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">إدارة المواعيد</h2></div>
                     <AppointmentManager
                         appointments={appointments}
                         onUpdateStatus={(id, status) => updateAppointmentMutation.mutate({ id, status })}
@@ -284,7 +302,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'products' && (
                 <div>
-                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة المنتجات</h2></div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">إدارة المنتجات</h2></div>
                     <ProductManager
                         products={products}
                         onSave={(data, id) => productMutation.mutateAsync({ data, id })}
@@ -295,7 +313,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'courses' && (
                 <div>
-                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة الدورات</h2></div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">إدارة الدورات</h2></div>
                     <CourseManager
                         courses={courses}
                         onSave={(data, id) => courseMutation.mutateAsync({ data, id })}
@@ -306,7 +324,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'articles' && (
                 <div>
-                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة المحتوى</h2></div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">إدارة المحتوى</h2></div>
                     <ArticleManager
                         articles={articles}
                         onSave={(data, id) => articleMutation.mutateAsync({ data, id })}
@@ -318,7 +336,7 @@ export default function AdminDashboard() {
             {/* Frequencies Tab */}
             {activeTab === 'frequencies' && (
                 <div>
-                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800">إدارة الترددات</h2></div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">إدارة الترددات</h2></div>
                     <FrequencyManager
                         frequencies={frequencies}
                         onSave={(data, id) => frequencyMutation.mutateAsync({ data, id })}

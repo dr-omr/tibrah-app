@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
+// Initialize Gemini API (server-side only)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export const config = {
     api: {
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const prompt = mode === 'face' ? FACE_PROMPT : LAB_PROMPT;
 
         // Use standard gemini-1.5-flash for speed and vision capabilities
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         // Prepare image part
         const imagePart = {

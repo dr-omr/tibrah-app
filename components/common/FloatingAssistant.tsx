@@ -8,16 +8,16 @@ export default function FloatingAssistant() {
     return (
         <div className="fixed bottom-24 md:bottom-8 left-6 z-50 font-cairo" dir="rtl">
             {isOpen && (
-                <div className="absolute bottom-16 left-0 w-[90vw] md:w-[380px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 origin-bottom-left animate-in fade-in zoom-in-95 slide-in-from-bottom-10 duration-200">
-                    <ChatInterface onClose={() => setIsOpen(false)} />
+                <div className="absolute bottom-16 left-0 w-[90vw] md:w-[380px] h-[600px] max-h-[80vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 origin-bottom-left animate-in fade-in zoom-in-95 slide-in-from-bottom-10 duration-200">
+                    <ChatInterface />
                 </div>
             )}
 
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 ${isOpen
-                        ? 'bg-slate-800 text-white rotate-90'
-                        : 'bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] text-white'
+                    ? 'bg-slate-800 text-white rotate-90'
+                    : 'bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] text-white'
                     }`}
             >
                 {/* Ripple Effect Animation */}

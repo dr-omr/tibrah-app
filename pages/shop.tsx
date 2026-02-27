@@ -44,7 +44,7 @@ export default function Shop() {
             const existingItem = cartItems.find((item: any) => item.product_id === product.id);
             if (existingItem) {
                 return db.entities.CartItem.update(existingItem.id, {
-                    quantity: existingItem.quantity + 1
+                    quantity: (existingItem.quantity as number) + 1
                 });
             }
             return db.entities.CartItem.create({
@@ -92,8 +92,8 @@ export default function Shop() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">المتجر</h1>
-                    <p className="text-sm text-slate-500">مكملات ومنتجات صحية</p>
+                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">المتجر</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">مكملات ومنتجات صحية</p>
                 </div>
 
                 <Link href={createPageUrl('Checkout')}>
@@ -135,8 +135,8 @@ export default function Shop() {
             ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-12">
                     <ShoppingBag className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-600">لا توجد منتجات</h3>
-                    <p className="text-slate-400 text-sm">جرب تغيير معايير البحث</p>
+                    <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">لا توجد منتجات</h3>
+                    <p className="text-slate-400 dark:text-slate-500 text-sm">جرب تغيير معايير البحث</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">

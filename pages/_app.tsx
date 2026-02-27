@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,7 +9,10 @@ import { NotificationProvider } from '../contexts/NotificationContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import { AudioProvider } from '../contexts/AudioContext';
+import { LanguageProvider } from '../contexts/LanguageContext';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import PageTransition from '../components/common/PageTransition';
+import { initializeNotifications } from '../lib/pushNotifications';
 import '../styles/globals.css';
 
 // Create a client
@@ -39,18 +42,16 @@ export default function App({ Component, pageProps }: AppProps) {
     const router = useRouter();
     const currentPageName = getPageName(router.pathname);
 
-    // Force unregister service workers to fix caching issues
-    React.useEffect(() => {
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                for (let registration of registrations) {
-                    console.log('Unregistering SW:', registration);
-                    registration.unregister();
-                }
+    // Initialize push notifications on app mount
+    useEffect(() => {
+        // Delay initialization to not block initial render
+        const timer = setTimeout(() => {
+            initializeNotifications().catch(() => {
+                // Silently fail — user may have denied permissions
             });
-        }
+        }, 3000);
+        return () => clearTimeout(timer);
     }, []);
-
     return (
         <>
             <Head>
@@ -65,14 +66,18 @@ export default function App({ Component, pageProps }: AppProps) {
                 <ErrorBoundary>
                     <AuthProvider>
                         <ThemeProvider>
-                            <NotificationProvider>
-                                <AudioProvider>
-                                    <Layout currentPageName={currentPageName}>
-                                        <Component {...pageProps} />
-                                    </Layout>
-                                    <Toaster position="top-center" richColors />
-                                </AudioProvider>
-                            </NotificationProvider>
+                            <LanguageProvider>
+                                <NotificationProvider>
+                                    <AudioProvider>
+                                        <Layout currentPageName={currentPageName}>
+                                            <PageTransition>
+                                                <Component {...pageProps} />
+                                            </PageTransition>
+                                        </Layout>
+                                        <Toaster position="top-center" richColors />
+                                    </AudioProvider>
+                                </NotificationProvider>
+                            </LanguageProvider>
                         </ThemeProvider>
                     </AuthProvider>
                 </ErrorBoundary>

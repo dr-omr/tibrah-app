@@ -1,6 +1,8 @@
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useState, useCallback } from 'react';
 import FloatingAssistant from './components/common/FloatingAssistant';
 import NetworkStatusBanner from './components/common/NetworkStatusBanner';
+import CommandPalette from './components/common/CommandPalette';
+import dynamic from 'next/dynamic';
 import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import LoadingScreen from './components/common/LoadingScreen';
 import SkipLinks, { MainContent } from './components/common/SkipLinks';
@@ -11,6 +13,10 @@ import GlobalMiniPlayer from './components/frequencies/GlobalMiniPlayer';
 import { useAuth } from './contexts/AuthContext';
 import { useAudio } from './contexts/AudioContext';
 import { useRouter } from 'next/router';
+import { AnimatePresence } from 'framer-motion';
+
+// Lazy load onboarding — only needed for first-time users
+const OnboardingFlow = dynamic(() => import('./components/common/OnboardingFlow'), { ssr: false });
 
 interface LayoutProps {
   children: ReactNode;
@@ -21,34 +27,39 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   const { user, loading } = useAuth();
   const { currentTrack } = useAudio();
   const router = useRouter();
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user has completed onboarding
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const done = localStorage.getItem('onboardingComplete');
+      if (!done) setShowOnboarding(true);
+    }
+  }, []);
+
+  // Global Ctrl+K / ⌘+K shortcut for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
 
-  // Pages that require authentication
+  // Pages that require authentication (admin only)
   const protectedPages = [
-    'Dashboard',
-    'Profile',
-    'HealthTracker',
-    'Settings',
     'AdminDashboard',
-    'Checkout',
-    'BookAppointment'
   ];
 
   // Check if current page is protected
   const isProtectedPage = currentPageName && protectedPages.includes(currentPageName);
 
-  useEffect(() => {
-    // Register Service Worker
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-          console.log('SW registered: ', registration);
-        }).catch(registrationError => {
-          console.log('SW registration failed: ', registrationError);
-        });
-      });
-    }
-  }, []);
+
 
   // Redirect to login if page is protected and user is not authenticated
   useEffect(() => {
@@ -74,44 +85,59 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   const hideFooter = ['Checkout', 'BookAppointment', 'Login', 'AdminDashboard', 'Settings'].includes(currentPageName || '');
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 font-cairo overscroll-bounce">
-      {/* Accessibility: Skip Links */}
-      <SkipLinks />
+    <>
+      {/* Onboarding for first-time users */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
+        )}
+      </AnimatePresence>
 
-      {/* Network Status Banner (Enhanced Offline + Slow Connection) */}
-      <NetworkStatusBanner />
+      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 font-cairo overscroll-bounce transition-colors duration-300">
+        {/* Accessibility: Skip Links */}
+        <SkipLinks />
 
-      {/* Header - shows different versions for mobile/desktop */}
-      {!hideNav && <Header currentPageName={currentPageName} />}
+        {/* Network Status Banner (Enhanced Offline + Slow Connection) */}
+        <NetworkStatusBanner />
 
-      {/* Main Content - pb-24 for bottom nav on mobile, safe area aware */}
-      <MainContent>
-        <div className={`
+        {/* Header - shows different versions for mobile/desktop */}
+        {!hideNav && <Header currentPageName={currentPageName} />}
+
+        {/* Main Content - pb-24 for bottom nav on mobile, safe area aware */}
+        <MainContent>
+          <div className={`
           scroll-momentum
           ${hideNav ? 'safe-bottom' : 'pb-24' /* Default padding for nav */}
           ${currentTrack ? 'pb-48' : '' /* Extra padding if player is visible */}
           min-h-[calc(100vh-80px)]
         `}>
-          <div className="px-4 sm:px-6 lg:px-8">
-            {children}
+            <div className="px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
           </div>
-        </div>
-      </MainContent>
+        </MainContent>
 
-      {/* Footer - Only on desktop for main pages */}
-      {!hideFooter && <div className="hidden md:block"><Footer /></div>}
+        {/* Footer - Only on desktop for main pages */}
+        {!hideFooter && <div className="hidden md:block"><Footer /></div>}
 
-      {/* Floating Assistant */}
-      <FloatingAssistant />
+        {/* Command Palette - Global Search */}
+        <CommandPalette
+          isOpen={showCommandPalette}
+          onClose={() => setShowCommandPalette(false)}
+        />
 
-      {/* PWA Install Prompt */}
-      <PWAInstallPrompt />
+        {/* Floating Assistant */}
+        <FloatingAssistant />
 
-      {/* Global Mini Player */}
-      {!hideNav && <GlobalMiniPlayer />}
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
 
-      {/* Mobile Bottom Nav - iOS Tab Bar Style with safe area */}
-      {!hideNav && <BottomNav currentPageName={currentPageName} />}
-    </div>
+        {/* Global Mini Player */}
+        {!hideNav && <GlobalMiniPlayer />}
+
+        {/* Mobile Bottom Nav - iOS Tab Bar Style with safe area */}
+        {!hideNav && <BottomNav currentPageName={currentPageName} />}
+      </div>
+    </>
   );
 }

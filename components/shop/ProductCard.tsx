@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 const whatsappLink = (productName) => `https://wa.me/967771447111?text=مرحباً%20د.%20عمر،%20أريد%20الاستفسار%20عن%20منتج:%20${encodeURIComponent(productName)}`;
 
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({ product, onAddToCart }: { product: any; onAddToCart: (p: any) => void }) {
     const hasDiscount = product.original_price && product.original_price > product.price;
     const discountPercent = hasDiscount
         ? Math.round((1 - product.price / product.original_price) * 100)
@@ -58,7 +58,7 @@ export default function ProductCard({ product, onAddToCart }) {
 
             <div className="p-4">
                 <Link href={createPageUrl(`ProductDetails?id=${product.id}`)}>
-                    <h3 className="font-bold text-slate-800 mb-1 line-clamp-2 hover:text-[#2D9B83] transition-colors">
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-1 line-clamp-2 hover:text-[#2D9B83] transition-colors">
                         {product.name}
                     </h3>
                 </Link>

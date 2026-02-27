@@ -29,7 +29,7 @@ export default function QuickAccessGrid() {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                         <Sparkles className="w-4 h-4 text-white" />
                     </div>
-                    <h2 className="text-lg font-bold text-slate-800">أبسر ايش عندنا لك</h2>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white">أبسر ايش عندنا لك</h2>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-5">
@@ -38,7 +38,7 @@ export default function QuickAccessGrid() {
                         return (
                             <Link key={index} href={createPageUrl(item.page)}>
                                 <motion.div
-                                    className="relative flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-100 cursor-pointer"
+                                    className="relative flex flex-col items-center p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 cursor-pointer"
                                     whileHover={{
                                         scale: 1.05,
                                         boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
@@ -81,7 +81,7 @@ export default function QuickAccessGrid() {
                                     </motion.div>
 
                                     {/* Label */}
-                                    <span className="text-xs font-semibold text-slate-700 text-center">
+                                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 text-center">
                                         {item.label}
                                     </span>
                                 </motion.div>

@@ -32,7 +32,42 @@ interface DailyLog extends EntityBase {
     exercise?: {
         type: string;
         duration_minutes: number;
+        calories?: number;
     };
+}
+
+interface FastingSession extends EntityBase {
+    start_time: string;
+    end_time?: string;
+    target_hours: number;
+    completed: boolean;
+    type?: string;
+}
+
+interface DoseLog extends EntityBase {
+    medication_id?: string;
+    medication_name?: string;
+    date: string;
+    time?: string;
+    taken: boolean;
+    dose?: string;
+}
+
+interface WeightLog extends EntityBase {
+    date: string;
+    weight: number;
+    unit?: string;
+    body_fat?: number;
+    muscle_mass?: number;
+    notes?: string;
+}
+
+interface UserHealth extends EntityBase {
+    user_id?: string;
+    program_id?: string;
+    enrolled_at?: string;
+    status?: string;
+    progress?: number;
 }
 
 interface Comment extends EntityBase {
@@ -269,6 +304,10 @@ export const db = {
         // Frequencies (kept for legacy data if needed, but not used in frontend anymore)
         Frequency: createEntityOperations<EntityBase>('frequencies'),
         RifeFrequency: createEntityOperations<EntityBase>('rife_frequencies'),
+        FastingSession: createEntityOperations<FastingSession>('fasting_sessions'),
+        DoseLog: createEntityOperations<DoseLog>('dose_logs'),
+        WeightLog: createEntityOperations<WeightLog>('weight_logs'),
+        UserHealth: createEntityOperations<UserHealth>('user_health'),
     },
 
     // AI Integrations (Simplified)

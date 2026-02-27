@@ -9,7 +9,7 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 
-export default function DailyCheckIn({ open, onOpenChange, onSubmit }) {
+export default function DailyCheckIn({ open, onOpenChange, onSubmit }: { open: boolean; onOpenChange: (open: boolean) => void; onSubmit: (data: any) => void }) {
     const [formData, setFormData] = useState({
         mood: 3,
         energy_level: 3,
@@ -21,7 +21,7 @@ export default function DailyCheckIn({ open, onOpenChange, onSubmit }) {
     const moodEmojis = ['😢', '😕', '😐', '🙂', '😄'];
     const energyEmojis = ['🔋', '🪫', '⚡', '💪', '🚀'];
 
-    const RatingSelector = ({ label, icon: Icon, value, onChange, emojis }) => (
+    const RatingSelector = ({ label, icon: Icon, value, onChange, emojis }: { label: string; icon: any; value: number; onChange: (v: number) => void; emojis?: string[] }) => (
         <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
                 <Icon className="w-5 h-5 text-[#2D9B83]" />
@@ -34,8 +34,8 @@ export default function DailyCheckIn({ open, onOpenChange, onSubmit }) {
                         type="button"
                         onClick={() => onChange(rating)}
                         className={`flex-1 py-3 rounded-xl text-2xl transition-all ${value === rating
-                                ? 'bg-[#2D9B83] shadow-md scale-110'
-                                : 'bg-slate-100 hover:bg-slate-200'
+                            ? 'bg-[#2D9B83] shadow-md scale-110'
+                            : 'bg-slate-100 hover:bg-slate-200'
                             }`}
                     >
                         {emojis ? emojis[rating - 1] : rating}

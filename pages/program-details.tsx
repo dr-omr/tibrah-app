@@ -158,7 +158,7 @@ export default function ProgramDetails() {
                         <div className="flex items-center gap-3">
                             <Play className="w-8 h-8 text-[#2D9B83]" />
                             <div>
-                                <p className="font-bold text-slate-800">جرب ٣ أيام مجاناً</p>
+                                <p className="font-bold text-slate-800 dark:text-white">جرب ٣ أيام مجاناً</p>
                                 <p className="text-sm text-slate-500">بدون التزام، ألغِ في أي وقت</p>
                             </div>
                         </div>
@@ -175,14 +175,14 @@ export default function ProgramDetails() {
                 {trialStarted && (
                     <div className="glass-dark rounded-2xl p-4 text-center">
                         <Check className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                        <p className="font-bold text-slate-800">تم تفعيل التجربة المجانية!</p>
+                        <p className="font-bold text-slate-800 dark:text-white">تم تفعيل التجربة المجانية!</p>
                         <p className="text-sm text-slate-500">استمتع بـ ٣ أيام مجانية</p>
                     </div>
                 )}
 
                 {/* Features */}
                 <div>
-                    <h3 className="font-bold text-slate-800 mb-4">ماذا يتضمن البرنامج؟</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-4">ماذا يتضمن البرنامج؟</h3>
                     <div className="space-y-3">
                         {program.features.map((feature, index) => (
                             <div key={index} className="flex items-start gap-3">
@@ -197,7 +197,7 @@ export default function ProgramDetails() {
 
                 {/* What's Included */}
                 <div className="glass rounded-2xl p-5">
-                    <h3 className="font-bold text-slate-800 mb-4">ما الذي ستحصل عليه؟</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-4">ما الذي ستحصل عليه؟</h3>
                     <div className="space-y-3">
                         {program.includes.map((item, index) => (
                             <div key={index} className="flex items-center justify-between">
@@ -216,7 +216,7 @@ export default function ProgramDetails() {
 
                 {/* Testimonials */}
                 <div>
-                    <h3 className="font-bold text-slate-800 mb-4">آراء المشتركين</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-4">آراء المشتركين</h3>
                     <div className="space-y-3">
                         {program.testimonials.map((testimonial, index) => (
                             <div key={index} className="glass rounded-2xl p-4">
@@ -238,17 +238,17 @@ export default function ProgramDetails() {
                 <div className="grid grid-cols-3 gap-3">
                     <div className="glass rounded-2xl p-4 text-center">
                         <Users className="w-6 h-6 mx-auto text-[#2D9B83] mb-2" />
-                        <p className="text-xl font-bold text-slate-800">+٥٠٠</p>
+                        <p className="text-xl font-bold text-slate-800 dark:text-white">+٥٠٠</p>
                         <p className="text-xs text-slate-500">مشترك</p>
                     </div>
                     <div className="glass rounded-2xl p-4 text-center">
                         <Star className="w-6 h-6 mx-auto text-[#D4AF37] mb-2" />
-                        <p className="text-xl font-bold text-slate-800">٤.٩</p>
+                        <p className="text-xl font-bold text-slate-800 dark:text-white">٤.٩</p>
                         <p className="text-xs text-slate-500">تقييم</p>
                     </div>
                     <div className="glass rounded-2xl p-4 text-center">
                         <Calendar className="w-6 h-6 mx-auto text-blue-500 mb-2" />
-                        <p className="text-xl font-bold text-slate-800">٩٥%</p>
+                        <p className="text-xl font-bold text-slate-800 dark:text-white">٩٥%</p>
                         <p className="text-xs text-slate-500">نسبة النجاح</p>
                     </div>
                 </div>
@@ -260,7 +260,7 @@ export default function ProgramDetails() {
                     <div>
                         <span className="text-slate-500 text-sm">السعر</span>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold text-slate-800">{program.price}</span>
+                            <span className="text-3xl font-bold text-slate-800 dark:text-white">{program.price}</span>
                             <span className="text-slate-500">ر.س</span>
                         </div>
                     </div>

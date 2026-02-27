@@ -58,7 +58,7 @@ export default function MyAppointments() {
                             <ArrowRight className="w-5 h-5" />
                         </Button>
                     </Link>
-                    <h1 className="text-lg font-bold text-slate-800">مواعيدي</h1>
+                    <h1 className="text-lg font-bold text-slate-800 dark:text-white">مواعيدي</h1>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@ export default function MyAppointments() {
                 {/* Upcoming Appointments */}
                 {upcomingAppointments.length > 0 && (
                     <div>
-                        <h2 className="font-bold text-slate-800 mb-3">المواعيد القادمة</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white mb-3">المواعيد القادمة</h2>
                         <div className="space-y-3">
                             {upcomingAppointments.map((apt: any) => (
                                 <AppointmentCard key={apt.id} appointment={apt} />
@@ -104,7 +104,7 @@ export default function MyAppointments() {
                 {/* Past Appointments */}
                 {pastAppointments.length > 0 && (
                     <div>
-                        <h2 className="font-bold text-slate-800 mb-3">المواعيد السابقة</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white mb-3">المواعيد السابقة</h2>
                         <div className="space-y-3">
                             {pastAppointments.map((apt: any) => (
                                 <AppointmentCard key={apt.id} appointment={apt} isPast />
@@ -146,7 +146,7 @@ function AppointmentCard({ appointment, isPast = false }: { appointment: any; is
                         <Video className={`w-6 h-6 ${isPast ? 'text-slate-400' : 'text-white'}`} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-slate-800">{sessionLabel}</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-white">{sessionLabel}</h3>
                         <p className="text-sm text-slate-500">د. عمر العماد</p>
                     </div>
                 </div>

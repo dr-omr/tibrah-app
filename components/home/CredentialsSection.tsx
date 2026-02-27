@@ -32,7 +32,7 @@ export default function CredentialsSection() {
     ];
 
     return (
-        <section className="px-4 py-8 bg-gradient-to-b from-slate-50 to-white">
+        <section className="px-4 py-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
             {/* Section Title */}
             <motion.div
                 className="text-center mb-6"
@@ -40,8 +40,8 @@ export default function CredentialsSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
             >
-                <h2 className="text-xl font-bold text-slate-800 mb-2">خبراتنا وإنجازاتنا</h2>
-                <p className="text-sm text-slate-500">نفتخر بخدمة مجتمعنا الصحي</p>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">خبراتنا وإنجازاتنا</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">نفتخر بخدمة مجتمعنا الصحي</p>
             </motion.div>
 
             {/* Stats - Premium Cards */}
@@ -67,8 +67,8 @@ export default function CredentialsSection() {
                                 >
                                     <Icon className="w-6 h-6 text-white" />
                                 </motion.div>
-                                <div className="text-2xl font-bold text-slate-800">{stat.value}</div>
-                                <div className="text-xs text-slate-500 font-medium">{stat.label}</div>
+                                <div className="text-2xl font-bold text-slate-800 dark:text-white">{stat.value}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{stat.label}</div>
                             </div>
                         </motion.div>
                     );
@@ -91,8 +91,8 @@ export default function CredentialsSection() {
                         <Award className="w-5 h-5 text-white" />
                     </motion.div>
                     <div>
-                        <span className="font-bold text-slate-800 block">التخصصات والشهادات</span>
-                        <span className="text-xs text-slate-500">Certifications</span>
+                        <span className="font-bold text-slate-800 dark:text-white block">التخصصات والشهادات</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Certifications</span>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -106,7 +106,7 @@ export default function CredentialsSection() {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Icon className="w-4 h-4 text-[#2D9B83]" />
-                                <span className="text-sm font-medium text-slate-700">{cert.name}</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{cert.name}</span>
                             </motion.div>
                         );
                     })}

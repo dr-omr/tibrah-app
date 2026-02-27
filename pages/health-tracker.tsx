@@ -9,45 +9,49 @@ import {
 } from 'lucide-react';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '../utils';
-import HealthSummary from '@/components/health-tracker/HealthSummary';
-// Legacy components (keeping for reference)
-import WaterTracker from '@/components/health-tracker/WaterTracker';
-import SleepTracker from '@/components/health-tracker/SleepTracker';
-import MedicationReminder from '@/components/health-tracker/MedicationReminder';
-import ActivityRings from '@/components/health-tracker/ActivityRings';
-import MoodTracker from '@/components/health-tracker/MoodTracker';
-import WeightTracker from '@/components/health-tracker/WeightTracker';
-import BloodPressureTracker from '@/components/health-tracker/BloodPressureTracker';
-import FastingTimer from '@/components/health-tracker/FastingTimer';
-import BreathingExercises from '@/components/health-tracker/BreathingExercises';
-import TodayView from '@/components/health-tracker/TodayView';
-import AIHealthAnalysis from '@/components/health-tracker/AIHealthAnalysis';
-import HistoryView from '@/components/health-tracker/HistoryView';
-import HistoryViewPro from '@/components/health-tracker/HistoryViewPro';
-import MetricsView from '@/components/health-tracker/MetricsView';
-import JournalView from '@/components/health-tracker/JournalView';
-import AddMetricSheet from '@/components/health-tracker/AddMetricSheet';
-import SymptomLogger from '@/components/health-tracker/SymptomLogger';
-import DailyCheckIn from '@/components/health-tracker/DailyCheckIn';
-import AIContextAssistant from '@/components/ai/AIContextAssistant';
-import { DOCTOR_KNOWLEDGE } from '@/lib/doctorContext';
 import { DailyLog } from '@/Entities/DailyLog';
 import { initializeNotifications } from '@/lib/pushNotifications';
-import InsightCard from '@/components/health-tracker/InsightCard';
-import ActionGrid from '@/components/health-tracker/ActionGrid';
-import MoodSymptomPicker from '@/components/health-tracker/MoodSymptomPicker';
+import { DOCTOR_KNOWLEDGE } from '@/lib/doctorContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// NEW PRO COMPONENTS - Complete Rebuild
-import WaterTrackerPro from '@/components/health-tracker/WaterTrackerPro';
-import SleepTrackerPro from '@/components/health-tracker/SleepTrackerPro';
-import ActivityFitnessPro from '@/components/health-tracker/ActivityFitnessPro';
-import MentalHealthHub from '@/components/health-tracker/MentalHealthHub';
-import WeightBodyTrackerPro from '@/components/health-tracker/WeightBodyTrackerPro';
-import FastingTimerPro from '@/components/health-tracker/FastingTimerPro';
-import MedicationReminderPro from '@/components/health-tracker/MedicationReminderPro';
+// Dynamic imports - only loaded when user navigates to tab
+const HealthSummary = dynamic(() => import('@/components/health-tracker/HealthSummary'), { ssr: false });
+const WaterTracker = dynamic(() => import('@/components/health-tracker/WaterTracker'), { ssr: false });
+const SleepTracker = dynamic(() => import('@/components/health-tracker/SleepTracker'), { ssr: false });
+const MedicationReminder = dynamic(() => import('@/components/health-tracker/MedicationReminder'), { ssr: false });
+const ActivityRings = dynamic(() => import('@/components/health-tracker/ActivityRings'), { ssr: false });
+const MoodTracker = dynamic(() => import('@/components/health-tracker/MoodTracker'), { ssr: false });
+const WeightTracker = dynamic(() => import('@/components/health-tracker/WeightTracker'), { ssr: false });
+const BloodPressureTracker = dynamic(() => import('@/components/health-tracker/BloodPressureTracker'), { ssr: false });
+const FastingTimer = dynamic(() => import('@/components/health-tracker/FastingTimer'), { ssr: false });
+const BreathingExercises = dynamic(() => import('@/components/health-tracker/BreathingExercises'), { ssr: false });
+const TodayView = dynamic(() => import('@/components/health-tracker/TodayView'), { ssr: false });
+const AIHealthAnalysis = dynamic(() => import('@/components/health-tracker/AIHealthAnalysis'), { ssr: false });
+const HistoryView = dynamic(() => import('@/components/health-tracker/HistoryView'), { ssr: false });
+const HistoryViewPro = dynamic(() => import('@/components/health-tracker/HistoryViewPro'), { ssr: false });
+const MetricsView = dynamic(() => import('@/components/health-tracker/MetricsView'), { ssr: false });
+const JournalView = dynamic(() => import('@/components/health-tracker/JournalView'), { ssr: false });
+const AddMetricSheet = dynamic(() => import('@/components/health-tracker/AddMetricSheet'), { ssr: false });
+const SymptomLogger = dynamic(() => import('@/components/health-tracker/SymptomLogger'), { ssr: false });
+const DailyCheckIn = dynamic(() => import('@/components/health-tracker/DailyCheckIn'), { ssr: false });
+const AIContextAssistant = dynamic(() => import('@/components/ai/AIContextAssistant'), { ssr: false });
+const InsightCard = dynamic(() => import('@/components/health-tracker/InsightCard'), { ssr: false });
+const ActionGrid = dynamic(() => import('@/components/health-tracker/ActionGrid'), { ssr: false });
+const MoodSymptomPicker = dynamic(() => import('@/components/health-tracker/MoodSymptomPicker'), { ssr: false });
+const WeeklyHealthReport = dynamic(() => import('@/components/health-tracker/WeeklyHealthReport'), { ssr: false });
+
+// PRO Components - lazy loaded
+const WaterTrackerPro = dynamic(() => import('@/components/health-tracker/WaterTrackerPro'), { ssr: false });
+const SleepTrackerPro = dynamic(() => import('@/components/health-tracker/SleepTrackerPro'), { ssr: false });
+const ActivityFitnessPro = dynamic(() => import('@/components/health-tracker/ActivityFitnessPro'), { ssr: false });
+const MentalHealthHub = dynamic(() => import('@/components/health-tracker/MentalHealthHub'), { ssr: false });
+const WeightBodyTrackerPro = dynamic(() => import('@/components/health-tracker/WeightBodyTrackerPro'), { ssr: false });
+const FastingTimerPro = dynamic(() => import('@/components/health-tracker/FastingTimerPro'), { ssr: false });
+const MedicationReminderPro = dynamic(() => import('@/components/health-tracker/MedicationReminderPro'), { ssr: false });
+
 
 interface NavItemProps {
     id: string;
@@ -118,9 +122,9 @@ export default function HealthTracker() {
         mutationFn: async (data: DailyLog) => {
             const existing = dailyLogs.find(l => l.date === data.date);
             if (existing?.id) {
-                return db.entities.DailyLog.update(existing.id, data);
+                return db.entities.DailyLog.update(existing.id, data as any);
             }
-            return db.entities.DailyLog.create(data);
+            return db.entities.DailyLog.create(data as any);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['dailyLogs'] });
@@ -142,6 +146,7 @@ export default function HealthTracker() {
         { id: 'meds', icon: Pill, label: 'الأدوية' },
         { id: 'mood', icon: Heart, label: 'المزاج' },
         { id: 'history', icon: Calendar, label: 'السجل' },
+        { id: 'report', icon: BarChart3, label: 'تقرير' },
     ];
 
     // Search state
@@ -472,6 +477,20 @@ export default function HealthTracker() {
                             metrics={metrics}
                             dailyLogs={dailyLogs}
                             symptoms={symptoms}
+                        />
+                    </motion.div>
+                )}
+
+                {/* Weekly Report */}
+                {activeTab === 'report' && (
+                    <motion.div
+                        className="pt-6"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                    >
+                        <WeeklyHealthReport
+                            dailyLogs={dailyLogs}
+                            metrics={metrics}
                         />
                     </motion.div>
                 )}

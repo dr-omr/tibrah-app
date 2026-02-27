@@ -57,7 +57,9 @@ interface AccordionMultipleProps extends React.HTMLAttributes<HTMLDivElement> {
 type AccordionProps = AccordionSingleProps | AccordionMultipleProps
 
 const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
-    ({ className, type, collapsible, ...props }, ref) => {
+    ({ className, type, ...restProps }, ref) => {
+        const collapsible = type === 'single' ? (restProps as any).collapsible : undefined
+        const props = restProps
         const [internalValue, setInternalValue] = React.useState<string | string[]>(
             type === "single"
                 ? (props as AccordionSingleProps).defaultValue || ""
@@ -94,8 +96,9 @@ const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
             value: _,
             defaultValue: __,
             onValueChange: ___,
+            collapsible: ____,
             ...divProps
-        } = props as AccordionSingleProps & AccordionMultipleProps
+        } = props as any
 
         return (
             <AccordionContext.Provider

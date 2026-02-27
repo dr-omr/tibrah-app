@@ -332,7 +332,7 @@ export default function EmotionalMedicine() {
 
             {/* Results Count */}
             <div className="px-6 mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-800">
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">
                     النتائج ({filteredDiseases.length})
                 </h2>
                 {selectedSystem && (
@@ -372,7 +372,7 @@ export default function EmotionalMedicine() {
                                     {organSystems.find(s => s.id === disease.organSystemEn)?.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-slate-800 mb-1">{disease.symptom}</h3>
+                                    <h3 className="font-bold text-slate-800 dark:text-white mb-1">{disease.symptom}</h3>
                                     <p className="text-xs text-slate-500 mb-2">
                                         {disease.targetOrgan} • {disease.organSystem}
                                     </p>
@@ -395,7 +395,7 @@ export default function EmotionalMedicine() {
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Search className="w-10 h-10 text-slate-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">لا توجد نتائج</h3>
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">لا توجد نتائج</h3>
                         <p className="text-slate-500">جرب كلمات بحث مختلفة</p>
                     </motion.div>
                 )}
@@ -403,7 +403,7 @@ export default function EmotionalMedicine() {
 
             {/* Related Resources */}
             <div className="px-6 mt-10">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-rose-500" />
                     موارد مرتبطة
                 </h3>

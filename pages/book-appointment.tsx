@@ -123,7 +123,7 @@ export default function BookAppointment() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
             {/* Header */}
             <div className="sticky top-0 z-20 glass px-6 py-4">
                 <div className="flex items-center gap-4">
@@ -132,7 +132,7 @@ export default function BookAppointment() {
                             <ArrowRight className="w-5 h-5" />
                         </Button>
                     </Link>
-                    <h1 className="text-lg font-bold text-slate-800">حجز موعد</h1>
+                    <h1 className="text-lg font-bold text-slate-800 dark:text-white">حجز موعد</h1>
                 </div>
 
                 {/* Progress */}
@@ -140,7 +140,7 @@ export default function BookAppointment() {
                     {[1, 2, 3].map((s) => (
                         <div
                             key={s}
-                            className={`flex-1 h-1 rounded-full transition-all duration-300 ${s <= step ? 'gradient-primary' : 'bg-slate-200'
+                            className={`flex-1 h-1 rounded-full transition-all duration-300 ${s <= step ? 'gradient-primary' : 'bg-slate-200 dark:bg-slate-700'
                                 }`}
                         />
                     ))}
@@ -152,8 +152,8 @@ export default function BookAppointment() {
                 {step === 1 && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">اختر نوع الجلسة</h2>
-                            <p className="text-slate-500">حدد الخدمة المناسبة لاحتياجاتك</p>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">اختر نوع الجلسة</h2>
+                            <p className="text-slate-500 dark:text-slate-400">حدد الخدمة المناسبة لاحتياجاتك</p>
                         </div>
 
                         <div className="space-y-4">
@@ -175,7 +175,7 @@ export default function BookAppointment() {
                                                 }`} />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-slate-800">{session.label}</h3>
+                                            <h3 className="font-bold text-slate-800 dark:text-white">{session.label}</h3>
                                             <p className="text-sm text-slate-500 mt-1">{session.description}</p>
                                             <div className="flex items-center gap-4 mt-3">
                                                 <span className="text-sm text-slate-400 flex items-center gap-1">
@@ -217,8 +217,8 @@ export default function BookAppointment() {
                 {step === 2 && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">اختر الموعد</h2>
-                            <p className="text-slate-500">حدد التاريخ والوقت المناسب</p>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">اختر الموعد</h2>
+                            <p className="text-slate-500 dark:text-slate-400">حدد التاريخ والوقت المناسب</p>
                         </div>
 
                         {/* Calendar */}
@@ -243,7 +243,7 @@ export default function BookAppointment() {
                         {/* Time Slots */}
                         {formData.date && (
                             <div>
-                                <h3 className="font-semibold text-slate-800 mb-3">الأوقات المتاحة</h3>
+                                <h3 className="font-semibold text-slate-800 dark:text-white mb-3">الأوقات المتاحة</h3>
                                 <div className="grid grid-cols-4 gap-2">
                                     {timeSlots.map((slot) => (
                                         <button
@@ -284,8 +284,8 @@ export default function BookAppointment() {
                 {step === 3 && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">بياناتك الشخصية</h2>
-                            <p className="text-slate-500">أدخل معلومات التواصل</p>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">بياناتك الشخصية</h2>
+                            <p className="text-slate-500 dark:text-slate-400">أدخل معلومات التواصل</p>
                         </div>
 
                         <div className="space-y-4">
@@ -346,7 +346,7 @@ export default function BookAppointment() {
 
                         {/* Summary */}
                         <div className="glass rounded-2xl p-4">
-                            <h4 className="font-semibold text-slate-800 mb-3">ملخص الحجز</h4>
+                            <h4 className="font-semibold text-slate-800 dark:text-white mb-3">ملخص الحجز</h4>
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-slate-500">نوع الجلسة</span>
@@ -394,8 +394,8 @@ export default function BookAppointment() {
                         <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-primary flex items-center justify-center shadow-glow animate-breathe">
                             <Check className="w-12 h-12 text-white" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">تم الحجز بنجاح!</h2>
-                        <p className="text-slate-500 mb-8">
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">تم الحجز بنجاح!</h2>
+                        <p className="text-slate-500 dark:text-slate-400 mb-8">
                             سنتواصل معك قريباً لتأكيد الموعد
                         </p>
 
@@ -456,6 +456,21 @@ ${formData.health_concern || 'لم تحدد'}
                                     إرسال نسخة من بيانات الحجز
                                 </Button>
                             </a>
+
+                            {/* Google Calendar Link */}
+                            {formData.date && (
+                                <a
+                                    href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`${selectedSession?.label} - طِبرَا`)}&dates=${format(formData.date, 'yyyyMMdd')}T${formData.time_slot.replace(/[^0-9:]/g, '').replace(':', '')}00/${format(formData.date, 'yyyyMMdd')}T${formData.time_slot.replace(/[^0-9:]/g, '').replace(':', '')}00&details=${encodeURIComponent(`جلسة ${selectedSession?.label} مع د. عمر العماد`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block"
+                                >
+                                    <Button variant="outline" className="w-full h-14 rounded-2xl text-lg font-bold border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950">
+                                        <CalendarIcon className="w-5 h-5 ml-2" />
+                                        أضف لتقويم Google
+                                    </Button>
+                                </a>
+                            )}
 
                             <Link href={createPageUrl('Home')}>
                                 <Button variant="outline" className="w-full h-14 rounded-2xl">

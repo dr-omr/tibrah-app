@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
-export default function MetricChart({ data, metricType, normalRange }) {
+export default function MetricChart({ data, metricType, normalRange }: { data: any[]; metricType: string; normalRange?: { min: number; max: number } }) {
     const metricConfig = {
         weight: { color: '#06b6d4', name: 'الوزن' },
         blood_pressure_systolic: { color: '#ef4444', name: 'الضغط الانقباضي' },
@@ -23,9 +23,9 @@ export default function MetricChart({ data, metricType, normalRange }) {
         ...item,
         date: format(new Date(item.recorded_at), 'MM/dd', { locale: ar }),
         fullDate: format(new Date(item.recorded_at), 'yyyy-MM-dd')
-    })).sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
+    })).sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
 
-    const CustomTooltip = ({ active, payload, label }) => {
+    const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
                 <div className="glass rounded-lg p-3 shadow-lg border border-slate-200">

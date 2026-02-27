@@ -115,7 +115,7 @@ export default function AdvancedRifePlayer({
 
     const initAudio = useCallback(() => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         }
 
         if (audioContextRef.current.state === 'suspended') {
@@ -351,8 +351,8 @@ export default function AdvancedRifePlayer({
                                     <Badge
                                         key={index}
                                         className={`cursor-pointer text-xs transition-all ${index === activeFrequencyIndex
-                                                ? 'bg-purple-500 text-white scale-110'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-purple-100'
+                                            ? 'bg-purple-500 text-white scale-110'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-purple-100'
                                             }`}
                                         onClick={() => {
                                             setActiveFrequencyIndex(index);
@@ -483,8 +483,8 @@ export default function AdvancedRifePlayer({
                     <Button
                         onClick={togglePlayPause}
                         className={`w-full h-14 rounded-2xl text-lg font-bold shadow-xl ${isPlaying
-                                ? 'bg-red-500 hover:bg-red-600 text-white'
-                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90'
                             }`}
                     >
                         {isPlaying ? (

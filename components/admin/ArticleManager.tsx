@@ -169,7 +169,7 @@ export default function ArticleManager({ articles, onSave, onDelete }: ArticleMa
                                     </div>
                                 )}
                                 <div className="px-2 py-1 bg-black/50 backdrop-blur text-white text-[10px] font-bold rounded-lg">
-                                    {article.views || 0} مشاهدة
+                                    {(article.views as number) || 0} مشاهدة
                                 </div>
                             </div>
 
@@ -189,7 +189,7 @@ export default function ArticleManager({ articles, onSave, onDelete }: ArticleMa
                                 <span className="text-[10px] uppercase tracking-wider text-[#2D9B83] font-bold">
                                     {libraryCategories.find(c => c.id === article.category)?.name || article.category}
                                 </span>
-                                <span className="text-[10px] text-slate-400">{new Date(article.created_at || Date.now()).toLocaleDateString('ar-EG')}</span>
+                                <span className="text-[10px] text-slate-400">{new Date((article.created_at as string) || Date.now()).toLocaleDateString('ar-EG')}</span>
                             </div>
                             <h3 className="font-bold text-slate-800 leading-tight line-clamp-2 min-h-[3rem]">
                                 {article.title}

@@ -169,7 +169,7 @@ export default function BodyMap() {
     return (
         <div className="min-h-screen bg-slate-50 pb-24">
             <div className="bg-white p-6 rounded-b-3xl shadow-sm mb-6">
-                <h1 className="text-2xl font-bold text-slate-800 mb-2">خريطة الجسم 🧘‍♂️</h1>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">خريطة الجسم 🧘‍♂️</h1>
                 <p className="text-slate-500">اضغط على أي منطقة في الجسم لفهم رسالتها الشعورية</p>
             </div>
 
@@ -182,7 +182,7 @@ export default function BodyMap() {
             />
 
             <div className="px-6">
-                <h2 className="text-xl font-bold text-slate-800 mb-4">أقسام الصحة الشمولية</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">أقسام الصحة الشمولية</h2>
                 <div className="grid grid-cols-2 gap-3">
                     {holisticSections.map((section, idx) => {
                         const Icon = section.icon;
@@ -195,7 +195,7 @@ export default function BodyMap() {
                                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center mb-3`}>
                                     <Icon className="w-5 h-5 text-white" />
                                 </div>
-                                <h4 className="font-bold text-slate-800 text-sm mb-1">{section.name}</h4>
+                                <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{section.name}</h4>
                                 <p className="text-xs text-slate-500">{section.description}</p>
                             </Link>
                         );
@@ -244,7 +244,7 @@ export default function BodyMap() {
                             <div className="space-y-6 pb-8">
                                 {/* Emotion */}
                                 <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4">
-                                    <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                                    <h4 className="font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
                                         <Heart className="w-5 h-5 text-red-500" />
                                         السبب الشعوري
                                     </h4>
@@ -254,13 +254,13 @@ export default function BodyMap() {
 
                                 {/* Deeper Cause */}
                                 <div>
-                                    <h4 className="font-bold text-slate-800 mb-2">السبب العميق</h4>
+                                    <h4 className="font-bold text-slate-800 dark:text-white mb-2">السبب العميق</h4>
                                     <p className="text-slate-600 leading-relaxed">{selectedArea.deeperCause}</p>
                                 </div>
 
                                 {/* Treatment Steps */}
                                 <div>
-                                    <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <h4 className="font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                                         <Sparkles className="w-5 h-5 text-[#2D9B83]" />
                                         خطوات العلاج الشعوري
                                     </h4>
@@ -278,7 +278,7 @@ export default function BodyMap() {
 
                                 {/* Affirmation */}
                                 <div className="bg-gradient-to-br from-[#2D9B83]/10 to-[#3FB39A]/10 rounded-2xl p-5">
-                                    <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <h4 className="font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                                         <Star className="w-5 h-5 text-[#D4AF37]" />
                                         التأكيد الشفائي
                                     </h4>
@@ -300,14 +300,14 @@ export default function BodyMap() {
                                     if (relatedDiseases.length > 0) {
                                         return (
                                             <div className="mt-6 pt-4 border-t border-slate-100">
-                                                <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                                <h4 className="font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                                                     <BookOpen className="w-5 h-5 text-pink-500" />
                                                     أمراض مرتبطة بـ {selectedArea.name}
                                                 </h4>
                                                 <div className="space-y-2">
                                                     {relatedDiseases.map((disease, idx) => (
                                                         <div key={idx} className="bg-pink-50 rounded-xl p-3">
-                                                            <p className="font-medium text-slate-800 text-sm">{disease.symptom}</p>
+                                                            <p className="font-medium text-slate-800 dark:text-white text-sm">{disease.symptom}</p>
                                                             <p className="text-xs text-slate-500 line-clamp-1">{disease.emotionalConflict}</p>
                                                         </div>
                                                     ))}
@@ -339,7 +339,7 @@ export default function BodyMap() {
                                 {/* Suggested Products */}
                                 {getSuggestedProducts(selectedArea.name).length > 0 && (
                                     <div className="mt-8 pt-6 border-t border-slate-100">
-                                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <h4 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                             <ShoppingBag className="w-5 h-5 text-[#D4AF37]" />
                                             منتجات مساعدة مقترحة
                                         </h4>
@@ -351,7 +351,7 @@ export default function BodyMap() {
                                                             <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
                                                         </div>
                                                         <div>
-                                                            <h5 className="font-bold text-slate-800 text-sm">{prod.name}</h5>
+                                                            <h5 className="font-bold text-slate-800 dark:text-white text-sm">{prod.name}</h5>
                                                             <p className="text-[#2D9B83] text-sm font-bold">{prod.price} ر.س</p>
                                                         </div>
                                                         <Button size="sm" variant="outline" className="mr-auto">عرض</Button>

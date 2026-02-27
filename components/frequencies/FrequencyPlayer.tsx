@@ -32,7 +32,7 @@ export default function FrequencyPlayer({
         if (frequency && isPlaying) {
             // Create audio context if not exists or closed
             if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             }
 
             // Resume if suspended (for iOS)
@@ -232,8 +232,8 @@ export default function FrequencyPlayer({
                                             key={mins}
                                             variant={timer === mins * 60 && timerActive ? 'default' : 'outline'}
                                             className={`rounded-xl ${timer === mins * 60 && timerActive
-                                                    ? 'gradient-primary text-white'
-                                                    : 'glass border-0'
+                                                ? 'gradient-primary text-white'
+                                                : 'glass border-0'
                                                 }`}
                                             onClick={() => {
                                                 setTimer(mins * 60);

@@ -11,24 +11,31 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-export default function AIHealthAnalysis({ metrics, symptoms, dailyLogs }) {
-    const [analysis, setAnalysis] = useState(null);
+interface TrendData {
+    direction: 'up' | 'down' | 'stable';
+    percentage: string;
+    recentAvg: string;
+    dataPoints: number;
+}
+
+export default function AIHealthAnalysis({ metrics, symptoms, dailyLogs }: { metrics: any[]; symptoms: any[]; dailyLogs: any[] }) {
+    const [analysis, setAnalysis] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
-    const [expandedSections, setExpandedSections] = useState({});
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-    const toggleSection = (section) => {
+    const toggleSection = (section: string) => {
         setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
     };
 
     const calculateTrends = () => {
-        const trends = {};
+        const trends: Record<string, TrendData> = {};
         const metricTypes = [...new Set(metrics.map(m => m.metric_type))];
 
         metricTypes.forEach(type => {
             const typeMetrics = metrics
                 .filter(m => m.metric_type === type)
-                .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+                .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime());
 
             if (typeMetrics.length >= 2) {
                 const recent = typeMetrics.slice(-5);
@@ -58,7 +65,7 @@ export default function AIHealthAnalysis({ metrics, symptoms, dailyLogs }) {
                 `${m.metric_type}: ${m.value} ${m.unit || ''} (${new Date(m.recorded_at).toLocaleDateString('ar')})`
             ).join('\n');
 
-            const trendsText = Object.entries(trends).map(([type, data]) =>
+            const trendsText = Object.entries(trends).map(([type, data]: [string, TrendData]) =>
                 `${type}: اتجاه ${data.direction === 'up' ? 'صاعد' : data.direction === 'down' ? 'هابط' : 'مستقر'} (${data.percentage}%)`
             ).join('\n');
 
@@ -179,7 +186,7 @@ ${logsText || 'لا توجد سجلات'}
                 }
             });
 
-            setAnalysis({ ...result, trends, generatedAt: new Date().toISOString() });
+            setAnalysis({ ...(result as any), trends, generatedAt: new Date().toISOString() });
         } catch (error) {
             console.error('Error generating analysis:', error);
             toast.error('حدث خطأ في التحليل');

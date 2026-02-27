@@ -172,6 +172,7 @@ export default function ActivityRings() {
             if (logs?.[0]) {
                 await db.entities.DailyLog.update(logs[0].id as string, {
                     exercise: {
+                        type: 'general',
                         calories: type === 'move' ? data.moveCalories + 50 : data.moveCalories,
                         duration_minutes: type === 'exercise' ? data.exerciseMinutes + 10 : data.exerciseMinutes
                     },
@@ -181,6 +182,7 @@ export default function ActivityRings() {
                 await db.entities.DailyLog.create({
                     date: today,
                     exercise: {
+                        type: 'general',
                         calories: type === 'move' ? 50 : 0,
                         duration_minutes: type === 'exercise' ? 10 : 0
                     },

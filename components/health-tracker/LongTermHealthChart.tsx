@@ -5,7 +5,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
-export default function LongTermHealthCharts({ metrics, dailyLogs, symptoms }) {
+export default function LongTermHealthCharts({ metrics, dailyLogs, symptoms }: { metrics: any[]; dailyLogs: any[]; symptoms: any[] }) {
     // Helper to get mood value (handles both object and number types)
     const getMoodValue = (log: any) => {
         if (!log?.mood) return 0;
@@ -16,7 +16,7 @@ export default function LongTermHealthCharts({ metrics, dailyLogs, symptoms }) {
     // Prepare data for logs (Mood & Energy)
     const logsData = dailyLogs
         .slice()
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .map(log => ({
             date: format(parseISO(log.date), 'dd MMM', { locale: ar }),
             mood: getMoodValue(log),
@@ -28,7 +28,7 @@ export default function LongTermHealthCharts({ metrics, dailyLogs, symptoms }) {
     // Prepare data for Weight trend
     const weightData = metrics
         .filter(m => m.metric_type === 'weight')
-        .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at))
+        .sort((a: any, b: any) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
         .map(m => ({
             date: format(parseISO(m.recorded_at), 'dd MMM', { locale: ar }),
             value: m.value,
@@ -38,14 +38,14 @@ export default function LongTermHealthCharts({ metrics, dailyLogs, symptoms }) {
     // Prepare data for Sleep trend (from metrics if available, or logs)
     const sleepData = metrics
         .filter(m => m.metric_type === 'sleep_hours')
-        .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at))
+        .sort((a: any, b: any) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
         .map(m => ({
             date: format(parseISO(m.recorded_at), 'dd MMM', { locale: ar }),
             value: m.value,
             unit: 'ساعة'
         }));
 
-    const CustomTooltip = ({ active, payload, label }) => {
+    const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
                 <div className="glass rounded-lg p-3 shadow-lg border border-slate-200 text-right dir-rtl">

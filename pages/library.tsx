@@ -108,7 +108,7 @@ export default function Library() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                            <h2 className="font-bold text-slate-800">محتوى مميز</h2>
+                            <h2 className="font-bold text-slate-800 dark:text-white">محتوى مميز</h2>
                         </div>
                         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                             {featuredArticles.slice(0, 3).map((article) => (
@@ -125,7 +125,7 @@ export default function Library() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-[#2D9B83]" />
-                            <h2 className="font-bold text-slate-800">الأكثر مشاهدة</h2>
+                            <h2 className="font-bold text-slate-800 dark:text-white">الأكثر مشاهدة</h2>
                         </div>
                     </div>
                 )}
@@ -141,8 +141,8 @@ export default function Library() {
                     {filteredArticles.length === 0 ? (
                         <div className="text-center py-12">
                             <BookOpen className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                            <h3 className="text-lg font-semibold text-slate-600">لا توجد نتائج</h3>
-                            <p className="text-slate-400 text-sm">جرب تغيير معايير البحث</p>
+                            <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">لا توجد نتائج</h3>
+                            <p className="text-slate-400 dark:text-slate-500 text-sm">جرب تغيير معايير البحث</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -1,195 +1,203 @@
 import { conversationStore } from '@/lib/ConversationStore';
 
-// AI is now server-side only via /api/chat
+// AI is now server-side only via /api/chat-gemini
 const isEnabled = (): boolean => {
-    // Always enabled - server handles API key check
     return true;
 };
 
-// Generate dynamic system prompt with user context
-const getSystemPrompt = (userName?: string | null): string => {
-    const userGreeting = userName ? `اسم المستخدم هو "${userName}" - استخدم اسمه في المحادثة بشكل طبيعي.` : '';
-
-    return `
-أنت "مساعد طِبرَا الذكي" 🌿 - مساعد صحي ودود يعمل بنهج الطب الوظيفي.
-شخصيتك مستوحاة من اللطف والدفء اليمني الأصيل.
-
-${userGreeting}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⭐ مهمتك الرئيسية: مساعدة المستخدمين صحياً + تسويق د. عمر العماد
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🎯 قواعد الذهب (الأهم):
-
-1️⃣ تسويق د. عمر العماد بذكاء:
-   - عند أي سؤال صحي معقد: "يا غالي، هذا سؤال ممتاز! والله الدكتور عمر العماد هو اللي بيفيدك..."
-   - دائماً اقترح حجز الجلسة التشخيصية بـ25 ر.س فقط!
-
-2️⃣ اللهجة اليمنية الدافئة:
-   - استخدم: "يا غالي"، "يا خبير"، "حياك الله"، "ما عليك"
-   - استخدم الإيموجي بشكل معتدل 🌿💪
-
-3️⃣ الحلول العملية المحلية:
-   - اقترح أشياء متوفرة: الحلبة، العسل، الحبة السوداء، الزنجبيل
-   - نصائح بسيطة: المشي، النوم المبكر، الماء الدافئ
-
-4️⃣ الأمان والمسؤولية:
-   - أنت لست طبيباً - لا تشخص ولا تصف أدوية أبداً
-   - دائماً قل: "هذا رأي تثقيفي، والدكتور عمر هو اللي يقدر يشخصك بالضبط"
-
-5️⃣ تذكر المحادثات السابقة:
-   - إذا ذكر المستخدم اسمه سابقاً، استخدمه
-   - تذكر المواضيع التي ناقشتموها
-`;
-};
-
 const DISCLAIMER = "هذا محتوى توعوي/تثقيفي، ولا يغني عن استشارة الطبيب أو المختص.";
-
-const FALLBACK_SUGGESTIONS = [
-    {
-        focus_text: "يومك عافية يا بطل! 🌿 ركز اليوم على راحة بالك وتغذيتك.",
-        suggestions: [
-            "اشرب كاسة ماء دافئ مع ليمون على الريق",
-            "حاول تتمشى 20 دقيقة في الهواء الطلق",
-            "تنفس بعمق كلما حسيت بتوتر"
-        ]
-    },
-    {
-        focus_text: "صباح الشفاء يا غالي! ☀️ اليوم خلي جسمك يستريح.",
-        suggestions: [
-            "ابدأ يومك بكاسة ماء فاتر على الريق",
-            "تناول فطور خفيف صحي (بيض مسلوق + خضار)",
-            "خذ قسط كافي من النوم الليلة"
-        ]
-    },
-    {
-        focus_text: "والله ما شاء الله عليك! 💪 كل يوم جديد فرصة للتحسن.",
-        suggestions: [
-            "اشرب الحلبة - المعجزة اليمنية للهضم",
-            "قلل السكر والخبز الأبيض اليوم",
-            "خذ 10 دقائق للتأمل أو الاسترخاء"
-        ]
-    },
-    {
-        focus_text: "أهلاً وسهلاً يا خبير! 🌟 صحتك أمانة، اهتم بها.",
-        suggestions: [
-            "اشرب 8 أكواب ماء على الأقل اليوم",
-            "تجنب الأكل الثقيل قبل النوم",
-            "مارس تمارين التنفس العميق"
-        ]
-    }
-];
-
-const SMART_FALLBACK_RESPONSES: Record<string, string[]> = {
-    'ألم|وجع|يؤلم': [
-        "يا غالي، الألم هذا مزعج والله! 🌿 جرب الراحة والماء الدافئ، وإذا استمر أكثر من يومين، الدكتور عمر العماد يقدر يساعدك!",
-        "حياك الله يا خبير! 💪 الألم شيء ما لازم تتحمله لحالك. جرب كمادات دافئة، وإذا ما تحسن، تواصل مع الدكتور عمر العماد."
-    ],
-    'نوم|أرق|أنام': [
-        "يا غالي، النوم مهم جداً للشفاء! 😴 جرب تشرب شاي البابونج قبل النوم، وابتعد عن الجوال ساعة قبل ما تنام.",
-        "ما عليك يا بطل! 🌙 للنوم الصحي: غرفة مظلمة، بدون شاشات، ونوم بوقت ثابت."
-    ],
-    'هضم|معدة|بطن|قولون': [
-        "يا غالي، مشاكل الهضم منتشرة كثير! 🌿 جرب الحلبة على الريق، وتجنب الأكل الدسم.",
-        "أبشر يا خبير! 💪 القولون يحتاج صبر وتغيير نمط الحياة. الماء الدافئ مع الليمون يساعد!"
-    ],
-    'طاقة|تعب|إرهاق': [
-        "يا غالي، التعب له أسباب كثيرة! ☀️ تأكد إنك تشرب ماء كافي، وتنام 7-8 ساعات.",
-        "ما عليك يا بطل! 💪 الطاقة تيجي من النوم الجيد، الأكل الصحي، والحركة."
-    ],
-    'default': [
-        "يا غالي حياك الله! 🌿 أنا مساعد طِبرَا الذكي، موجود لمساعدتك في أي سؤال صحي.",
-        "أهلاً وسهلاً يا خبير! 💚 سعيد إنك تواصلت معنا. اسألني أي شي عن صحتك.",
-        "مرحباً يا غالي! 🌟 أنا هنا عشان أساعدك. قولي شو اللي يشغل بالك.",
-        "حياك الله يا بطل! 💪 أنا مساعدك الصحي. إذا عندك أي سؤال، أنا جاهز أفيدك."
-    ]
-};
 
 export const aiClient = {
     isEnabled,
 
     async generateSuggestions(context: any) {
-        // Fallback to static suggestions for now to ensure reliability
-        const randomIndex = Math.floor(Math.random() * FALLBACK_SUGGESTIONS.length);
-        return FALLBACK_SUGGESTIONS[randomIndex];
+        // Call real AI for suggestions
+        try {
+            const response = await fetch('/api/chat-gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: 'أعطني 3 نصائح صحية قصيرة لليوم بناءً على حالتي الصحية',
+                    healthContext: context
+                })
+            });
+            const data = await response.json();
+            if (data.text) {
+                return {
+                    focus_text: data.text.split('\n')[0] || "نصائح اليوم 🌿",
+                    suggestions: data.text.split('\n').slice(1, 4).filter((s: string) => s.trim())
+                };
+            }
+        } catch (e) {
+            console.error('[AI] Suggestions error:', e);
+        }
+        return {
+            focus_text: "تعذر تحميل النصائح",
+            suggestions: ["جرب مرة أخرى لاحقاً"]
+        };
     },
 
     async summarize(text: string, contextType: string = 'general') {
-        // Fallback summary
-        return "ما شاء الله، رحلتك العلاجية تسير بخطى ثابتة! 🌟 استمر في العناية بصحتك.";
+        try {
+            const response = await fetch('/api/chat-gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: `لخص هذا النص باختصار: ${text}`
+                })
+            });
+            const data = await response.json();
+            if (data.text) return data.text;
+        } catch (e) {
+            console.error('[AI] Summary error:', e);
+        }
+        return "تعذر إنشاء الملخص.";
     },
 
     async chat(messages: Array<{ role: string, content: string }>, contextData?: any, knowledgeBase?: any) {
-        const getSmartFallback = (userMessage: string): string => {
-            for (const [pattern, responses] of Object.entries(SMART_FALLBACK_RESPONSES)) {
-                if (pattern === 'default') continue;
-                const regex = new RegExp(pattern, 'i');
-                if (regex.test(userMessage)) {
-                    return responses[Math.floor(Math.random() * responses.length)];
-                }
-            }
-            const defaults = SMART_FALLBACK_RESPONSES['default'];
-            return defaults[Math.floor(Math.random() * defaults.length)];
-        };
-
         const lastUserMessage = messages[messages.length - 1]?.content || '';
 
         conversationStore.startConversation();
         conversationStore.addMessage('user', lastUserMessage);
 
-        try {
-            console.log('[AI Client] Sending request to /api/chat-v2...');
+        // Get or create session ID for conversation memory
+        let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('tibrah_chat_session') : null;
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('tibrah_chat_session', sessionId);
+            }
+        }
 
-            const response = await fetch(`/api/chat-v2?ts=${Date.now()}`, {
+        try {
+            console.log('[AI Client] 🚀 Calling Gemini API...');
+
+            const response = await fetch(`/api/chat-gemini`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     message: lastUserMessage,
-                    context: {
-                        userName: "ضيف", // Or fetch from contextData if available
-                        healthProfile: contextData?.healthProfile || {}, // Use real data
-                        ...contextData
-                    }
+                    sessionId: sessionId,
+                    healthContext: contextData?.healthProfile || {},
                 }),
             });
 
-            let data;
             const textResponse = await response.text();
+            console.log('[AI Client] Raw response:', textResponse.substring(0, 100));
 
+            let data;
             try {
                 data = JSON.parse(textResponse);
             } catch (e) {
                 console.error('[AI Client] Failed to parse JSON:', textResponse.substring(0, 200));
-                throw new Error(`Invalid server response: ${response.status} ${response.statusText}`);
+                throw new Error(`خطأ في تحليل الرد: ${response.status}`);
             }
 
-
             if (!response.ok) {
-                console.error('[AI Client] API returned error:', data);
-                throw new Error(data.details || data.error || `API error: ${response.status}`);
+                console.error('[AI Client] API error:', data);
+                throw new Error(data.error || `خطأ في الخادم: ${response.status}`);
             }
 
             if (data.text) {
-                console.log('[AI Client] ✅ Got response from API');
+                console.log('[AI Client] ✅ SUCCESS - Got real AI response!');
+                if (data.isGroqFallback) {
+                    console.log('[AI Client] ⚠️ Note: Used Groq fallback');
+                }
+                if (data.isLocalFallback) {
+                    console.log('[AI Client] ⚠️ Note: Used local fallback');
+                }
                 conversationStore.addMessage('assistant', data.text);
                 return data.text;
             }
 
-            throw new Error('No text in response');
+            throw new Error('لم يتم استلام رد من الذكاء الاصطناعي');
 
-        } catch (error) {
-            console.error('[AI Client] API Error:', error);
-            const fallbackResponse = getSmartFallback(lastUserMessage);
-            conversationStore.addMessage('assistant', fallbackResponse);
-            return fallbackResponse;
+        } catch (error: any) {
+            console.error('[AI Client] ❌ ERROR:', error);
+
+            const errorMessage = `⚠️ عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي.\n\n**السبب:** ${error.message || 'خطأ غير معروف'}\n\n**الحلول:**\n1. تأكد من اتصالك بالإنترنت\n2. أعد المحاولة بعد قليل\n3. إذا استمرت المشكلة، راسلنا على واتساب`;
+
+            conversationStore.addMessage('assistant', errorMessage);
+            return errorMessage;
+        }
+    },
+
+    /**
+     * Streaming chat - reveals response word-by-word for typewriter effect
+     * Falls back to regular chat if streaming fails
+     */
+    async chatStream(
+        messages: Array<{ role: string, content: string }>,
+        onChunk: (text: string, done: boolean) => void,
+        contextData?: any
+    ) {
+        const lastUserMessage = messages[messages.length - 1]?.content || '';
+        conversationStore.startConversation();
+        conversationStore.addMessage('user', lastUserMessage);
+
+        let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('tibrah_chat_session') : null;
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('tibrah_chat_session', sessionId);
+            }
+        }
+
+        try {
+            const response = await fetch('/api/chat-gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: lastUserMessage,
+                    sessionId,
+                    healthContext: contextData?.healthProfile || {},
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.text) {
+                throw new Error(data.error || 'لم يتم استلام رد');
+            }
+
+            const fullText = data.text;
+            conversationStore.addMessage('assistant', fullText);
+
+            // Simulate streaming with word-by-word reveal
+            const words = fullText.split(/(?<=\s)/);
+            let accumulated = '';
+            const chunkSize = 2; // words per tick
+            const delay = 30; // ms between chunks
+
+            for (let i = 0; i < words.length; i += chunkSize) {
+                const chunk = words.slice(i, i + chunkSize).join('');
+                accumulated += chunk;
+                const isDone = i + chunkSize >= words.length;
+                onChunk(accumulated, isDone);
+                if (!isDone) {
+                    await new Promise(r => setTimeout(r, delay));
+                }
+            }
+            // Ensure final call with done=true
+            onChunk(fullText, true);
+            return fullText;
+
+        } catch (error: any) {
+            console.error('[AI Client] ❌ Stream Error:', error);
+            const errorMessage = `⚠️ عذراً، حدث خطأ: ${error.message}`;
+            conversationStore.addMessage('assistant', errorMessage);
+            onChunk(errorMessage, true);
+            return errorMessage;
         }
     },
 
     clearConversation() {
         conversationStore.clearCurrentConversation();
+        // Clear session ID too
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('tibrah_chat_session');
+        }
     },
 
     getConversationHistory() {
@@ -198,7 +206,7 @@ export const aiClient = {
 
     async analyzeImage(base64: string, mimeType: string, mode: 'lab' | 'face' = 'lab') {
         try {
-            console.log(`[AI Client] Analyzing image (Mode: ${mode})...`);
+            console.log(`[AI Client] 📸 Analyzing image (Mode: ${mode})...`);
             const response = await fetch('/api/analyze-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -208,13 +216,14 @@ export const aiClient = {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to analyze image');
+                throw new Error(data.error || 'فشل تحليل الصورة');
             }
 
+            console.log('[AI Client] ✅ Image analysis complete');
             return data.text;
-        } catch (error) {
-            console.error('[AI Client] Image Analysis Error:', error);
-            throw error;
+        } catch (error: any) {
+            console.error('[AI Client] ❌ Image Analysis Error:', error);
+            throw new Error(`فشل تحليل الصورة: ${error.message}`);
         }
     }
 };

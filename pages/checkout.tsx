@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, Trash2, Plus, Minus, ShoppingBag,
-    MessageCircle, CreditCard, Check
+    MessageCircle, CreditCard, Check, Tag
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import YemeniPaymentGateways, { PaymentMethodType } from '@/components/checkout/YemeniPaymentGateways';
 import ManualPaymentModal from '@/components/checkout/ManualPaymentModal';
 import { useAuth } from '@/contexts/AuthContext';
+import CouponInput, { Coupon } from '@/components/checkout/CouponInput';
 
 interface CartItem {
     id: string;
@@ -26,7 +27,9 @@ export default function Checkout() {
     const [checkoutComplete, setCheckoutComplete] = useState(false);
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | undefined>();
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const { user } = useAuth(); // Get User
+    const [discount, setDiscount] = useState(0);
+    const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+    const { user } = useAuth();
     const queryClient = useQueryClient();
 
     const { data: cartItems = [], isLoading } = useQuery<CartItem[]>({
@@ -66,7 +69,12 @@ export default function Checkout() {
 
     const subtotal = cartItems.reduce((sum: number, item: CartItem) => sum + (item.price * item.quantity), 0);
     const shipping = subtotal >= 200 ? 0 : 25;
-    const total = subtotal + shipping;
+    const total = subtotal + shipping - discount;
+
+    const handleCouponApply = (newDiscount: number, coupon: Coupon | null) => {
+        setDiscount(newDiscount);
+        setAppliedCoupon(coupon);
+    };
 
     const getUserStr = () => {
         if (!user) return "";
@@ -78,7 +86,8 @@ export default function Checkout() {
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
 
-        const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}\n\n💰 المجموع: ${total} ر.س\n📌 طريقة الدفع: عند الاستلام${getUserStr()}`;
+        const couponText = appliedCoupon ? `\n🏷️ كوبون: ${appliedCoupon.code} (خصم ${discount} ر.س)` : '';
+        const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}${couponText}\n\n💰 المجموع: ${total} ر.س\n📌 طريقة الدفع: عند الاستلام${getUserStr()}`;
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
         clearCartMutation.mutate();
         setCheckoutComplete(true);
@@ -91,7 +100,8 @@ export default function Checkout() {
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
 
-        const message = `✅ *تأكيد دفع إلكتروني - طِبرَا*\n\n💳 المحفظة: ${selectedMethod}\n🔢 رقم العملية: ${transactionId}\n💰 المبلغ: ${total} ر.س\n\n🛒 الطلب:\n${orderText}${getUserStr()}`;
+        const couponText = appliedCoupon ? `\n🏷️ كوبون: ${appliedCoupon.code} (خصم ${discount} ر.س)` : '';
+        const message = `✅ *تأكيد دفع إلكتروني - طِبرَا*\n\n💳 المحفظة: ${selectedMethod}\n🔢 رقم العملية: ${transactionId}\n💰 المبلغ: ${total} ر.س${couponText}\n\n🛒 الطلب:\n${orderText}${getUserStr()}`;
 
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
 
@@ -106,7 +116,7 @@ export default function Checkout() {
                     <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-primary flex items-center justify-center shadow-glow animate-breathe">
                         <Check className="w-12 h-12 text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">تم استلام طلبك!</h2>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">تم استلام طلبك!</h2>
                     <p className="text-slate-500 mb-8">تم إرسال تفاصيل الدفع والطلب عبر واتساب للمراجعة</p>
                     <Link href={createPageUrl('Shop')}>
                         <Button className="gradient-primary rounded-2xl px-8">
@@ -128,7 +138,7 @@ export default function Checkout() {
                             <ArrowRight className="w-5 h-5" />
                         </Button>
                     </Link>
-                    <h1 className="text-lg font-bold text-slate-800">سلة التسوق</h1>
+                    <h1 className="text-lg font-bold text-slate-800 dark:text-white">سلة التسوق</h1>
                     <span className="text-sm text-slate-500">({cartItems.length} منتج)</span>
                 </div>
             </div>
@@ -174,7 +184,7 @@ export default function Checkout() {
 
                                     {/* Info */}
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-slate-800 line-clamp-2">
+                                        <h3 className="font-semibold text-slate-800 dark:text-white line-clamp-2">
                                             {item.product_name}
                                         </h3>
                                         <p className="text-[#2D9B83] font-bold mt-1">
@@ -228,17 +238,25 @@ export default function Checkout() {
 
                     {/* Payment Methods */}
                     <div className="px-6 mt-6">
-                        <h3 className="font-bold text-slate-800 mb-3">اختر طريقة الدفع</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-3">اختر طريقة الدفع</h3>
                         <YemeniPaymentGateways
                             onSelect={setSelectedMethod}
                             selectedMethod={selectedMethod}
                         />
                     </div>
 
-                    {/* Summary */}
                     <div className="px-6 mt-4">
                         <div className="glass rounded-2xl p-6">
-                            <h3 className="font-bold text-slate-800 mb-4">ملخص الطلب</h3>
+                            <h3 className="font-bold text-slate-800 dark:text-white mb-4">ملخص الطلب</h3>
+
+                            {/* Coupon Input */}
+                            <div className="mb-4">
+                                <CouponInput
+                                    subtotal={subtotal}
+                                    onApply={handleCouponApply}
+                                    appliedCoupon={appliedCoupon}
+                                />
+                            </div>
 
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
@@ -251,8 +269,17 @@ export default function Checkout() {
                                         {shipping === 0 ? 'مجاني' : `${shipping} ر.س`}
                                     </span>
                                 </div>
+                                {discount > 0 && (
+                                    <div className="flex justify-between text-emerald-600">
+                                        <span className="flex items-center gap-1">
+                                            <Tag className="w-3 h-3" />
+                                            خصم الكوبون
+                                        </span>
+                                        <span className="font-medium">-{discount} ر.س</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between pt-3 border-t">
-                                    <span className="font-bold text-slate-800">الإجمالي</span>
+                                    <span className="font-bold text-slate-800 dark:text-white">الإجمالي</span>
                                     <span className="text-xl font-bold text-[#2D9B83]">{total} ر.س</span>
                                 </div>
                             </div>

@@ -156,7 +156,7 @@ export default function Frequencies() {
                             <Radio className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800">الترددات الشفائية</h1>
+                            <h1 className="text-2xl font-bold text-slate-800 dark:text-white">الترددات الشفائية</h1>
                             <p className="text-sm text-slate-500">صيدلية الشفاء الرقمية</p>
                         </div>
                     </div>
@@ -273,7 +273,7 @@ export default function Frequencies() {
 
                                 {selectedFrequency.benefits && (
                                     <div>
-                                        <h4 className="font-semibold text-slate-800 mb-3">الفوائد العلاجية</h4>
+                                        <h4 className="font-semibold text-slate-800 dark:text-white mb-3">الفوائد العلاجية</h4>
                                         <div className="flex flex-wrap gap-2">
                                             {selectedFrequency.benefits.map((benefit, index) => (
                                                 <span

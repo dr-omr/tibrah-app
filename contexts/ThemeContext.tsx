@@ -57,6 +57,11 @@ interface ThemeContextType {
         primaryLight: string;
         primaryDark: string;
     };
+    primary: string;
+    primaryLight: string;
+    primaryDark: string;
+    isDarkMode: boolean;
+    toggleDarkMode: () => void;
     setTheme: (config: Partial<ThemeConfig>) => void;
     setPreset: (preset: ThemePreset) => void;
     setCustomColor: (color: string) => void;
@@ -66,6 +71,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'tibrah_theme';
+const DARK_MODE_KEY = 'tibrah_dark_mode';
 
 // Helper to calculate lighter/darker variants
 function adjustColor(hex: string, percent: number): string {
@@ -87,9 +93,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         preset: 'emerald',
         useCustom: false,
     });
+    const [isDarkMode, setIsDarkMode] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    // Load theme from localStorage on mount
+    // Load theme and dark mode from localStorage on mount
     useEffect(() => {
         setMounted(true);
         try {
@@ -97,6 +104,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             if (stored) {
                 const parsed = JSON.parse(stored);
                 setThemeState(parsed);
+            }
+            const darkStored = localStorage.getItem(DARK_MODE_KEY);
+            if (darkStored) {
+                const isDark = JSON.parse(darkStored);
+                setIsDarkMode(isDark);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                }
             }
         } catch (e) {
             console.error('Failed to load theme:', e);
@@ -186,10 +201,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         });
     };
 
+    const toggleDarkMode = () => {
+        setIsDarkMode(prev => {
+            const newValue = !prev;
+            if (newValue) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            try {
+                localStorage.setItem(DARK_MODE_KEY, JSON.stringify(newValue));
+            } catch (e) { /* ignore */ }
+            return newValue;
+        });
+    };
+
     return (
         <ThemeContext.Provider value={{
             theme,
             currentColors,
+            primary: currentColors.primary,
+            primaryLight: currentColors.primaryLight,
+            primaryDark: currentColors.primaryDark,
+            isDarkMode,
+            toggleDarkMode,
             setTheme,
             setPreset,
             setCustomColor,

@@ -164,30 +164,30 @@ export default function Courses() {
                         <div className="p-2">
                             <div className="flex items-center justify-center gap-1 mb-1">
                                 <BookOpen className="w-4 h-4 text-amber-500" />
-                                <span className="text-xl font-bold text-slate-800">{courses.length}</span>
+                                <span className="text-xl font-bold text-slate-800 dark:text-white">{courses.length}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">دورة</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400">دورة</div>
                         </div>
-                        <div className="p-2 border-r border-slate-200">
+                        <div className="p-2 border-r border-slate-200 dark:border-slate-700">
                             <div className="flex items-center justify-center gap-1 mb-1">
                                 <Users className="w-4 h-4 text-blue-500" />
-                                <span className="text-xl font-bold text-slate-800">{totalStudents > 1000 ? `${(totalStudents / 1000).toFixed(1)}k` : totalStudents}</span>
+                                <span className="text-xl font-bold text-slate-800 dark:text-white">{totalStudents > 1000 ? `${(totalStudents / 1000).toFixed(1)}k` : totalStudents}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">طالب</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400">طالب</div>
                         </div>
-                        <div className="p-2 border-r border-slate-200">
+                        <div className="p-2 border-r border-slate-200 dark:border-slate-700">
                             <div className="flex items-center justify-center gap-1 mb-1">
                                 <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                                <span className="text-xl font-bold text-slate-800">{avgRating}</span>
+                                <span className="text-xl font-bold text-slate-800 dark:text-white">{avgRating}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">تقييم</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400">تقييم</div>
                         </div>
-                        <div className="p-2 border-r border-slate-200">
+                        <div className="p-2 border-r border-slate-200 dark:border-slate-700">
                             <div className="flex items-center justify-center gap-1 mb-1">
                                 <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span className="text-xl font-bold text-slate-800">{freeCourses}</span>
+                                <span className="text-xl font-bold text-slate-800 dark:text-white">{freeCourses}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500">مجانية</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400">مجانية</div>
                         </div>
                     </div>
                 </div>
@@ -202,7 +202,7 @@ export default function Courses() {
                             onClick={() => setActiveCategory(cat.id)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap text-sm font-medium transition-all duration-200 tap-feedback ${activeCategory === cat.id
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-amber-50 hover:border-amber-200'
+                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950 hover:border-amber-200'
                                 }`}
                         >
                             <span>{cat.icon}</span>
@@ -215,7 +215,7 @@ export default function Courses() {
             {/* Filters Row */}
             <div className="flex gap-2 px-4 sm:px-6 pb-4">
                 <Select value={priceFilter} onValueChange={setPriceFilter}>
-                    <SelectTrigger className="w-[120px] bg-white border border-slate-200 rounded-xl h-10">
+                    <SelectTrigger className="w-[120px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-10">
                         <Filter className="w-4 h-4 ml-1 text-slate-400" />
                         <SelectValue placeholder="السعر" />
                     </SelectTrigger>
@@ -227,7 +227,7 @@ export default function Courses() {
                 </Select>
 
                 <Select value={levelFilter} onValueChange={setLevelFilter}>
-                    <SelectTrigger className="w-[120px] bg-white border border-slate-200 rounded-xl h-10">
+                    <SelectTrigger className="w-[120px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-10">
                         <TrendingUp className="w-4 h-4 ml-1 text-slate-400" />
                         <SelectValue placeholder="المستوى" />
                     </SelectTrigger>
@@ -270,10 +270,10 @@ export default function Courses() {
                 {isLoading ? (
                     <ListSkeleton count={4} />
                 ) : filteredCourses.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-2xl border border-slate-100">
+                    <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
                         <Search className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                        <h3 className="text-lg font-semibold text-slate-600 mb-1">لا توجد نتائج</h3>
-                        <p className="text-slate-400 text-sm mb-4">جرب تغيير معايير البحث أو الفلاتر</p>
+                        <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-1">لا توجد نتائج</h3>
+                        <p className="text-slate-400 dark:text-slate-500 text-sm mb-4">جرب تغيير معايير البحث أو الفلاتر</p>
                         <Button
                             variant="outline"
                             onClick={() => {
@@ -292,7 +292,7 @@ export default function Courses() {
                         <Link
                             key={course.id}
                             href={createPageUrl(`CourseDetails?id=${course.id}`)}
-                            className="block bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md hover:border-amber-200 transition-all card-clickable"
+                            className="block bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:border-amber-200 transition-all card-clickable"
                         >
                             <div className="flex gap-4 p-4">
                                 {/* Thumbnail */}
@@ -320,7 +320,7 @@ export default function Courses() {
                                 {/* Info */}
                                 <div className="flex-1 min-w-0 flex flex-col">
                                     <div className="flex items-start justify-between gap-2 mb-1">
-                                        <h3 className="font-bold text-slate-800 line-clamp-1 text-base">{course.title}</h3>
+                                        <h3 className="font-bold text-slate-800 dark:text-white line-clamp-1 text-base">{course.title}</h3>
                                     </div>
 
                                     <p className="text-xs text-slate-500 line-clamp-2 mb-2 flex-grow">{course.description}</p>
@@ -348,7 +348,7 @@ export default function Courses() {
                                     <div className="flex items-center justify-between mt-auto">
                                         <div className="flex items-center gap-1">
                                             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                                            <span className="font-bold text-slate-700">{course.rating}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-200">{course.rating}</span>
                                             <span className="text-xs text-slate-400">({course.reviews_count})</span>
                                         </div>
 

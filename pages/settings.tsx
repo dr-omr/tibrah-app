@@ -13,9 +13,11 @@ import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
     User, Bell, Scale, Palette, Database, ArrowRight, Moon, Sun, Check,
-    Loader2, Download, Trash2, Shield
+    Loader2, Download, Trash2, Shield, Globe
 } from 'lucide-react';
 import PushNotificationButton from '@/components/dashboard/PushNotificationButton';
+import LanguageToggle from '@/components/common/LanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 // ... (imports)
 
 export default function Settings() {
@@ -216,12 +218,12 @@ export default function Settings() {
                 <section>
                     <div className="flex items-center gap-2 mb-4">
                         <User className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="font-bold text-slate-800">المعلومات الشخصية</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white">المعلومات الشخصية</h2>
                     </div>
 
                     <div className="glass rounded-2xl p-4 space-y-4">
                         <div>
-                            <label className="text-sm font-medium text-slate-700 mb-2 block">الاسم الكامل</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">الاسم الكامل</label>
                             <div className="relative">
                                 <Input
                                     value={fullName}
@@ -233,7 +235,7 @@ export default function Settings() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium text-slate-700 mb-2 block">تفضيلات طبية</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">تفضيلات طبية</label>
                             <Textarea
                                 value={medicalPreferences}
                                 onChange={(e) => setMedicalPreferences(e.target.value)}
@@ -252,7 +254,7 @@ export default function Settings() {
                 <section>
                     <div className="flex items-center gap-2 mb-4">
                         <Bell className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="font-bold text-slate-800">الإشعارات والتذكيرات</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white">الإشعارات والتذكيرات</h2>
                     </div>
 
                     <div className="glass rounded-2xl overflow-hidden">
@@ -271,7 +273,7 @@ export default function Settings() {
                                     }`}
                             >
                                 <span className="text-2xl">{item.icon}</span>
-                                <span className="flex-1 font-medium text-slate-700">{item.label}</span>
+                                <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
                                 <Switch
                                     checked={settings.notifications[item.key]}
                                     onCheckedChange={(v) => updateNotification(item.key, v)}
@@ -285,13 +287,13 @@ export default function Settings() {
                 <section>
                     <div className="flex items-center gap-2 mb-4">
                         <Scale className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="font-bold text-slate-800">وحدات القياس</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white">وحدات القياس</h2>
                     </div>
 
                     <div className="glass rounded-2xl overflow-hidden">
                         <div className="flex items-center gap-4 p-4 border-b border-slate-100">
                             <span className="text-2xl">⚖️</span>
-                            <span className="flex-1 font-medium text-slate-700">الوزن</span>
+                            <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">الوزن</span>
                             <Select value={settings.units.weight} onValueChange={(v) => updateUnit('weight', v)}>
                                 <SelectTrigger className="w-28 h-9">
                                     <SelectValue />
@@ -305,7 +307,7 @@ export default function Settings() {
 
                         <div className="flex items-center gap-4 p-4 border-b border-slate-100">
                             <span className="text-2xl">🌡️</span>
-                            <span className="flex-1 font-medium text-slate-700">الحرارة</span>
+                            <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">الحرارة</span>
                             <Select value={settings.units.temperature} onValueChange={(v) => updateUnit('temperature', v)}>
                                 <SelectTrigger className="w-28 h-9">
                                     <SelectValue />
@@ -319,7 +321,7 @@ export default function Settings() {
 
                         <div className="flex items-center gap-4 p-4 border-b border-slate-100">
                             <span className="text-2xl">🩸</span>
-                            <span className="flex-1 font-medium text-slate-700">سكر الدم</span>
+                            <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">سكر الدم</span>
                             <Select value={settings.units.bloodSugar} onValueChange={(v) => updateUnit('bloodSugar', v)}>
                                 <SelectTrigger className="w-28 h-9">
                                     <SelectValue />
@@ -333,7 +335,7 @@ export default function Settings() {
 
                         <div className="flex items-center gap-4 p-4">
                             <span className="text-2xl">📏</span>
-                            <span className="flex-1 font-medium text-slate-700">الطول</span>
+                            <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">الطول</span>
                             <Select value={settings.units.height} onValueChange={(v) => updateUnit('height', v)}>
                                 <SelectTrigger className="w-28 h-9">
                                     <SelectValue />
@@ -347,11 +349,29 @@ export default function Settings() {
                     </div>
                 </section>
 
+                {/* Language Section */}
+                <section>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Globe className="w-5 h-5 text-[#2D9B83]" />
+                        <h2 className="font-bold text-slate-800 dark:text-white">اللغة</h2>
+                    </div>
+
+                    <div className="glass rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-medium text-slate-700 dark:text-slate-300">لغة التطبيق</p>
+                                <p className="text-sm text-slate-400 mt-0.5">العربية أو الإنجليزية</p>
+                            </div>
+                            <LanguageToggle variant="switch" />
+                        </div>
+                    </div>
+                </section>
+
                 {/* Appearance Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
                         <Palette className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="font-bold text-slate-800">المظهر</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white">المظهر</h2>
                     </div>
 
                     <div className="glass rounded-2xl overflow-hidden">
@@ -363,7 +383,7 @@ export default function Settings() {
                                     <Sun className="w-5 h-5 text-amber-500" />
                                 )}
                             </div>
-                            <span className="flex-1 font-medium text-slate-700">المظهر</span>
+                            <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">المظهر</span>
                             <Select value={settings.appearance.theme} onValueChange={(v) => updateAppearance('theme', v)}>
                                 <SelectTrigger className="w-28 h-9">
                                     <SelectValue />
@@ -377,7 +397,7 @@ export default function Settings() {
                         </div>
 
                         <div className="p-4">
-                            <span className="font-medium text-slate-700 block mb-3">اللون الرئيسي</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300 block mb-3">اللون الرئيسي</span>
                             <div className="flex gap-3">
                                 {colorOptions.map((color) => (
                                     <button
@@ -403,14 +423,14 @@ export default function Settings() {
                 <section>
                     <div className="flex items-center gap-2 mb-4">
                         <Database className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="font-bold text-slate-800">إدارة البيانات</h2>
+                        <h2 className="font-bold text-slate-800 dark:text-white">إدارة البيانات</h2>
                     </div>
 
                     <div className="glass rounded-2xl overflow-hidden">
                         <button
                             onClick={exportData}
                             disabled={exporting}
-                            className="w-full flex items-center gap-4 p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center gap-4 p-4 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         >
                             <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
                                 {exporting ? (
@@ -420,14 +440,14 @@ export default function Settings() {
                                 )}
                             </div>
                             <div className="flex-1 text-right">
-                                <span className="font-medium text-slate-700 block">تصدير البيانات</span>
+                                <span className="font-medium text-slate-700 dark:text-slate-300 block">تصدير البيانات</span>
                                 <span className="text-sm text-slate-400">تحميل جميع بياناتك الصحية</span>
                             </div>
                         </button>
 
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <button className="w-full flex items-center gap-4 p-4 hover:bg-red-50 transition-colors">
+                                <button className="w-full flex items-center gap-4 p-4 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
                                     <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
                                         <Trash2 className="w-5 h-5 text-red-600" />
                                     </div>
@@ -464,7 +484,7 @@ export default function Settings() {
                 <div className="glass rounded-2xl p-4 flex items-start gap-3">
                     <Shield className="w-5 h-5 text-[#2D9B83] flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="font-medium text-slate-700 mb-1">خصوصيتك محمية</p>
+                        <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">خصوصيتك محمية</p>
                         <p className="text-sm text-slate-500">
                             جميع بياناتك مشفرة ومحفوظة بأمان. نحن لا نشارك بياناتك مع أي طرف ثالث.
                         </p>

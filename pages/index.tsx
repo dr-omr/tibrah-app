@@ -1,12 +1,25 @@
 import React from 'react';
+import dynamic from 'next/dynamic';
 import DoctorIntro from '../components/home/DoctorIntro';
-import HealthPrograms from '../components/home/HealthPrograms';
-import QuickAccessGrid from '../components/home/QuickAccessGrid';
-import HealthTrackerDiscovery from '../components/home/HealthTrackerDiscovery';
-import SocialProof from '../components/home/SocialProof';
-import CredentialsSection from '../components/home/CredentialsSection';
 import SEO, { pageSEO } from '../components/common/SEO';
 import { HomeStructuredData } from '../components/common/StructuredData';
+
+// Dynamic imports — below the fold components load lazily
+const HealthPrograms = dynamic(() => import('../components/home/HealthPrograms'), {
+    loading: () => <div className="h-96 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
+});
+const QuickAccessGrid = dynamic(() => import('../components/home/QuickAccessGrid'), {
+    loading: () => <div className="h-48 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
+});
+const HealthTrackerDiscovery = dynamic(() => import('../components/home/HealthTrackerDiscovery'), {
+    loading: () => <div className="h-64 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
+});
+const SocialProof = dynamic(() => import('../components/home/SocialProof'), {
+    loading: () => <div className="h-48 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
+});
+const CredentialsSection = dynamic(() => import('../components/home/CredentialsSection'), {
+    loading: () => <div className="h-40 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
+});
 
 export default function HomePage() {
     return (
@@ -36,4 +49,3 @@ export default function HomePage() {
         </div>
     );
 }
-

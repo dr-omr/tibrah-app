@@ -56,7 +56,7 @@ export default function RifeFrequencyPlayer({
 
     const initAudio = () => {
         if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             gainNodeRef.current = audioContextRef.current.createGain();
             gainNodeRef.current.connect(audioContextRef.current.destination);
             gainNodeRef.current.gain.value = volume;
@@ -210,8 +210,8 @@ export default function RifeFrequencyPlayer({
                                 <Badge
                                     key={index}
                                     className={`cursor-pointer transition-all ${index === activeFrequencyIndex
-                                            ? 'bg-purple-500 text-white'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-purple-100'
+                                        ? 'bg-purple-500 text-white'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-purple-100'
                                         }`}
                                     onClick={() => {
                                         setActiveFrequencyIndex(index);
@@ -298,8 +298,8 @@ export default function RifeFrequencyPlayer({
                     <Button
                         onClick={isPlaying ? stopPlaying : startPlaying}
                         className={`w-full h-16 rounded-2xl text-lg font-bold shadow-xl ${isPlaying
-                                ? 'bg-red-500 hover:bg-red-600 text-white'
-                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90'
                             }`}
                     >
                         {isPlaying ? (

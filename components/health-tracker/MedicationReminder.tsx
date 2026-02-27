@@ -119,10 +119,9 @@ export default function MedicationReminder() {
                 tag: `medication-${med.id}-${time}`,
                 icon: '/icons/icon-192x192.png',
                 badge: '/icons/icon-72x72.png',
-                vibrate: [200, 100, 200, 100, 200],
                 requireInteraction: true,
                 silent: false
-            });
+            } as any);
 
             localStorage.setItem(lastNotifKey, Date.now().toString());
         }

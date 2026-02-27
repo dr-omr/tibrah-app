@@ -42,9 +42,16 @@ export default function ShopFilters({
     setSortBy,
     priceRange,
     setPriceRange
+}: {
+    category: string;
+    setCategory: (v: string) => void;
+    sortBy: string;
+    setSortBy: (v: string) => void;
+    priceRange: number[];
+    setPriceRange: (v: number[]) => void;
 }) {
     return (
-        <div className="sticky top-0 z-20 bg-gradient-to-b from-slate-50 to-transparent pb-4">
+        <div className="sticky top-0 z-20 bg-gradient-to-b from-slate-50 dark:from-slate-900 to-transparent pb-4">
             {/* Category Pills */}
             <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
                 {categories.map((cat) => (
@@ -52,8 +59,8 @@ export default function ShopFilters({
                         key={cat.value}
                         onClick={() => setCategory(cat.value)}
                         className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all duration-300 ${category === cat.value
-                                ? 'gradient-primary text-white shadow-md'
-                                : 'glass text-slate-600 hover:bg-[#2D9B83]/10'
+                            ? 'gradient-primary text-white shadow-md'
+                            : 'glass text-slate-600 dark:text-slate-300 hover:bg-[#2D9B83]/10'
                             }`}
                     >
                         {cat.label}
@@ -96,7 +103,7 @@ export default function ShopFilters({
                         <div className="py-6 space-y-6">
                             {/* Price Range */}
                             <div>
-                                <label className="text-sm font-medium text-slate-700 mb-4 block">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
                                     نطاق السعر
                                 </label>
                                 <Slider
@@ -115,7 +122,7 @@ export default function ShopFilters({
                             {/* Active Filters */}
                             {(category !== 'all' || priceRange[0] > 0 || priceRange[1] < 500) && (
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700 mb-2 block">
+                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
                                         الفلاتر النشطة
                                     </label>
                                     <div className="flex flex-wrap gap-2">

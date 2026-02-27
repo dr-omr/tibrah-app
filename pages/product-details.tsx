@@ -189,7 +189,7 @@ export default function ProductDetails() {
                 </Badge>
 
                 {/* Name */}
-                <h1 className="text-2xl font-bold text-slate-800 mb-2">{product.name}</h1>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">{product.name}</h1>
                 {product.name_en && (
                     <p className="text-slate-400 text-sm mb-4">{product.name_en}</p>
                 )}
@@ -219,7 +219,7 @@ export default function ProductDetails() {
                 {/* Description */}
                 {product.description && (
                     <div className="mb-6">
-                        <h3 className="font-semibold text-slate-800 mb-2">الوصف</h3>
+                        <h3 className="font-semibold text-slate-800 dark:text-white mb-2">الوصف</h3>
                         <p className="text-slate-600 leading-relaxed">{product.description}</p>
                     </div>
                 )}
@@ -227,7 +227,7 @@ export default function ProductDetails() {
                 {/* Benefits */}
                 {product.benefits && product.benefits.length > 0 && (
                     <div className="mb-6">
-                        <h3 className="font-semibold text-slate-800 mb-3">الفوائد</h3>
+                        <h3 className="font-semibold text-slate-800 dark:text-white mb-3">الفوائد</h3>
                         <div className="space-y-2">
                             {product.benefits.map((benefit, index) => (
                                 <div key={index} className="flex items-center gap-3">

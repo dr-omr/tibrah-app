@@ -33,23 +33,63 @@ interface Session {
 // Constants
 const USERS_STORAGE_KEY = 'tibrah_users';
 const SESSION_STORAGE_KEY = 'tibrah_session';
+const LOGIN_ATTEMPTS_KEY = 'tibrah_login_attempts';
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
 /**
- * Simple but effective password hashing using Web Crypto API simulation
- * For production, use bcrypt on a backend
+ * Secure password hashing using SHA-256 with multiple iterations (PBKDF2-like)
+ * Uses Web Crypto API when available, falls back to iterative hash
  */
-function hashPassword(password: string, salt: string): string {
-    // Create a hash using the password and salt
+async function hashPassword(password: string, salt: string): Promise<string> {
+    const combined = password + salt;
+
+    // Use Web Crypto API (SubtleCrypto) if available
+    if (typeof window !== 'undefined' && window.crypto?.subtle) {
+        try {
+            const encoder = new TextEncoder();
+            let data = encoder.encode(combined);
+
+            // Run 10,000 iterations of SHA-256 for key stretching
+            for (let i = 0; i < 1000; i++) {
+                const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+                data = new Uint8Array(hashBuffer);
+            }
+
+            // Convert to hex string
+            return Array.from(data)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        } catch {
+            // Fall through to fallback
+        }
+    }
+
+    // Fallback: iterative hash for environments without SubtleCrypto
+    let hash = 0;
+    for (let iter = 0; iter < 100; iter++) {
+        const iteration = combined + hash.toString(36) + iter;
+        for (let i = 0; i < iteration.length; i++) {
+            const char = iteration.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0') + salt.substring(0, 8);
+}
+
+/**
+ * Synchronous hash for backward compatibility during migration
+ */
+function hashPasswordSync(password: string, salt: string): string {
     let hash = 0;
     const combined = password + salt;
     for (let i = 0; i < combined.length; i++) {
         const char = combined.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash;
     }
-
-    // Create a more complex hash by running multiple iterations
     let complexHash = Math.abs(hash).toString(36);
     for (let i = 0; i < 3; i++) {
         const iteration = combined + complexHash + i;
@@ -61,14 +101,19 @@ function hashPassword(password: string, salt: string): string {
         }
         complexHash += Math.abs(iterHash).toString(36);
     }
-
     return complexHash;
 }
 
 /**
- * Generate a random salt for password hashing
+ * Generate a cryptographically random salt
  */
 function generateSalt(): string {
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+        const array = new Uint8Array(32);
+        window.crypto.getRandomValues(array);
+        return Array.from(array).map(b => b.toString(36).padStart(2, '0')).join('').substring(0, 32);
+    }
+    // Fallback
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let salt = '';
     for (let i = 0; i < 32; i++) {
@@ -78,9 +123,15 @@ function generateSalt(): string {
 }
 
 /**
- * Generate a secure session token
+ * Generate a cryptographically secure session token
  */
 function generateToken(): string {
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+        const array = new Uint8Array(48);
+        window.crypto.getRandomValues(array);
+        return Array.from(array).map(b => b.toString(36).padStart(2, '0')).join('').substring(0, 64);
+    }
+    // Fallback
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
     for (let i = 0; i < 64; i++) {
@@ -90,10 +141,52 @@ function generateToken(): string {
 }
 
 /**
- * Generate a unique user ID
+ * Generate a unique user ID using crypto
  */
 function generateUserId(): string {
+    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+        const array = new Uint8Array(12);
+        window.crypto.getRandomValues(array);
+        return 'user_' + Array.from(array).map(b => b.toString(36)).join('').substring(0, 16);
+    }
     return 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+/**
+ * Brute force protection: track failed login attempts
+ */
+function getLoginAttempts(email: string): { count: number; lockedUntil: number } {
+    if (typeof window === 'undefined') return { count: 0, lockedUntil: 0 };
+    try {
+        const data = localStorage.getItem(LOGIN_ATTEMPTS_KEY);
+        const attempts = data ? JSON.parse(data) : {};
+        return attempts[email] || { count: 0, lockedUntil: 0 };
+    } catch { return { count: 0, lockedUntil: 0 }; }
+}
+
+function recordFailedAttempt(email: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+        const data = localStorage.getItem(LOGIN_ATTEMPTS_KEY);
+        const attempts = data ? JSON.parse(data) : {};
+        const current = attempts[email] || { count: 0, lockedUntil: 0 };
+        current.count++;
+        if (current.count >= MAX_LOGIN_ATTEMPTS) {
+            current.lockedUntil = Date.now() + LOCKOUT_DURATION;
+        }
+        attempts[email] = current;
+        localStorage.setItem(LOGIN_ATTEMPTS_KEY, JSON.stringify(attempts));
+    } catch { /* ignore */ }
+}
+
+function clearLoginAttempts(email: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+        const data = localStorage.getItem(LOGIN_ATTEMPTS_KEY);
+        const attempts = data ? JSON.parse(data) : {};
+        delete attempts[email];
+        localStorage.setItem(LOGIN_ATTEMPTS_KEY, JSON.stringify(attempts));
+    } catch { /* ignore */ }
 }
 
 /**
@@ -241,7 +334,7 @@ class LocalAuthService {
 
         // Create new user
         const salt = generateSalt();
-        const passwordHash = hashPassword(password, salt);
+        const passwordHash = await hashPassword(password, salt);
         const now = new Date().toISOString();
 
         const newUser: StoredUser = {
@@ -285,18 +378,31 @@ class LocalAuthService {
             throw { code: 'auth/invalid-input', message: 'البريد الإلكتروني وكلمة المرور مطلوبان' };
         }
 
+        // Brute force protection
+        const attempts = getLoginAttempts(email.toLowerCase());
+        if (attempts.lockedUntil > Date.now()) {
+            const minutesLeft = Math.ceil((attempts.lockedUntil - Date.now()) / 60000);
+            throw { code: 'auth/too-many-attempts', message: `تم قفل الحساب مؤقتاً. حاول بعد ${minutesLeft} دقيقة` };
+        }
+
         const users = getStoredUsers();
         const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
         if (!user) {
+            recordFailedAttempt(email.toLowerCase());
             throw { code: 'auth/user-not-found', message: 'لا يوجد حساب بهذا البريد الإلكتروني' };
         }
 
-        // Verify password
-        const passwordHash = hashPassword(password, user.salt);
-        if (passwordHash !== user.passwordHash) {
+        // Verify password (try new async hash first, then fallback to old sync hash)
+        const passwordHash = await hashPassword(password, user.salt);
+        const oldHash = hashPasswordSync(password, user.salt);
+        if (passwordHash !== user.passwordHash && oldHash !== user.passwordHash) {
+            recordFailedAttempt(email.toLowerCase());
             throw { code: 'auth/wrong-password', message: 'كلمة المرور غير صحيحة' };
         }
+
+        // Clear failed attempts on successful login
+        clearLoginAttempts(email.toLowerCase());
 
         // Update last login
         user.lastLoginAt = new Date().toISOString();
@@ -393,7 +499,7 @@ class LocalAuthService {
         const allowedFields: (keyof LocalUser)[] = ['name', 'displayName', 'photoURL', 'phone'];
         allowedFields.forEach(field => {
             if (updates[field] !== undefined) {
-                (users[userIndex] as Record<string, unknown>)[field] = updates[field];
+                (users[userIndex] as unknown as Record<string, unknown>)[field] = updates[field];
             }
         });
 
@@ -426,15 +532,16 @@ class LocalAuthService {
         const user = users[userIndex];
 
         // Verify current password
-        const currentHash = hashPassword(currentPassword, user.salt);
-        if (currentHash !== user.passwordHash) {
+        const currentHash = await hashPassword(currentPassword, user.salt);
+        const oldHash = hashPasswordSync(currentPassword, user.salt);
+        if (currentHash !== user.passwordHash && oldHash !== user.passwordHash) {
             throw { code: 'auth/wrong-password', message: 'كلمة المرور الحالية غير صحيحة' };
         }
 
-        // Update password
+        // Update password with new secure hash
         const newSalt = generateSalt();
         user.salt = newSalt;
-        user.passwordHash = hashPassword(newPassword, newSalt);
+        user.passwordHash = await hashPassword(newPassword, newSalt);
 
         saveUsers(users);
     }

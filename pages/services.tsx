@@ -126,6 +126,7 @@ export default function Services() {
                 <div className="relative z-10 mb-4">
                     <AIContextAssistant
                         contextType="services"
+                        contextData={{}}
                         knowledgeBase={DOCTOR_KNOWLEDGE}
                         title="اسألني عن خدمات د. عمر"
                     />

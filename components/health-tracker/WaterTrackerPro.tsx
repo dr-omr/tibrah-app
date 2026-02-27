@@ -92,7 +92,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                 if (logs?.[0]) {
                     return {
                         ...logs[0],
-                        total_ml: logs[0].glasses ? logs[0].glasses * 250 : 0,
+                        total_ml: logs[0].glasses ? (logs[0].glasses as number) * 250 : 0,
                         goal_ml: dailyGoal,
                         logs: []
                     } as WaterLog;

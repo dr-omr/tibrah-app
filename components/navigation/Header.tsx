@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createPageUrl } from '../../utils';
-import { Home, HeartPulse, GraduationCap, ShoppingBag, User, Calendar, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Home, HeartPulse, GraduationCap, ShoppingBag, User, Calendar, LogOut, Settings, ChevronDown, Search } from 'lucide-react';
 import NotificationBell from '../notifications/NotificationBell';
 import ThemeToggle from '../common/ThemeToggle';
+import LanguageToggle from '../common/LanguageToggle';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
@@ -70,6 +71,9 @@ export default function Header({ currentPageName }: HeaderProps) {
                         <div className="flex items-center gap-3">
                             {/* Theme Toggle */}
                             <ThemeToggle size="sm" />
+
+                            {/* Language Toggle */}
+                            <LanguageToggle variant="minimal" />
 
                             {/* Notification Bell */}
                             <NotificationBell variant="header" />
@@ -162,7 +166,7 @@ export default function Header({ currentPageName }: HeaderProps) {
             {/* Mobile Header - Simplified */}
             <header className="md:hidden sticky top-0 z-40">
                 {/* Glassmorphism background */}
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-slate-100/50" />
+                <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100/50 dark:border-slate-800/50" />
 
                 <div className="relative flex items-center justify-between px-4 h-14">
                     {/* Logo */}
@@ -170,11 +174,22 @@ export default function Header({ currentPageName }: HeaderProps) {
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center shadow-md shadow-[#2D9B83]/20">
                             <span className="text-white font-bold text-sm">ط</span>
                         </div>
-                        <span className="font-bold text-base text-slate-800">طِبرَا</span>
+                        <span className="font-bold text-base text-slate-800 dark:text-white">طِبرَا</span>
                     </Link>
 
                     {/* Right Actions */}
                     <div className="flex items-center gap-2">
+                        {/* Search Button - triggers Command Palette */}
+                        <button
+                            onClick={() => {
+                                const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true });
+                                window.dispatchEvent(event);
+                            }}
+                            className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            aria-label="بحث"
+                        >
+                            <Search className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                        </button>
                         <NotificationBell variant="header" />
 
                         {/* User Avatar on Mobile */}

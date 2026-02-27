@@ -234,15 +234,15 @@ export default function CourseDetails() {
                             <div className="text-xs text-slate-500">{course.reviews_count} تقييم</div>
                         </div>
                         <div>
-                            <div className="font-bold text-slate-800 mb-1">{course.duration_hours}h</div>
+                            <div className="font-bold text-slate-800 dark:text-white mb-1">{course.duration_hours}h</div>
                             <div className="text-xs text-slate-500">مدة الدورة</div>
                         </div>
                         <div>
-                            <div className="font-bold text-slate-800 mb-1">{course.lessons_count}</div>
+                            <div className="font-bold text-slate-800 dark:text-white mb-1">{course.lessons_count}</div>
                             <div className="text-xs text-slate-500">درس</div>
                         </div>
                         <div>
-                            <div className="font-bold text-slate-800 mb-1">{course.enrolled_count}</div>
+                            <div className="font-bold text-slate-800 dark:text-white mb-1">{course.enrolled_count}</div>
                             <div className="text-xs text-slate-500">طالب</div>
                         </div>
                     </div>
@@ -257,7 +257,7 @@ export default function CourseDetails() {
                         <span className="text-white font-bold">د.ع</span>
                     </div>
                     <div>
-                        <p className="font-bold text-slate-800">{course.instructor_name}</p>
+                        <p className="font-bold text-slate-800 dark:text-white">{course.instructor_name}</p>
                         <p className="text-sm text-slate-500">استشاري الطب الوظيفي</p>
                     </div>
                     <Badge variant="outline" className="mr-auto">{levelLabels[course.level]}</Badge>
@@ -265,14 +265,14 @@ export default function CourseDetails() {
 
                 {/* Description */}
                 <div>
-                    <h3 className="font-bold text-slate-800 mb-2">عن الدورة</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-2">عن الدورة</h3>
                     <p className="text-slate-600 leading-relaxed">{course.description}</p>
                 </div>
 
                 {/* Features */}
                 {course.features && (
                     <div>
-                        <h3 className="font-bold text-slate-800 mb-3">ماذا ستتعلم</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-3">ماذا ستتعلم</h3>
                         <div className="space-y-2">
                             {course.features.map((feature, index) => (
                                 <div key={index} className="flex items-start gap-2">
@@ -297,7 +297,7 @@ export default function CourseDetails() {
 
                 {/* Lessons */}
                 <div>
-                    <h3 className="font-bold text-slate-800 mb-3">محتوى الدورة</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-3">محتوى الدورة</h3>
 
                     <div className="glass rounded-2xl overflow-hidden">
                         <button
@@ -354,7 +354,7 @@ export default function CourseDetails() {
                 {/* Requirements */}
                 {course.requirements && (
                     <div>
-                        <h3 className="font-bold text-slate-800 mb-3">المتطلبات</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-3">المتطلبات</h3>
                         <div className="space-y-2">
                             {course.requirements.map((req, index) => (
                                 <div key={index} className="flex items-start gap-2">
@@ -375,7 +375,7 @@ export default function CourseDetails() {
                             <span className="text-2xl font-bold text-green-500">مجاني</span>
                         ) : (
                             <>
-                                <span className="text-2xl font-bold text-slate-800">{course.price}</span>
+                                <span className="text-2xl font-bold text-slate-800 dark:text-white">{course.price}</span>
                                 <span className="text-slate-500 mr-1">ر.س</span>
                             </>
                         )}

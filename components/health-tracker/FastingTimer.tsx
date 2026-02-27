@@ -151,10 +151,9 @@ export default function FastingTimer() {
                 tag: 'fasting-timer',
                 icon: '/icons/icon-192x192.png',
                 badge: '/icons/icon-72x72.png',
-                vibrate: [200, 100, 200],
                 silent: false,
                 requireInteraction: false
-            });
+            } as any);
         }
     };
 

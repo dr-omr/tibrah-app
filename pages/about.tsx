@@ -71,7 +71,7 @@ export default function About() {
                         <div className="w-12 h-12 rounded-2xl bg-[#2D9B83]/10 flex items-center justify-center">
                             <Target className="w-6 h-6 text-[#2D9B83]" />
                         </div>
-                        <h2 className="text-xl font-bold text-slate-800">رسالتنا</h2>
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">رسالتنا</h2>
                     </div>
                     <p className="text-slate-600 leading-relaxed">
                         نؤمن بأن الصحة الحقيقية تبدأ من الداخل. في طِبرَا، نجمع بين حكمة الطب التقليدي وأحدث الأبحاث العلمية لنقدم لك رعاية صحية شاملة تعالج الأسباب الجذرية، لا مجرد الأعراض.
@@ -80,7 +80,7 @@ export default function About() {
 
                 {/* Features Grid */}
                 <div>
-                    <h2 className="text-lg font-bold text-slate-800 mb-4 px-1">ما يميزنا</h2>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 px-1">ما يميزنا</h2>
                     <div className="grid grid-cols-2 gap-3">
                         {features.map((feature, index) => {
                             const Icon = feature.icon;
@@ -89,7 +89,7 @@ export default function About() {
                                     <div className="w-10 h-10 rounded-xl bg-[#2D9B83]/10 flex items-center justify-center mb-3">
                                         <Icon className="w-5 h-5 text-[#2D9B83]" />
                                     </div>
-                                    <h3 className="font-bold text-slate-800 text-sm mb-1">{feature.title}</h3>
+                                    <h3 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{feature.title}</h3>
                                     <p className="text-xs text-slate-500 leading-relaxed">{feature.description}</p>
                                 </div>
                             );
@@ -99,7 +99,7 @@ export default function About() {
 
                 {/* Values */}
                 <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-100">
-                    <h2 className="text-lg font-bold text-slate-800 mb-4 text-center">قيمنا</h2>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 text-center">قيمنا</h2>
                     <div className="flex justify-around">
                         {values.map((value, index) => {
                             const Icon = value.icon;
@@ -140,7 +140,7 @@ export default function About() {
 
                 {/* Contact Section */}
                 <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-100">
-                    <h2 className="text-lg font-bold text-slate-800 mb-4">تواصل معنا</h2>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">تواصل معنا</h2>
                     <div className="space-y-4">
                         <a
                             href="https://wa.me/967771447111"
@@ -152,7 +152,7 @@ export default function About() {
                                 <MessageCircle className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <p className="font-medium text-slate-800">واتساب</p>
+                                <p className="font-medium text-slate-800 dark:text-white">واتساب</p>
                                 <p className="text-sm text-slate-500">+967 771 447 111</p>
                             </div>
                         </a>
@@ -167,7 +167,7 @@ export default function About() {
                                 <Instagram className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <p className="font-medium text-slate-800">انستغرام</p>
+                                <p className="font-medium text-slate-800 dark:text-white">انستغرام</p>
                                 <p className="text-sm text-slate-500">@dr.omr369</p>
                             </div>
                         </a>
@@ -177,7 +177,7 @@ export default function About() {
                                 <MapPin className="w-5 h-5 text-slate-600" />
                             </div>
                             <div>
-                                <p className="font-medium text-slate-800">الموقع</p>
+                                <p className="font-medium text-slate-800 dark:text-white">الموقع</p>
                                 <p className="text-sm text-slate-500">اليمن - صنعاء</p>
                             </div>
                         </div>

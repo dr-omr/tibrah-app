@@ -468,7 +468,7 @@ export default function FastingTimerPro() {
                                             }`}
                                         style={{
                                             backgroundColor: isReached ? phase.color : '#E2E8F0',
-                                            ringColor: isCurrent ? phase.color : 'transparent'
+                                            ['--tw-ring-color' as any]: isCurrent ? phase.color : 'transparent'
                                         }}
                                         animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
                                         transition={{ repeat: Infinity, duration: 1.5 }}

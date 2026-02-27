@@ -46,11 +46,12 @@ export const showNotification = (
         badge: '/icons/icon-72x72.png',
         dir: 'rtl',
         lang: 'ar',
-        vibrate: [200, 100, 200],
         tag: 'tibrah-notification',
         renotify: true,
         ...options
-    };
+    } as any;
+    // Note: vibrate is a valid Web API property but not always in TS types
+    (defaultOptions as any).vibrate = [200, 100, 200];
 
     return new Notification(title, defaultOptions);
 };

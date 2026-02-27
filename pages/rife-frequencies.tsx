@@ -493,7 +493,7 @@ export default function RifeFrequencies() {
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-slate-800">{freq.name}</h3>
+                                            <h3 className="font-bold text-slate-800 dark:text-white">{freq.name}</h3>
                                             <span className="text-xs text-slate-400">{freq.name_en}</span>
                                         </div>
 

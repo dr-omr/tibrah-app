@@ -4,7 +4,7 @@ import { createPageUrl } from '../../utils';
 import { Clock, Eye, Play, FileText, BookOpen, Mic } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
-export default function ArticleCard({ article }) {
+export default function ArticleCard({ article }: { article: any }) {
     const typeConfig = {
         article: { icon: FileText, label: 'مقال', color: 'bg-blue-500' },
         video: { icon: Play, label: 'فيديو', color: 'bg-red-500' },

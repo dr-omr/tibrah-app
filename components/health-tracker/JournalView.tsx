@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
-export default function JournalView({ onSubmitLog, onSubmitSymptom }) {
+export default function JournalView({ onSubmitLog, onSubmitSymptom }: { onSubmitLog: (data: any) => void; onSubmitSymptom: (data: any) => void }) {
     const [activeSection, setActiveSection] = useState('checkin'); // checkin or symptom
 
     // Check-in State
@@ -39,7 +39,7 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }) {
         setSymptomData({ symptom: '', severity: 5, body_area: 'general', notes: '' }); // Reset
     };
 
-    const RatingRow = ({ label, value, onChange, emojis, icon: Icon }) => (
+    const RatingRow = ({ label, value, onChange, emojis, icon: Icon }: { label: string; value: number; onChange: (v: number) => void; emojis?: string[]; icon: any }) => (
         <div className="bg-white p-4 rounded-2xl border border-slate-100">
             <div className="flex items-center gap-2 mb-3">
                 <Icon className="w-5 h-5 text-[#2D9B83]" />
@@ -52,8 +52,8 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }) {
                         type="button"
                         onClick={() => onChange(r)}
                         className={`flex-1 h-12 rounded-xl text-2xl flex items-center justify-center transition-all ${value === r
-                                ? 'bg-[#2D9B83]/10 text-[#2D9B83] ring-2 ring-[#2D9B83] scale-110'
-                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                            ? 'bg-[#2D9B83]/10 text-[#2D9B83] ring-2 ring-[#2D9B83] scale-110'
+                            : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                             }`}
                     >
                         {emojis ? emojis[r - 1] : r}
