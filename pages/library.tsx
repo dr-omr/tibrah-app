@@ -6,24 +6,20 @@ import Link from 'next/link';
 import { Input } from "@/components/ui/input";
 import ArticleCard from '../components/library/ArticleCard';
 import LibraryFilters from '../components/library/LibraryFilters';
-import { localArticles } from '@/lib/articles';
+import { localArticles, Article } from '@/lib/articles';
+import type { GetStaticProps, InferGetStaticPropsType } from 'next';
 
-// Interface for Article
-interface Article {
-    id: string;
-    title?: string;
-    summary?: string;
-    image_url?: string;
-    category?: string;
-    type?: string;
-    views?: number;
-    featured?: boolean;
-    tags?: string[];
-    created_date?: string;
-    content?: string;
-}
+// Pre-render local articles for SEO
+export const getStaticProps: GetStaticProps<{ initialArticles: Article[] }> = async () => {
+    return {
+        props: {
+            initialArticles: localArticles,
+        },
+        revalidate: 3600, // Re-generate every hour
+    };
+};
 
-export default function Library() {
+export default function Library({ initialArticles }: InferGetStaticPropsType<typeof getStaticProps>) {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeType, setActiveType] = useState('all');
     const [activeCategory, setActiveCategory] = useState('all');
@@ -43,9 +39,8 @@ export default function Library() {
         initialData: [],
     });
 
-    // Merge DB articles with Local fallback articles
-    // Prefer DB articles if IDs collide (though they shouldn't)
-    const articles = [...dbArticles, ...localArticles];
+    // Merge DB articles with pre-rendered local articles
+    const articles = [...dbArticles, ...initialArticles];
 
     // Filter articles
     const filteredArticles = articles.filter((article: any) => {
@@ -156,3 +151,4 @@ export default function Library() {
         </div>
     );
 }
+

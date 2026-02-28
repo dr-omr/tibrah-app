@@ -37,7 +37,8 @@ export default function Login() {
         try {
             await signInWithEmail(email, password);
             toast.success('تم تسجيل الدخول بنجاح! 🎉');
-            router.push('/');
+            const returnUrl = (router.query.returnUrl as string) || '/';
+            router.push(returnUrl);
         } catch (error: unknown) {
             const authError = error as { code?: string; message?: string };
             // console.log('Login error:', authError);
@@ -70,7 +71,8 @@ export default function Login() {
         try {
             await signInWithGoogle();
             toast.success('تم تسجيل الدخول بنجاح! 🎉');
-            router.push('/');
+            const returnUrl = (router.query.returnUrl as string) || '/';
+            router.push(returnUrl);
         } catch (error: unknown) {
             const authError = error as { code?: string; message?: string };
             // console.log('Google login error:', authError);

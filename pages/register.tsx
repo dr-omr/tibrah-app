@@ -52,7 +52,7 @@ export default function Register() {
             router.push('/');
         } catch (error: unknown) {
             const authError = error as { code?: string; message?: string };
-            console.log('Register error:', authError);
+            // Auth error handled by UI
 
             switch (authError.code) {
                 case 'auth/email-already-in-use':

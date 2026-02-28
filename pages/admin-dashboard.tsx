@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
-import { Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Lock, ArrowRight, Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from '@/contexts/AuthContext';
 
 // Modular Components
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -15,34 +16,81 @@ import AppointmentManager from '@/components/admin/AppointmentManager';
 import ProductManager from '@/components/admin/ProductManager';
 import CourseManager from '@/components/admin/CourseManager';
 import ArticleManager from '@/components/admin/ArticleManager';
-import FrequencyManager from '@/components/admin/FrequencyManager'; // New
+import FrequencyManager from '@/components/admin/FrequencyManager';
 import UserManagement from '@/components/admin/UserManagement';
-import SystemConfig from '@/components/admin/SystemConfig'; // Assuming exists
-import ThemeSettings from '@/components/admin/ThemeSettings'; // Assuming exists
-import FoodManager from '@/components/admin/FoodManager'; // Meal Planner Admin
-import RecipeManager from '@/components/admin/RecipeManager'; // Recipe Admin
+import SystemConfig from '@/components/admin/SystemConfig';
+import ThemeSettings from '@/components/admin/ThemeSettings';
+import FoodManager from '@/components/admin/FoodManager';
+import RecipeManager from '@/components/admin/RecipeManager';
 
 export default function AdminDashboard() {
+    const { user, isAdmin, loading: authLoading } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [passcode, setPasscode] = useState('');
+    const [loginError, setLoginError] = useState('');
+    const [loginAttempts, setLoginAttempts] = useState(0);
     const [activeTab, setActiveTab] = useState('overview');
     const queryClient = useQueryClient();
 
-    // Check Auth on Mount
+    // Check Auth on Mount — use AuthContext first, then check localStorage session
     useEffect(() => {
-        const isAuth = localStorage.getItem('admin_auth');
-        if (isAuth === 'true') setIsAuthenticated(true);
-    }, []);
+        if (!authLoading) {
+            if (isAdmin) {
+                // User is logged in with admin role — auto-authenticate
+                setIsAuthenticated(true);
+                localStorage.setItem('admin_auth_session', Date.now().toString());
+            } else {
+                // Check if there's a valid admin session (expires after 8 hours)
+                const sessionTime = localStorage.getItem('admin_auth_session');
+                if (sessionTime) {
+                    const elapsed = Date.now() - parseInt(sessionTime, 10);
+                    const EIGHT_HOURS = 8 * 60 * 60 * 1000;
+                    if (elapsed < EIGHT_HOURS) {
+                        setIsAuthenticated(true);
+                    } else {
+                        // Session expired
+                        localStorage.removeItem('admin_auth_session');
+                    }
+                }
+            }
+        }
+    }, [authLoading, isAdmin]);
 
-    // Auth Handler
-    const handleLogin = (e: React.FormEvent) => {
+    // Auth Handler — verify passcode against server-side API
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (passcode === '777144711') { // Dr. Omar's Phone Prefix/Code
-            setIsAuthenticated(true);
-            localStorage.setItem('admin_auth', 'true');
-            toast.success('مرحباً دكتور عمر!');
-        } else {
-            toast.error('رمز الدخول غير صحيح');
+        setLoginError('');
+
+        // Brute force protection — lock after 5 failed attempts
+        if (loginAttempts >= 5) {
+            setLoginError('تم تجاوز الحد الأقصى للمحاولات. يرجى الانتظار 15 دقيقة.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/admin-verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ passcode }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setIsAuthenticated(true);
+                localStorage.setItem('admin_auth_session', Date.now().toString());
+                if (data.token) {
+                    localStorage.setItem('admin_api_token', data.token);
+                }
+                toast.success('مرحباً دكتور عمر!');
+                setLoginAttempts(0);
+            } else {
+                setLoginAttempts(prev => prev + 1);
+                setLoginError(`رمز الدخول غير صحيح (${5 - loginAttempts - 1} محاولات متبقية)`);
+                toast.error('رمز الدخول غير صحيح');
+            }
+        } catch {
+            // Offline fallback — if the API is unreachable, deny access
+            setLoginError('تعذر التحقق. تأكد من الاتصال بالإنترنت.');
         }
     };
 
@@ -88,17 +136,10 @@ export default function AdminDashboard() {
         enabled: isAuthenticated
     });
 
-    // We assume there is a 'Frequency' entity in db.ts or we stub it
-    // If not, this might fail unless db.ts handles arbitrary collections
-    // db.entities is strictly typed. I need to check db.ts if Frequency exists.
-    // If not, I will add it to db.ts first.
-    // Assuming it doesn't exist yet, I will use a placeholder or generic 'Entity' if available.
-    // Earlier I saw db.ts content and it had Users, Products, Courses, etc. I don't recall Frequencies.
-    // I will proceed with adding Frequency to db.ts in a subsequent step if needed, but for now I'll stub the fetch.
+    // Frequency entity (optional — may not exist in database)
     const { data: frequencies = [], refetch: refetchFrequencies } = useQuery({
         queryKey: ['admin-frequencies'],
         queryFn: async () => {
-            // Safe check if Frequency entity exists, else return empty
             if ((db.entities as any).Frequency) {
                 return (db.entities as any).Frequency.list();
             }
@@ -179,7 +220,7 @@ export default function AdminDashboard() {
             if (entity) {
                 id ? await entity.update(id, data) : await entity.create(data);
             } else {
-                console.warn('Frequency entity not found in db');
+                // Frequency entity not found — feature not available
             }
         },
         onSuccess: () => { refetchFrequencies(); toast.success('تم حفظ التردد'); }
@@ -228,14 +269,22 @@ export default function AdminDashboard() {
 
                         <Button
                             type="submit"
-                            className="w-full h-14 bg-gradient-to-r from-[#2D9B83] to-[#1A5F50] hover:from-[#258570] hover:to-[#144D40] text-white font-bold text-lg rounded-xl shadow-lg shadow-[#2D9B83]/30 hover:shadow-[#2D9B83]/50 transition-all transform hover:-translate-y-1 active:translate-y-0"
+                            disabled={loginAttempts >= 5}
+                            className="w-full h-14 bg-gradient-to-r from-[#2D9B83] to-[#1A5F50] hover:from-[#258570] hover:to-[#144D40] text-white font-bold text-lg rounded-xl shadow-lg shadow-[#2D9B83]/30 hover:shadow-[#2D9B83]/50 transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             تسجيل الدخول الآمن
                         </Button>
+
+                        {loginError && (
+                            <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-sm">
+                                <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+                                <span>{loginError}</span>
+                            </div>
+                        )}
                     </form>
 
                     <div className="mt-8 pt-6 border-t border-white/10">
-                        <p className="text-xs text-slate-400">نظام طِبرَا الذكي v2.0</p>
+                        <p className="text-xs text-slate-400">نظام طِبرَا الذكي v2.0 — مؤمّن</p>
                     </div>
                 </div>
             </div>

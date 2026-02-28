@@ -84,6 +84,92 @@ interface User extends EntityBase {
     settings?: Record<string, unknown>;
 }
 
+interface CartItemEntity extends EntityBase {
+    product_id: string;
+    product_name: string;
+    price: number;
+    quantity: number;
+    image_url?: string;
+    user_id?: string;
+}
+
+interface ProductEntity extends EntityBase {
+    name: string;
+    name_en?: string;
+    description?: string;
+    price: number;
+    original_price?: number;
+    category: string;
+    image_url?: string;
+    benefits?: string[];
+    in_stock?: boolean;
+    featured?: boolean;
+    rating?: number;
+}
+
+interface CourseEntity extends EntityBase {
+    title: string;
+    description?: string;
+    thumbnail_url?: string;
+    duration_hours?: number;
+    lessons_count?: number;
+    enrolled_count?: number;
+    rating?: number;
+    is_free?: boolean;
+    price?: number;
+    level?: 'beginner' | 'intermediate' | 'advanced';
+    category?: string;
+    status?: 'published' | 'draft';
+}
+
+interface OrderEntity extends EntityBase {
+    user_id: string;
+    user_name?: string;
+    user_phone?: string;
+    items: {
+        product_id: string;
+        product_name: string;
+        price: number;
+        quantity: number;
+        image_url?: string;
+    }[];
+    subtotal: number;
+    shipping: number;
+    discount: number;
+    total: number;
+    coupon_code?: string;
+    payment_method: string;
+    transaction_id?: string;
+    status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    notes?: string;
+}
+
+interface AppointmentEntity extends EntityBase {
+    user_id?: string;
+    doctor_id?: string;
+    date: string;
+    time?: string;
+    type?: string;
+    status?: string;
+    notes?: string;
+    price?: number;
+}
+
+// Fallback event listeners — notify UI when Firebase fails silently
+type FallbackListener = (entityName: string, operation: string) => void;
+const fallbackListeners: FallbackListener[] = [];
+
+export function onFirebaseFallback(listener: FallbackListener) {
+    fallbackListeners.push(listener);
+    return () => {
+        const index = fallbackListeners.indexOf(listener);
+        if (index > -1) fallbackListeners.splice(index, 1);
+    };
+}
+
+function notifyFallback(entityName: string, operation: string) {
+    fallbackListeners.forEach(listener => listener(entityName, operation));
+}
 
 // Helper to determine mode
 const isFirebaseReady = () => {
@@ -134,6 +220,7 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                     return items;
                 } catch (e) {
                     console.warn(`Firestore list failed for ${entityName}, falling back to local.`, e);
+                    notifyFallback(entityName, 'list');
                 }
             }
 
@@ -206,6 +293,7 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                     return newItem;
                 } catch (e) {
                     console.error(`Firestore create failed for ${entityName}`, e);
+                    notifyFallback(entityName, 'create');
                 }
             }
 
@@ -264,29 +352,16 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
 
 // Tibrah Database Client
 export const db = {
-    // Entities
-    users: createEntityOperations<User>('users'),
-    healthMetrics: createEntityOperations<HealthMetric>('health_metrics'),
-    dailyLogs: createEntityOperations<DailyLog>('daily_logs'),
-    symptomLogs: createEntityOperations<EntityBase>('symptom_logs'),
-    appointments: createEntityOperations<EntityBase>('appointments'),
-    products: createEntityOperations<EntityBase>('products'),
-    cartItems: createEntityOperations<EntityBase>('cart_items'),
-    comments: createEntityOperations<Comment>('comments'),
-    foods: createEntityOperations<EntityBase>('foods'),
-    recipes: createEntityOperations<EntityBase>('recipes'),
-
-    // Explicit entity names for compatibility during migration (optional, but helpful)
     entities: {
         User: createEntityOperations<User>('users'),
         HealthMetric: createEntityOperations<HealthMetric>('health_metrics'),
         DailyLog: createEntityOperations<DailyLog>('daily_logs'),
         SymptomLog: createEntityOperations<EntityBase>('symptom_logs'),
-        Appointment: createEntityOperations<EntityBase>('appointments'),
-        Product: createEntityOperations<EntityBase>('products'),
-        CartItem: createEntityOperations<EntityBase>('cart_items'),
+        Appointment: createEntityOperations<AppointmentEntity>('appointments'),
+        Product: createEntityOperations<ProductEntity>('products'),
+        CartItem: createEntityOperations<CartItemEntity>('cart_items'),
         Comment: createEntityOperations<Comment>('comments'),
-        Course: createEntityOperations<EntityBase>('courses'),
+        Course: createEntityOperations<CourseEntity>('courses'),
         Lesson: createEntityOperations<EntityBase>('lessons'),
         CourseEnrollment: createEntityOperations<EntityBase>('course_enrollments'),
         KnowledgeArticle: createEntityOperations<EntityBase>('knowledge_articles'),
@@ -301,14 +376,26 @@ export const db = {
         HealthProgram: createEntityOperations<EntityBase>('health_programs'),
         Food: createEntityOperations<EntityBase>('foods'),
         Recipe: createEntityOperations<EntityBase>('recipes'),
-        // Frequencies (kept for legacy data if needed, but not used in frontend anymore)
         Frequency: createEntityOperations<EntityBase>('frequencies'),
         RifeFrequency: createEntityOperations<EntityBase>('rife_frequencies'),
         FastingSession: createEntityOperations<FastingSession>('fasting_sessions'),
         DoseLog: createEntityOperations<DoseLog>('dose_logs'),
         WeightLog: createEntityOperations<WeightLog>('weight_logs'),
         UserHealth: createEntityOperations<UserHealth>('user_health'),
+        Order: createEntityOperations<OrderEntity>('orders'),
     },
+
+    // Legacy aliases (deprecated - use db.entities.* instead)
+    users: createEntityOperations<User>('users'),
+    healthMetrics: createEntityOperations<HealthMetric>('health_metrics'),
+    dailyLogs: createEntityOperations<DailyLog>('daily_logs'),
+    symptomLogs: createEntityOperations<EntityBase>('symptom_logs'),
+    appointments: createEntityOperations<AppointmentEntity>('appointments'),
+    products: createEntityOperations<ProductEntity>('products'),
+    cartItems: createEntityOperations<CartItemEntity>('cart_items'),
+    comments: createEntityOperations<Comment>('comments'),
+    foods: createEntityOperations<EntityBase>('foods'),
+    recipes: createEntityOperations<EntityBase>('recipes'),
 
     // AI Integrations (Simplified)
     integrations: {

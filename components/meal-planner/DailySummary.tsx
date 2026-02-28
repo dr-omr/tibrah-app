@@ -4,7 +4,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Beef, Wheat, Droplets } from 'lucide-react';
-import { NutritionInfo } from '@/lib/mealDatabase';
+import { NutritionInfo } from '@/lib/mealTypes';
 import { DailyGoals } from './types';
 
 interface DailySummaryProps {

@@ -40,12 +40,6 @@ interface CartItem {
 export default function ProductDetails() {
     const router = useRouter();
     const productId = router.query.id as string;
-
-    // Guard: Wait for router to be ready
-    if (!router.isReady) {
-        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
-    }
-
     const [quantity, setQuantity] = useState(1);
     const queryClient = useQueryClient();
 
@@ -55,7 +49,7 @@ export default function ProductDetails() {
             const products = await db.entities.Product.filter({ id: productId }) as unknown as Product[];
             return products[0] || null;
         },
-        enabled: !!productId,
+        enabled: !!productId && router.isReady,
     });
 
     const { data: cartItems = [] } = useQuery<CartItem[]>({
@@ -67,7 +61,9 @@ export default function ProductDetails() {
 
     const addToCartMutation = useMutation({
         mutationFn: async () => {
-            const existingItem = cartItems.find((item: CartItem) => item.product_id === productId);
+            // Read fresh cart data to avoid stale closure
+            const currentCart = queryClient.getQueryData<CartItem[]>(['cart']) || [];
+            const existingItem = currentCart.find((item: CartItem) => item.product_id === productId);
             if (existingItem) {
                 return db.entities.CartItem.update(existingItem.id, {
                     quantity: existingItem.quantity + quantity
@@ -86,6 +82,11 @@ export default function ProductDetails() {
             toast.success('تمت الإضافة للسلة');
         },
     });
+
+    // Guard: Wait for router to be ready
+    if (!router.isReady) {
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+    }
 
     const features = [
         { icon: Truck, text: 'شحن سريع خلال ٣-٥ أيام' },
@@ -186,6 +187,7 @@ export default function ProductDetails() {
                     {product.category === 'dmso' && 'DMSO'}
                     {product.category === 'personal_care' && 'عناية شخصية'}
                     {product.category === 'detox' && 'ديتوكس'}
+                    {product.category === 'gut_health' && 'صحة الأمعاء'}
                 </Badge>
 
                 {/* Name */}

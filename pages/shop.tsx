@@ -30,13 +30,6 @@ export default function Shop() {
         queryFn: () => db.entities.Product.list(),
     });
 
-    // Use local products as fallback when API returns empty - cast to any for type compatibility
-    const products: any[] = apiProducts.length > 0 ? apiProducts : localProducts;
-
-    if (isError && localProducts.length === 0) {
-        return <ErrorState title="خطأ" message="تعذر تحميل المنتجات" onRetry={refetch} />;
-    }
-
     const { data: cartItems = [] } = useQuery({
         queryKey: ['cart'],
         queryFn: () => db.entities.CartItem.list(),
@@ -44,7 +37,13 @@ export default function Shop() {
 
     const addToCartMutation = useMutation({
         mutationFn: async (product: any) => {
-            const existingItem = cartItems.find((item: any) => item.product_id === product.id);
+            // Stock validation
+            if (product.in_stock === false) {
+                throw new Error('هذا المنتج غير متوفر حالياً');
+            }
+            // Read fresh cart data to avoid stale closure
+            const currentCart = queryClient.getQueryData<any[]>(['cart']) || [];
+            const existingItem = currentCart.find((item: any) => item.product_id === product.id);
             if (existingItem) {
                 return db.entities.CartItem.update(existingItem.id, {
                     quantity: (existingItem.quantity as number) + 1
@@ -62,7 +61,17 @@ export default function Shop() {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('تمت الإضافة للسلة');
         },
+        onError: (error: Error) => {
+            toast.error(error.message || 'حدث خطأ أثناء الإضافة');
+        },
     });
+
+    // Use local products as fallback when API returns empty - cast to any for type compatibility
+    const products: any[] = apiProducts.length > 0 ? apiProducts : localProducts;
+
+    if (isError && localProducts.length === 0) {
+        return <ErrorState title="خطأ" message="تعذر تحميل المنتجات" onRetry={refetch} />;
+    }
 
     // Filter and sort products
     let filteredProducts = products.filter((product: any) => {

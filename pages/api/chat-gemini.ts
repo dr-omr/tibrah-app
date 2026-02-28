@@ -5,26 +5,14 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
+import { checkRateLimit, getClientIp, sanitizeString } from '@/lib/apiMiddleware';
 
 // Gemini API Key (server-side only — never use NEXT_PUBLIC_ for secrets)
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-// Simple in-memory rate limiting (30 requests per minute per IP)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 30;
-const RATE_WINDOW_MS = 60 * 1000;
-
-function isRateLimited(ip: string): boolean {
-    const now = Date.now();
-    const entry = rateLimitMap.get(ip);
-    if (!entry || now > entry.resetTime) {
-        rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW_MS });
-        return false;
-    }
-    entry.count++;
-    return entry.count > RATE_LIMIT;
-}
+// Singleton Gemini client (avoid recreating per request)
+const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 // System Prompt for Tibrah AI (Enhanced v2)
 const TIBRAH_SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 - طبيب وظيفي افتراضي ودود ومتخصص.
@@ -72,22 +60,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: "Method not allowed" });
     }
 
-    // Rate limiting
-    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'unknown';
-    if (isRateLimited(clientIp)) {
+    // Rate limiting — 30 requests per minute per IP
+    const clientIp = getClientIp(req);
+    const { limited } = checkRateLimit(clientIp, 30, 60 * 1000);
+    if (limited) {
         return res.status(429).json({ error: "Too many requests", text: "⚠️ طلبات كثيرة، يرجى المحاولة بعد دقيقة", success: false });
     }
 
-    const { message, healthContext, history } = req.body;
+    const { message, healthContext, history, aiMemoryContext } = req.body;
 
-    if (!message) {
+    if (!message || typeof message !== 'string') {
         return res.status(400).json({ error: "Message is required" });
     }
 
-    console.log("🤖 [Tibrah AI] Incoming request:", message.substring(0, 50));
+    // Input validation: limit message length
+    const sanitizedMessage = message.slice(0, 2000);
+
+    console.log("🤖 [Tibrah AI] Incoming request:", sanitizedMessage.substring(0, 50));
 
     // Build context-aware prompt
     let contextPrompt = TIBRAH_SYSTEM_PROMPT;
+
+    // Inject long-term AI health memory (conditions, medications, goals, etc.)
+    if (aiMemoryContext && typeof aiMemoryContext === 'string') {
+        contextPrompt += "\n" + aiMemoryContext.substring(0, 1000);
+    }
+
     if (healthContext) {
         contextPrompt += "\n\n📋 بيانات المستخدم الصحية:";
         if (healthContext.name) contextPrompt += `\n- الاسم: ${healthContext.name}`;
@@ -111,9 +109,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 🥇 Try Gemini FIRST (upgraded to 2.0 Flash)
-    if (GEMINI_API_KEY) {
+    if (genAI) {
         try {
-            const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({
                 model: "gemini-2.5-flash",
                 systemInstruction: contextPrompt,
@@ -129,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 history: conversationHistory,
             });
 
-            const result = await chat.sendMessage(message);
+            const result = await chat.sendMessage(sanitizedMessage);
 
             const response = result.response;
             const text = response.text();
@@ -144,8 +141,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     suggestions
                 });
             }
-        } catch (geminiError: any) {
-            console.error("❌ [Tibrah AI] Gemini FAILED:", geminiError.message);
+        } catch (geminiError: unknown) {
+            console.error("❌ [Tibrah AI] Gemini FAILED:", geminiError instanceof Error ? geminiError.message : geminiError);
         }
     } else {
         console.log("⚠️ [Tibrah AI] No Gemini API key!");
@@ -179,8 +176,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     success: true
                 });
             }
-        } catch (groqError: any) {
-            console.error("❌ [Tibrah AI] Groq FAILED:", groqError.message);
+        } catch (groqError: unknown) {
+            console.error("❌ [Tibrah AI] Groq FAILED:", groqError instanceof Error ? groqError.message : groqError);
         }
     } else {
         console.log("⚠️ [Tibrah AI] No Groq API key!");

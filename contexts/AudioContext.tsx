@@ -154,7 +154,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         } else if (track.type === 'rife' && track.frequencies) {
             playRifeSequence(track.frequencies);
         } else {
-            console.log('Music files not yet implemented locally');
+            // Music file playback — not yet implemented
         }
 
     }, [currentTrack, isPlaying, playTone, playRifeSequence, stopAudio]);

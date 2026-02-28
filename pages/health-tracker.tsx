@@ -19,18 +19,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Dynamic imports - only loaded when user navigates to tab
 const HealthSummary = dynamic(() => import('@/components/health-tracker/HealthSummary'), { ssr: false });
-const WaterTracker = dynamic(() => import('@/components/health-tracker/WaterTracker'), { ssr: false });
-const SleepTracker = dynamic(() => import('@/components/health-tracker/SleepTracker'), { ssr: false });
-const MedicationReminder = dynamic(() => import('@/components/health-tracker/MedicationReminder'), { ssr: false });
 const ActivityRings = dynamic(() => import('@/components/health-tracker/ActivityRings'), { ssr: false });
 const MoodTracker = dynamic(() => import('@/components/health-tracker/MoodTracker'), { ssr: false });
-const WeightTracker = dynamic(() => import('@/components/health-tracker/WeightTracker'), { ssr: false });
 const BloodPressureTracker = dynamic(() => import('@/components/health-tracker/BloodPressureTracker'), { ssr: false });
-const FastingTimer = dynamic(() => import('@/components/health-tracker/FastingTimer'), { ssr: false });
 const BreathingExercises = dynamic(() => import('@/components/health-tracker/BreathingExercises'), { ssr: false });
 const TodayView = dynamic(() => import('@/components/health-tracker/TodayView'), { ssr: false });
 const AIHealthAnalysis = dynamic(() => import('@/components/health-tracker/AIHealthAnalysis'), { ssr: false });
-const HistoryView = dynamic(() => import('@/components/health-tracker/HistoryView'), { ssr: false });
 const HistoryViewPro = dynamic(() => import('@/components/health-tracker/HistoryViewPro'), { ssr: false });
 const MetricsView = dynamic(() => import('@/components/health-tracker/MetricsView'), { ssr: false });
 const JournalView = dynamic(() => import('@/components/health-tracker/JournalView'), { ssr: false });

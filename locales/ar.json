@@ -1,0 +1,179 @@
+{
+    "nav.home": "الرئيسية",
+    "nav.services": "خدماتنا",
+    "nav.shop": "المتجر",
+    "nav.courses": "الدورات",
+    "nav.library": "المكتبة",
+    "nav.profile": "حسابي",
+    "nav.settings": "الإعدادات",
+    "nav.help": "المساعدة",
+    "nav.about": "من نحن",
+    "nav.login": "تسجيل الدخول",
+    "nav.logout": "تسجيل الخروج",
+    "nav.search": "ابحث عن أي شيء...",
+    "health.title": "المتابع الصحي",
+    "health.subtitle": "تتبع صحتك يومياً",
+    "health.water": "شرب الماء",
+    "health.sleep": "النوم",
+    "health.mood": "المزاج",
+    "health.weight": "الوزن",
+    "health.fasting": "الصيام",
+    "health.medication": "الأدوية",
+    "health.breathing": "تمارين التنفس",
+    "health.journal": "اليوميات",
+    "health.analysis": "تحليل ذكي",
+    "health.history": "السجل",
+    "health.steps": "الخطوات",
+    "health.addEntry": "إضافة سجل",
+    "shop.title": "المتجر",
+    "shop.subtitle": "مكملات ومنتجات صحية",
+    "shop.search": "ابحث عن منتج...",
+    "shop.addToCart": "أضف للسلة",
+    "shop.cart": "سلة التسوق",
+    "shop.empty": "السلة فارغة",
+    "shop.total": "الإجمالي",
+    "shop.subtotal": "المجموع الفرعي",
+    "shop.shipping": "الشحن",
+    "shop.freeShipping": "مجاني",
+    "shop.coupon": "عندك كود خصم؟",
+    "shop.couponApply": "تطبيق",
+    "shop.couponDiscount": "خصم الكوبون",
+    "shop.checkout": "إتمام الشراء",
+    "shop.whatsapp": "الدفع عند الاستلام",
+    "shop.payOnline": "دفع إلكتروني",
+    "shop.orderComplete": "تم استلام طلبك!",
+    "shop.continueShopping": "متابعة التسوق",
+    "shop.quantity": "الكمية",
+    "shop.noProducts": "لا توجد منتجات",
+    "courses.title": "الدورات التعليمية",
+    "courses.progress": "تقدمك في الدورة",
+    "courses.lessons": "درس",
+    "courses.completed": "مكتمل",
+    "courses.congrats": "مبروك! أكملت الدورة 🎉",
+    "courses.enrolled": "مسجل",
+    "courses.free": "مجاني",
+    "courses.enroll": "سجل الآن",
+    "ai.title": "مساعد طِبرَا",
+    "ai.placeholder": "اكتب سؤالك هنا...",
+    "ai.listening": "جاري الاستماع...",
+    "ai.thinking": "💭 يفكر...",
+    "ai.writing": "✍️ يكتب...",
+    "ai.available": "🟢 متاح الآن",
+    "ai.welcome": "مرحباً بك! أنا مساعدك الصحي الذكي 🌿",
+    "ai.tryQuestions": "جرّب أحد هذه الأسئلة:",
+    "ai.clearChat": "تم مسح المحادثة.",
+    "appointments.title": "حجز موعد",
+    "appointments.book": "احجز الآن",
+    "appointments.myAppointments": "مواعيدي",
+    "general.loading": "جاري التحميل...",
+    "general.error": "حدث خطأ",
+    "general.retry": "إعادة المحاولة",
+    "general.save": "حفظ",
+    "general.cancel": "إلغاء",
+    "general.delete": "حذف",
+    "general.edit": "تعديل",
+    "general.back": "رجوع",
+    "general.next": "التالي",
+    "general.sar": "ر.س",
+    "general.noResults": "لا توجد نتائج",
+    "settings.title": "الإعدادات",
+    "settings.language": "اللغة",
+    "settings.arabic": "العربية",
+    "settings.english": "English",
+    "settings.darkMode": "الوضع الداكن",
+    "settings.notifications": "الإشعارات",
+    "settings.account": "الحساب",
+    "settings.privacy": "الخصوصية",
+    "settings.about": "عن التطبيق",
+    "onboarding.welcome": "مرحباً بك في طِبرَا",
+    "onboarding.subtitle": "عيادتك الرقمية المتكاملة — صحتك تبدأ من هنا 💚",
+    "onboarding.skip": "تخطي",
+    "onboarding.next": "التالي",
+    "onboarding.start": "ابدأ تجربتك",
+    "onboarding.nameQuestion": "ما اسمك الجميل؟",
+    "onboarding.interestsQuestion": "ما الذي يهمك صحياً؟",
+    "onboarding.ready": "كل شيء جاهز!",
+    "meal.title": "تخطيط الوجبات 🥗",
+    "meal.subtitle": "خطة غذائية مخصصة",
+    "meal.plan": "الخطة",
+    "meal.foods": "الأطعمة",
+    "meal.recipes": "الوصفات",
+    "meal.analytics": "التحليل",
+    "meal.addFood": "إضافة طعام",
+    "meal.addedSuccess": "تمت إضافة الوجبة",
+    "meal.removedSuccess": "تم حذف الوجبة",
+    "meal.breakfast": "فطور",
+    "meal.lunch": "غداء",
+    "meal.dinner": "عشاء",
+    "meal.snack": "وجبة خفيفة",
+    "meal.calories": "سعرات",
+    "meal.protein": "بروتين",
+    "meal.carbs": "كربوهيدرات",
+    "meal.fat": "دهون",
+    "meal.goals": "الأهداف والحالة الصحية",
+    "meal.savedSettings": "تم حفظ الإعدادات",
+    "meal.searchPlaceholder": "ابحث عن طعام...",
+    "meal.noMeals": "لا توجد وجبات بعد",
+    "meal.dailyTip": "نصيحة اليوم",
+    "medical.title": "ملفي الطبي",
+    "medical.subtitle": "كل بياناتك الصحية في مكان واحد",
+    "medical.personalData": "البيانات الشخصية",
+    "medical.chronicConditions": "الحالات المزمنة",
+    "medical.allergies": "الحساسية",
+    "medical.addCondition": "إضافة حالة مزمنة",
+    "medical.addAllergy": "إضافة حساسية",
+    "medical.uploadDoc": "إضافة مستند طبي",
+    "medical.uploadSubtitle": "ارفع نتائج التحاليل أو التقارير الطبية",
+    "medical.files": "الملفات",
+    "medical.labs": "المختبر",
+    "medical.noFiles": "لا توجد ملفات مرفقة بعد",
+    "medical.bloodType": "فصيلة الدم",
+    "medical.weight": "الوزن",
+    "medical.height": "الطول",
+    "medical.age": "العمر",
+    "medical.enterName": "أدخل اسمك",
+    "medical.saved": "تم حفظ البيانات",
+    "fitness.title": "اختبار اللياقة",
+    "fitness.startTest": "ابدأ الاختبار",
+    "fitness.results": "النتائج",
+    "admin.title": "لوحة القيادة",
+    "admin.overview": "نظرة عامة",
+    "admin.welcome": "مرحباً بك مرة أخرى، د. عمر 👋",
+    "admin.users": "إدارة المستخدمين",
+    "admin.products": "إدارة المنتجات",
+    "admin.appointments": "إدارة المواعيد",
+    "admin.latestAppointments": "آخر المواعيد",
+    "admin.viewAll": "عرض الكل",
+    "admin.analytics": "التحليلات المتقدمة",
+    "admin.login": "تسجيل الدخول الآمن",
+    "admin.passcode": "رمز الدخول السري",
+    "common.search": "بحث",
+    "common.filter": "تصفية",
+    "common.all": "الكل",
+    "common.add": "إضافة",
+    "common.remove": "حذف",
+    "common.confirm": "تأكيد",
+    "common.close": "إغلاق",
+    "common.open": "فتح",
+    "common.yes": "نعم",
+    "common.no": "لا",
+    "common.noData": "لا توجد بيانات",
+    "common.refresh": "تحديث",
+    "payment.title": "الدفع",
+    "payment.selectMethod": "اختر طريقة الدفع",
+    "payment.whatsapp": "الدفع عبر واتساب",
+    "payment.bankTransfer": "تحويل بنكي",
+    "payment.mobileWallet": "محفظة إلكترونية",
+    "payment.transactionId": "رقم العملية",
+    "payment.confirm": "تأكيد الدفع",
+    "payment.secure": "دفع آمن ومحمي",
+    "payment.total": "المبلغ الإجمالي",
+    "rewards.title": "الإنجازات",
+    "rewards.points": "نقطة",
+    "rewards.streak": "أيام متتالية",
+    "rewards.badges": "الأوسمة",
+    "rewards.challenges": "التحديات",
+    "network.offline": "لا يوجد اتصال بالإنترنت",
+    "network.online": "تم استعادة الاتصال",
+    "network.limited": "بعض الميزات قد لا تعمل"
+}

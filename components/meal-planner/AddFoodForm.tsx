@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
-import { FoodItem } from '@/lib/mealDatabase';
+import { FoodItem } from '@/lib/mealTypes';
 
 interface AddFoodFormProps {
     foods: FoodItem[];

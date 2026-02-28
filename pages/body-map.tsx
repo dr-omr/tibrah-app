@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { createPageUrl } from '../utils';
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import InteractiveBody from '@/components/body-map/InteractiveBody';
 import { useQuery } from '@tanstack/react-query';
-import { emotionalDiseases } from '@/data/emotionalMedicineData';
+import { emotionalDiseases, preloadEmotionalData } from '@/data/emotionalMedicineData';
 import { aiClient } from '@/components/ai/aiClient';
 
 const holisticSections = [
@@ -157,6 +157,11 @@ export default function BodyMap() {
     const [selectedArea, setSelectedArea] = useState<any>(null);
     const [aiInsight, setAiInsight] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(false);
+
+    // Preload emotional data from JSON
+    useEffect(() => {
+        preloadEmotionalData();
+    }, []);
 
     // Fetch products to suggest (cached)
     const { data: allProducts } = useQuery({

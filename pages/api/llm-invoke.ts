@@ -1,16 +1,39 @@
 import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
+import { checkRateLimit, getClientIp, sanitizeString } from '@/lib/apiMiddleware';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === "OPTIONS") {
+        res.setHeader("Allow", "POST");
+        return res.status(200).end();
+    }
+
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    // Rate limiting — 20 requests per minute
+    const ip = getClientIp(req);
+    const { limited } = checkRateLimit(ip, 20, 60 * 1000);
+    if (limited) {
+        return res.status(429).json({
+            error: "Too many requests",
+            message: "⚠️ طلبات كثيرة، يرجى المحاولة بعد دقيقة",
+            success: false,
+        });
+    }
+
     try {
         const { prompt, response_json_schema } = req.body;
+
+        // Validate required input
+        const sanitizedPrompt = sanitizeString(prompt, 10000);
+        if (!sanitizedPrompt) {
+            return res.status(400).json({ error: "Prompt is required", success: false });
+        }
 
         // 🥇 Try Gemini first
         if (GEMINI_API_KEY) {
@@ -31,8 +54,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 const jsonResponse = JSON.parse(content);
 
                 return res.status(200).json(jsonResponse);
-            } catch (geminiError: any) {
-                console.error("[InvokeLLM] Gemini failed:", geminiError.message);
+            } catch (geminiError: unknown) {
+                console.error("[InvokeLLM] Gemini failed:", geminiError instanceof Error ? geminiError.message : geminiError);
             }
         }
 
@@ -55,8 +78,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 const content = completion.choices[0]?.message?.content || "{}";
                 const jsonResponse = JSON.parse(content);
                 return res.status(200).json(jsonResponse);
-            } catch (groqError: any) {
-                console.error("[InvokeLLM] Groq failed:", groqError.message);
+            } catch (groqError: unknown) {
+                console.error("[InvokeLLM] Groq failed:", groqError instanceof Error ? groqError.message : groqError);
             }
         }
 

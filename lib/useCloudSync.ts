@@ -7,7 +7,7 @@ import firestoreService, {
     CloudSettings,
     isFirestoreAvailable
 } from './firestore';
-import { emotionalDiseases } from '@/data/emotionalMedicineData';
+import { emotionalDiseases, preloadEmotionalData } from '@/data/emotionalMedicineData';
 
 // ═══════════════════════════════════════════════════════════════
 // CLOUD SYNC STATUS
@@ -39,6 +39,9 @@ export function useCloudDiseases(): UseSyncResult<CloudEmotionalDisease> {
 
     // Initial load with real-time subscription
     useEffect(() => {
+        // Preload lazy data first
+        preloadEmotionalData();
+
         if (!isFirestoreAvailable()) {
             setSyncStatus('offline');
             setIsLoading(false);

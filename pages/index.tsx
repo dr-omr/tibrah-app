@@ -8,6 +8,10 @@ import { HomeStructuredData } from '../components/common/StructuredData';
 const HealthPrograms = dynamic(() => import('../components/home/HealthPrograms'), {
     loading: () => <div className="h-96 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
 });
+const DailyHealthSummary = dynamic(() => import('../components/dashboard/DailyHealthSummary'), {
+    loading: () => <div className="h-32 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
+    ssr: false,
+});
 const QuickAccessGrid = dynamic(() => import('../components/home/QuickAccessGrid'), {
     loading: () => <div className="h-48 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl mx-4 my-4" />,
 });
@@ -32,7 +36,10 @@ export default function HomePage() {
             {/* 1. ترحيب الدكتور + زر الحجز */}
             <DoctorIntro />
 
-            {/* 2. البرامج العلاجية - أهم شيء يشوفه الزبون! */}
+            {/* 2. ملخص صحي يومي */}
+            <DailyHealthSummary />
+
+            {/* 3. البرامج العلاجية - أهم شيء يشوفه الزبون! */}
             <HealthPrograms />
 
             {/* 3. الأقسام الرئيسية */}

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from 'framer-motion';
-import { emotionalDiseases, organSystems, getDiseasesBySystem, EmotionalDisease } from '@/data/emotionalMedicineData';
+import { emotionalDiseases, organSystems, getDiseasesBySystem, EmotionalDisease, preloadEmotionalData } from '@/data/emotionalMedicineData';
 import { aiClient } from '@/components/ai/aiClient';
 
 // Related resources
@@ -29,6 +29,12 @@ export default function EmotionalMedicine() {
     const [copied, setCopied] = useState(false);
     const [aiInsight, setAiInsight] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(false);
+    const [dataReady, setDataReady] = useState(false);
+
+    // Preload emotional data from JSON
+    useEffect(() => {
+        preloadEmotionalData().then(() => setDataReady(true));
+    }, []);
 
     // Audio System States
     const [isSpeaking, setIsSpeaking] = useState(false);

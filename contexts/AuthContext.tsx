@@ -22,6 +22,11 @@ try {
     console.log('🔄 Firebase not configured, using Local Auth only');
 }
 
+// Configurable admin emails (from env or default)
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'dr.omar@tibrah.com')
+    .split(',')
+    .map(e => e.trim().toLowerCase());
+
 // ============================================
 // Types
 // ============================================
@@ -76,6 +81,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [loading, setLoading] = useState(true);
     const [authProvider, setAuthProvider] = useState<'local' | 'firebase' | 'none'>('none');
 
+    // Sync auth cookie for middleware route protection
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+        if (user) {
+            const cookieData = JSON.stringify({ email: user.email, role: user.role });
+            document.cookie = `tibrah_auth=${encodeURIComponent(cookieData)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+        } else if (!loading) {
+            // Clear cookie on logout (only after initial load)
+            document.cookie = 'tibrah_auth=; path=/; max-age=0';
+        }
+    }, [user, loading]);
+
     // Check if Firebase is properly configured
     const isFirebaseConfigured = (): boolean => {
         if (!auth || !firebaseAuth) return false;
@@ -109,7 +126,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         name: firebaseUser.displayName || 'مستخدم',
         displayName: firebaseUser.displayName || undefined,
         photoURL: firebaseUser.photoURL || undefined,
-        role: firebaseUser.email === 'dr.omar@tibrah.com' ? 'admin' : 'user',
+        role: ADMIN_EMAILS.includes((firebaseUser.email || '').toLowerCase()) ? 'admin' : 'user',
         authProvider: 'firebase',
     });
 
@@ -279,7 +296,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         changePassword,
         deleteAccount,
 
-        isAdmin: user?.role === 'admin' || user?.email === 'dr.omar@tibrah.com',
+        isAdmin: user?.role === 'admin' || ADMIN_EMAILS.includes((user?.email || '').toLowerCase()),
         isAuthenticated: !!user,
     };
 

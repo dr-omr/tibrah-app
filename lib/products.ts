@@ -78,7 +78,7 @@ export const localProducts: LocalProduct[] = [
         price: 180,
         original_price: 220,
         image_url: '/products/probiotic.png',
-        category: 'gut-health',
+        category: 'gut_health',
         featured: true,
         in_stock: true,
         rating: 4.9,
@@ -95,7 +95,7 @@ export const localProducts: LocalProduct[] = [
         description: 'مزيل عرق طبيعي 100% خالي من الألومنيوم والمواد الكيميائية الضارة. فعال لمدة 24 ساعة.',
         price: 85,
         image_url: '/products/deodorant.png',
-        category: 'personal-care',
+        category: 'personal_care',
         featured: false,
         in_stock: true,
         rating: 4.6,
@@ -112,6 +112,8 @@ export const productCategories = [
     { id: 'supplements', name: 'مكملات' },
     { id: 'vitamins', name: 'فيتامينات' },
     { id: 'minerals', name: 'معادن' },
-    { id: 'gut-health', name: 'صحة الأمعاء' },
-    { id: 'personal-care', name: 'العناية الشخصية' }
+    { id: 'gut_health', name: 'صحة الأمعاء' },
+    { id: 'personal_care', name: 'العناية الشخصية' },
+    { id: 'detox', name: 'ديتوكس' },
+    { id: 'dmso', name: 'DMSO' },
 ];

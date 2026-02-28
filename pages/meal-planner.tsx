@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import {
     foodDatabase, categories, searchFoods,
     calculateTotalNutrition, healthConditions, getSafeFoodsForCondition,
-    FoodItem, NutritionInfo, MealPlan, recipeDatabase, Recipe
+    FoodItem, NutritionInfo, MealPlan, recipeDatabase, Recipe,
+    preloadMealData
 } from '@/lib/mealDatabase';
 import { recipesDatabase } from '@/data/recipesData';
 import { MealEntry, UserHealthProfile, DailyGoals, defaultGoals } from '@/components/meal-planner/types';
@@ -87,6 +88,9 @@ export default function MealPlanner() {
 
     // Load custom foods/recipes from Firebase on mount
     useEffect(() => {
+        // Preload meal data from JSON
+        preloadMealData();
+
         const loadCustomData = async () => {
             try {
                 const { db } = await import('@/lib/db');

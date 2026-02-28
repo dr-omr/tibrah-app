@@ -1,5 +1,5 @@
 // Shared types for meal planner components
-import { FoodItem, NutritionInfo } from '@/lib/mealDatabase';
+import { FoodItem, NutritionInfo } from '@/lib/mealTypes';
 
 export interface DailyGoals {
     calories: number;

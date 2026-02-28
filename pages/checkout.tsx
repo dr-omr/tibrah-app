@@ -17,6 +17,7 @@ import CouponInput, { Coupon } from '@/components/checkout/CouponInput';
 
 interface CartItem {
     id: string;
+    product_id: string;
     product_name: string;
     price: number;
     quantity: number;
@@ -69,7 +70,7 @@ export default function Checkout() {
 
     const subtotal = cartItems.reduce((sum: number, item: CartItem) => sum + (item.price * item.quantity), 0);
     const shipping = subtotal >= 200 ? 0 : 25;
-    const total = subtotal + shipping - discount;
+    const total = Math.max(0, subtotal + shipping - discount);
 
     const handleCouponApply = (newDiscount: number, coupon: Coupon | null) => {
         setDiscount(newDiscount);
@@ -81,7 +82,34 @@ export default function Checkout() {
         return `\n👤 العميل: ${user.displayName || user.name || 'مجهول'}\n📞 الهاتف: ${user.phone || 'غير مسجل'}`;
     };
 
-    const handleWhatsAppOrder = () => {
+    const saveOrder = async (paymentMethod: string, transactionId?: string) => {
+        try {
+            await db.entities.Order.create({
+                user_id: user?.id || 'guest',
+                user_name: user?.displayName || user?.name || 'ضيف',
+                user_phone: user?.phone || '',
+                items: cartItems.map((item: CartItem) => ({
+                    product_id: item.product_id,
+                    product_name: item.product_name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image_url: item.image_url || '',
+                })),
+                subtotal,
+                shipping,
+                discount,
+                total,
+                coupon_code: appliedCoupon?.code || '',
+                payment_method: paymentMethod,
+                transaction_id: transactionId || '',
+                status: 'pending' as const,
+            });
+        } catch (e) {
+            console.error('Failed to save order:', e);
+        }
+    };
+
+    const handleWhatsAppOrder = async () => {
         const orderText = cartItems.map((item: CartItem) =>
             `- ${item.product_name} × ${item.quantity} = ${item.price * item.quantity} ر.س`
         ).join('\n');
@@ -89,11 +117,12 @@ export default function Checkout() {
         const couponText = appliedCoupon ? `\n🏷️ كوبون: ${appliedCoupon.code} (خصم ${discount} ر.س)` : '';
         const message = `🛒 طلب جديد من تطبيق طِبرَا\n\n${orderText}${couponText}\n\n💰 المجموع: ${total} ر.س\n📌 طريقة الدفع: عند الاستلام${getUserStr()}`;
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
+        await saveOrder('الدفع عند الاستلام');
         clearCartMutation.mutate();
         setCheckoutComplete(true);
     };
 
-    const handlePaymentConfirm = (transactionId: string) => {
+    const handlePaymentConfirm = async (transactionId: string) => {
         setIsPaymentModalOpen(false);
 
         const orderText = cartItems.map((item: CartItem) =>
@@ -105,6 +134,7 @@ export default function Checkout() {
 
         window.open(`https://wa.me/967771447111?text=${encodeURIComponent(message)}`, '_blank');
 
+        await saveOrder(selectedMethod || 'دفع إلكتروني', transactionId);
         clearCartMutation.mutate();
         setCheckoutComplete(true);
     };

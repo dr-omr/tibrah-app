@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import {
@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from 'framer-motion';
-import { emotionalDiseases, organSystems, EmotionalDisease } from '@/data/emotionalMedicineData';
+import { emotionalDiseases, organSystems, EmotionalDisease, preloadEmotionalData } from '@/data/emotionalMedicineData';
 import { aiClient } from '@/components/ai/aiClient';
 
 // Popular searches
@@ -41,6 +41,11 @@ export default function SymptomAnalysis() {
     const [aiAnalysis, setAiAnalysis] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
+
+    // Preload emotional data from JSON
+    useEffect(() => {
+        preloadEmotionalData();
+    }, []);
 
     // Filter diseases based on search and category
     const filteredDiseases = useMemo(() => {
@@ -390,8 +395,8 @@ export default function SymptomAnalysis() {
                                         {/* Severity Badge */}
                                         {aiAnalysis.severity && (
                                             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${aiAnalysis.severity === 'high' ? 'bg-red-100 text-red-700' :
-                                                    aiAnalysis.severity === 'medium' ? 'bg-amber-100 text-amber-700' :
-                                                        'bg-green-100 text-green-700'
+                                                aiAnalysis.severity === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                                    'bg-green-100 text-green-700'
                                                 }`}>
                                                 {aiAnalysis.severity === 'high' ? '🔴 شدة عالية' :
                                                     aiAnalysis.severity === 'medium' ? '🟡 شدة متوسطة' :

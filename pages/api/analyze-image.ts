@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
+import { checkRateLimit, getClientIp } from '@/lib/apiMiddleware';
 
 // Initialize Gemini API (server-side only)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -51,6 +52,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    // Rate limiting — 10 image analyses per minute per IP
+    const ip = getClientIp(req);
+    const { limited } = checkRateLimit(ip, 10, 60 * 1000);
+    if (limited) {
+        return res.status(429).json({
+            error: 'Too many requests',
+            message: '⚠️ طلبات كثيرة لتحليل الصور، يرجى المحاولة بعد دقيقة',
+            success: false,
+        });
+    }
+
     try {
         const { imageBase64, mimeType, mode } = req.body;
 
@@ -78,20 +90,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         return res.status(200).json({ text });
 
-    } catch (error: any) {
-        console.error("Gemini Vision Error:", error);
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error("Gemini Vision Error:", errMsg);
 
         let errorMessage = "فشل تحليل الصورة، يرجى المحاولة مرة أخرى.";
-        if (error.message?.includes("413") || error.message?.includes("too large")) {
+        if (errMsg.includes("413") || errMsg.includes("too large")) {
             errorMessage = "حجم الصورة كبير جداً. يرجى استخدام صورة أصغر.";
-        } else if (error.message?.includes("API_KEY")) {
+        } else if (errMsg.includes("API_KEY")) {
             errorMessage = "خطأ في إعدادات النظام (API Key).";
         }
 
         return res.status(500).json({
             error: "Failed to analyze image",
             details: errorMessage,
-            raw: process.env.NODE_ENV === 'development' ? error.message : undefined
+            raw: process.env.NODE_ENV === 'development' ? errMsg : undefined
         });
     }
 }

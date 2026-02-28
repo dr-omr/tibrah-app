@@ -6,6 +6,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
+import { checkRateLimit, getClientIp, sanitizeString } from '@/lib/apiMiddleware';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -240,8 +241,24 @@ const ANALYSIS_PROMPTS: Record<string, string> = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === "OPTIONS") {
+        res.setHeader("Allow", "POST");
+        return res.status(200).end();
+    }
+
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // Rate limiting — 20 requests per minute
+    const ip = getClientIp(req);
+    const { limited } = checkRateLimit(ip, 20, 60 * 1000);
+    if (limited) {
+        return res.status(429).json({
+            error: "Too many requests",
+            message: "⚠️ طلبات كثيرة، يرجى المحاولة بعد دقيقة",
+            success: false,
+        });
     }
 
     if (!GEMINI_API_KEY) {
@@ -251,14 +268,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const { type, data, context } = req.body;
 
-        if (!type || !ANALYSIS_PROMPTS[type]) {
+        // Validate analysis type
+        const sanitizedType = sanitizeString(type, 100);
+        if (!sanitizedType || !ANALYSIS_PROMPTS[sanitizedType]) {
             return res.status(400).json({
                 error: "Invalid analysis type",
                 valid_types: Object.keys(ANALYSIS_PROMPTS)
             });
         }
 
-        const systemPrompt = ANALYSIS_PROMPTS[type];
+        const systemPrompt = ANALYSIS_PROMPTS[sanitizedType];
 
         // Build user message with context
         let userMessage = `البيانات للتحليل:\n${JSON.stringify(data, null, 2)}`;
@@ -296,10 +315,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             source: "gemini-2.5-flash"
         });
 
-    } catch (error: any) {
-        console.error(`[AI Analyze] Error (${req.body?.type}):`, error.message);
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error(`[AI Analyze] Error (${req.body?.type}):`, errMsg);
 
-        if (error.message?.includes("429")) {
+        if (errMsg.includes("429")) {
             return res.status(429).json({
                 error: "Rate limit exceeded",
                 success: false,

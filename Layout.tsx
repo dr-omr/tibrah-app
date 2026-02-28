@@ -1,21 +1,21 @@
 import React, { ReactNode, useEffect, useState, useCallback } from 'react';
-import FloatingAssistant from './components/common/FloatingAssistant';
-import NetworkStatusBanner from './components/common/NetworkStatusBanner';
-import CommandPalette from './components/common/CommandPalette';
 import dynamic from 'next/dynamic';
-import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import LoadingScreen from './components/common/LoadingScreen';
 import SkipLinks, { MainContent } from './components/common/SkipLinks';
 import BottomNav from './components/navigation/BottomNav';
 import Header from './components/navigation/Header';
 import Footer from './components/navigation/Footer';
-import GlobalMiniPlayer from './components/frequencies/GlobalMiniPlayer';
 import { useAuth } from './contexts/AuthContext';
 import { useAudio } from './contexts/AudioContext';
 import { useRouter } from 'next/router';
 import { AnimatePresence } from 'framer-motion';
 
-// Lazy load onboarding — only needed for first-time users
+// Dynamic imports — these are client-only interactive components
+const FloatingAssistant = dynamic(() => import('./components/common/FloatingAssistant'), { ssr: false });
+const NetworkStatusBanner = dynamic(() => import('./components/common/NetworkStatusBanner'), { ssr: false });
+const CommandPalette = dynamic(() => import('./components/common/CommandPalette'), { ssr: false });
+const PWAInstallPrompt = dynamic(() => import('./components/common/PWAInstallPrompt'), { ssr: false });
+const GlobalMiniPlayer = dynamic(() => import('./components/frequencies/GlobalMiniPlayer'), { ssr: false });
 const OnboardingFlow = dynamic(() => import('./components/common/OnboardingFlow'), { ssr: false });
 
 interface LayoutProps {
@@ -51,9 +51,14 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   }, []);
 
 
-  // Pages that require authentication (admin only)
+  // Pages that require authentication
   const protectedPages = [
     'AdminDashboard',
+    'Profile',
+    'MedicalFile',
+    'Rewards',
+    'Settings',
+    'MyAppointments',
   ];
 
   // Check if current page is protected

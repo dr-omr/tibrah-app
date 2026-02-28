@@ -16,11 +16,11 @@ export function createPageUrl(path: string): string {
     // Parse the path for page name and query params
     const [pageName, queryString] = path.split('?');
 
-    // Convert page name to kebab-case path
+    // Convert PascalCase to kebab-case, handling consecutive uppercase (e.g., AI → ai)
     const urlPath = pageName
-        .replace(/([A-Z])/g, '-$1')
-        .toLowerCase()
-        .replace(/^-/, '');
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .toLowerCase();
 
     // Reconstruct with query string if present
     return queryString ? `/${urlPath}?${queryString}` : `/${urlPath}`;
