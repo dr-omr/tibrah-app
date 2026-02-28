@@ -3,13 +3,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
 import {
     Smile, Meh, Frown, Heart, Angry,
-    TrendingUp, Calendar, ChevronLeft, Plus, Sparkles
+    TrendingUp, Calendar, ChevronLeft, Plus, Sparkles,
+    Brain, Loader2
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
+import { aiClient } from '@/components/ai/aiClient';
 
 interface MoodEntry {
     mood: number;
@@ -47,6 +49,8 @@ export default function MoodTracker() {
     const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
     const [note, setNote] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [aiMoodInsight, setAiMoodInsight] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     // Load today's mood
     const { data: todaysMood } = useQuery({
@@ -290,6 +294,49 @@ export default function MoodTracker() {
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* AI Mood Analysis */}
+            <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-4 border border-pink-200">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-rose-600" />
+                        <span className="font-bold text-slate-800 text-sm">تحليل ذكي للمزاج</span>
+                    </div>
+                    <Button
+                        size="sm"
+                        className="bg-rose-600 text-white rounded-xl h-8 text-xs"
+                        disabled={aiLoading}
+                        onClick={async () => {
+                            setAiLoading(true);
+                            try {
+                                const result = await aiClient.analyzeMood({
+                                    current_mood: todaysMood?.mood || selectedMood,
+                                    emotions: todaysMood?.emotions || selectedEmotions,
+                                    note: todaysMood?.note || note,
+                                    weekly_average: Number(averageMood),
+                                    history: moodHistory.map(h => ({ day: h.day, mood: h.mood }))
+                                });
+                                setAiMoodInsight(result);
+                            } catch { }
+                            finally { setAiLoading(false); }
+                        }}
+                    >
+                        {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                        {aiLoading ? 'جاري...' : 'حلل مزاجي'}
+                    </Button>
+                </div>
+                {aiMoodInsight && (
+                    <div className="space-y-2 mt-2">
+                        {aiMoodInsight.analysis && <p className="text-sm text-slate-700">{aiMoodInsight.analysis}</p>}
+                        {aiMoodInsight.coping_strategies?.map((t: string, i: number) => (
+                            <p key={i} className="text-xs text-slate-600">• {t}</p>
+                        ))}
+                        {aiMoodInsight.affirmation && (
+                            <p className="text-xs text-pink-600 italic text-center">✨ "{aiMoodInsight.affirmation}"</p>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

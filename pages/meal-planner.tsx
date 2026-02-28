@@ -9,9 +9,10 @@ import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import {
-    Target, Calendar, Utensils, ChefHat, TrendingUp
+    Target, Calendar, Utensils, ChefHat, TrendingUp, Sparkles, Loader2, Brain
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import {
     foodDatabase, categories, searchFoods,
     calculateTotalNutrition, healthConditions, getSafeFoodsForCondition,
@@ -19,6 +20,7 @@ import {
 } from '@/lib/mealDatabase';
 import { recipesDatabase } from '@/data/recipesData';
 import { MealEntry, UserHealthProfile, DailyGoals, defaultGoals } from '@/components/meal-planner/types';
+import { aiClient } from '@/components/ai/aiClient';
 
 // Dynamic imports for code splitting
 const AddFoodForm = dynamic(() => import('@/components/meal-planner/AddFoodForm'), { ssr: false });
@@ -44,6 +46,9 @@ export default function MealPlanner() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [showSettingsSheet, setShowSettingsSheet] = useState(false);
+    const [aiMealPlan, setAiMealPlan] = useState<any>(null);
+    const [aiMealLoading, setAiMealLoading] = useState(false);
+    const [showAiPlanSheet, setShowAiPlanSheet] = useState(false);
 
     // Load saved meals
     const { data: savedMeals = [] } = useQuery<MealEntry[]>({
@@ -189,6 +194,28 @@ export default function MealPlanner() {
         { id: 'analytics' as const, label: 'التحليل', icon: TrendingUp },
     ];
 
+    // AI Meal Plan Generator
+    const generateAiMealPlan = useCallback(async () => {
+        setAiMealLoading(true);
+        try {
+            const result = await aiClient.planMeals(
+                {
+                    conditions: healthProfile.conditions,
+                    allergies: healthProfile.allergies,
+                    calorie_goal: healthProfile.goals.calories,
+                    protein_goal: healthProfile.goals.protein,
+                },
+                { region: 'يمن', style: 'صحي وطبيعي' }
+            );
+            setAiMealPlan(result);
+            setShowAiPlanSheet(true);
+        } catch (err) {
+            toast.error('تعذر إنشاء خطة الوجبات');
+        } finally {
+            setAiMealLoading(false);
+        }
+    }, [healthProfile]);
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
             {/* Header */}
@@ -202,13 +229,27 @@ export default function MealPlanner() {
                         <h1 className="text-2xl font-bold">تخطيط الوجبات 🥗</h1>
                         <p className="text-white/70 text-sm">خطة غذائية مخصصة</p>
                     </div>
-                    <motion.button
-                        className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setShowSettingsSheet(true)}
-                    >
-                        <Target className="w-5 h-5 text-white" />
-                    </motion.button>
+                    <div className="flex gap-2">
+                        <motion.button
+                            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
+                            whileTap={{ scale: 0.9 }}
+                            onClick={generateAiMealPlan}
+                            disabled={aiMealLoading}
+                        >
+                            {aiMealLoading ? (
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            ) : (
+                                <Sparkles className="w-5 h-5 text-white" />
+                            )}
+                        </motion.button>
+                        <motion.button
+                            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setShowSettingsSheet(true)}
+                        >
+                            <Target className="w-5 h-5 text-white" />
+                        </motion.button>
+                    </div>
                 </div>
 
                 {/* Week Calendar */}
@@ -361,6 +402,66 @@ export default function MealPlanner() {
                             toast.success('تم حفظ الإعدادات');
                         }}
                     />
+                </SheetContent>
+            </Sheet>
+
+            {/* AI Meal Plan Sheet */}
+            <Sheet open={showAiPlanSheet} onOpenChange={setShowAiPlanSheet}>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+                    <SheetHeader>
+                        <SheetTitle className="text-right flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-emerald-500" />
+                            خطة وجبات ذكية
+                        </SheetTitle>
+                    </SheetHeader>
+                    {aiMealPlan && (
+                        <div className="space-y-4 mt-4 pb-8" dir="rtl">
+                            {aiMealPlan.daily_calories && (
+                                <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                                    <span className="text-sm text-emerald-700 font-bold">
+                                        🔥 السعرات المقترحة: {aiMealPlan.daily_calories} سعرة
+                                    </span>
+                                </div>
+                            )}
+                            {aiMealPlan.meals?.map((meal: any, i: number) => (
+                                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-bold text-slate-800">{meal.name}</h4>
+                                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">
+                                            {meal.time} • {meal.calories} سعرة
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mb-2">
+                                        {meal.foods?.map((food: string, j: number) => (
+                                            <span key={j} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg">{food}</span>
+                                        ))}
+                                    </div>
+                                    {meal.benefits && (
+                                        <p className="text-xs text-slate-500">💚 {meal.benefits}</p>
+                                    )}
+                                </div>
+                            ))}
+                            {aiMealPlan.snacks?.length > 0 && (
+                                <div className="bg-amber-50 rounded-xl p-3">
+                                    <p className="text-xs font-bold text-amber-700 mb-1">🍎 وجبات خفيفة:</p>
+                                    {aiMealPlan.snacks.map((s: any, i: number) => (
+                                        <p key={i} className="text-xs text-amber-600">• {s.name} ({s.time}): {s.foods?.join('، ')}</p>
+                                    ))}
+                                </div>
+                            )}
+                            {aiMealPlan.tips?.length > 0 && (
+                                <div className="bg-blue-50 rounded-xl p-3">
+                                    <p className="text-xs font-bold text-blue-700 mb-1">💡 نصائح:</p>
+                                    {aiMealPlan.tips.map((t: string, i: number) => (
+                                        <p key={i} className="text-xs text-blue-600">• {t}</p>
+                                    ))}
+                                </div>
+                            )}
+                            {aiMealPlan.hydration_plan && (
+                                <p className="text-xs text-cyan-600 text-center">💧 {aiMealPlan.hydration_plan}</p>
+                            )}
+                        </div>
+                    )}
                 </SheetContent>
             </Sheet>
         </div>

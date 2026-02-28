@@ -6,10 +6,11 @@ import { motion } from 'framer-motion';
 import {
     TrendingUp, TrendingDown, Minus, Calendar, Droplets, Moon,
     Activity, Heart, Brain, Scale, Share2, Download, ChevronLeft,
-    ChevronRight, Sparkles, Award
+    ChevronRight, Sparkles, Award, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { aiClient } from '@/components/ai/aiClient';
 
 interface WeeklyHealthReportProps {
     dailyLogs: any[];
@@ -52,6 +53,8 @@ function sum(arr: number[]): number {
 
 export default function WeeklyHealthReport({ dailyLogs, metrics }: WeeklyHealthReportProps) {
     const [weekOffset, setWeekOffset] = useState(0);
+    const [aiInsight, setAiInsight] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     const currentWeek = useMemo(() => getWeekRange(weekOffset), [weekOffset]);
     const prevWeek = useMemo(() => getWeekRange(weekOffset + 1), [weekOffset]);
@@ -271,6 +274,66 @@ export default function WeeklyHealthReport({ dailyLogs, metrics }: WeeklyHealthR
                     );
                 })}
             </div>
+
+            {/* AI Weekly Insight */}
+            <motion.div
+                className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+            >
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-purple-600" />
+                        <span className="font-bold text-slate-800 text-sm">رؤى ذكية أسبوعية</span>
+                    </div>
+                    <Button
+                        size="sm"
+                        className="bg-purple-600 text-white rounded-xl h-8 text-xs"
+                        disabled={aiLoading}
+                        onClick={async () => {
+                            setAiLoading(true);
+                            try {
+                                const result = await aiClient.generateWeeklyReport({
+                                    water: { total: sum(thisWeekData.water), avg: avg(thisWeekData.water).toFixed(1) },
+                                    sleep: { avg: avg(thisWeekData.sleep).toFixed(1) },
+                                    mood: { avg: avg(thisWeekData.mood).toFixed(1) },
+                                    steps: { total: sum(thisWeekData.steps) },
+                                    score: overallScore,
+                                    days_tracked: thisWeekData.water.filter(w => w > 0).length
+                                });
+                                setAiInsight(result);
+                            } catch { toast.error('تعذر التحليل'); }
+                            finally { setAiLoading(false); }
+                        }}
+                    >
+                        {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Brain className="w-3 h-3 ml-1" />}
+                        {aiLoading ? 'جاري...' : 'احصل على رؤى'}
+                    </Button>
+                </div>
+                {aiInsight && (
+                    <div className="space-y-2 mt-3">
+                        {aiInsight.summary && <p className="text-sm text-slate-700 leading-relaxed">{aiInsight.summary}</p>}
+                        {aiInsight.highlights?.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                                {aiInsight.highlights.map((h: string, i: number) => (
+                                    <span key={i} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-lg border border-green-200">✓ {h}</span>
+                                ))}
+                            </div>
+                        )}
+                        {aiInsight.next_week_plan?.length > 0 && (
+                            <div>
+                                <p className="text-xs font-bold text-purple-700 mb-1">📋 خطة الأسبوع القادم:</p>
+                                {aiInsight.next_week_plan.map((p: string, i: number) => (
+                                    <p key={i} className="text-xs text-slate-600 mr-2">• {p}</p>
+                                ))}
+                            </div>
+                        )}
+                        {aiInsight.motivation && (
+                            <p className="text-xs text-purple-600 italic text-center mt-2">"{aiInsight.motivation}"</p>
+                        )}
+                    </div>
+                )}
+            </motion.div>
 
             {/* Actions */}
             <div className="flex gap-3">

@@ -7,14 +7,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import {
-    FileText, Calendar, User, Edit3, Droplets, Scale, Thermometer
+    FileText, Calendar, User, Edit3, Droplets, Scale, Thermometer,
+    Sparkles, Brain, Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
     ProfileEditForm, AddConditionForm, AddAllergyForm,
     type ChronicCondition, type PatientProfile
 } from '@/components/medical-file/MedicalFileForms';
+import { aiClient } from '@/components/ai/aiClient';
 
 // Dynamic imports for code splitting
 const ConditionsSection = dynamic(() => import('@/components/medical-file/ConditionsSection'), { ssr: false });
@@ -47,6 +50,21 @@ export default function MedicalFilePage() {
         conditions: true,
         allergies: true,
     });
+    const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const runAiAnalysis = async () => {
+        setAiLoading(true);
+        try {
+            const result = await aiClient.analyzeMedicalFile(
+                profile,
+                profile.chronic_conditions || [],
+                profile.allergies || []
+            );
+            setAiAnalysis(result);
+        } catch { toast.error('تعذر التحليل'); }
+        finally { setAiLoading(false); }
+    };
 
     // Fetch profile
     const { data: profile = {} as PatientProfile } = useQuery<PatientProfile>({
@@ -251,6 +269,68 @@ export default function MedicalFilePage() {
                         );
                     })}
                 </div>
+            </div>
+
+            {/* AI Medical Analysis */}
+            <div className="px-4 mb-4">
+                <motion.div
+                    className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <Brain className="w-5 h-5 text-purple-600" />
+                            <span className="font-bold text-slate-800 text-sm">تحليل ذكي للملف الطبي</span>
+                        </div>
+                        <Button
+                            size="sm"
+                            className="bg-purple-600 text-white rounded-xl h-8 text-xs"
+                            disabled={aiLoading}
+                            onClick={runAiAnalysis}
+                        >
+                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                            {aiLoading ? 'جاري...' : 'حلل ملفي'}
+                        </Button>
+                    </div>
+                    {aiAnalysis && (
+                        <div className="space-y-3 mt-3">
+                            {aiAnalysis.health_overview && (
+                                <p className="text-sm text-slate-700 leading-relaxed">{aiAnalysis.health_overview}</p>
+                            )}
+                            {aiAnalysis.risk_factors?.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-bold text-red-600 mb-1">⚠️ عوامل خطر:</p>
+                                    {aiAnalysis.risk_factors.map((r: string, i: number) => (
+                                        <p key={i} className="text-xs text-slate-600 mr-2">• {r}</p>
+                                    ))}
+                                </div>
+                            )}
+                            {aiAnalysis.lifestyle_recommendations?.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-bold text-green-600 mb-1">💚 نصائح:</p>
+                                    {aiAnalysis.lifestyle_recommendations.map((r: string, i: number) => (
+                                        <p key={i} className="text-xs text-slate-600 mr-2">• {r}</p>
+                                    ))}
+                                </div>
+                            )}
+                            {aiAnalysis.tests_due?.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                    {aiAnalysis.tests_due.map((t: string, i: number) => (
+                                        <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-200">🔬 {t}</span>
+                                    ))}
+                                </div>
+                            )}
+                            {aiAnalysis.positive_indicators?.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                    {aiAnalysis.positive_indicators.map((p: string, i: number) => (
+                                        <span key={i} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-lg">✓ {p}</span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </motion.div>
             </div>
 
             <div className="px-4 space-y-4">

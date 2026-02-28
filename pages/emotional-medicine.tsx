@@ -4,13 +4,14 @@ import Link from 'next/link';
 import {
     Search, X, Heart, Brain, ArrowRight, Sparkles, Copy, Volume2,
     Check, MessageCircle, ChevronLeft, BookOpen, Activity, Zap,
-    VolumeX, Mic, Play, Pause, SkipForward, Headphones
+    VolumeX, Mic, Play, Pause, SkipForward, Headphones, Loader2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from 'framer-motion';
 import { emotionalDiseases, organSystems, getDiseasesBySystem, EmotionalDisease } from '@/data/emotionalMedicineData';
+import { aiClient } from '@/components/ai/aiClient';
 
 // Related resources
 const relatedResources = [
@@ -26,6 +27,8 @@ export default function EmotionalMedicine() {
     const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
     const [selectedDisease, setSelectedDisease] = useState<EmotionalDisease | null>(null);
     const [copied, setCopied] = useState(false);
+    const [aiInsight, setAiInsight] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     // Audio System States
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -606,6 +609,66 @@ export default function EmotionalMedicine() {
                                 {/* Source */}
                                 <div className="text-center py-2">
                                     <p className="text-xs text-slate-400">المصدر: {selectedDisease.sourceRef}</p>
+                                </div>
+
+                                {/* AI Deep Analysis */}
+                                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Brain className="w-5 h-5 text-purple-600" />
+                                            <h4 className="font-bold text-slate-800 text-sm">تحليل ذكي</h4>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            className="bg-purple-600 text-white rounded-xl h-8 text-xs"
+                                            disabled={aiLoading}
+                                            onClick={async () => {
+                                                setAiLoading(true);
+                                                try {
+                                                    const result = await aiClient.analyzeBodyMap(
+                                                        selectedDisease.targetOrgan,
+                                                        [selectedDisease.symptom, selectedDisease.emotionalConflict]
+                                                    );
+                                                    setAiInsight(result);
+                                                } catch { }
+                                                finally { setAiLoading(false); }
+                                            }}
+                                        >
+                                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                                            {aiLoading ? 'جاري...' : 'تحليل معمق'}
+                                        </Button>
+                                    </div>
+                                    {aiInsight && (
+                                        <div className="space-y-2 mt-2">
+                                            {aiInsight.emotional_connection && (
+                                                <p className="text-sm text-slate-700 leading-relaxed">{aiInsight.emotional_connection}</p>
+                                            )}
+                                            {aiInsight.healing_exercises?.length > 0 && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-purple-700 mb-1">🧘 تمارين:</p>
+                                                    {aiInsight.healing_exercises.map((ex: string, i: number) => (
+                                                        <p key={i} className="text-xs text-slate-600 mr-2">• {ex}</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {aiInsight.affirmations?.length > 0 && (
+                                                <div className="bg-white/60 rounded-xl p-3">
+                                                    <p className="text-xs font-bold text-purple-700 mb-1">✨ تأكيدات:</p>
+                                                    {aiInsight.affirmations.map((a: string, i: number) => (
+                                                        <p key={i} className="text-xs text-purple-600 italic">"{a}"</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {aiInsight.lifestyle_tips?.length > 0 && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-purple-700 mb-1">💡 نصائح:</p>
+                                                    {aiInsight.lifestyle_tips.map((t: string, i: number) => (
+                                                        <p key={i} className="text-xs text-slate-600 mr-2">• {t}</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* CTA */}

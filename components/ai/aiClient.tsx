@@ -225,7 +225,97 @@ export const aiClient = {
             console.error('[AI Client] ❌ Image Analysis Error:', error);
             throw new Error(`فشل تحليل الصورة: ${error.message}`);
         }
+    },
+
+    /**
+     * Universal AI Analysis — calls /api/ai-analyze for all analysis types
+     * @param type - Analysis type (symptom_analysis, health_data_analysis, etc.)
+     * @param data - The data to analyze
+     * @param context - Optional additional context
+     */
+    async analyzeHealth(type: string, data: any, context?: any) {
+        try {
+            console.log(`[AI Client] 🧠 Running AI analysis: ${type}...`);
+            const response = await fetch('/api/ai-analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, data, context })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'فشل التحليل');
+            }
+
+            console.log(`[AI Client] ✅ Analysis complete: ${type}`);
+            return result.data;
+        } catch (error: any) {
+            console.error(`[AI Client] ❌ Analysis Error (${type}):`, error);
+            throw error;
+        }
+    },
+
+    // Convenience methods for common analysis types
+    async analyzeSymptoms(symptoms: string[], bodyArea?: string) {
+        return this.analyzeHealth('symptom_analysis', { symptoms, body_area: bodyArea });
+    },
+
+    async analyzeBodyMap(area: string, currentEmotions?: string[]) {
+        return this.analyzeHealth('body_map_analysis', { area, current_emotions: currentEmotions });
+    },
+
+    async analyzeHealthData(metrics: any, dailyLogs?: any[], symptoms?: any[]) {
+        return this.analyzeHealth('health_data_analysis', { metrics, daily_logs: dailyLogs, symptoms });
+    },
+
+    async generateWeeklyReport(weeklyData: any) {
+        return this.analyzeHealth('weekly_report', weeklyData);
+    },
+
+    async analyzeSleep(sleepData: any) {
+        return this.analyzeHealth('sleep_analysis', sleepData);
+    },
+
+    async analyzeMood(moodData: any) {
+        return this.analyzeHealth('mood_analysis', moodData);
+    },
+
+    async planMeals(healthProfile: any, preferences?: any) {
+        return this.analyzeHealth('meal_planning', { health_profile: healthProfile, preferences });
+    },
+
+    async suggestRecipes(ingredients?: string[], healthGoals?: string[]) {
+        return this.analyzeHealth('recipe_suggestion', { available_ingredients: ingredients, health_goals: healthGoals });
+    },
+
+    async analyzeMedicalFile(profile: any, conditions?: any[], allergies?: string[]) {
+        return this.analyzeHealth('medical_file_analysis', { profile, chronic_conditions: conditions, allergies });
+    },
+
+    async recommendCourses(healthProfile: any, interests?: string[]) {
+        return this.analyzeHealth('course_recommendation', { health_profile: healthProfile, interests });
+    },
+
+    async recommendProducts(healthProfile: any, symptoms?: string[]) {
+        return this.analyzeHealth('product_recommendation', { health_profile: healthProfile, symptoms });
+    },
+
+    async analyzeFasting(fastingData: any) {
+        return this.analyzeHealth('fasting_analysis', fastingData);
+    },
+
+    async suggestAppointment(symptoms: string[], healthProfile?: any) {
+        return this.analyzeHealth('appointment_suggestion', { symptoms, health_profile: healthProfile });
     }
 };
 
+export type AnalysisType =
+    | 'symptom_analysis' | 'body_map_analysis' | 'health_data_analysis'
+    | 'weekly_report' | 'sleep_analysis' | 'mood_analysis'
+    | 'meal_planning' | 'recipe_suggestion' | 'medical_file_analysis'
+    | 'course_recommendation' | 'product_recommendation'
+    | 'fasting_analysis' | 'appointment_suggestion';
+
 export const AI_DISCLAIMER = DISCLAIMER;
+

@@ -7,12 +7,13 @@ import { db } from '@/lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Timer, Play, Pause, RotateCcw, Trophy, Flame,
-    Sparkles, Clock, Zap, Heart, Brain, Battery
+    Sparkles, Clock, Zap, Heart, Brain, Battery, Loader2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { format, differenceInSeconds, differenceInHours, addHours } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { aiClient } from '@/components/ai/aiClient';
 
 // Fasting phases with benefits
 const FASTING_PHASES = [
@@ -51,6 +52,8 @@ export default function FastingTimerPro() {
     const [isActive, setIsActive] = useState(false);
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
     const [startTime, setStartTime] = useState<Date | null>(null);
+    const [aiFastingTips, setAiFastingTips] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     // Fix hydration - only render random animations on client
     const [isMounted, setIsMounted] = useState(false);
@@ -554,6 +557,54 @@ export default function FastingTimerPro() {
                     <div className="text-[10px] text-emerald-600 font-medium">مراحل مُكتملة</div>
                 </motion.div>
             </div>
+
+            {/* AI Fasting Analysis */}
+            <motion.div
+                className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-amber-600" />
+                        <span className="font-bold text-slate-800 text-sm">تحليل ذكي للصيام</span>
+                    </div>
+                    <Button
+                        size="sm"
+                        className="bg-amber-600 text-white rounded-xl h-8 text-xs"
+                        disabled={aiLoading}
+                        onClick={async () => {
+                            setAiLoading(true);
+                            try {
+                                const result = await aiClient.analyzeFasting({
+                                    preset: `${selectedPreset}:${24 - selectedPreset}`,
+                                    elapsed_hours: parseFloat(elapsedHours.toFixed(1)),
+                                    current_phase: currentPhase.name,
+                                    is_active: isActive,
+                                    phases_completed: FASTING_PHASES.filter(p => elapsedHours >= p.hours).length
+                                });
+                                setAiFastingTips(result);
+                            } catch { }
+                            finally { setAiLoading(false); }
+                        }}
+                    >
+                        {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                        {aiLoading ? 'جاري...' : 'نصائح ذكية'}
+                    </Button>
+                </div>
+                {aiFastingTips && (
+                    <div className="space-y-2 mt-2">
+                        {aiFastingTips.analysis && <p className="text-sm text-slate-700">{aiFastingTips.analysis}</p>}
+                        {aiFastingTips.tips?.map((t: string, i: number) => (
+                            <p key={i} className="text-xs text-slate-600">• {t}</p>
+                        ))}
+                        {aiFastingTips.motivation && (
+                            <p className="text-xs text-amber-600 italic text-center">🔥 "{aiFastingTips.motivation}"</p>
+                        )}
+                    </div>
+                )}
+            </motion.div>
         </motion.div>
     );
 }

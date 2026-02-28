@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash",
+                model: "gemini-2.5-flash",
                 systemInstruction: contextPrompt,
                 generationConfig: {
                     temperature: 0.8,
@@ -139,7 +139,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 const suggestions = generateSuggestions(message, text);
                 return res.status(200).json({
                     text,
-                    source: "gemini-2.0",
+                    source: "gemini-2.5",
                     success: true,
                     suggestions
                 });

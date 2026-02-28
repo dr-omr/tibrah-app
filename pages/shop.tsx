@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '@/lib/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ShoppingBag, Search, ShoppingCart } from 'lucide-react';
+import { ShoppingBag, Search, ShoppingCart, Sparkles, Brain, Loader2 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +13,15 @@ import ShopFilters from '../components/shop/ShopFilters';
 import { ProductGridSkeleton } from '../components/common/Skeletons';
 import ErrorState from '../components/common/ErrorState';
 import { localProducts, productCategories } from '@/lib/products';
+import { aiClient } from '@/components/ai/aiClient';
 
 export default function Shop() {
     const [searchQuery, setSearchQuery] = useState('');
     const [category, setCategory] = useState('all');
     const [sortBy, setSortBy] = useState('featured');
     const [priceRange, setPriceRange] = useState([0, 500]);
+    const [aiRecs, setAiRecs] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     const queryClient = useQueryClient();
 
@@ -149,6 +152,55 @@ export default function Shop() {
                     ))}
                 </div>
             )}
+
+            {/* AI Product Recommendations */}
+            <div className="mt-6 bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-600" />
+                        <span className="font-bold text-slate-800 text-sm">توصيات ذكية</span>
+                    </div>
+                    <Button
+                        size="sm"
+                        className="bg-purple-600 text-white rounded-xl h-8 text-xs"
+                        disabled={aiLoading}
+                        onClick={async () => {
+                            setAiLoading(true);
+                            try {
+                                const result = await aiClient.recommendProducts({
+                                    category: category !== 'all' ? category : 'مكملات صحية',
+                                    available_products: products.map((p: any) => p.name).slice(0, 10)
+                                });
+                                setAiRecs(result);
+                            } catch { }
+                            finally { setAiLoading(false); }
+                        }}
+                    >
+                        {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                        {aiLoading ? 'جاري...' : 'اقترح لي'}
+                    </Button>
+                </div>
+                {aiRecs && (
+                    <div className="space-y-2 mt-2">
+                        {aiRecs.recommendations?.map((rec: any, i: number) => (
+                            <div key={i} className="bg-white/70 rounded-xl p-3">
+                                <p className="text-sm font-bold text-slate-800">{rec.product || rec.name}</p>
+                                <p className="text-xs text-slate-500">{rec.reason || rec.benefits}</p>
+                            </div>
+                        ))}
+                        {aiRecs.general_tips?.length > 0 && (
+                            <div>
+                                <p className="text-xs font-bold text-purple-700 mb-1">💡 نصائح:</p>
+                                {aiRecs.general_tips.map((t: string, i: number) => (
+                                    <p key={i} className="text-xs text-slate-600 mr-2">• {t}</p>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            <div className="pb-24" />
         </div>
     );
 }

@@ -24,10 +24,14 @@ import {
     Filter,
     TrendingUp,
     GraduationCap,
-    Search
+    Search,
+    Sparkles,
+    Brain,
+    Loader2
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { ListSkeleton } from '@/components/common/Skeletons'; // Assuming this exists or I'll stub it if not
+import { ListSkeleton } from '@/components/common/Skeletons';
+import { aiClient } from '@/components/ai/aiClient';
 
 // Interfaces
 interface Course {
@@ -73,6 +77,8 @@ export default function Courses() {
     const [activeCategory, setActiveCategory] = useState('all');
     const [priceFilter, setPriceFilter] = useState('all');
     const [levelFilter, setLevelFilter] = useState('all');
+    const [aiRecs, setAiRecs] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     const { data: apiCourses, isLoading, isError, refetch } = useQuery<Course[]>({
         queryKey: ['courses'],
@@ -402,6 +408,53 @@ export default function Courses() {
                     </div>
                 </div>
             </div>
+
+            {/* AI Course Recommendations */}
+            <div className="px-4 sm:px-6 pb-6">
+                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <Brain className="w-5 h-5 text-purple-600" />
+                            <span className="font-bold text-slate-800 text-sm">توصيات ذكية</span>
+                        </div>
+                        <Button
+                            size="sm"
+                            className="bg-purple-600 text-white rounded-xl h-8 text-xs"
+                            disabled={aiLoading}
+                            onClick={async () => {
+                                setAiLoading(true);
+                                try {
+                                    const result = await aiClient.recommendCourses({
+                                        interests: [activeCategory !== 'all' ? activeCategory : 'الطب الوظيفي'],
+                                        level: levelFilter !== 'all' ? levelFilter : 'beginner',
+                                        available_courses: courses.map(c => c.title).slice(0, 10)
+                                    });
+                                    setAiRecs(result);
+                                } catch { }
+                                finally { setAiLoading(false); }
+                            }}
+                        >
+                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                            {aiLoading ? 'جاري...' : 'اقترح لي'}
+                        </Button>
+                    </div>
+                    {aiRecs && (
+                        <div className="space-y-2 mt-2">
+                            {aiRecs.recommendations?.map((rec: any, i: number) => (
+                                <div key={i} className="bg-white/70 rounded-xl p-3">
+                                    <p className="text-sm font-bold text-slate-800">{rec.title || rec.course}</p>
+                                    <p className="text-xs text-slate-500">{rec.reason}</p>
+                                </div>
+                            ))}
+                            {aiRecs.learning_path && (
+                                <p className="text-xs text-purple-600 italic text-center">📚 مسار التعلم: {aiRecs.learning_path}</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="pb-24" />
         </div>
     );
 }

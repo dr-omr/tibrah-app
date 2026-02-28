@@ -61,8 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Select prompt based on mode
         const prompt = mode === 'face' ? FACE_PROMPT : LAB_PROMPT;
 
-        // Use standard gemini-1.5-flash for speed and vision capabilities
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // Use gemini-2.5-flash for speed and vision capabilities
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Prepare image part
         const imagePart = {

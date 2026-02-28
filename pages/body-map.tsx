@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { createPageUrl } from '../utils';
 import {
-    ArrowRight, Search, Heart, Brain, Activity, Sparkles, ShoppingBag, Star, MessageCircle, BookOpen
+    ArrowRight, Search, Heart, Brain, Activity, Sparkles, ShoppingBag, Star, MessageCircle, BookOpen, Loader2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import InteractiveBody from '@/components/body-map/InteractiveBody';
 import { useQuery } from '@tanstack/react-query';
 import { emotionalDiseases } from '@/data/emotionalMedicineData';
+import { aiClient } from '@/components/ai/aiClient';
 
 const holisticSections = [
     { name: 'الطب الشعوري', description: 'افهم رسائل جسمك', page: 'emotional-medicine', icon: Heart, color: 'from-pink-500 to-rose-500' },
@@ -154,6 +155,8 @@ const emotionalMap: Record<string, any> = {
 
 export default function BodyMap() {
     const [selectedArea, setSelectedArea] = useState<any>(null);
+    const [aiInsight, setAiInsight] = useState<any>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     // Fetch products to suggest (cached)
     const { data: allProducts } = useQuery({
@@ -164,6 +167,19 @@ export default function BodyMap() {
 
     const getSuggestedProducts = (areaName: string) => {
         return allProducts?.slice(0, 3) || [];
+    };
+
+    const runAiBodyAnalysis = async (area: any) => {
+        setAiLoading(true);
+        setAiInsight(null);
+        try {
+            const result = await aiClient.analyzeBodyMap(area.name, [area.emotion]);
+            setAiInsight(result);
+        } catch (err) {
+            console.error('Body map AI error:', err);
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     return (
@@ -288,6 +304,56 @@ export default function BodyMap() {
                                     <p className="text-sm text-slate-500 mt-3">
                                         ردد هذا التأكيد 3 مرات يومياً أمام المرآة بإيمان وثقة
                                     </p>
+                                </div>
+
+                                {/* AI Deep Analysis */}
+                                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Brain className="w-5 h-5 text-purple-600" />
+                                            <h4 className="font-bold text-slate-800 text-sm">تحليل ذكي معمق</h4>
+                                        </div>
+                                        <Button
+                                            onClick={() => runAiBodyAnalysis(selectedArea)}
+                                            disabled={aiLoading}
+                                            size="sm"
+                                            className="bg-purple-600 text-white rounded-xl text-xs h-8"
+                                        >
+                                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
+                                            {aiLoading ? 'جاري...' : 'حلل بالذكاء الاصطناعي'}
+                                        </Button>
+                                    </div>
+                                    {aiInsight && (
+                                        <div className="space-y-3 mt-2">
+                                            {aiInsight.emotional_connection && (
+                                                <p className="text-sm text-slate-700 leading-relaxed">{aiInsight.emotional_connection}</p>
+                                            )}
+                                            {aiInsight.healing_exercises?.length > 0 && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-purple-700 mb-1">🧘 تمارين الشفاء:</p>
+                                                    {aiInsight.healing_exercises.map((ex: string, i: number) => (
+                                                        <p key={i} className="text-xs text-slate-600 mr-3">• {ex}</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {aiInsight.affirmations?.length > 0 && (
+                                                <div className="bg-white/60 rounded-xl p-3">
+                                                    <p className="text-xs font-bold text-purple-700 mb-1">✨ تأكيدات مخصصة:</p>
+                                                    {aiInsight.affirmations.map((a: string, i: number) => (
+                                                        <p key={i} className="text-xs text-purple-600 italic">"{a}"</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {aiInsight.lifestyle_tips?.length > 0 && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-purple-700 mb-1">💡 نصائح:</p>
+                                                    {aiInsight.lifestyle_tips.map((t: string, i: number) => (
+                                                        <p key={i} className="text-xs text-slate-600 mr-3">• {t}</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Related Diseases from Emotional Medicine Database */}
