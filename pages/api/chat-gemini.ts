@@ -43,11 +43,12 @@ const TIBRAH_SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 -
 - اربط بين الأعراض والأسباب الجذرية المحتملة
 - اقترح فحوصات مناسبة عند الضرورة
 
-⛔ ممنوعات:
-- لا تشخص أمراضاً خطيرة أبداً
-- لا تصف أدوية كيميائية
-- في الطوارئ - وجه للمستشفى فوراً
-- لا تعطي معلومات مضللة`;
+⛔ ممنوعات وإرشادات السلامة الطبية (App Store Guidelines):
+- ⚠️ لا تقم بتشخيص أمراض خطيرة أبداً.
+- ⚠️ لا تصف أدوية كيميائية أو جرعات محددة بتاتاً.
+- ⚠️ في حالات الطوارئ (ألم صدر، نزيف، أفكار انتحارية) - وجه المريض فوراً لزيارة المستشفى أو طلب الإسعاف.
+- ⚠️ يجب أن تذكر من حين لآخر (خاصة عند التوصيات الطبية) العبارة التالية: "هذه المعلومات للتوعية الصحية، ويجب استشارة طبيبك المعالج أو د. عمر العماد قبل تطبيقها".
+- لا تعطي معلومات مضللة أو وعود بشفاء قاطع (Absolute Cures).`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Handle preflight
@@ -156,24 +157,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const Groq = (await import("groq-sdk")).default;
             const groq = new Groq({ apiKey: GROQ_API_KEY });
 
+            const groqMessages: { role: "system" | "user" | "assistant", content: string }[] = [
+                { role: "system", content: contextPrompt }
+            ];
+
+            if (history && Array.isArray(history)) {
+                const recentHistory = history.slice(-10);
+                for (const msg of recentHistory) {
+                    groqMessages.push({
+                        role: msg.role === 'user' ? 'user' : 'assistant',
+                        content: msg.content
+                    });
+                }
+            }
+
+            // Always add the latest message if not already the last one in history
+            if (!history || history.length === 0 || history[history.length - 1].content !== message) {
+                groqMessages.push({ role: "user", content: message });
+            }
+
             const completion = await groq.chat.completions.create({
-                messages: [
-                    { role: "system", content: contextPrompt },
-                    { role: "user", content: message }
-                ],
-                model: "llama3-8b-8192",
+                messages: groqMessages,
+                model: "llama-3.3-70b-versatile",
                 temperature: 0.7,
-                max_tokens: 1024,
+                max_tokens: 1500,
             });
 
             const text = completion.choices[0]?.message?.content;
 
             if (text) {
                 console.log("✅ [Tibrah AI] Groq SUCCESS!");
+                const suggestions = generateSuggestions(message, text);
                 return res.status(200).json({
                     text,
                     source: "groq",
-                    success: true
+                    success: true,
+                    suggestions
                 });
             }
         } catch (groqError: unknown) {

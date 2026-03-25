@@ -128,9 +128,9 @@ export default function Settings() {
         setExporting(true);
         try {
             const [metrics, symptoms, dailyLogs] = await Promise.all([
-                db.entities.HealthMetric.list(),
-                db.entities.SymptomLog.list(),
-                db.entities.DailyLog.list(),
+                db.entities.HealthMetric.listForUser(authUser?.id || ''),
+                db.entities.SymptomLog.listForUser(authUser?.id || ''),
+                db.entities.DailyLog.listForUser(authUser?.id || ''),
             ]);
 
             const exportData = {
@@ -159,9 +159,9 @@ export default function Settings() {
         setDeleting(true);
         try {
             const [metrics, symptoms, dailyLogs] = await Promise.all([
-                db.entities.HealthMetric.list(),
-                db.entities.SymptomLog.list(),
-                db.entities.DailyLog.list(),
+                db.entities.HealthMetric.listForUser(authUser?.id || ''),
+                db.entities.SymptomLog.listForUser(authUser?.id || ''),
+                db.entities.DailyLog.listForUser(authUser?.id || ''),
             ]);
 
             await Promise.all([
@@ -200,7 +200,7 @@ export default function Settings() {
     return (
         <div className="min-h-screen pb-24">
             {/* Header */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] px-6 py-8">
+            <div className="relative overflow-hidden bg-gradient-to-br from-primary to-primary-light px-6 py-8">
                 <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
 
                 <div className="relative flex items-center gap-4">
@@ -217,7 +217,7 @@ export default function Settings() {
                 {/* Personal Information Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
-                        <User className="w-5 h-5 text-[#2D9B83]" />
+                        <User className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-slate-800 dark:text-white">المعلومات الشخصية</h2>
                     </div>
 
@@ -228,7 +228,7 @@ export default function Settings() {
                                 <Input
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
-                                    className="bg-white/50 border-slate-200 focus:border-[#2D9B83] focus:ring-[#2D9B83]"
+                                    className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary"
                                 />
                                 <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                             </div>
@@ -240,11 +240,11 @@ export default function Settings() {
                                 value={medicalPreferences}
                                 onChange={(e) => setMedicalPreferences(e.target.value)}
                                 placeholder="مثلاً: أفضل العلاجات الطبيعية، لدي حساسية من..."
-                                className="bg-white/50 border-slate-200 focus:border-[#2D9B83] focus:ring-[#2D9B83] h-24 resize-none"
+                                className="bg-white/50 border-slate-200 focus:border-primary focus:ring-primary h-24 resize-none"
                             />
                         </div>
 
-                        <Button onClick={updateProfile} className="w-full bg-[#2D9B83] hover:bg-[#2D9B83]/90 text-white">
+                        <Button onClick={updateProfile} className="w-full bg-primary hover:bg-primary/90 text-white">
                             حفظ التغييرات
                         </Button>
                     </div>
@@ -253,13 +253,13 @@ export default function Settings() {
                 {/* Notifications Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
-                        <Bell className="w-5 h-5 text-[#2D9B83]" />
+                        <Bell className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-slate-800 dark:text-white">الإشعارات والتذكيرات</h2>
                     </div>
 
                     <div className="glass rounded-2xl overflow-hidden">
                         {/* Push Notification Permission */}
-                        <div className="p-4 bg-gradient-to-r from-[#2D9B83]/5 to-[#3FB39A]/5 border-b border-[#2D9B83]/10">
+                        <div className="p-4 bg-gradient-to-r from-primary/5 to-primary-light/5 border-b border-primary/10">
                             <PushNotificationButton />
                             <p className="text-xs text-slate-500 mt-2 text-center">
                                 يجب تفعيل إشعارات المتصفح لاستلام التنبيهات
@@ -286,7 +286,7 @@ export default function Settings() {
                 {/* Units Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
-                        <Scale className="w-5 h-5 text-[#2D9B83]" />
+                        <Scale className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-slate-800 dark:text-white">وحدات القياس</h2>
                     </div>
 
@@ -352,7 +352,7 @@ export default function Settings() {
                 {/* Language Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
-                        <Globe className="w-5 h-5 text-[#2D9B83]" />
+                        <Globe className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-slate-800 dark:text-white">اللغة</h2>
                     </div>
 
@@ -370,7 +370,7 @@ export default function Settings() {
                 {/* Appearance Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
-                        <Palette className="w-5 h-5 text-[#2D9B83]" />
+                        <Palette className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-slate-800 dark:text-white">المظهر</h2>
                     </div>
 
@@ -422,7 +422,7 @@ export default function Settings() {
                 {/* Data Management Section */}
                 <section>
                     <div className="flex items-center gap-2 mb-4">
-                        <Database className="w-5 h-5 text-[#2D9B83]" />
+                        <Database className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-slate-800 dark:text-white">إدارة البيانات</h2>
                     </div>
 
@@ -482,7 +482,7 @@ export default function Settings() {
 
                 {/* Privacy Note */}
                 <div className="glass rounded-2xl p-4 flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-[#2D9B83] flex-shrink-0 mt-0.5" />
+                    <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
                         <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">خصوصيتك محمية</p>
                         <p className="text-sm text-slate-500">

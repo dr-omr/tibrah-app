@@ -1,0 +1,53 @@
+/* === Input Styles === */
+.input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-xl);
+    background: #f8fafc;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(45, 155, 131, 0.1);
+    background: white;
+}
+
+/* === Mobile Input Sizing === */
+@media (max-width: 640px) {
+
+    input,
+    select,
+    textarea {
+        min-height: 48px;
+        font-size: 16px !important;
+        /* Prevents iOS zoom */
+    }
+}
+
+/* ===== Form Controls (Dark Mode) ===== */
+.dark input,
+.dark select,
+.dark textarea {
+    background: var(--fill-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    caret-color: var(--primary);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    background: var(--fill-secondary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+    outline: none;
+}

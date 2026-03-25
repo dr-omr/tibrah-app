@@ -1,0 +1,79 @@
+/* === Base Styles === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    direction: rtl;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Selection === */
+::selection {
+    background: rgba(45, 155, 131, 0.2);
+    color: var(--primary-dark);
+}
+
+/* === Focus States === */
+*:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* === Prevent Text Selection on Buttons === */
+button,
+.btn,
+[role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* === Smooth Scrolling === */
+html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* === Disable Double-Tap Zoom === */
+* {
+    touch-action: manipulation;
+}
+
+/* ===== Global Dark Mode Styles ===== */
+.dark body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.dark html {
+    background: var(--bg-primary);
+    color-scheme: dark;
+}
+
+.dark ::selection {
+    background: rgba(78, 205, 176, 0.35);
+    color: var(--text-primary);
+}
+
+.dark *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ===== Links ===== */
+.dark a:not([class]) {
+    color: var(--primary);
+}
+
+.dark a:not([class]):hover {
+    color: var(--primary-light);
+}

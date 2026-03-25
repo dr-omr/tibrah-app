@@ -34,7 +34,7 @@ const searchIndex: SearchItem[] = [
     // === الصفحات الرئيسية ===
     { id: 'home', title: 'الصفحة الرئيسية', titleEn: 'Home', description: 'العودة للصفحة الرئيسية', icon: Compass, href: '/home', category: 'pages', keywords: ['رئيسية', 'home', 'بداية'], color: '#2D9B83' },
     { id: 'services', title: 'خدماتنا', titleEn: 'Services', description: 'تصفح جميع خدمات طِبرَا', icon: Sparkles, href: '/services', category: 'pages', keywords: ['خدمات', 'services', 'برامج'], color: '#8B5CF6', badge: 'جديد' },
-    { id: 'shop', title: 'المتجر', titleEn: 'Shop', description: 'منتجات صحية ومكملات غذائية', icon: ShoppingBag, href: '/shop', category: 'pages', keywords: ['متجر', 'shop', 'منتجات', 'شراء', 'مكملات'], color: '#EC4899' },
+    { id: 'shop', title: 'الصيدلية والمكملات', titleEn: 'Pharmacy', description: 'علاجات صحية ومكملات غذائية', icon: ShoppingBag, href: '/shop', category: 'pages', keywords: ['متجر', 'shop', 'منتجات', 'شراء', 'مكملات', 'صيدلية', 'علاج'], color: '#EC4899' },
     { id: 'courses', title: 'الدورات التعليمية', titleEn: 'Courses', description: 'دورات صحية وتطويرية', icon: BookOpen, href: '/courses', category: 'pages', keywords: ['دورات', 'courses', 'تعلم', 'تعليم'], color: '#F59E0B' },
     { id: 'library', title: 'المكتبة الصحية', titleEn: 'Library', description: 'مقالات ومعلومات طبية', icon: FileText, href: '/library', category: 'pages', keywords: ['مكتبة', 'library', 'مقالات', 'قراءة'], color: '#06B6D4' },
     { id: 'about', title: 'من نحن', titleEn: 'About', description: 'تعرف على د. عمرو وطِبرَا', icon: User, href: '/about', category: 'pages', keywords: ['عنا', 'about', 'دكتور', 'عمرو'], color: '#2D9B83' },
@@ -262,7 +262,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                                         <X className="w-3 h-3 text-slate-500" />
                                     </motion.button>
                                 )}
-                                <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] text-slate-500 font-mono">
+                                <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs text-slate-500 font-mono">
                                     ESC
                                 </kbd>
                             </div>
@@ -381,7 +381,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                                                                             {item.title}
                                                                         </span>
                                                                         {item.badge && (
-                                                                            <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-full font-medium">
+                                                                            <span className="text-xs px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-full font-medium">
                                                                                 {item.badge}
                                                                             </span>
                                                                         )}
@@ -423,23 +423,23 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
                             {/* Footer */}
                             <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between">
-                                <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                                <div className="flex items-center gap-3 text-xs text-slate-400">
                                     <span className="flex items-center gap-1">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-mono">↑↓</kbd>
+                                        <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono">↑↓</kbd>
                                         تنقل
                                     </span>
                                     <span className="flex items-center gap-1">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-mono">↵</kbd>
+                                        <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono">↵</kbd>
                                         فتح
                                     </span>
                                     <span className="flex items-center gap-1">
-                                        <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-mono">esc</kbd>
+                                        <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono">esc</kbd>
                                         إغلاق
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Sparkles className="w-3 h-3 text-emerald-500" />
-                                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">طِبرَا</span>
+                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">طِبرَا</span>
                                 </div>
                             </div>
                         </div>
@@ -462,7 +462,7 @@ export function SearchButton({ onClick }: { onClick: () => void }) {
         >
             <Search className="w-4 h-4" />
             <span className="flex-1 text-right text-sm">ابحث عن أي شيء...</span>
-            <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-200/50 dark:bg-slate-700 rounded text-[10px] font-mono">
+            <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-200/50 dark:bg-slate-700 rounded text-xs font-mono">
                 <Command className="w-3 h-3" />K
             </kbd>
         </motion.button>

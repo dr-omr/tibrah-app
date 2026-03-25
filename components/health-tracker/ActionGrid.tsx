@@ -1,17 +1,16 @@
 // components/health-tracker/ActionGrid.tsx
-// Premium Horizontal Scrollable Quick Actions
+// iOS-style horizontal scrollable quick actions
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon, Droplets, Apple, Dumbbell, Moon, Heart, Scale, Pill, Timer, Brain, Activity } from 'lucide-react';
+import { LucideIcon, Droplets, Apple, Dumbbell, Moon, Heart, Scale, Pill, Timer, Brain, Activity, Zap } from 'lucide-react';
 
 interface ActionItem {
     id: string;
     icon: LucideIcon;
     label: string;
-    gradient: string;
-    bgLight: string;
-    iconColor: string;
+    tintBg: string;
+    tintColor: string;
     onClick?: () => void;
 }
 
@@ -22,29 +21,32 @@ interface ActionGridProps {
 }
 
 const defaultActions: ActionItem[] = [
-    { id: 'water', icon: Droplets, label: 'الماء', gradient: 'from-cyan-400 to-teal-500', bgLight: 'bg-cyan-50', iconColor: '#06B6D4' },
-    { id: 'calories', icon: Apple, label: 'السعرات', gradient: 'from-red-400 to-rose-500', bgLight: 'bg-red-50', iconColor: '#EF4444' },
-    { id: 'weight', icon: Scale, label: 'الوزن', gradient: 'from-violet-500 to-purple-600', bgLight: 'bg-violet-50', iconColor: '#8B5CF6' },
-    { id: 'meals', icon: Apple, label: 'الوجبات', gradient: 'from-green-400 to-emerald-500', bgLight: 'bg-green-50', iconColor: '#22C55E' },
-    { id: 'workout', icon: Dumbbell, label: 'التمارين', gradient: 'from-orange-400 to-amber-500', bgLight: 'bg-orange-50', iconColor: '#F97316' },
-    { id: 'sleep', icon: Moon, label: 'النوم', gradient: 'from-indigo-400 to-blue-500', bgLight: 'bg-indigo-50', iconColor: '#6366F1' },
-    { id: 'heart', icon: Heart, label: 'القلب', gradient: 'from-pink-400 to-rose-500', bgLight: 'bg-pink-50', iconColor: '#EC4899' },
-    { id: 'meds', icon: Pill, label: 'الأدوية', gradient: 'from-teal-400 to-cyan-500', bgLight: 'bg-teal-50', iconColor: '#14B8A6' },
+    { id: 'water', icon: Droplets, label: 'الماء', tintBg: 'bg-cyan-100/80 dark:bg-cyan-900/20', tintColor: 'text-cyan-500' },
+    { id: 'calories', icon: Apple, label: 'السعرات', tintBg: 'bg-red-100/80 dark:bg-red-900/20', tintColor: 'text-red-500' },
+    { id: 'weight', icon: Scale, label: 'الوزن', tintBg: 'bg-violet-100/80 dark:bg-violet-900/20', tintColor: 'text-violet-500' },
+    { id: 'meals', icon: Apple, label: 'الوجبات', tintBg: 'bg-green-100/80 dark:bg-green-900/20', tintColor: 'text-green-500' },
+    { id: 'workout', icon: Dumbbell, label: 'التمارين', tintBg: 'bg-orange-100/80 dark:bg-orange-900/20', tintColor: 'text-orange-500' },
+    { id: 'sleep', icon: Moon, label: 'النوم', tintBg: 'bg-indigo-100/80 dark:bg-indigo-900/20', tintColor: 'text-indigo-500' },
+    { id: 'heart', icon: Heart, label: 'القلب', tintBg: 'bg-pink-100/80 dark:bg-pink-900/20', tintColor: 'text-pink-500' },
+    { id: 'meds', icon: Pill, label: 'الأدوية', tintBg: 'bg-teal-100/80 dark:bg-teal-900/20', tintColor: 'text-teal-500' },
 ];
 
 export default function ActionGrid({ onActionClick, customActions, activeAction }: ActionGridProps) {
     const actions = customActions || defaultActions;
 
     return (
-        <div className="bg-white rounded-3xl p-5 shadow-lg shadow-black/5">
+        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-700/50">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">إجراءات سريعة</h3>
-                <span className="text-xs text-slate-400">{actions.length} خيار</span>
+            <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <Zap className="w-4 h-4 text-primary" />
+                    إجراءات سريعة
+                </h3>
+                <span className="text-xs text-slate-400 font-medium">{actions.length} خيار</span>
             </div>
 
             {/* Horizontal Scrollable Cards */}
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-x-mobile">
+            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide scroll-x-mobile">
                 {actions.map((action) => {
                     const isActive = activeAction === action.id;
                     const Icon = action.icon;
@@ -52,44 +54,26 @@ export default function ActionGrid({ onActionClick, customActions, activeAction 
                     return (
                         <motion.button
                             key={action.id}
-                            className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl min-w-[72px] transition-all relative ${isActive
-                                    ? `bg-gradient-to-br ${action.gradient} shadow-lg`
-                                    : `${action.bgLight} hover:shadow-md`
+                            className={`flex-shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-xl min-w-[64px] transition-all ${isActive
+                                ? 'bg-primary shadow-sm'
+                                : 'bg-slate-50 dark:bg-slate-700/40 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                                 }`}
-                            whileHover={{ scale: 1.05, y: -3 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileTap={{ scale: 0.93 }}
                             onClick={() => onActionClick?.(action.id)}
                         >
                             {/* Icon Container */}
-                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${isActive ? 'bg-white/25' : 'bg-white shadow-sm'
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive
+                                ? 'bg-white/20'
+                                : `${action.tintBg}`
                                 }`}>
-                                <motion.div
-                                    initial={{ rotate: 0 }}
-                                    whileHover={{ rotate: [0, -10, 10, 0] }}
-                                    transition={{ duration: 0.4 }}
-                                >
-                                    <Icon
-                                        className={`w-5 h-5 ${isActive ? 'text-white' : ''}`}
-                                        style={{ color: isActive ? undefined : action.iconColor }}
-                                    />
-                                </motion.div>
+                                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : action.tintColor}`} />
                             </div>
 
                             {/* Label */}
-                            <span className={`text-[11px] font-bold ${isActive ? 'text-white' : 'text-slate-600'
+                            <span className={`text-xs font-semibold ${isActive ? 'text-white' : 'text-slate-600 dark:text-slate-300'
                                 }`}>
                                 {action.label}
                             </span>
-
-                            {/* Active Indicator */}
-                            {isActive && (
-                                <motion.div
-                                    className="absolute -bottom-1 w-1.5 h-1.5 bg-white rounded-full shadow"
-                                    layoutId="activeActionIndicator"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                />
-                            )}
                         </motion.button>
                     );
                 })}
@@ -97,4 +81,3 @@ export default function ActionGrid({ onActionClick, customActions, activeAction 
         </div>
     );
 }
-

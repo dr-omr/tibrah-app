@@ -1,15 +1,15 @@
-import React from 'react';
-import BreathingSanctuary from '../components/wellness/BreathingSanctuary';
-import Head from 'next/head';
+// pages/breathe.tsx
+// Redirects to health-tracker — breathing exercises are now part of the health tracker
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function BreathePage() {
-    return (
-        <>
-            <Head>
-                <title>TIBRAH | معبد التنفس</title>
-                <meta name="theme-color" content="#0f172a" />
-            </Head>
-            <BreathingSanctuary />
-        </>
-    );
+    const router = useRouter();
+
+    useEffect(() => {
+        router.replace('/health-tracker');
+    }, [router]);
+
+    return null;
 }

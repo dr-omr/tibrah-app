@@ -2,11 +2,11 @@
  * GlobalSearch — Universal search across the entire Tibrah app
  * Searches: Products, Articles, Pages
  * Features: Instant results, keyboard navigation, recent searches
+ * Optimized: CSS animations instead of framer-motion
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, X, Clock, Package, BookOpen,
     FileText, Sparkles, TrendingUp
@@ -39,7 +39,7 @@ const appPages: SearchResult[] = [
     { id: 'home', title: 'الرئيسية', type: 'page', url: '/' },
     { id: 'health', title: 'المتابع الصحي', subtitle: 'تتبع الماء والنوم والوزن', type: 'page', url: '/health-tracker' },
     { id: 'meal', title: 'تخطيط الوجبات', subtitle: 'خطة غذائية مخصصة', type: 'page', url: '/meal-planner' },
-    { id: 'shop', title: 'المتجر', subtitle: 'مكملات ومنتجات صحية', type: 'page', url: '/shop' },
+    { id: 'shop', title: 'الصيدلية والمكملات', subtitle: 'علاجات ومكملات صحية', type: 'page', url: '/shop' },
     { id: 'courses', title: 'الدورات التعليمية', subtitle: 'تعلم عن صحتك', type: 'page', url: '/courses' },
     { id: 'library', title: 'المكتبة الصحية', subtitle: 'مقالات ودراسات', type: 'page', url: '/library' },
     { id: 'services', title: 'خدماتنا', subtitle: 'استشارات ومتابعة', type: 'page', url: '/services' },
@@ -193,138 +193,130 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     if (!isOpen) return null;
 
     return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
+        <div
+            className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm animate-ios-fade-in"
+            onClick={onClose}
+        >
+            <div
+                className="w-full max-w-lg mx-auto mt-16 px-4 animate-ios-slide-down"
+                onClick={(e) => e.stopPropagation()}
             >
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="w-full max-w-lg mx-auto mt-16 px-4"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                        {/* Search Input */}
-                        <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
-                            <Search className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="ابحث عن أي شيء..."
-                                className="flex-1 bg-transparent text-slate-800 dark:text-white placeholder-slate-400 outline-none text-lg"
-                                dir="rtl"
-                            />
-                            {query && (
-                                <button onClick={() => setQuery('')} className="p-1">
-                                    <X className="w-5 h-5 text-slate-400" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Results */}
-                        <div className="max-h-[60vh] overflow-y-auto">
-                            {/* Recent Searches */}
-                            {!query && recentSearches.length > 0 && (
-                                <div className="p-4">
-                                    <p className="text-xs text-slate-400 font-medium mb-3 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        عمليات بحث سابقة
-                                    </p>
-                                    {recentSearches.map((recent, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setQuery(recent)}
-                                            className="w-full text-right px-3 py-2 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2"
-                                        >
-                                            <Clock className="w-3.5 h-3.5 text-slate-300" />
-                                            {recent}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Quick Links */}
-                            {!query && (
-                                <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                                    <p className="text-xs text-slate-400 font-medium mb-3 flex items-center gap-1">
-                                        <TrendingUp className="w-3 h-3" />
-                                        الأكثر زيارة
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {[
-                                            { name: 'المتابع الصحي', url: '/health-tracker', emoji: '💊' },
-                                            { name: 'المتجر', url: '/shop', emoji: '🛒' },
-                                            { name: 'حجز موعد', url: '/book-appointment', emoji: '📅' },
-                                            { name: 'المساعد الذكي', url: '/ai-assistant', emoji: '🤖' },
-                                        ].map((item) => (
-                                            <button
-                                                key={item.url}
-                                                onClick={() => { router.push(item.url); onClose(); }}
-                                                className="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors text-sm"
-                                            >
-                                                <span>{item.emoji}</span>
-                                                <span className="text-slate-700 dark:text-slate-300">{item.name}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Search Results */}
-                            {query && results.length > 0 && (
-                                <div className="p-2">
-                                    {results.map((result, idx) => (
-                                        <button
-                                            key={result.id}
-                                            onClick={() => handleSelect(result)}
-                                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-right ${idx === selectedIndex
-                                                    ? 'bg-[#2D9B83]/10 text-[#2D9B83]'
-                                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                                                }`}
-                                        >
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${idx === selectedIndex ? 'bg-[#2D9B83]/20' : 'bg-slate-100 dark:bg-slate-800'
-                                                }`}>
-                                                {getTypeIcon(result.type)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-slate-800 dark:text-white truncate">{result.title}</p>
-                                                {result.subtitle && (
-                                                    <p className="text-xs text-slate-400 truncate">{result.subtitle}</p>
-                                                )}
-                                            </div>
-                                            <span className="text-[10px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex-shrink-0">
-                                                {getTypeLabel(result.type)}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* No Results */}
-                            {query && results.length === 0 && (
-                                <div className="py-12 text-center">
-                                    <Sparkles className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                                    <p className="text-slate-500 dark:text-slate-400">لا توجد نتائج لـ &quot;{query}&quot;</p>
-                                    <p className="text-xs text-slate-400 mt-1">حاول كلمات مختلفة</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                            <span>↑↓ تنقل • Enter اختيار • Esc إغلاق</span>
-                        </div>
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                    {/* Search Input */}
+                    <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
+                        <Search className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="ابحث عن أي شيء..."
+                            className="flex-1 bg-transparent text-slate-800 dark:text-white placeholder-slate-400 outline-none text-lg"
+                            dir="rtl"
+                        />
+                        {query && (
+                            <button onClick={() => setQuery('')} className="p-1">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        )}
                     </div>
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>
+
+                    {/* Results */}
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        {/* Recent Searches */}
+                        {!query && recentSearches.length > 0 && (
+                            <div className="p-4">
+                                <p className="text-xs text-slate-400 font-medium mb-3 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    عمليات بحث سابقة
+                                </p>
+                                {recentSearches.map((recent, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setQuery(recent)}
+                                        className="w-full text-right px-3 py-2 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2"
+                                    >
+                                        <Clock className="w-3.5 h-3.5 text-slate-300" />
+                                        {recent}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Quick Links */}
+                        {!query && (
+                            <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+                                <p className="text-xs text-slate-400 font-medium mb-3 flex items-center gap-1">
+                                    <TrendingUp className="w-3 h-3" />
+                                    الأكثر زيارة
+                                </p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { name: 'المتابع الصحي', url: '/health-tracker', emoji: '💊' },
+                                        { name: 'الصيدلية', url: '/shop', emoji: '🛒' },
+                                        { name: 'حجز موعد', url: '/book-appointment', emoji: '📅' },
+                                        { name: 'المساعد الذكي', url: '/ai-assistant', emoji: '🤖' },
+                                    ].map((item) => (
+                                        <button
+                                            key={item.url}
+                                            onClick={() => { router.push(item.url); onClose(); }}
+                                            className="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors text-sm tap-feedback"
+                                        >
+                                            <span>{item.emoji}</span>
+                                            <span className="text-slate-700 dark:text-slate-300">{item.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Search Results */}
+                        {query && results.length > 0 && (
+                            <div className="p-2">
+                                {results.map((result, idx) => (
+                                    <button
+                                        key={result.id}
+                                        onClick={() => handleSelect(result)}
+                                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-right ${idx === selectedIndex
+                                            ? 'bg-primary/10 text-primary'
+                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+                                            }`}
+                                    >
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${idx === selectedIndex ? 'bg-primary/20' : 'bg-slate-100 dark:bg-slate-800'
+                                            }`}>
+                                            {getTypeIcon(result.type)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-slate-800 dark:text-white truncate">{result.title}</p>
+                                            {result.subtitle && (
+                                                <p className="text-xs text-slate-400 truncate">{result.subtitle}</p>
+                                            )}
+                                        </div>
+                                        <span className="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex-shrink-0">
+                                            {getTypeLabel(result.type)}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* No Results */}
+                        {query && results.length === 0 && (
+                            <div className="py-12 text-center">
+                                <Sparkles className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                                <p className="text-slate-500 dark:text-slate-400">لا توجد نتائج لـ &quot;{query}&quot;</p>
+                                <p className="text-xs text-slate-400 mt-1">حاول كلمات مختلفة</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span>↑↓ تنقل • Enter اختيار • Esc إغلاق</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }

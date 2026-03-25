@@ -19,13 +19,16 @@ import { startReminderChecker } from '../lib/notificationScheduler';
 import { initErrorMonitoring } from '../lib/errorMonitoring';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import '../styles/globals.css';
+import '../components/body-map/bodyMapStyles.css';
 
-// Dynamic imports for non-critical global components (reduces initial bundle)
-const NetworkStatus = dynamic(() => import('../components/common/NetworkStatus'), { ssr: false });
+// Premium unified FAB (AI + Booking + Search + WhatsApp)
 const FloatingActionButton = dynamic(() => import('../components/common/FloatingActionButton'), { ssr: false });
+
+// Deferred global components — load after initial render is complete
 const GlobalSearch = dynamic(() => import('../components/common/GlobalSearch'), { ssr: false });
 const SmartHealthReminder = dynamic(() => import('../components/common/SmartHealthReminder'), { ssr: false });
 const OnboardingTour = dynamic(() => import('../components/common/OnboardingTour'), { ssr: false });
+const CompanionBot = dynamic(() => import('../components/ai/CompanionBot'), { ssr: false });
 
 // Create a client
 const queryClient = new QueryClient({
@@ -40,7 +43,6 @@ const queryClient = new QueryClient({
 // Convert route path to page name
 function getPageName(pathname: string): string {
     if (pathname === '/') return 'Home';
-    // Remove leading slash and convert kebab-case to PascalCase
     const path = pathname.slice(1).split('/')[0];
     return path
         .split('-')
@@ -54,7 +56,7 @@ function RouteProgressBar({ isLoading }: { isLoading: boolean }) {
     return (
         <div className="fixed top-0 left-0 right-0 z-[9999] h-1">
             <div
-                className="h-full bg-gradient-to-r from-[#2D9B83] via-[#3FB39A] to-[#D4AF37] rounded-r-full animate-pulse"
+                className="h-full bg-gradient-to-r from-primary via-primary-light to-[#D4AF37] rounded-r-full animate-pulse"
                 style={{
                     animation: 'progressBar 1.5s ease-in-out infinite',
                     width: '70%',
@@ -76,6 +78,7 @@ export default function App({ Component, pageProps }: AppProps) {
     const currentPageName = getPageName(router.pathname);
     const [isRouteChanging, setIsRouteChanging] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [deferredReady, setDeferredReady] = useState(false);
 
     // Global keyboard shortcuts
     useKeyboardShortcuts({ onSearch: () => setIsSearchOpen(true) });
@@ -98,18 +101,20 @@ export default function App({ Component, pageProps }: AppProps) {
 
     // Initialize push notifications and reminder scheduler on app mount
     useEffect(() => {
-        // Delay initialization to not block initial render
         const timer = setTimeout(() => {
-            initializeNotifications().catch(() => {
-                // Silently fail — user may have denied permissions
-            });
-            // Start the health reminder scheduler
+            initializeNotifications().catch(() => { });
             startReminderChecker();
-            // Initialize error monitoring (global error handlers)
             initErrorMonitoring();
         }, 3000);
         return () => clearTimeout(timer);
     }, []);
+
+    // Defer non-critical overlays — load after page settles
+    useEffect(() => {
+        const timer = setTimeout(() => setDeferredReady(true), 4000);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <>
             <Head>
@@ -135,11 +140,18 @@ export default function App({ Component, pageProps }: AppProps) {
                                                 </PageTransition>
                                             </Layout>
                                             <Toaster position="top-center" richColors />
-                                            <NetworkStatus />
+                                            {/* Premium unified FAB — always available */}
                                             <FloatingActionButton onSearchOpen={() => setIsSearchOpen(true)} />
+                                            {/* Global search overlay */}
                                             <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-                                            <SmartHealthReminder />
-                                            <OnboardingTour />
+                                            {/* Deferred overlays — load after page settles */}
+                                            {deferredReady && (
+                                                <>
+                                                    <SmartHealthReminder />
+                                                    <OnboardingTour />
+                                                    <CompanionBot />
+                                                </>
+                                            )}
                                         </CartProvider>
                                     </AudioProvider>
                                 </NotificationProvider>

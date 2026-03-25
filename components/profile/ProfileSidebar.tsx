@@ -35,7 +35,7 @@ export default function ProfileSidebar({ user, activePage = 'overview', onLogout
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             {/* User Profile Header */}
-            <div className="bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] p-6">
+            <div className="bg-gradient-to-br from-primary to-primary-light p-6">
                 <div className="flex items-center gap-4">
                     <div className="relative">
                         <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden">
@@ -84,14 +84,14 @@ export default function ProfileSidebar({ user, activePage = 'overview', onLogout
                                 <Link href={createPageUrl(item.page)}>
                                     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                                         ${isActive
-                                            ? 'bg-[#2D9B83]/10 text-[#2D9B83]'
+                                            ? 'bg-primary/10 text-primary'
                                             : 'text-slate-600 hover:bg-slate-50'
                                         }`}
                                     >
-                                        <Icon className={`w-5 h-5 ${isActive ? 'text-[#2D9B83]' : 'text-slate-400'}`} />
+                                        <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-slate-400'}`} />
                                         <span className="font-medium">{item.label}</span>
                                         {isActive && (
-                                            <div className="mr-auto w-1.5 h-1.5 bg-[#2D9B83] rounded-full" />
+                                            <div className="mr-auto w-1.5 h-1.5 bg-primary rounded-full" />
                                         )}
                                     </div>
                                 </Link>

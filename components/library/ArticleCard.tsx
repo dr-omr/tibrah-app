@@ -67,11 +67,11 @@ export default function ArticleCard({ article }: { article: any }) {
 
                 {/* Content */}
                 <div className="p-4">
-                    <Badge variant="outline" className="text-[10px] mb-2 border-[#2D9B83] text-[#2D9B83]">
+                    <Badge variant="outline" className="text-xs mb-2 border-primary text-primary">
                         {categoryLabels[article.category]}
                     </Badge>
 
-                    <h3 className="font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-[#2D9B83] transition-colors">
+                    <h3 className="font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                         {article.title}
                     </h3>
 

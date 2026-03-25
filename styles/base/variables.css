@@ -1,0 +1,132 @@
+/* ===================================================
+   TIBRAH Design System - Unified Styles
+   Variables
+   =================================================== */
+
+:root {
+    /* === Colors === */
+    --primary: #2D9B83;
+    --primary-light: #3FB39A;
+    --primary-dark: #1E7A66;
+    --gradient-start: #2D9B83;
+    --gradient-end: #3FB39A;
+    --gold: #D4AF37;
+    --gold-light: #F4D03F;
+
+    /* === Triage Level Colors === */
+    --triage-emergency: #dc2626;
+    --triage-urgent: #f97316;
+    --triage-review: #eab308;
+    --triage-routine: #22c55e;
+    --shadow-triage: 0 4px 20px -4px rgba(45, 155, 131, 0.25);
+    --gradient-trust: linear-gradient(135deg, #0d9488 0%, #2D9B83 50%, #10b981 100%);
+
+    /* === Typography === */
+    --font-family: 'Tajawal', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-family-en: 'Inter', 'Tajawal', -apple-system, sans-serif;
+    --font-size-xs: 0.75rem;
+    /* 12px */
+    --font-size-sm: 0.875rem;
+    /* 14px */
+    --font-size-base: 1rem;
+    /* 16px */
+    --font-size-lg: 1.125rem;
+    /* 18px */
+    --font-size-xl: 1.25rem;
+    /* 20px */
+    --font-size-2xl: 1.5rem;
+    /* 24px */
+    --font-size-3xl: 1.875rem;
+    /* 30px */
+    --font-size-4xl: 2.25rem;
+    /* 36px */
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extra: 800;
+    --font-weight-black: 900;
+
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+
+    /* === Spacing === */
+    --spacing-xs: 0.25rem;
+    /* 4px */
+    --spacing-sm: 0.5rem;
+    /* 8px */
+    --spacing-md: 1rem;
+    /* 16px */
+    --spacing-lg: 1.5rem;
+    /* 24px */
+    --spacing-xl: 2rem;
+    /* 32px */
+    --spacing-2xl: 3rem;
+    /* 48px */
+    --spacing-3xl: 4rem;
+    /* 64px */
+
+    /* === Border Radius === */
+    --radius-sm: 0.375rem;
+    /* 6px */
+    --radius-md: 0.5rem;
+    /* 8px */
+    --radius-lg: 0.75rem;
+    /* 12px */
+    --radius-xl: 1.25rem;
+    /* 20px (iOS style) */
+    --radius-2xl: 1.75rem;
+    /* 28px (iOS prominent cards) */
+    --radius-3xl: 2.25rem;
+    /* 36px */
+    --radius-full: 9999px;
+
+    /* === Shadows === */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.06), 0 4px 12px -4px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.08), 0 12px 24px -8px rgba(0, 0, 0, 0.05);
+    --shadow-soft: 0 4px 30px rgba(0, 0, 0, 0.03);
+    --shadow-glow: 0 0 40px rgba(45, 155, 131, 0.12);
+
+    /* === Card Shadows (Unified 3-Tier Apple Style) === 
+       Using multi-layer shadows for depth without harsh lines */
+    --shadow-card: 
+        0 2px 8px -2px rgba(20, 20, 40, 0.04), 
+        0 8px 16px -4px rgba(20, 20, 40, 0.02);
+    --shadow-card-elevated: 
+        0 4px 16px -4px rgba(20, 20, 40, 0.06), 
+        0 12px 32px -8px rgba(20, 20, 40, 0.04);
+    --shadow-card-hero: 
+        0 8px 24px -4px rgba(20, 20, 40, 0.08), 
+        0 24px 48px -12px rgba(20, 20, 40, 0.06),
+        0 0 0 1px rgba(20, 20, 40, 0.01); /* Invisible border effect via shadow */
+
+    /* === Home Page Spacing (Strict Apple Standard) === */
+    --space-section: 2rem; /* 32px — robust section spacing */
+    --space-page-x: 1.25rem; /* 20px — modern horizontal margins */
+    --space-card-gap: 1rem; /* 16px — component gap */
+    --space-card-inner: 1.25rem; /* 20px — spacious card internal padding */
+
+    /* === Section Accent Colors === */
+    --section-health: #0d9488;
+    --section-medical: #3b82f6;
+    --section-services: #d97706;
+    --section-shop: #ea580c;
+    --section-community: #8b5cf6;
+
+    /* === Transitions === */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
+    --transition-slow: 300ms ease;
+
+    /* === Z-Index === */
+    --z-dropdown: 50;
+    --z-sticky: 100;
+    --z-fixed: 200;
+    --z-modal: 300;
+    --z-popover: 400;
+    --z-tooltip: 500;
+}

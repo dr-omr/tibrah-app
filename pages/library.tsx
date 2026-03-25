@@ -1,154 +1,311 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Head from 'next/head';
 import { db } from '@/lib/db';
 import { useQuery } from '@tanstack/react-query';
-import { Search, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { Search, BookOpen, Sparkles, TrendingUp, PlayCircle, FileText, Brain, ChevronLeft, ArrowRight, Loader2, Bookmark } from 'lucide-react';
 import Link from 'next/link';
-import { Input } from "@/components/ui/input";
-import ArticleCard from '../components/library/ArticleCard';
-import LibraryFilters from '../components/library/LibraryFilters';
+import { motion, AnimatePresence } from 'framer-motion';
+import { haptic } from '@/lib/HapticFeedback';
+import { uiSounds } from '@/lib/uiSounds';
+import { aiClient } from '@/components/ai/aiClient';
 import { localArticles, Article } from '@/lib/articles';
 import type { GetStaticProps, InferGetStaticPropsType } from 'next';
+import { useRouter } from 'next/router';
+import { createPageUrl } from '@/utils';
 
-// Pre-render local articles for SEO
 export const getStaticProps: GetStaticProps<{ initialArticles: Article[] }> = async () => {
-    return {
-        props: {
-            initialArticles: localArticles,
-        },
-        revalidate: 3600, // Re-generate every hour
-    };
+    return { props: { initialArticles: localArticles } };
 };
 
-export default function Library({ initialArticles }: InferGetStaticPropsType<typeof getStaticProps>) {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [activeType, setActiveType] = useState('all');
-    const [activeCategory, setActiveCategory] = useState('all');
+const CATEGORIES = [
+    { id: 'all', label: 'الكل' },
+    { id: 'functional', label: 'الطب الوظيفي' },
+    { id: 'mental', label: 'الصحة النفسية' },
+    { id: 'nutrition', label: 'التغذية العلاجية' },
+    { id: 'lifestyle', label: 'نمط الحياة' }
+];
 
+export default function Library({ initialArticles }: InferGetStaticPropsType<typeof getStaticProps>) {
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeCategory, setActiveCategory] = useState('all');
+    
+    // AI Semantic Search State
+    const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+    const [isAiSearching, setIsAiSearching] = useState(false);
+    
+    // Header scroll effect
+    const [isScrolled, setIsScrolled] = useState(false);
+    useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const { data: dbArticles = [] } = useQuery({
         queryKey: ['articles'],
         queryFn: async () => {
-            try {
-                const data = await db.entities.KnowledgeArticle.list('-created_date', 50);
-                return data as unknown as Article[];
-            } catch (e) {
-                console.error("Failed to fetch articles", e);
-                return [];
-            }
+            try { return await db.entities.KnowledgeArticle.list('-created_date', 50) as unknown as Article[]; } 
+            catch { return []; }
         },
         initialData: [],
     });
 
-    // Merge DB articles with pre-rendered local articles
     const articles = [...dbArticles, ...initialArticles];
 
-    // Filter articles
     const filteredArticles = articles.filter((article: any) => {
         const matchesSearch =
             article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            article.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            article.tags?.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        const matchesType = activeType === 'all' || article.type === activeType;
+            article.summary?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = activeCategory === 'all' || article.category === activeCategory;
-
-        return matchesSearch && matchesType && matchesCategory;
+        return matchesSearch && matchesCategory;
     });
 
-    const featuredArticles = articles.filter((a: any) => a.featured);
-    const trendingArticles = [...articles].sort((a: any, b: any) => (b.views || 0) - (a.views || 0)).slice(0, 4);
+    const featuredArticles = articles.filter((a: any) => a.featured).slice(0, 5);
+    const recentArticles = [...articles].sort((a: any, b: any) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()).slice(0, 6);
+
+    // Trigger AI semantic search when user pauses typing
+    useEffect(() => {
+        if (searchQuery.length < 5) {
+            setAiAnswer(null);
+            return;
+        }
+        
+        const delaySearch = setTimeout(async () => {
+            setIsAiSearching(true);
+            try {
+                // Simulate vector search / semantic DB query
+                const result = await db.integrations.Core.InvokeLLM({
+                    prompt: `أنت باحث طبي عيادي في مكتبة (طِبرَا). يبحث المستخدم عن: "${searchQuery}". 
+                    بناءً على مبادئ الطب الوظيفي، قدم إجابة علمية مختصرة ومفيدة جداً (3-4 أسطر كحد أقصى) تجيب على سؤاله أو توضح المفهوم.`
+                }) as any;
+                setAiAnswer(result?.response || result?.answer);
+                uiSounds.success();
+            } catch {
+                setAiAnswer(null);
+            } finally {
+                setIsAiSearching(false);
+            }
+        }, 1200);
+
+        return () => clearTimeout(delaySearch);
+    }, [searchQuery]);
 
     return (
-        <div className="min-h-screen pb-24">
-            {/* Header */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] px-6 py-8">
-                <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#D4AF37]/20 rounded-full blur-2xl translate-x-1/2 translate-y-1/2" />
+        <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-teal-500/20 font-sans pb-24 overflow-x-hidden">
+            <Head>
+                <title>طِبرَا | المكتبة الطبية</title>
+                <meta name="theme-color" content="#f8fafc" />
+            </Head>
 
-                <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                            <BookOpen className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">المكتبة</h1>
-                            <p className="text-white/80 text-sm">مقالات، فيديوهات ودراسات</p>
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="relative">
-                        <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <Input
-                            placeholder="ابحث عن موضوع..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="bg-white/90 border-0 rounded-2xl pr-12 h-14 text-slate-800 placeholder:text-slate-400"
-                        />
+            {/* ═══ Header ═══ */}
+            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm py-3' : 'bg-transparent py-5'}`}>
+                <div className="px-5 max-w-6xl mx-auto flex items-center justify-between">
+                    <button onClick={() => { haptic.selection(); router.back(); }} className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 shadow-sm">
+                        <ArrowRight className="w-5 h-5 text-slate-600 rtl:-scale-x-100" />
+                    </button>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl font-black tracking-tight text-slate-800">طِبرَا</span>
+                        <span className="px-2 py-0.5 rounded-md bg-teal-50 border border-teal-100 text-[10px] font-bold tracking-widest text-teal-700">LIBRARY</span>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div className="px-6 py-6 space-y-6">
-                {/* Filters */}
-                <LibraryFilters
-                    activeType={activeType}
-                    setActiveType={setActiveType}
-                    activeCategory={activeCategory}
-                    setActiveCategory={setActiveCategory}
-                />
+            {/* ═══ Hero & Semantic Search ═══ */}
+            <section className="relative pt-32 pb-12 px-5 overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-100/50 rounded-full blur-[100px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+                <div className="absolute top-20 left-0 w-[400px] h-[400px] bg-emerald-100/40 rounded-full blur-[80px] pointer-events-none -translate-x-1/2" />
 
-                {/* Featured Section - Show only when no search/filter */}
-                {!searchQuery && activeType === 'all' && activeCategory === 'all' && (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                            <h2 className="font-bold text-slate-800 dark:text-white">محتوى مميز</h2>
+                <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-6 shadow-xl shadow-slate-200/50">
+                        <BookOpen className="w-8 h-8 text-teal-600" />
+                    </div>
+                    <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight text-slate-900 tracking-tight">
+                        اكتشف جذور <br className="md:hidden"/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-600 to-emerald-500">العافية الحقيقية</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium mb-10 max-w-md text-[15px] leading-relaxed">
+                        مكتبة طبية متكاملة مدعومة بالذكاء الاصطناعي للإجابة على تساؤلاتك الطبية فوراً.
+                    </p>
+
+                    {/* AI Smart Search Bar */}
+                    <div className="w-full max-w-xl relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-teal-200 to-emerald-200 rounded-2xl blur-lg opacity-30 group-focus-within:opacity-50 transition-opacity duration-500" />
+                        <div className="relative bg-white border border-slate-200 rounded-2xl p-2 flex items-center shadow-lg shadow-slate-200/50">
+                            <Search className="w-5 h-5 text-teal-600 ml-3 shrink-0" />
+                            <input
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="ابحث أو اسأل... (مثال: ما فوائد المغنيسيوم؟)"
+                                className="flex-1 bg-transparent border-0 text-slate-800 placeholder-slate-400 focus:ring-0 text-[15px] py-3 font-semibold"
+                            />
+                            {isAiSearching && <Loader2 className="w-5 h-5 text-teal-500 animate-spin shrink-0 ml-3" />}
                         </div>
-                        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                            {featuredArticles.slice(0, 3).map((article) => (
-                                <div key={article.id} className="min-w-[280px]">
-                                    <ArticleCard article={article} />
-                                </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══ AI Generative Answer (Shows when searching) ═══ */}
+            <AnimatePresence>
+                {(isAiSearching || aiAnswer) && searchQuery.length >= 5 && (
+                    <motion.section 
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }} 
+                        animate={{ opacity: 1, height: 'auto', marginTop: 24 }} 
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        className="px-5 max-w-2xl mx-auto overflow-hidden"
+                    >
+                        <div className="bg-white border border-teal-100 rounded-3xl p-6 relative shadow-xl shadow-teal-100/50">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 blur-3xl rounded-full" />
+                            <div className="flex items-center gap-2 mb-4 relative z-10">
+                                <Brain className="w-5 h-5 text-teal-600" />
+                                <h3 className="font-bold text-teal-900 text-sm">خلاصة المكتبة الذكية:</h3>
+                            </div>
+                            <div className="relative z-10">
+                                {isAiSearching ? (
+                                    <div className="space-y-3">
+                                        <div className="h-3 bg-slate-100 rounded-full w-3/4 animate-pulse" />
+                                        <div className="h-3 bg-slate-100 rounded-full w-full animate-pulse" />
+                                        <div className="h-3 bg-slate-100 rounded-full w-2/3 animate-pulse" />
+                                    </div>
+                                ) : (
+                                    <p className="text-[15px] text-slate-700 leading-relaxed font-semibold">
+                                        {aiAnswer}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </motion.section>
+                )}
+            </AnimatePresence>
+
+            {/* ═══ Main Content Area ═══ */}
+            <main className="max-w-6xl mx-auto px-5 mt-10">
+                {/* Visual Category Spills */}
+                {!searchQuery && (
+                    <div className="mb-12 overflow-x-auto hide-scrollbar -mx-5 px-5 pb-4">
+                        <div className="flex gap-3 min-w-max">
+                            {CATEGORIES.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => { haptic.selection(); setActiveCategory(cat.id); }}
+                                    className={`px-5 py-2.5 rounded-full text-[13px] font-bold transition-all border ${
+                                        activeCategory === cat.id 
+                                        ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-600/20' 
+                                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                                    }`}
+                                >
+                                    {cat.label}
+                                </button>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Trending Section */}
-                {!searchQuery && activeType === 'all' && activeCategory === 'all' && (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-[#2D9B83]" />
-                            <h2 className="font-bold text-slate-800 dark:text-white">الأكثر مشاهدة</h2>
+                {/* ═══ Featured Hero Carousel (Netflix Style but Light/Premium) ═══ */}
+                {!searchQuery && activeCategory === 'all' && (
+                    <section className="mb-16">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Sparkles className="w-5 h-5 text-amber-500" />
+                            <h2 className="text-xl font-black text-slate-800">قراءات مميزة</h2>
                         </div>
-                    </div>
+                        
+                        <div className="flex overflow-x-auto hide-scrollbar gap-5 pb-8 -mx-5 px-5 snap-x snap-mandatory">
+                            {featuredArticles.map((article: any, i) => (
+                                <Link key={i} href={createPageUrl(`ArticleDetails?id=${article.id}`)} className="snap-center shrink-0 w-[85vw] md:w-[60vw] max-w-[500px]">
+                                    <motion.div 
+                                        whileTap={{ scale: 0.98 }}
+                                        className="relative h-[400px] md:h-[450px] rounded-[32px] overflow-hidden group border border-slate-200 bg-white shadow-xl shadow-slate-200/50"
+                                    >
+                                        {article.image_url ? (
+                                            <img src={article.image_url} alt={article.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-700" />
+                                        ) : (
+                                            <div className="absolute inset-0 bg-slate-100" />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                                        
+                                        <div className="absolute top-5 left-5 right-5 flex justify-between items-start z-10">
+                                            <div className="px-3 py-1 bg-white/95 backdrop-blur-md rounded-full border border-white/20 shadow-sm">
+                                                <span className="text-[10px] font-bold text-teal-700 uppercase tracking-widest">{article.category}</span>
+                                            </div>
+                                            <button className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center hover:bg-white/30 transition-colors">
+                                                <Bookmark className="w-4 h-4 text-white" />
+                                            </button>
+                                        </div>
+
+                                        <div className="absolute bottom-6 left-6 right-6 z-10">
+                                            <h3 className="text-2xl font-black text-white mb-3 leading-tight drop-shadow-md group-hover:text-teal-300 transition-colors">{article.title}</h3>
+                                            <p className="text-[13px] text-white/90 font-medium line-clamp-2 mb-4 leading-relaxed">{article.summary}</p>
+                                            
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-600/30">
+                                                    <PlayCircle className="w-5 h-5 text-white ml-0.5" />
+                                                </div>
+                                                <span className="text-xs font-bold text-white uppercase tracking-widest">{article.type === 'video' ? 'شاهد الآن' : 'اقرأ الآن'}</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
                 )}
 
-                {/* Results */}
-                <div>
-                    {searchQuery || activeType !== 'all' || activeCategory !== 'all' ? (
-                        <p className="text-sm text-slate-500 mb-4">
-                            {filteredArticles.length} نتيجة
-                        </p>
-                    ) : null}
+                {/* ═══ Search Results & Grid ═══ */}
+                <section>
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-teal-600" />
+                            <h2 className="text-xl font-black text-slate-800">
+                                {searchQuery ? 'نتائج البحث' : activeCategory !== 'all' ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'المُضاف حديثاً'}
+                            </h2>
+                        </div>
+                        {(searchQuery || activeCategory !== 'all') && (
+                            <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm">{filteredArticles.length} مادة</span>
+                        )}
+                    </div>
 
                     {filteredArticles.length === 0 ? (
-                        <div className="text-center py-12">
-                            <BookOpen className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                            <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">لا توجد نتائج</h3>
-                            <p className="text-slate-400 dark:text-slate-500 text-sm">جرب تغيير معايير البحث</p>
-                        </div>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 bg-white border border-slate-200 shadow-sm rounded-3xl">
+                            <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-black text-slate-800 mb-2">لا توجد نتائج</h3>
+                            <p className="text-sm text-slate-500 font-medium">حاول البحث بكلمات مختلفة أو اسأل المكتبة الذكية أعلى الصفحة.</p>
+                        </motion.div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {filteredArticles.map((article) => (
-                                <ArticleCard key={article.id} article={article} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {filteredArticles.map((article: any, i: number) => (
+                                <Link key={i} href={createPageUrl(`ArticleDetails?id=${article.id}`)}>
+                                    <motion.div 
+                                        whileHover={{ y: -4 }}
+                                        className="bg-white border border-slate-200 hover:border-teal-200 rounded-3xl p-4 flex gap-4 transition-all group shadow-sm hover:shadow-xl hover:shadow-slate-200/50"
+                                    >
+                                        <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 relative">
+                                            {article.image_url ? (
+                                                <img src={article.image_url} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-teal-50">
+                                                    {article.type === 'video' ? <PlayCircle className="w-8 h-8 text-teal-300" /> : <FileText className="w-8 h-8 text-teal-300" />}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0 py-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100 uppercase tracking-wider">{article.category}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-0.5 rounded-md border border-slate-100">{article.read_time} د</span>
+                                            </div>
+                                            <h3 className="font-bold text-slate-800 text-[13px] line-clamp-2 leading-snug mb-1.5 group-hover:text-teal-600 transition-colors">
+                                                {article.title}
+                                            </h3>
+                                            <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed font-medium">
+                                                {article.summary}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                </Link>
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
+                </section>
+            </main>
         </div>
     );
 }
-

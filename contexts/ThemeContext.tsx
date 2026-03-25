@@ -61,7 +61,9 @@ interface ThemeContextType {
     primaryLight: string;
     primaryDark: string;
     isDarkMode: boolean;
+    isHighContrast: boolean;
     toggleDarkMode: () => void;
+    toggleHighContrast: () => void;
     setTheme: (config: Partial<ThemeConfig>) => void;
     setPreset: (preset: ThemePreset) => void;
     setCustomColor: (color: string) => void;
@@ -72,6 +74,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'tibrah_theme';
 const DARK_MODE_KEY = 'tibrah_dark_mode';
+const HIGH_CONTRAST_KEY = 'tibrah_high_contrast';
 
 // Helper to calculate lighter/darker variants
 function adjustColor(hex: string, percent: number): string {
@@ -94,6 +97,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         useCustom: false,
     });
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isHighContrast, setIsHighContrast] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     // Load theme and dark mode from localStorage on mount
@@ -111,6 +115,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
                 setIsDarkMode(isDark);
                 if (isDark) {
                     document.documentElement.classList.add('dark');
+                }
+            }
+            const hcStored = localStorage.getItem(HIGH_CONTRAST_KEY);
+            if (hcStored) {
+                const isHC = JSON.parse(hcStored);
+                setIsHighContrast(isHC);
+                if (isHC) {
+                    document.documentElement.classList.add('high-contrast');
                 }
             }
         } catch (e) {
@@ -216,6 +228,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         });
     };
 
+    const toggleHighContrast = () => {
+        setIsHighContrast(prev => {
+            const newValue = !prev;
+            if (newValue) {
+                document.documentElement.classList.add('high-contrast');
+            } else {
+                document.documentElement.classList.remove('high-contrast');
+            }
+            try {
+                localStorage.setItem(HIGH_CONTRAST_KEY, JSON.stringify(newValue));
+            } catch (e) { /* ignore */ }
+            return newValue;
+        });
+    };
+
     return (
         <ThemeContext.Provider value={{
             theme,
@@ -224,7 +251,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             primaryLight: currentColors.primaryLight,
             primaryDark: currentColors.primaryDark,
             isDarkMode,
+            isHighContrast,
             toggleDarkMode,
+            toggleHighContrast,
             setTheme,
             setPreset,
             setCustomColor,

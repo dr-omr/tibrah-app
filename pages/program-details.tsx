@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,7 +14,79 @@ import {
 } from 'lucide-react';
 
 // Program data
-const programs = {
+const programs: Record<string, any> = {
+    holistic_vip: {
+        id: 'holistic_vip',
+        title: 'الرعاية الشمولية VIP',
+        subtitle: 'تغطية صحية وشعورية كاملة',
+        duration: 'اشتراك شهري',
+        description: 'أعلى مستوى من الرعاية الصحية — جلسات استشارية مكثفة، أولوية في الحجوزات، تحليل ذكي غير محدود، وتوصيل مجاني لكل المكملات مع متابعة يومية عبر واتساب.',
+        color: 'from-indigo-900 via-slate-900 to-indigo-950',
+        icon: Sparkles,
+        price: '499',
+        currency: 'SAR',
+        period: 'شهرياً',
+        trial: false,
+        featured: true,
+        features: [
+            'جلستين استشارية 45 دقيقة شهرياً',
+            'أولوية القصوى في الحجوزات',
+            'تحليل أعراض غير محدود بالذكاء الاصطناعي',
+            'توصيل مجاني لجميع المكملات',
+            'متابعة يومية عبر WhatsApp',
+            'خطة غذائية مخصصة ومحدثة',
+            'تقارير صحية أسبوعية',
+            'دعم طوارئ على مدار الساعة',
+        ],
+        includes: [
+            { text: 'جلسات استشارية شهرية', included: true },
+            { text: 'تحليل أعراض AI غير محدود', included: true },
+            { text: 'متابعة يومية واتساب', included: true },
+            { text: 'توصيل مجاني للمكملات', included: true },
+            { text: 'أولوية في الحجوزات', included: true },
+            { text: 'خطة غذائية مخصصة', included: true },
+            { text: 'دعم طوارئ 24/7', included: true },
+        ],
+        testimonials: [
+            { name: 'عبدالله ع.', rating: 5, text: 'أفضل استثمار في صحتي — المتابعة اليومية والجلسات الشهرية غيّرت حياتي تماماً.' },
+            { name: 'منى ح.', rating: 5, text: 'الاشتراك VIP يستاهل كل ريال. الدكتور عمر متابعني بشكل مستمر والنتائج مذهلة.' },
+            { name: 'سلطان م.', rating: 5, text: 'التوصيل المجاني والمتابعة اليومية خلّتني ما أفكر بشيء غير صحتي.' },
+        ]
+    },
+    care_plus: {
+        id: 'care_plus',
+        title: 'العناية المتقدمة',
+        subtitle: 'المتابعة الذكية لحالتك',
+        duration: 'اشتراك شهري',
+        description: 'باقة مثالية لمن يريد متابعة ذكية ومنتظمة — جلسة استشارية قصيرة، تشخيصات AI، وخصم دائم على المكملات.',
+        color: 'from-slate-700 to-slate-800',
+        icon: Heart,
+        price: '149',
+        currency: 'SAR',
+        period: 'شهرياً',
+        trial: true,
+        featured: false,
+        features: [
+            'جلسة استشارية قصيرة (15 دقيقة) شهرياً',
+            '3 تشخيصات ذكية AI شهرياً',
+            'خصم 15% على جميع المكملات',
+            'تقارير صحية شهرية',
+            'أولوية في الرد على الاستفسارات',
+        ],
+        includes: [
+            { text: 'جلسة استشارية شهرية', included: true },
+            { text: 'تشخيصات AI (3 شهرياً)', included: true },
+            { text: 'خصم 15% على المكملات', included: true },
+            { text: 'تقارير صحية', included: true },
+            { text: 'متابعة يومية واتساب', included: false },
+            { text: 'توصيل مجاني', included: false },
+            { text: 'دعم طوارئ 24/7', included: false },
+        ],
+        testimonials: [
+            { name: 'ريم س.', rating: 5, text: 'باقة ممتازة بسعر معقول — الجلسة الشهرية تكفيني والخصم على المكملات وفّر لي كثير.' },
+            { name: 'ياسر ك.', rating: 4, text: 'التشخيصات الذكية مفيدة جداً، وأشعر إني متابع بشكل احترافي.' },
+        ]
+    },
     weekly: {
         id: 'weekly',
         title: 'برنامج الأسبوع',
@@ -23,6 +96,8 @@ const programs = {
         color: 'from-blue-500 to-cyan-500',
         icon: Flame,
         price: '150',
+        currency: 'ر.ي',
+        period: '',
         trial: true,
         featured: false,
         features: ['خطة غذائية مخصصة', 'متابعة يومية', 'دعم WhatsApp', 'تعديلات فورية'],
@@ -43,9 +118,11 @@ const programs = {
         subtitle: 'التحول الحقيقي',
         duration: '21 يوماً',
         description: 'البرنامج المثالي لإعادة ضبط الجسم وبناء عادات صحية مستدامة',
-        color: 'from-[#2D9B83] to-[#3FB39A]',
+        color: 'from-primary to-primary-light',
         icon: Brain,
         price: '350',
+        currency: 'ر.ي',
+        period: '',
         trial: true,
         featured: true,
         features: ['خطة شاملة', '3 جلسات متابعة', 'دعم 24/7', 'تقييم نهائي', 'محتوى تعليمي'],
@@ -69,6 +146,8 @@ const programs = {
         color: 'from-[#D4AF37] to-[#F4D03F]',
         icon: Heart,
         price: '900',
+        currency: 'ر.ي',
+        period: '',
         trial: true,
         featured: false,
         features: ['برنامج متدرج', '10 جلسات', 'دعم مستمر', 'خطة صيانة', 'أولوية الرد'],
@@ -90,12 +169,14 @@ export default function ProgramDetails() {
     const { id: programId } = router.query;
     const queryClient = useQueryClient();
     const [trialStarted, setTrialStarted] = useState(false);
+    const { user } = useAuth();
+    const userId = user?.id;
 
     const program = programs[programId as keyof typeof programs];
 
     const startTrialMutation = useMutation({
         mutationFn: async () => {
-            return db.entities.UserHealth.create({
+            return db.entities.UserHealth.createForUser(userId || '', {
                 trial_started: new Date().toISOString(),
                 trial_program: programId as string,
                 journey_stage: 'initial',
@@ -135,7 +216,7 @@ export default function ProgramDetails() {
                     </Link>
 
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-[24px] bg-white/20 flex items-center justify-center">
                             <Icon className="w-8 h-8 text-white" />
                         </div>
                         <div>
@@ -154,9 +235,9 @@ export default function ProgramDetails() {
             <div className="px-6 py-6 space-y-6">
                 {/* Trial Badge */}
                 {program.trial && !trialStarted && (
-                    <div className="glass-dark rounded-2xl p-4 flex items-center justify-between">
+                    <div className="glass-dark rounded-[24px] p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Play className="w-8 h-8 text-[#2D9B83]" />
+                            <Play className="w-8 h-8 text-primary" />
                             <div>
                                 <p className="font-bold text-slate-800 dark:text-white">جرب ٣ أيام مجاناً</p>
                                 <p className="text-sm text-slate-500">بدون التزام، ألغِ في أي وقت</p>
@@ -173,7 +254,7 @@ export default function ProgramDetails() {
                 )}
 
                 {trialStarted && (
-                    <div className="glass-dark rounded-2xl p-4 text-center">
+                    <div className="glass-dark rounded-[24px] p-4 text-center">
                         <Check className="w-12 h-12 text-green-500 mx-auto mb-2" />
                         <p className="font-bold text-slate-800 dark:text-white">تم تفعيل التجربة المجانية!</p>
                         <p className="text-sm text-slate-500">استمتع بـ ٣ أيام مجانية</p>
@@ -196,7 +277,7 @@ export default function ProgramDetails() {
                 </div>
 
                 {/* What's Included */}
-                <div className="glass rounded-2xl p-5">
+                <div className="glass rounded-[24px] p-5">
                     <h3 className="font-bold text-slate-800 dark:text-white mb-4">ما الذي ستحصل عليه؟</h3>
                     <div className="space-y-3">
                         {program.includes.map((item, index) => (
@@ -219,7 +300,7 @@ export default function ProgramDetails() {
                     <h3 className="font-bold text-slate-800 dark:text-white mb-4">آراء المشتركين</h3>
                     <div className="space-y-3">
                         {program.testimonials.map((testimonial, index) => (
-                            <div key={index} className="glass rounded-2xl p-4">
+                            <div key={index} className="glass rounded-[24px] p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="flex">
                                         {[...Array(testimonial.rating)].map((_, i) => (
@@ -236,17 +317,17 @@ export default function ProgramDetails() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="glass rounded-2xl p-4 text-center">
-                        <Users className="w-6 h-6 mx-auto text-[#2D9B83] mb-2" />
+                    <div className="glass rounded-[24px] p-4 text-center">
+                        <Users className="w-6 h-6 mx-auto text-primary mb-2" />
                         <p className="text-xl font-bold text-slate-800 dark:text-white">+٥٠٠</p>
                         <p className="text-xs text-slate-500">مشترك</p>
                     </div>
-                    <div className="glass rounded-2xl p-4 text-center">
+                    <div className="glass rounded-[24px] p-4 text-center">
                         <Star className="w-6 h-6 mx-auto text-[#D4AF37] mb-2" />
                         <p className="text-xl font-bold text-slate-800 dark:text-white">٤.٩</p>
                         <p className="text-xs text-slate-500">تقييم</p>
                     </div>
-                    <div className="glass rounded-2xl p-4 text-center">
+                    <div className="glass rounded-[24px] p-4 text-center">
                         <Calendar className="w-6 h-6 mx-auto text-blue-500 mb-2" />
                         <p className="text-xl font-bold text-slate-800 dark:text-white">٩٥%</p>
                         <p className="text-xs text-slate-500">نسبة النجاح</p>
@@ -255,24 +336,25 @@ export default function ProgramDetails() {
             </div>
 
             {/* Fixed Bottom */}
-            <div className="fixed bottom-0 left-0 right-0 glass p-4 border-t">
-                <div className="flex items-center gap-4">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-4 border-t border-slate-200/60 dark:border-slate-700/50 safe-bottom z-40">
+                <div className="flex items-center gap-4 max-w-lg mx-auto">
                     <div>
-                        <span className="text-slate-500 text-sm">السعر</span>
+                        <span className="text-slate-500 text-sm">{program.period ? 'الاشتراك' : 'السعر'}</span>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold text-slate-800 dark:text-white">{program.price}</span>
-                            <span className="text-slate-500">ر.س</span>
+                            <span className="text-3xl font-black text-slate-800 dark:text-white">{program.price}</span>
+                            <span className="text-slate-500 text-sm">{program.currency || 'ر.س'}</span>
+                            {program.period && <span className="text-xs text-slate-400">/ {program.period}</span>}
                         </div>
                     </div>
 
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1">
                         <a
                             href={`https://wa.me/967771447111?text=مرحباً، أريد الاشتراك في ${program.title}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block"
                         >
-                            <Button className={`w-full h-12 bg-gradient-to-r ${program.color} rounded-xl text-white font-bold`}>
+                            <Button className={`w-full h-12 bg-gradient-to-r ${program.color} rounded-xl text-white font-bold shadow-lg`}>
                                 <MessageCircle className="w-5 h-5 ml-2" />
                                 اشترك الآن
                             </Button>

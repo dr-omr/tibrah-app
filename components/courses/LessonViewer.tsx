@@ -217,7 +217,7 @@ export default function LessonViewer({
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-xs font-medium truncate ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'
                                                         }`}>{lesson.title}</p>
-                                                    <p className="text-[10px] text-slate-400">{lesson.duration}</p>
+                                                    <p className="text-xs text-slate-400">{lesson.duration}</p>
                                                 </div>
                                             </motion.button>
                                         );

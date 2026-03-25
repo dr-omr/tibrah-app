@@ -143,12 +143,12 @@ export default function ActivityLog({ users, appointments, products, courses }: 
             <div className="p-5 border-b border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-[#2D9B83]" />
+                        <Activity className="w-5 h-5 text-primary" />
                         <h3 className="font-bold text-slate-800 dark:text-white text-sm">سجل النشاطات</h3>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <LiveDot color="#10B981" />
-                        <span className="text-[11px] text-slate-400">تحديث مباشر</span>
+                        <span className="text-xs text-slate-400">تحديث مباشر</span>
                     </div>
                 </div>
 
@@ -199,7 +199,7 @@ export default function ActivityLog({ users, appointments, products, courses }: 
                                         <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                                             {entry.text}
                                         </p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                        <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                                             <Clock className="w-3 h-3" />
                                             {getTimeAgo(entry.time)}
                                         </p>
@@ -221,22 +221,22 @@ export default function ActivityLog({ users, appointments, products, courses }: 
                 <div className="flex items-center justify-around text-center">
                     <div>
                         <span className="text-lg font-bold text-slate-800 dark:text-white">{users.length}</span>
-                        <p className="text-[10px] text-slate-400">مستخدم</p>
+                        <p className="text-xs text-slate-400">مستخدم</p>
                     </div>
                     <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
                     <div>
                         <span className="text-lg font-bold text-slate-800 dark:text-white">{appointments.length}</span>
-                        <p className="text-[10px] text-slate-400">موعد</p>
+                        <p className="text-xs text-slate-400">موعد</p>
                     </div>
                     <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
                     <div>
                         <span className="text-lg font-bold text-slate-800 dark:text-white">{products.length}</span>
-                        <p className="text-[10px] text-slate-400">منتج</p>
+                        <p className="text-xs text-slate-400">منتج</p>
                     </div>
                     <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
                     <div>
                         <span className="text-lg font-bold text-slate-800 dark:text-white">{courses.length}</span>
-                        <p className="text-[10px] text-slate-400">دورة</p>
+                        <p className="text-xs text-slate-400">دورة</p>
                     </div>
                 </div>
             </div>

@@ -143,14 +143,14 @@ export default function HealthGoals() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <Target className="w-5 h-5 text-[#2D9B83]" />
+                    <Target className="w-5 h-5 text-primary" />
                     أهدافي اليومية
                 </h3>
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400">{Math.round(totalProgress * 100)}% مكتمل</span>
                     <button
                         onClick={() => setShowAdd(!showAdd)}
-                        className="w-8 h-8 rounded-full bg-[#2D9B83]/10 text-[#2D9B83] flex items-center justify-center hover:bg-[#2D9B83]/20 transition-colors"
+                        className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
                     >
                         <Plus className="w-4 h-4" />
                     </button>
@@ -158,11 +158,11 @@ export default function HealthGoals() {
             </div>
 
             {/* Overall Progress Ring */}
-            <div className="flex items-center gap-4 bg-gradient-to-r from-[#2D9B83]/10 to-[#3FB39A]/10 dark:from-[#2D9B83]/20 dark:to-[#3FB39A]/20 rounded-2xl p-4">
+            <div className="flex items-center gap-4 bg-gradient-to-r from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 rounded-2xl p-4">
                 <div className="relative">
                     <ProgressRing progress={totalProgress} color="#2D9B83" size={70} />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-[#2D9B83]">{Math.round(totalProgress * 100)}%</span>
+                        <span className="text-lg font-bold text-primary">{Math.round(totalProgress * 100)}%</span>
                     </div>
                 </div>
                 <div>

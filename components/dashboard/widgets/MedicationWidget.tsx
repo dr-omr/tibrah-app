@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pill, Check, Clock, AlertCircle, Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -27,6 +28,8 @@ interface MedicationWidgetProps {
 
 export const MedicationWidget = ({ medications, logs, onUpdate }: MedicationWidgetProps) => {
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const { user } = useAuth();
+    const userId = user?.id;
 
     // Calculate next dose
     const nextDose = useMemo(() => {
@@ -77,7 +80,7 @@ export const MedicationWidget = ({ medications, logs, onUpdate }: MedicationWidg
         setLoadingId(nextDose.med.id);
 
         try {
-            await db.entities.MedicationLog.create({
+            await db.entities.MedicationLog.createForUser(userId || '', {
                 medication_id: nextDose.med.id,
                 taken_at: new Date().toISOString(),
                 status: 'taken'
@@ -126,7 +129,7 @@ export const MedicationWidget = ({ medications, logs, onUpdate }: MedicationWidg
                     </div>
                     <Button
                         size="sm"
-                        className={`${nextDose.status === 'overdue' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#2D9B83] hover:bg-[#258570]'
+                        className={`${nextDose.status === 'overdue' ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary-dark'
                             } text-white shadow-md active:scale-95 transition-all`}
                         onClick={handleTake}
                         disabled={!!loadingId}

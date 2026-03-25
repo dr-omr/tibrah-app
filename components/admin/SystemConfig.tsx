@@ -46,7 +46,7 @@ const defaultSettings: SystemSettings = {
         enabled: true,
         text: '🎉 عرض خاص: خصم 20% على برنامج 21 يوم!',
         link: '/courses',
-        backgroundColor: '#2D9B83'
+        backgroundColor: 'var(--primary)'
     },
     features: {
         aiAssistant: true,
@@ -107,7 +107,7 @@ export default function SystemConfig({ settings = defaultSettings, onSave }: Sys
         { key: 'rifeFrequencies' as const, label: 'ترددات رايف', description: 'مكتبة الترددات العلاجية' },
         { key: 'healthTracker' as const, label: 'تتبع الصحة', description: 'تسجيل ومتابعة القياسات الصحية' },
         { key: 'courses' as const, label: 'الدورات', description: 'البرامج والدورات التعليمية' },
-        { key: 'shop' as const, label: 'المتجر', description: 'متجر المنتجات الطبيعية' },
+        { key: 'shop' as const, label: 'الصيدلية', description: 'صيدلية العلاجات والمكملات' },
     ];
 
     return (
@@ -297,7 +297,7 @@ export default function SystemConfig({ settings = defaultSettings, onSave }: Sys
                 <Button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-[#2D9B83] hover:bg-[#2D9B83]/90 text-white px-8"
+                    className="bg-primary hover:bg-primary/90 text-white px-8"
                 >
                     {isSaving ? (
                         <>جاري الحفظ...</>

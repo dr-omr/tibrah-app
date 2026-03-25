@@ -13,9 +13,14 @@ const customJestConfig = {
         '\\.(jpg|jpeg|png|gif|webp|avif|ico|bmp|svg)$': '<rootDir>/__mocks__/fileMock.js',
     },
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
-    transformIgnorePatterns: [
-        '/node_modules/(?!(lucide-react|framer-motion)/)',
-    ],
 };
 
-module.exports = createJestConfig(customJestConfig);
+module.exports = async () => {
+    const nextJestConfig = await createJestConfig(customJestConfig)();
+    return {
+        ...nextJestConfig,
+        transformIgnorePatterns: [
+            '/node_modules/(?!(lucide-react|framer-motion)/)',
+        ],
+    };
+};

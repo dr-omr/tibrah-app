@@ -4,6 +4,9 @@
  * Supports Vibration API with intelligent fallbacks
  */
 
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Capacitor } from '@capacitor/core';
+
 export type HapticPattern = 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning' | 'selection';
 
 interface HapticPatternConfig {
@@ -24,6 +27,7 @@ const HAPTIC_PATTERNS: Record<HapticPattern, HapticPatternConfig> = {
 class HapticFeedback {
     private isSupported: boolean = false;
     private isEnabled: boolean = true;
+    private isNative: boolean = false;
 
     constructor() {
         this.checkSupport();
@@ -36,17 +40,18 @@ class HapticFeedback {
             return;
         }
 
-        // Check for Vibration API
-        this.isSupported = 'vibrate' in navigator;
-
-        // Additional check for iOS (which doesn't support Vibration API but has Taptic Engine)
-        // We'll rely on CSS touch-action: manipulation for iOS
-        console.log('[Haptic] Vibration API supported:', this.isSupported);
+        this.isNative = Capacitor.isNativePlatform();
+        
+        if (this.isNative) {
+            this.isSupported = true; // Capacitor Handles Support Checking internally
+        } else {
+            // Fallback for Web PWA
+            this.isSupported = 'vibrate' in navigator;
+        }
     }
 
     private loadPreference(): void {
         if (typeof window === 'undefined') return;
-
         try {
             const stored = localStorage.getItem('tibrah_haptic_enabled');
             if (stored !== null) {
@@ -82,92 +87,100 @@ class HapticFeedback {
     }
 
     /**
-     * Trigger haptic feedback with a specific pattern
+     * Fallback to Web Vibration API if not native
      */
-    trigger(type: HapticPattern = 'light'): boolean {
-        if (!this.isSupported || !this.isEnabled) {
-            return false;
+    private triggerWebFallback(type: HapticPattern): boolean {
+         if (!this.isSupported || !this.isEnabled || !navigator.vibrate) return false;
+         try {
+             navigator.vibrate(HAPTIC_PATTERNS[type].pattern);
+             return true;
+         } catch {
+             return false;
+         }
+    }
+
+    /**
+     * Trigger haptic feedback based on type
+     */
+    async trigger(type: HapticPattern = 'light'): Promise<boolean> {
+        if (!this.isSupported || !this.isEnabled) return false;
+
+        if (this.isNative) {
+            try {
+                switch(type) {
+                    case 'light':
+                        await Haptics.impact({ style: ImpactStyle.Light });
+                        break;
+                    case 'medium':
+                        await Haptics.impact({ style: ImpactStyle.Medium });
+                        break;
+                    case 'heavy':
+                        await Haptics.impact({ style: ImpactStyle.Heavy });
+                        break;
+                    case 'success':
+                        await Haptics.notification({ type: NotificationType.Success });
+                        break;
+                    case 'error':
+                        await Haptics.notification({ type: NotificationType.Error });
+                        break;
+                    case 'warning':
+                        await Haptics.notification({ type: NotificationType.Warning });
+                        break;
+                    case 'selection':
+                        await Haptics.selectionStart();
+                        await Haptics.selectionChanged();
+                        await Haptics.selectionEnd();
+                        break;
+                }
+                return true;
+            } catch (e) {
+                console.warn('[Haptic Native] Failed', e);
+                return this.triggerWebFallback(type);
+            }
+        } else {
+             return this.triggerWebFallback(type);
         }
+    }
 
-        try {
-            const config = HAPTIC_PATTERNS[type];
-            navigator.vibrate(config.pattern);
-            return true;
-        } catch (error) {
-            console.warn('[Haptic] Vibration failed:', error);
-            return false;
+    // Sugar methods
+    tap() { this.trigger('light'); return true; }
+    impact() { this.trigger('medium'); return true; }
+    success() { this.trigger('success'); return true; }
+    error() { this.trigger('error'); return true; }
+    warning() { this.trigger('warning'); return true; }
+    selection() { this.trigger('selection'); return true; }
+
+    /**
+     * Custom vibration pattern (Web only currently, Native doesn't support raw arrays easily)
+     */
+    async custom(pattern: number | number[]): Promise<boolean> {
+        if (!this.isSupported || !this.isEnabled) return false;
+        
+        if (this.isNative) {
+            // Vibrate roughly maps to heavy impact in native for a custom request
+             try {
+                await Haptics.vibrate({ duration: Array.isArray(pattern) ? pattern[0] : pattern });
+                return true;
+             } catch {
+                return false;
+             }
+        } else if (navigator.vibrate) {
+            try {
+                navigator.vibrate(pattern);
+                return true;
+            } catch {
+                return false;
+            }
         }
-    }
-
-    /**
-     * Light tap - for regular button presses
-     */
-    tap(): boolean {
-        return this.trigger('light');
-    }
-
-    /**
-     * Medium tap - for more significant actions
-     */
-    impact(): boolean {
-        return this.trigger('medium');
-    }
-
-    /**
-     * Success feedback - for completed actions
-     */
-    success(): boolean {
-        return this.trigger('success');
-    }
-
-    /**
-     * Error feedback - for failed actions
-     */
-    error(): boolean {
-        return this.trigger('error');
-    }
-
-    /**
-     * Warning feedback - for warnings
-     */
-    warning(): boolean {
-        return this.trigger('warning');
-    }
-
-    /**
-     * Selection feedback - for selecting items
-     */
-    selection(): boolean {
-        return this.trigger('selection');
-    }
-
-    /**
-     * Custom vibration pattern
-     */
-    custom(pattern: number | number[]): boolean {
-        if (!this.isSupported || !this.isEnabled) {
-            return false;
-        }
-
-        try {
-            navigator.vibrate(pattern);
-            return true;
-        } catch (error) {
-            console.warn('[Haptic] Custom vibration failed:', error);
-            return false;
-        }
+        return false;
     }
 
     /**
      * Stop any ongoing vibration
      */
     stop(): void {
-        if (this.isSupported) {
-            try {
-                navigator.vibrate(0);
-            } catch {
-                // Ignore errors
-            }
+        if (!this.isNative && navigator.vibrate) {
+            try { navigator.vibrate(0); } catch {}
         }
     }
 }

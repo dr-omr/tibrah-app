@@ -73,13 +73,13 @@ export default function InteractiveBodyMap({
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-[#2D9B83]" />
+                        <Activity className="w-5 h-5 text-primary" />
                         خريطة الجسم التفاعلية
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">اضغط على أي عضو لمعرفة تفاصيله</p>
                 </div>
                 <div className="text-center">
-                    <div className="text-2xl font-bold text-[#2D9B83]">{overallScore}%</div>
+                    <div className="text-2xl font-bold text-primary">{overallScore}%</div>
                     <span className="text-xs text-slate-500">الصحة العامة</span>
                 </div>
             </div>
@@ -87,7 +87,7 @@ export default function InteractiveBodyMap({
             {/* Legend */}
             <div className="flex items-center justify-center gap-6 text-xs mb-4">
                 <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-[#2D9B83]" />
+                    <div className="w-3 h-3 rounded-full bg-primary" />
                     <span className="text-slate-600">سليم</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -135,12 +135,12 @@ export default function InteractiveBodyMap({
                         disabled={!interactive}
                     >
                         <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center shadow-lg transition-all ${organ.status === 'healthy' ? 'bg-[#2D9B83]' : 'bg-[#D4AF37] animate-pulse'
-                                } ${hoveredOrgan === organ.id ? 'ring-4 ring-offset-2 ring-[#2D9B83]/20 scale-125' : ''}`}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center shadow-lg transition-all ${organ.status === 'healthy' ? 'bg-primary' : 'bg-[#D4AF37] animate-pulse'
+                                } ${hoveredOrgan === organ.id ? 'ring-4 ring-offset-2 ring-primary/20 scale-125' : ''}`}
                         >
                             <div className="w-2.5 h-2.5 bg-white rounded-full" />
                         </div>
-                        <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] whitespace-nowrap transition-all ${hoveredOrgan === organ.id ? 'text-[#2D9B83] font-bold' : 'text-slate-500'
+                        <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap transition-all ${hoveredOrgan === organ.id ? 'text-primary font-bold' : 'text-slate-500'
                             }`}>
                             {organ.name}
                         </span>
@@ -185,7 +185,7 @@ export default function InteractiveBodyMap({
                             {/* Description */}
                             <div className="glass p-4 rounded-xl">
                                 <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <Info className="w-4 h-4 text-[#2D9B83]" />
+                                    <Info className="w-4 h-4 text-primary" />
                                     الوظيفة
                                 </h4>
                                 <p className="text-slate-600 text-sm">{selectedOrgan.description}</p>
@@ -200,7 +200,7 @@ export default function InteractiveBodyMap({
                                 <div className="space-y-2">
                                     {selectedOrgan.tips.map((tip, index) => (
                                         <div key={index} className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 p-2 rounded-lg">
-                                            <div className="w-2 h-2 rounded-full bg-[#2D9B83]" />
+                                            <div className="w-2 h-2 rounded-full bg-primary" />
                                             {tip}
                                         </div>
                                     ))}

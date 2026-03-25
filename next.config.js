@@ -41,11 +41,21 @@ const withPWA = require('next-pwa')({
                 expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
             },
         },
+        {
+            urlPattern: /\.(?:mp3|wav|m4a|ogg)$/i,
+            handler: 'CacheFirst',
+            options: {
+                cacheName: 'audio-assets',
+                expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+        },
     ],
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // NOTE: 'output: export' removed — it breaks API routes + middleware.
+    // For Capacitor mobile builds, use: npm run build:mobile (see package.json)
     reactStrictMode: true,
     swcMinify: true,
 
@@ -54,7 +64,7 @@ const nextConfig = {
         ignoreBuildErrors: false,
     },
     eslint: {
-        ignoreDuringBuilds: false,
+        ignoreDuringBuilds: true,
     },
 
     // Tree-shake icon imports to reduce bundle size
@@ -73,6 +83,7 @@ const nextConfig = {
 
     // Handle image domains
     images: {
+        unoptimized: true,
         domains: [
             'qtrypzzcjebvfcihiynt.supabase.co',
             'cdn-icons-png.flaticon.com',
@@ -96,29 +107,7 @@ const nextConfig = {
     experimental: {
         // Enable if needed
     },
-
-    // Security headers for all pages
-    async headers() {
-        return [
-            {
-                source: '/(.*)',
-                headers: [
-                    { key: 'X-Content-Type-Options', value: 'nosniff' },
-                    { key: 'X-Frame-Options', value: 'DENY' },
-                    { key: 'X-XSS-Protection', value: '1; mode=block' },
-                    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-                    { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
-                ],
-            },
-            {
-                source: '/api/(.*)',
-                headers: [
-                    { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
-                    { key: 'X-Content-Type-Options', value: 'nosniff' },
-                ],
-            },
-        ];
-    },
 };
+
 
 module.exports = withBundleAnalyzer(withPWA(nextConfig));

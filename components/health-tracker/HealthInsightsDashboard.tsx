@@ -174,7 +174,7 @@ export default function HealthInsightsDashboard({
                             key={p}
                             onClick={() => setPeriod(p)}
                             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${period === p
-                                    ? 'bg-white dark:bg-slate-700 text-[#2D9B83] shadow-sm'
+                                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
                                     : 'text-slate-500'
                                 }`}
                         >
@@ -204,7 +204,7 @@ export default function HealthInsightsDashboard({
                     <p className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
                         {stats.water.avg.toFixed(1)} <span className="text-sm text-slate-400">كوب/يوم</span>
                     </p>
-                    <p className="text-[10px] text-green-500">
+                    <p className="text-xs text-green-500">
                         {stats.water.onTarget} من {periodDays} أيام على الهدف
                     </p>
                     <div className="mt-3">
@@ -231,7 +231,7 @@ export default function HealthInsightsDashboard({
                     <p className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
                         {stats.sleep.avg.toFixed(1)} <span className="text-sm text-slate-400">ساعة/يوم</span>
                     </p>
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-xs text-slate-400">
                         {stats.sleep.avg >= 7 ? '✅ ممتاز' : stats.sleep.avg >= 6 ? '⚡ جيد' : '⚠️ يحتاج تحسين'}
                     </p>
                     <div className="mt-3">
@@ -292,7 +292,7 @@ export default function HealthInsightsDashboard({
                         <span className="text-sm text-slate-400">كغ</span>
                     </p>
                     {weightGoal && stats.weight.current > 0 && (
-                        <p className="text-[10px] text-slate-400">
+                        <p className="text-xs text-slate-400">
                             الهدف: {weightGoal} كغ — باقي {Math.abs(stats.weight.current - weightGoal).toFixed(1)} كغ
                         </p>
                     )}
@@ -303,10 +303,10 @@ export default function HealthInsightsDashboard({
             </div>
 
             {/* AI Summary Placeholder */}
-            <div className="bg-gradient-to-r from-[#2D9B83]/10 to-[#3FB39A]/10 dark:from-[#2D9B83]/20 dark:to-[#3FB39A]/20 rounded-2xl p-4 border border-[#2D9B83]/20">
+            <div className="bg-gradient-to-r from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 rounded-2xl p-4 border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-[#2D9B83]" />
-                    <span className="text-sm font-bold text-[#2D9B83]">ملخص ذكي</span>
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-bold text-primary">ملخص ذكي</span>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                     {stats.water.avg >= waterGoal

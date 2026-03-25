@@ -1,15 +1,26 @@
 /**
- * FloatingActionButton — Quick access FAB for common actions
- * Shows: AI Assistant, Book Appointment, Search, Scroll to top
+ * FloatingActionButton — Premium Unified Quick Access
+ * Merges FAB actions + AI Assistant into one elegant button
+ * Features: AI chat, booking, WhatsApp, scroll-to-top
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
-    Plus, X, Bot, CalendarPlus, Search, ArrowUp,
+    X, Bot, CalendarPlus, Search, ArrowUp,
     MessageCircle, Sparkles
 } from 'lucide-react';
+
+// Lazy-load the ChatInterface only when user opens it
+const ChatInterface = dynamic(() => import('../agents/ChatInterface'), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center h-full">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+    ),
+});
 
 interface FloatingActionButtonProps {
     onSearchOpen?: () => void;
@@ -18,10 +29,11 @@ interface FloatingActionButtonProps {
 export default function FloatingActionButton({ onSearchOpen }: FloatingActionButtonProps) {
     const router = useRouter();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showChat, setShowChat] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // Hide on certain pages where FAB would overlap
-    const hiddenPages = ['/ai-assistant', '/login', '/register'];
+    // Hide on certain pages
+    const hiddenPages = ['/login', '/register'];
     const isHidden = hiddenPages.some(p => router.pathname.startsWith(p));
 
     useEffect(() => {
@@ -32,9 +44,27 @@ export default function FloatingActionButton({ onSearchOpen }: FloatingActionBut
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const scrollToTop = () => {
+    const scrollToTop = useCallback(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    }, []);
+
+    const handleAction = useCallback((action: string) => {
+        setIsExpanded(false);
+        switch (action) {
+            case 'ai':
+                setShowChat(true);
+                break;
+            case 'appointment':
+                router.push('/book-appointment');
+                break;
+            case 'search':
+                onSearchOpen?.();
+                break;
+            case 'whatsapp':
+                window.open('https://wa.me/967771447111', '_blank');
+                break;
+        }
+    }, [router, onSearchOpen]);
 
     if (isHidden) return null;
 
@@ -43,102 +73,131 @@ export default function FloatingActionButton({ onSearchOpen }: FloatingActionBut
             id: 'ai',
             label: 'المساعد الذكي',
             icon: <Bot className="w-5 h-5" />,
-            color: 'bg-[#2D9B83]',
-            onClick: () => { router.push('/ai-assistant'); setIsExpanded(false); },
+            gradient: 'from-primary to-primary-light',
         },
         {
             id: 'appointment',
             label: 'حجز موعد',
             icon: <CalendarPlus className="w-5 h-5" />,
-            color: 'bg-blue-500',
-            onClick: () => { router.push('/book-appointment'); setIsExpanded(false); },
+            gradient: 'from-blue-500 to-blue-600',
         },
         {
             id: 'search',
             label: 'بحث',
             icon: <Search className="w-5 h-5" />,
-            color: 'bg-purple-500',
-            onClick: () => { onSearchOpen?.(); setIsExpanded(false); },
+            gradient: 'from-purple-500 to-violet-600',
         },
         {
             id: 'whatsapp',
             label: 'واتساب',
             icon: <MessageCircle className="w-5 h-5" />,
-            color: 'bg-green-500',
-            onClick: () => { window.open('https://wa.me/967771447111', '_blank'); setIsExpanded(false); },
+            gradient: 'from-green-500 to-emerald-600',
         },
     ];
 
     return (
         <>
-            {/* Backdrop */}
-            <AnimatePresence>
-                {isExpanded && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[998]"
-                        onClick={() => setIsExpanded(false)}
+            {/* ═══ Chat Panel ═══ */}
+            {showChat && (
+                <div className="fixed inset-0 z-[9998] flex items-end justify-start p-4 md:items-end md:justify-start">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-ios-fade-in"
+                        onClick={() => setShowChat(false)}
                     />
-                )}
-            </AnimatePresence>
-
-            <div className="fixed bottom-24 left-4 z-[999] flex flex-col-reverse items-center gap-3">
-                {/* Scroll to top */}
-                <AnimatePresence>
-                    {showScrollTop && !isExpanded && (
-                        <motion.button
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            onClick={scrollToTop}
-                            className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                        >
-                            <ArrowUp className="w-4 h-4" />
-                        </motion.button>
-                    )}
-                </AnimatePresence>
-
-                {/* Action Items */}
-                <AnimatePresence>
-                    {isExpanded && actions.map((action, idx) => (
-                        <motion.div
-                            key={action.id}
-                            initial={{ scale: 0, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0, opacity: 0, y: 20 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="flex items-center gap-2"
-                        >
-                            <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg shadow-md whitespace-nowrap">
-                                {action.label}
-                            </span>
+                    {/* Chat Window */}
+                    <div className="relative w-full md:w-[400px] h-[70vh] md:h-[600px] max-h-[80vh] mb-20 ml-0 md:ml-2 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-ios-spring-in">
+                        {/* Chat Header */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-l from-primary to-primary-light">
+                            <div className="flex items-center gap-2 text-white">
+                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                    <Sparkles className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold">مساعد طِبرَا الذكي</p>
+                                    <p className="text-xs opacity-80">متصل الآن</p>
+                                </div>
+                            </div>
                             <button
-                                onClick={action.onClick}
-                                className={`w-12 h-12 rounded-full ${action.color} text-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform`}
+                                onClick={() => setShowChat(false)}
+                                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
                             >
-                                {action.icon}
+                                <X className="w-4 h-4" />
                             </button>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
+                        </div>
+                        {/* Chat Content */}
+                        <div className="h-[calc(100%-56px)]">
+                            <ChatInterface />
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                {/* Main FAB */}
-                <motion.button
+            {/* ═══ Backdrop for expanded actions ═══ */}
+            {isExpanded && (
+                <div
+                    className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[998] animate-ios-fade-in"
+                    onClick={() => setIsExpanded(false)}
+                />
+            )}
+
+            {/* ═══ FAB Container ═══ */}
+            <div className="fixed bottom-24 left-4 z-[999] flex flex-col-reverse items-center gap-4">
+                {/* Scroll to top — shows only when scrolled down and FAB is collapsed */}
+                {showScrollTop && !isExpanded && (
+                    <button
+                        onClick={scrollToTop}
+                        className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 animate-ios-scale-in tap-feedback mb-1"
+                    >
+                        <ArrowUp className="w-4 h-4" />
+                    </button>
+                )}
+
+                {/* Action Items — expand upward */}
+                {isExpanded && actions.map((action, idx) => (
+                    <div
+                        key={action.id}
+                        className="flex items-center gap-2 animate-ios-spring-in"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                    >
+                        <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-xl shadow-md whitespace-nowrap">
+                            {action.label}
+                        </span>
+                        <button
+                            onClick={() => handleAction(action.id)}
+                            className={`w-12 h-12 rounded-full bg-gradient-to-br ${action.gradient} text-white shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform`}
+                        >
+                            {action.icon}
+                        </button>
+                    </div>
+                ))}
+
+                {/* ═══ Main FAB Button ═══ */}
+                <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${isExpanded
-                            ? 'bg-slate-800 dark:bg-slate-600 rotate-45'
-                            : 'bg-gradient-to-br from-[#2D9B83] to-[#3FB39A]'
+                    className={`relative w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${isExpanded
+                        ? 'bg-slate-800 dark:bg-slate-600'
+                        : 'bg-gradient-to-br from-primary to-primary-light'
                         }`}
-                    whileTap={{ scale: 0.9 }}
                 >
-                    {isExpanded ? (
-                        <X className="w-6 h-6 text-white" />
-                    ) : (
-                        <Sparkles className="w-6 h-6 text-white" />
+                    {/* Pulse ring — only when collapsed */}
+                    {!isExpanded && !showChat && (
+                        <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" />
                     )}
-                </motion.button>
+
+                    <div className="relative z-10 transition-transform duration-300" style={{ transform: isExpanded ? 'rotate(45deg)' : 'none' }}>
+                        {isExpanded ? (
+                            <X className="w-6 h-6 text-white" />
+                        ) : (
+                            <Sparkles className="w-6 h-6 text-white" />
+                        )}
+                    </div>
+
+                    {/* Notification dot */}
+                    {!isExpanded && !showChat && (
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
+                    )}
+                </button>
             </div>
         </>
     );

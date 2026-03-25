@@ -82,8 +82,8 @@ export default function SmartRecommendations() {
                             </div>
 
                             <div className="flex-1">
-                                <p className="text-xs text-[#2D9B83] font-medium mb-1 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#2D9B83]" />
+                                <p className="text-xs text-primary font-medium mb-1 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                     {rec.reason}
                                 </p>
                                 <h3 className="font-bold text-slate-800 mb-1">{rec.title}</h3>

@@ -1,35 +1,35 @@
-// components/common/PageTransition.tsx
-// Smooth page transition wrapper with framer-motion
+/**
+ * PageTransition — Fluid, ultra-premium page transition
+ * Uses Framer Motion for seamless route changes
+ */
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PageTransitionProps {
     children: React.ReactNode;
 }
 
-const pageVariants = {
-    initial: {
+const variants: any = {
+    out: {
         opacity: 0,
-        y: 8,
+        y: 10,
+        scale: 0.98,
+        transition: {
+            duration: 0.2,
+            ease: "easeIn"
+        }
     },
-    animate: {
+    in: {
         opacity: 1,
         y: 0,
+        scale: 1,
         transition: {
-            duration: 0.25,
-            ease: 'easeOut' as const,
-        },
-    },
-    exit: {
-        opacity: 0,
-        y: -8,
-        transition: {
-            duration: 0.15,
-            ease: 'easeIn' as const,
-        },
-    },
+            duration: 0.4,
+            ease: "easeOut"
+        }
+    }
 };
 
 export default function PageTransition({ children }: PageTransitionProps) {
@@ -39,10 +39,11 @@ export default function PageTransition({ children }: PageTransitionProps) {
         <AnimatePresence mode="wait" initial={false}>
             <motion.div
                 key={router.pathname}
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
+                variants={variants}
+                initial="out"
+                animate="in"
+                exit="out"
+                className="min-h-screen"
             >
                 {children}
             </motion.div>

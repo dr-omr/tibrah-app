@@ -160,11 +160,11 @@ export default function SleepTrackerPro() {
                 user_id: userId
             };
 
-            const existing = await db.entities.SleepLog.filter({ date: yesterday });
+            const existing = await db.entities.SleepLog.filter({ date: yesterday, user_id: userId });
             if (existing?.[0]) {
                 return db.entities.SleepLog.update(existing[0].id as string, data);
             }
-            return db.entities.SleepLog.create(data);
+            return db.entities.SleepLog.createForUser(userId || '', data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sleepLogsPro'] });
@@ -176,7 +176,7 @@ export default function SleepTrackerPro() {
     // Delete/Reset sleep log
     const deleteSleepMutation = useMutation({
         mutationFn: async () => {
-            const existing = await db.entities.SleepLog.filter({ date: yesterday });
+            const existing = await db.entities.SleepLog.filter({ date: yesterday, user_id: userId });
             if (existing?.[0]) {
                 return db.entities.SleepLog.delete(existing[0].id as string);
             }
@@ -407,7 +407,7 @@ export default function SleepTrackerPro() {
                                 <Bed className="w-6 h-6 mx-auto mb-2 text-indigo-200" />
                             </motion.div>
                             <div className="font-bold text-lg">{lastNightSleep.bedtime}</div>
-                            <div className="text-[10px] text-white/70">وقت النوم</div>
+                            <div className="text-xs text-white/70">وقت النوم</div>
                         </motion.div>
                         <motion.div
                             className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center"
@@ -420,7 +420,7 @@ export default function SleepTrackerPro() {
                                 <Sunrise className="w-6 h-6 mx-auto mb-2 text-amber-200" />
                             </motion.div>
                             <div className="font-bold text-lg">{lastNightSleep.wake_time}</div>
-                            <div className="text-[10px] text-white/70">الاستيقاظ</div>
+                            <div className="text-xs text-white/70">الاستيقاظ</div>
                         </motion.div>
                         <motion.div
                             className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center"
@@ -433,7 +433,7 @@ export default function SleepTrackerPro() {
                                 <Clock className="w-6 h-6 mx-auto mb-2 text-cyan-200" />
                             </motion.div>
                             <div className="font-bold text-lg">{sleepHours.toFixed(1)}س</div>
-                            <div className="text-[10px] text-white/70">المدة</div>
+                            <div className="text-xs text-white/70">المدة</div>
                         </motion.div>
                     </motion.div>
                 ) : (
@@ -465,7 +465,7 @@ export default function SleepTrackerPro() {
 
             {/* Sleep Phases Card */}
             <motion.div
-                className="bg-white rounded-2xl p-5 shadow-lg"
+                className="bg-white dark:bg-slate-800/80 rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
@@ -506,7 +506,7 @@ export default function SleepTrackerPro() {
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-3">
                 <motion.div
-                    className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 text-center shadow-lg"
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                     whileHover={{ y: -3, scale: 1.02 }}
                 >
                     <motion.div
@@ -516,11 +516,11 @@ export default function SleepTrackerPro() {
                         <TrendingUp className="w-7 h-7 mx-auto mb-2 text-indigo-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-indigo-700">{avgScore}</div>
-                    <div className="text-[10px] text-indigo-600 font-medium">متوسط الدرجة</div>
+                    <div className="text-xs text-indigo-600 font-medium">متوسط الدرجة</div>
                 </motion.div>
 
                 <motion.div
-                    className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 text-center shadow-lg"
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                     whileHover={{ y: -3, scale: 1.02 }}
                 >
                     <motion.div
@@ -530,11 +530,11 @@ export default function SleepTrackerPro() {
                         <Clock className="w-7 h-7 mx-auto mb-2 text-purple-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-purple-700">{avgHours.toFixed(1)}س</div>
-                    <div className="text-[10px] text-purple-600 font-medium">متوسط المدة</div>
+                    <div className="text-xs text-purple-600 font-medium">متوسط المدة</div>
                 </motion.div>
 
                 <motion.div
-                    className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-4 text-center shadow-lg"
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                     whileHover={{ y: -3, scale: 1.02 }}
                 >
                     <motion.div
@@ -544,13 +544,13 @@ export default function SleepTrackerPro() {
                         <Zap className="w-7 h-7 mx-auto mb-2 text-red-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-red-700">{weeklyDebt.toFixed(1)}س</div>
-                    <div className="text-[10px] text-red-600 font-medium">دين النوم</div>
+                    <div className="text-xs text-red-600 font-medium">دين النوم</div>
                 </motion.div>
             </div>
 
             {/* Weekly Chart */}
             <motion.div
-                className="bg-white rounded-2xl p-5 shadow-lg"
+                className="bg-white dark:bg-slate-800/80 rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -591,10 +591,10 @@ export default function SleepTrackerPro() {
                                         <span className="text-slate-300 text-xs">-</span>
                                     )}
                                 </motion.div>
-                                <span className="text-[9px] text-slate-500 font-medium">
+                                <span className="text-xs text-slate-500 font-medium">
                                     {hours > 0 ? `${hours.toFixed(1)}س` : '-'}
                                 </span>
-                                <span className={`text-[10px] ${isYesterday ? 'text-purple-600 font-bold' : 'text-slate-500'}`}>
+                                <span className={`text-xs ${isYesterday ? 'text-purple-600 font-bold' : 'text-slate-500'}`}>
                                     {day.label}
                                 </span>
                             </div>
@@ -605,7 +605,7 @@ export default function SleepTrackerPro() {
 
             {/* Bedtime Recommendation */}
             <motion.div
-                className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 flex items-center gap-4 shadow-lg"
+                className="bg-indigo-50/80 dark:bg-indigo-900/15 rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-indigo-100/50 dark:border-indigo-800/20"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
@@ -627,7 +627,7 @@ export default function SleepTrackerPro() {
 
             {/* AI Sleep Analysis */}
             <motion.div
-                className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200 shadow-lg"
+                className="bg-violet-50/80 dark:bg-violet-900/15 rounded-2xl p-4 border border-purple-100/50 dark:border-purple-800/20 shadow-sm"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
@@ -756,7 +756,7 @@ export default function SleepTrackerPro() {
                                         >
                                             {q.emoji}
                                         </motion.span>
-                                        <span className={`text-[10px] font-medium ${q.value === quality ? 'text-white' : 'text-slate-600'}`}>
+                                        <span className={`text-xs font-medium ${q.value === quality ? 'text-white' : 'text-slate-600'}`}>
                                             {q.label}
                                         </span>
                                     </motion.button>

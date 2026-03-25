@@ -58,10 +58,10 @@ export default function OrderTracker({ order }: OrderTrackerProps) {
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
             {/* Header */}
-            <div className="p-5 bg-gradient-to-l from-[#2D9B83]/5 to-transparent border-b border-slate-100 dark:border-slate-700">
+            <div className="p-5 bg-gradient-to-l from-primary/5 to-transparent border-b border-slate-100 dark:border-slate-700">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <ShoppingBag className="w-5 h-5 text-[#2D9B83]" />
+                        <ShoppingBag className="w-5 h-5 text-primary" />
                         <h3 className="font-bold text-slate-800 dark:text-white">طلب #{order.orderNumber}</h3>
                     </div>
                     <span className="text-xs text-slate-400">{order.date}</span>
@@ -89,7 +89,7 @@ export default function OrderTracker({ order }: OrderTrackerProps) {
                                 <div className="flex flex-col items-center">
                                     <motion.div
                                         className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 transition-all ${isCompleted
-                                                ? 'bg-[#2D9B83] shadow-lg shadow-[#2D9B83]/25'
+                                                ? 'bg-primary shadow-lg shadow-primary/25'
                                                 : 'bg-slate-100 dark:bg-slate-700'
                                             }`}
                                         initial={{ scale: 0, opacity: 0 }}
@@ -101,7 +101,7 @@ export default function OrderTracker({ order }: OrderTrackerProps) {
                                     {!isLast && (
                                         <div className="relative w-0.5 h-12 bg-slate-100 dark:bg-slate-700">
                                             <motion.div
-                                                className="absolute top-0 left-0 w-full bg-[#2D9B83]"
+                                                className="absolute top-0 left-0 w-full bg-primary"
                                                 initial={{ height: 0 }}
                                                 animate={{ height: isCompleted ? '100%' : '0%' }}
                                                 transition={{ delay: idx * 0.15 + 0.3, duration: 0.4 }}
@@ -124,7 +124,7 @@ export default function OrderTracker({ order }: OrderTrackerProps) {
                                         {step.label}
                                         {isCurrent && (
                                             <motion.span
-                                                className="inline-block mr-2 w-2 h-2 rounded-full bg-[#2D9B83]"
+                                                className="inline-block mr-2 w-2 h-2 rounded-full bg-primary"
                                                 animate={{ opacity: [1, 0.3, 1] }}
                                                 transition={{ duration: 1.5, repeat: Infinity }}
                                             />
@@ -162,7 +162,7 @@ export default function OrderTracker({ order }: OrderTrackerProps) {
                     )}
                     <div className="flex justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
                         <span className="font-bold text-slate-800 dark:text-white">الإجمالي</span>
-                        <span className="font-bold text-[#2D9B83]">{order.total} ر.س</span>
+                        <span className="font-bold text-primary">{order.total} ر.س</span>
                     </div>
                 </div>
             </div>

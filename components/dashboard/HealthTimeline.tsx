@@ -14,12 +14,12 @@ export default function HealthTimeline({ events = defaultEvents }) {
         <div className="glass rounded-3xl p-6">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-slate-800">رحلتك العلاجية</h3>
-                <span className="text-sm text-[#2D9B83] font-medium">٦٠٪ مكتمل</span>
+                <span className="text-sm text-primary font-medium">٦٠٪ مكتمل</span>
             </div>
 
             <div className="relative">
                 {/* Timeline line */}
-                <div className="absolute right-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#2D9B83] via-[#3FB39A] to-slate-200" />
+                <div className="absolute right-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary-light to-slate-200" />
 
                 <div className="space-y-6">
                     {events.map((event, index) => (
@@ -50,7 +50,7 @@ export default function HealthTimeline({ events = defaultEvents }) {
                                     }`}>
                                     <div className="flex items-start justify-between">
                                         <div>
-                                            <h4 className={`font-semibold ${event.current ? 'text-[#2D9B83]' : 'text-slate-700'
+                                            <h4 className={`font-semibold ${event.current ? 'text-primary' : 'text-slate-700'
                                                 }`}>
                                                 {event.title}
                                             </h4>

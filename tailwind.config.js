@@ -27,7 +27,9 @@ module.exports = {
             },
             // Typography
             fontFamily: {
-                cairo: ['Cairo', 'sans-serif'],
+                sans: ['Tajawal', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                tajawal: ['Tajawal', 'Inter', 'sans-serif'],
+                inter: ['Inter', 'Tajawal', 'sans-serif'],
             },
             fontSize: {
                 'xs': '0.75rem',
@@ -76,6 +78,20 @@ module.exports = {
                 'modal': '300',
                 'popover': '400',
                 'tooltip': '500',
+            },
+            keyframes: {
+                shimmer: {
+                    '0%': { transform: 'translateX(-100%)' },
+                    '100%': { transform: 'translateX(100%)' },
+                },
+                'gradient-x': {
+                    '0%, 100%': { backgroundPosition: '0% 50%' },
+                    '50%': { backgroundPosition: '100% 50%' },
+                },
+            },
+            animation: {
+                shimmer: 'shimmer 3s ease-in-out infinite',
+                'gradient-x': 'gradient-x 3s ease infinite',
             },
         },
     },

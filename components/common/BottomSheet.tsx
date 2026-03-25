@@ -4,6 +4,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useHaptic } from '@/lib/HapticFeedback';
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ export default function BottomSheet({
 }: BottomSheetProps) {
     const [currentSnap, setCurrentSnap] = useState(0);
     const sheetRef = useRef<HTMLDivElement>(null);
+    const { selection } = useHaptic();
 
     const handleDragEnd = useCallback((_: any, info: PanInfo) => {
         const velocity = info.velocity.y;
@@ -31,29 +33,36 @@ export default function BottomSheet({
 
         // Fast swipe down → close
         if (velocity > 500 || offset > 150) {
+            selection();
             onClose();
             return;
         }
 
         // Fast swipe up → expand to max snap
         if (velocity < -500) {
-            setCurrentSnap(snapPoints.length - 1);
+            if (currentSnap !== snapPoints.length - 1) {
+                selection();
+                setCurrentSnap(snapPoints.length - 1);
+            }
             return;
         }
 
         // Otherwise snap to nearest point based on position
         if (offset > 50) {
             if (currentSnap > 0) {
+                selection();
                 setCurrentSnap(currentSnap - 1);
             } else {
+                selection();
                 onClose();
             }
         } else if (offset < -50) {
             if (currentSnap < snapPoints.length - 1) {
+                selection();
                 setCurrentSnap(currentSnap + 1);
             }
         }
-    }, [currentSnap, onClose, snapPoints]);
+    }, [currentSnap, onClose, snapPoints, selection]);
 
     const sheetHeight = snapPoints[currentSnap] || 50;
 

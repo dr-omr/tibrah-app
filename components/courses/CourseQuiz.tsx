@@ -151,7 +151,7 @@ export default function CourseQuiz({
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <HelpCircle className="w-5 h-5 text-[#2D9B83]" />
+                    <HelpCircle className="w-5 h-5 text-primary" />
                     <h3 className="font-bold text-slate-800 dark:text-white">{title}</h3>
                 </div>
                 <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -162,7 +162,7 @@ export default function CourseQuiz({
             {/* Progress Bar */}
             <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                 <motion.div
-                    className="h-full bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] rounded-full"
+                    className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.3 }}
@@ -187,7 +187,7 @@ export default function CourseQuiz({
                         {currentQuestion.options.map((option, idx) => {
                             const isSelected = selectedOption === idx;
                             const isCorrect = idx === currentQuestion.correctIndex;
-                            let optionStyle = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#2D9B83]';
+                            let optionStyle = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary';
 
                             if (isAnswered) {
                                 if (isCorrect) {
@@ -198,7 +198,7 @@ export default function CourseQuiz({
                                     optionStyle = 'bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 opacity-50';
                                 }
                             } else if (isSelected) {
-                                optionStyle = 'bg-[#2D9B83]/10 border-2 border-[#2D9B83]';
+                                optionStyle = 'bg-primary/10 border-2 border-primary';
                             }
 
                             return (

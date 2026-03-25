@@ -42,7 +42,7 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }: { onSubmit
     const RatingRow = ({ label, value, onChange, emojis, icon: Icon }: { label: string; value: number; onChange: (v: number) => void; emojis?: string[]; icon: any }) => (
         <div className="bg-white p-4 rounded-2xl border border-slate-100">
             <div className="flex items-center gap-2 mb-3">
-                <Icon className="w-5 h-5 text-[#2D9B83]" />
+                <Icon className="w-5 h-5 text-primary" />
                 <span className="font-medium text-slate-700">{label}</span>
             </div>
             <div className="flex justify-between gap-2">
@@ -52,7 +52,7 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }: { onSubmit
                         type="button"
                         onClick={() => onChange(r)}
                         className={`flex-1 h-12 rounded-xl text-2xl flex items-center justify-center transition-all ${value === r
-                            ? 'bg-[#2D9B83]/10 text-[#2D9B83] ring-2 ring-[#2D9B83] scale-110'
+                            ? 'bg-primary/10 text-primary ring-2 ring-primary scale-110'
                             : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                             }`}
                     >
@@ -70,7 +70,7 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }: { onSubmit
             <div className="flex p-1 bg-slate-100 rounded-2xl mx-4">
                 <button
                     onClick={() => setActiveSection('checkin')}
-                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activeSection === 'checkin' ? 'bg-white text-[#2D9B83] shadow-sm' : 'text-slate-500'
+                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activeSection === 'checkin' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'
                         }`}
                 >
                     تسجيل يومي ☀️
@@ -117,7 +117,7 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }: { onSubmit
                         />
                     </div>
 
-                    <Button type="submit" className="w-full h-14 rounded-2xl bg-[#2D9B83] hover:bg-[#1E7A66] text-white font-bold text-lg shadow-lg shadow-[#2D9B83]/20">
+                    <Button type="submit" className="w-full h-14 rounded-2xl bg-primary hover:bg-[#1E7A66] text-white font-bold text-lg shadow-lg shadow-primary/20">
                         حفظ التسجيل اليومي
                     </Button>
                 </form>
@@ -137,7 +137,7 @@ export default function JournalView({ onSubmitLog, onSubmitSymptom }: { onSubmit
                                 <Badge
                                     key={s}
                                     variant="outline"
-                                    className="cursor-pointer hover:bg-[#2D9B83] hover:text-white py-1.5 px-3"
+                                    className="cursor-pointer hover:bg-primary hover:text-white py-1.5 px-3"
                                     onClick={() => setSymptomData({ ...symptomData, symptom: s })}
                                 >
                                     {s}

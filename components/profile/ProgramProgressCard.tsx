@@ -89,7 +89,7 @@ export default function ProgramProgressCard({
                 <div className="relative">
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] rounded-full transition-all duration-700"
+                            className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-700"
                             style={{ width: `${progressPercentage}%` }}
                         />
                     </div>
@@ -120,7 +120,7 @@ export default function ProgramProgressCard({
             {/* Expand Button */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-center gap-2 py-3 text-[#2D9B83] hover:bg-[#2D9B83]/5 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 text-primary hover:bg-primary/5 transition-colors"
             >
                 <span className="text-sm font-medium">
                     {isExpanded ? 'إخفاء التفاصيل' : 'عرض المهام اليومية'}
@@ -143,7 +143,7 @@ export default function ProgramProgressCard({
                                 onClick={() => setSelectedDay(day.day)}
                                 className={`flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all
                                     ${selectedDay === day.day
-                                        ? 'bg-[#2D9B83] text-white'
+                                        ? 'bg-primary text-white'
                                         : day.completed
                                             ? 'bg-green-100 text-green-700'
                                             : 'bg-slate-100 text-slate-600'

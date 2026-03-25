@@ -190,8 +190,8 @@ export default function HealthVitalsCard({ vitals = defaultVitals, onSaveVital }
                             </div>
 
                             {/* Edit Hint */}
-                            <div className="absolute inset-0 bg-[#2D9B83]/0 group-hover:bg-[#2D9B83]/5 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                <Plus className="w-6 h-6 text-[#2D9B83]" />
+                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                <Plus className="w-6 h-6 text-primary" />
                             </div>
                         </button>
                     );
@@ -232,7 +232,7 @@ export default function HealthVitalsCard({ vitals = defaultVitals, onSaveVital }
                         </Button>
                         <Button
                             onClick={handleSave}
-                            className="flex-1 bg-[#2D9B83] hover:bg-[#2D9B83]/90"
+                            className="flex-1 bg-primary hover:bg-primary/90"
                         >
                             حفظ
                         </Button>

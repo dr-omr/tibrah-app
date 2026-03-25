@@ -161,7 +161,7 @@ export default function HealthMetricsCard({
                     <CircularProgress value={sleepHours} max={sleepGoal} color="#6366F1" size={70}>
                         <span className="text-sm font-bold text-indigo-600">{sleepHours}h</span>
                     </CircularProgress>
-                    <p className="text-center text-[10px] text-slate-400 mt-2">
+                    <p className="text-center text-xs text-slate-400 mt-2">
                         {sleepHours >= sleepGoal ? '👏 ممتاز!' : `ينقصك ${(sleepGoal - sleepHours).toFixed(1)} ساعة`}
                     </p>
                 </motion.div>
@@ -180,7 +180,7 @@ export default function HealthMetricsCard({
                     <CircularProgress value={steps} max={stepsGoal} color="#10B981" size={70}>
                         <span className="text-sm font-bold text-green-600">{(steps / 1000).toFixed(1)}k</span>
                     </CircularProgress>
-                    <p className="text-center text-[10px] text-slate-400 mt-2">
+                    <p className="text-center text-xs text-slate-400 mt-2">
                         الهدف: {(stepsGoal / 1000)}k خطوة
                     </p>
                 </motion.div>
@@ -208,7 +208,7 @@ export default function HealthMetricsCard({
                             </motion.button>
                         ))}
                     </div>
-                    <p className="text-center text-[10px] text-slate-400">
+                    <p className="text-center text-xs text-slate-400">
                         {mood === 'happy' ? 'يومك رائع! 🌟' : mood === 'sad' ? 'بكرة أحلى 💪' : 'يوم عادي 🌤️'}
                     </p>
                 </motion.div>

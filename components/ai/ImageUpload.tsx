@@ -59,7 +59,7 @@ export function ImageUpload({ onImageSelected, isLoading }: ImageUploadProps) {
                         variant="ghost"
                         size="icon"
                         disabled={isLoading}
-                        className="text-slate-500 hover:text-[#2D9B83] hover:bg-[#2D9B83]/10 rounded-full transition-all"
+                        className="text-slate-500 hover:text-primary hover:bg-primary/10 rounded-full transition-all"
                         onClick={() => fileInputRef.current?.click()}
                     >
                         <ImageIcon className="w-6 h-6" />
@@ -69,7 +69,7 @@ export function ImageUpload({ onImageSelected, isLoading }: ImageUploadProps) {
                         variant="ghost"
                         size="icon"
                         disabled={isLoading}
-                        className="text-slate-500 hover:text-[#2D9B83] hover:bg-[#2D9B83]/10 rounded-full transition-all md:hidden"
+                        className="text-slate-500 hover:text-primary hover:bg-primary/10 rounded-full transition-all md:hidden"
                         onClick={() => {
                             // Trigger camera on mobile
                             if (fileInputRef.current) {

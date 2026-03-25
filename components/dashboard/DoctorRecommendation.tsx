@@ -82,7 +82,7 @@ export default function DoctorRecommendations({ recommendations = [] }) {
                         <p className="text-sm text-slate-500">{sampleRecommendations.length} توصية نشطة</p>
                     </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-[#2D9B83]">
+                <Button variant="ghost" size="sm" className="text-primary">
                     عرض الكل
                     <ArrowLeft className="w-4 h-4 mr-1" />
                 </Button>
@@ -110,7 +110,7 @@ export default function DoctorRecommendations({ recommendations = [] }) {
                                         <h4 className={`font-semibold ${rec.status === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                                             {rec.title}
                                         </h4>
-                                        <Badge className={`${priConfig.color} border-0 text-[10px]`}>
+                                        <Badge className={`${priConfig.color} border-0 text-xs`}>
                                             {priConfig.label}
                                         </Badge>
                                     </div>

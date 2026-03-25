@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     Activity, Plus, TrendingUp, TrendingDown, Minus,
     Calendar, AlertTriangle, CheckCircle, Heart
@@ -40,6 +41,8 @@ const getBPStatus = (systolic: number, diastolic: number) => {
 
 export default function BloodPressureTracker() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
     const today = format(new Date(), 'yyyy-MM-dd');
 
     const [showForm, setShowForm] = useState(false);
@@ -49,11 +52,13 @@ export default function BloodPressureTracker() {
 
     // Load readings
     const { data: readings = [] } = useQuery<BPReading[]>({
-        queryKey: ['bloodPressure'],
+        queryKey: ['bloodPressure', userId],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DailyLog.list('-date', 14);
+                const logs = await db.entities.DailyLog.listForUser(userId || '');
                 return logs
+                    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .slice(0, 14)
                     .filter((log: Record<string, unknown>) => log.blood_pressure)
                     .map((log: Record<string, unknown>) => ({
                         id: log.id as string,
@@ -66,7 +71,8 @@ export default function BloodPressureTracker() {
             } catch {
                 return [];
             }
-        }
+        },
+        enabled: !!userId,
     });
 
     const latestReading = readings[0];
@@ -83,7 +89,7 @@ export default function BloodPressureTracker() {
             const dia = parseInt(diastolic);
             const pul = pulse ? parseInt(pulse) : null;
 
-            const logs = await db.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
             const data = {
                 date: today,
                 blood_pressure: {
@@ -97,7 +103,7 @@ export default function BloodPressureTracker() {
             if (logs?.[0]) {
                 await db.entities.DailyLog.update(logs[0].id as string, data);
             } else {
-                await db.entities.DailyLog.create(data);
+                await db.entities.DailyLog.createForUser(userId || '', data);
             }
         },
         onSuccess: () => {
@@ -249,7 +255,7 @@ export default function BloodPressureTracker() {
                                         style={{ height: `${(reading.diastolic / 180) * 60}px` }}
                                     />
                                 </div>
-                                <span className="text-[9px] text-slate-400 mt-1">
+                                <span className="text-xs text-slate-400 mt-1">
                                     {format(new Date(reading.date), 'dd/MM')}
                                 </span>
                             </div>

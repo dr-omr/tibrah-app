@@ -234,6 +234,12 @@ export const aiClient = {
      * @param context - Optional additional context
      */
     async analyzeHealth(type: string, data: any, context?: any) {
+        // Quick offline check before fetching
+        if (typeof window !== 'undefined' && !navigator.onLine) {
+            console.warn(`[AI Client] 🚫 Offline: Could not analyze ${type}`);
+            throw new Error('أنت غير متصل بالإنترنت. يرجى التحقق من اتصالك والمحاولة مرة أخرى.');
+        }
+
         try {
             console.log(`[AI Client] 🧠 Running AI analysis: ${type}...`);
             const response = await fetch('/api/ai-analyze', {
@@ -252,7 +258,20 @@ export const aiClient = {
             return result.data;
         } catch (error: any) {
             console.error(`[AI Client] ❌ Analysis Error (${type}):`, error);
-            throw error;
+            
+            // Provide user-friendly error messages based on the error type
+            if (error.message?.includes('429') || error.message?.includes('طلبات كثيرة')) {
+                 throw new Error('عذراً، هناك ضغط كبير على الخادم. يرجى الانتظار دقيقة والمحاولة مرة أخرى.');
+            }
+            if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+                 throw new Error('تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.');
+            }
+            if (error.message?.includes('API key')) {
+                 throw new Error('خدمة التحليل غير متوفرة حالياً بسبب مشكلة في الإعدادات.');
+            }
+            
+            // Throw a generic but friendly error if none of the specific cases match
+            throw new Error(error.message || 'عذراً، حدث خطأ غير متوقع أثناء عملية التحليل. يرجى المحاولة مرة أخرى لاحقاً.');
         }
     },
 

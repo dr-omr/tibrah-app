@@ -45,7 +45,7 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
                 {!isOpen ? (
                     <Button
                         onClick={() => setIsOpen(true)}
-                        className="w-full bg-gradient-to-r from-[#2D9B83]/10 to-[#3FB39A]/10 hover:from-[#2D9B83]/20 hover:to-[#3FB39A]/20 text-[#2D9B83] border-0 shadow-none justify-between"
+                        className="w-full bg-gradient-to-r from-primary/10 to-primary-light/10 hover:from-primary/20 hover:to-primary-light/20 text-primary border-0 shadow-none justify-between"
                     >
                         <span className="flex items-center gap-2">
                             <Bot className="w-5 h-5" />
@@ -54,11 +54,11 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
                         <MessageSquare className="w-4 h-4 opacity-50" />
                     </Button>
                 ) : (
-                    <div className="glass rounded-2xl overflow-hidden border border-[#2D9B83]/20 shadow-lg animate-in slide-in-from-top-2 duration-300">
+                    <div className="glass rounded-2xl overflow-hidden border border-primary/20 shadow-lg animate-in slide-in-from-top-2 duration-300">
                         {/* Header */}
-                        <div className="bg-[#2D9B83]/5 p-3 flex items-center justify-between border-b border-[#2D9B83]/10">
+                        <div className="bg-primary/5 p-3 flex items-center justify-between border-b border-primary/10">
                             <div className="flex items-center gap-2">
-                                <Bot className="w-5 h-5 text-[#2D9B83]" />
+                                <Bot className="w-5 h-5 text-primary" />
                                 <span className="font-bold text-sm text-slate-700">{title}</span>
                             </div>
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
@@ -81,7 +81,7 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${msg.role === 'user'
-                                        ? 'bg-[#2D9B83] text-white rounded-tr-none'
+                                        ? 'bg-primary text-white rounded-tr-none'
                                         : 'bg-white text-slate-700 shadow-sm rounded-tl-none'
                                         }`}>
                                         {msg.content}
@@ -92,7 +92,7 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
                             {loading && (
                                 <div className="flex justify-start">
                                     <div className="bg-white rounded-2xl rounded-tl-none px-4 py-2 shadow-sm">
-                                        <Loader2 className="w-4 h-4 text-[#2D9B83] animate-spin" />
+                                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
                                     </div>
                                 </div>
                             )}
@@ -108,7 +108,7 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
                                 className="flex-1 text-sm h-10"
                                 disabled={loading}
                             />
-                            <Button type="submit" size="icon" disabled={loading || !input.trim()} className="h-10 w-10 bg-[#2D9B83]">
+                            <Button type="submit" size="icon" disabled={loading || !input.trim()} className="h-10 w-10 bg-primary">
                                 <Send className="w-4 h-4" />
                             </Button>
                         </form>

@@ -1,0 +1,100 @@
+/* === Therapeutic Session Card === */
+.therapeutic-card {
+    transition: transform 200ms ease, box-shadow 300ms ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.therapeutic-card:active {
+    transform: scale(0.98);
+}
+
+.therapeutic-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.dark .therapeutic-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* === Hero Wave Animation === */
+@keyframes therapeutic-wave {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(-5px) translateY(3px); }
+    50% { transform: translateX(0) translateY(-3px); }
+    75% { transform: translateX(5px) translateY(2px); }
+}
+
+.animate-therapeutic-wave {
+    animation: therapeutic-wave 8s ease-in-out infinite;
+}
+
+/* === Circular Progress Ring === */
+.progress-ring-track {
+    stroke: rgba(255, 255, 255, 0.1);
+    fill: none;
+}
+
+.progress-ring-fill {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+}
+
+/* === Fade-Breathe for Playing State === */
+@keyframes fade-breathe {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.03); }
+}
+
+.animate-fade-breathe {
+    animation: fade-breathe 3s ease-in-out infinite;
+}
+
+/* === Evidence Badge Pulse === */
+@keyframes evidence-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3); }
+    50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+}
+
+.evidence-badge-supported {
+    animation: evidence-pulse 3s ease-in-out infinite;
+}
+
+/* === Session Complete Glow === */
+@keyframes session-complete-glow {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-session-complete {
+    animation: session-complete-glow 0.5s ease-out forwards;
+}
+
+/* === Category Chip Scroll Fade === */
+.category-scroll-fade {
+    mask-image: linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+/* === Mobile Therapeutic Player Overrides === */
+@media (max-width: 640px) {
+    .therapeutic-player-sheet {
+        max-height: 90vh !important;
+    }
+    
+    .therapeutic-player-sheet .progress-ring-container {
+        width: 160px;
+        height: 160px;
+    }
+}
+
+/* === Player Ambient Glow === */
+.player-glow {
+    box-shadow: 0 0 60px rgba(168, 85, 247, 0.15),
+                0 0 120px rgba(236, 72, 153, 0.08);
+}
+
+.dark .player-glow {
+    box-shadow: 0 0 80px rgba(168, 85, 247, 0.2),
+                0 0 160px rgba(236, 72, 153, 0.1);
+}

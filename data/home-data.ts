@@ -82,8 +82,8 @@ export const SERVICES_DATA: ServiceData[] = [
         promoPrice: '35',
         currency: 'ر.س',
         duration: '45-60 دقيقة',
-        gradient: 'from-[#2D9B83] to-[#3FB39A]',
-        bgGradient: 'from-[#2D9B83]/10 to-[#3FB39A]/10',
+        gradient: 'from-primary to-primary-light',
+        bgGradient: 'from-primary/10 to-primary-light/10',
         shadowColor: 'shadow-emerald-200/50',
         page: 'BookAppointment',
         badge: 'عرض إطلاق',
@@ -195,8 +195,8 @@ export const PROGRAMS_DATA: ProgramData[] = [
             'تقييم شامل في نهاية البرنامج',
             'محتوى تعليمي مخصص'
         ],
-        color: 'from-[#2D9B83] to-[#3FB39A]',
-        bgColor: 'from-[#2D9B83]/10 to-[#3FB39A]/10',
+        color: 'from-primary to-primary-light',
+        bgColor: 'from-primary/10 to-primary-light/10',
         cta: 'ابدأ التحول الحقيقي'
     },
     {

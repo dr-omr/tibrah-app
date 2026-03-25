@@ -24,7 +24,7 @@ export default function DailyCheckIn({ open, onOpenChange, onSubmit }: { open: b
     const RatingSelector = ({ label, icon: Icon, value, onChange, emojis }: { label: string; icon: any; value: number; onChange: (v: number) => void; emojis?: string[] }) => (
         <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-                <Icon className="w-5 h-5 text-[#2D9B83]" />
+                <Icon className="w-5 h-5 text-primary" />
                 <span className="font-medium text-slate-700">{label}</span>
             </div>
             <div className="flex justify-between gap-2">
@@ -34,7 +34,7 @@ export default function DailyCheckIn({ open, onOpenChange, onSubmit }: { open: b
                         type="button"
                         onClick={() => onChange(rating)}
                         className={`flex-1 py-3 rounded-xl text-2xl transition-all ${value === rating
-                            ? 'bg-[#2D9B83] shadow-md scale-110'
+                            ? 'bg-primary shadow-md scale-110'
                             : 'bg-slate-100 hover:bg-slate-200'
                             }`}
                     >

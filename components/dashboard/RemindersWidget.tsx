@@ -66,7 +66,7 @@ export default function RemindersWidget({ reminders = [] }) {
 
                 <Sheet open={showSheet} onOpenChange={setShowSheet}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-[#2D9B83]">
+                        <Button variant="ghost" size="sm" className="text-primary">
                             إدارة
                             <ChevronLeft className="w-4 h-4 mr-1" />
                         </Button>
@@ -142,7 +142,7 @@ export default function RemindersWidget({ reminders = [] }) {
             {/* Quick Action */}
             <Button
                 variant="outline"
-                className="w-full mt-4 rounded-xl border-dashed border-slate-300 text-slate-500 hover:border-[#2D9B83] hover:text-[#2D9B83]"
+                className="w-full mt-4 rounded-xl border-dashed border-slate-300 text-slate-500 hover:border-primary hover:text-primary"
             >
                 <Plus className="w-4 h-4 ml-2" />
                 إضافة تذكير سريع

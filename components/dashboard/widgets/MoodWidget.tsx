@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Brain, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -21,6 +22,8 @@ const MOODS = [
 export const MoodWidget = ({ currentMood, logId, onUpdate }: MoodWidgetProps) => {
     const [selectedMood, setSelectedMood] = useState<number | undefined>(currentMood);
     const [isUpdating, setIsUpdating] = useState(false);
+    const { user } = useAuth();
+    const userId = user?.id;
     const today = format(new Date(), 'yyyy-MM-dd');
 
     const handleMoodSelect = async (score: number) => {
@@ -33,7 +36,7 @@ export const MoodWidget = ({ currentMood, logId, onUpdate }: MoodWidgetProps) =>
             if (logId) {
                 await db.entities.DailyLog.update(logId, { mood_score: score });
             } else {
-                await db.entities.DailyLog.create({
+                await db.entities.DailyLog.createForUser(userId || '', {
                     date: today,
                     mood_score: score
                 });

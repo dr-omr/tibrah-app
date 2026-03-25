@@ -35,7 +35,7 @@ export default function TodayView({ metrics, dailyLogs, symptoms, onUpdate, onLo
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Today Summary Card */}
             <div className="glass rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2D9B83] to-[#3FB39A]" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-light" />
 
                 <div className="flex justify-between items-start mb-4">
                     <div>
@@ -55,32 +55,32 @@ export default function TodayView({ metrics, dailyLogs, symptoms, onUpdate, onLo
                         <span className="block text-lg font-bold text-slate-700">
                             {metrics.find(m => m.metric_type === 'sleep_hours' && m.recorded_at.startsWith(today))?.value || '--'}
                         </span>
-                        <span className="text-[10px] text-slate-400">ساعات نوم</span>
+                        <span className="text-xs text-slate-400">ساعات نوم</span>
                     </div>
                     <div className="bg-slate-50 rounded-2xl p-3 text-center">
                         <Activity className="w-5 h-5 mx-auto mb-1 text-emerald-500" />
                         <span className="block text-lg font-bold text-slate-700">
                             {todaysLog?.exercise?.duration_minutes || 0}
                         </span>
-                        <span className="text-[10px] text-slate-400">دقيقة نشاط</span>
+                        <span className="text-xs text-slate-400">دقيقة نشاط</span>
                     </div>
                     <div className="bg-slate-50 rounded-2xl p-3 text-center">
                         <Smile className="w-5 h-5 mx-auto mb-1 text-amber-500" />
                         <span className="block text-lg font-bold text-slate-700">
                             {getMoodValue(todaysLog) ? `${getMoodValue(todaysLog)}/5` : '--'}
                         </span>
-                        <span className="text-[10px] text-slate-400">المزاج</span>
+                        <span className="text-xs text-slate-400">المزاج</span>
                     </div>
                 </div>
 
                 {/* Quick Actions */}
                 <div className="flex gap-3">
                     {!todaysLog ? (
-                        <Button onClick={onCheckIn} className="flex-1 bg-[#2D9B83] hover:bg-[#1E7A66] text-white rounded-xl h-12 shadow-lg shadow-[#2D9B83]/20">
+                        <Button onClick={onCheckIn} className="flex-1 bg-primary hover:bg-[#1E7A66] text-white rounded-xl h-12 shadow-lg shadow-primary/20">
                             تسجيل يومي
                         </Button>
                     ) : (
-                        <Button onClick={onCheckIn} variant="outline" className="flex-1 border-dashed border-slate-300 text-slate-500 hover:text-[#2D9B83] hover:border-[#2D9B83] rounded-xl h-12">
+                        <Button onClick={onCheckIn} variant="outline" className="flex-1 border-dashed border-slate-300 text-slate-500 hover:text-primary hover:border-primary rounded-xl h-12">
                             تحديث اليوم
                         </Button>
                     )}

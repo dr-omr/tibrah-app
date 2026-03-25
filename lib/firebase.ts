@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -19,6 +19,8 @@ const firebaseConfig = {
 let app: any = null;
 let auth: any = null;
 let googleProvider: any = null;
+let facebookProvider: any = null;
+let appleProvider: any = null;
 let db: any = null;
 let storage: any = null;
 
@@ -26,9 +28,19 @@ try {
     if (firebaseConfig.apiKey && firebaseConfig.projectId) {
         app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
         auth = getAuth(app);
+        
         googleProvider = new GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
+        
+        facebookProvider = new FacebookAuthProvider();
+        facebookProvider.addScope('email');
+        facebookProvider.addScope('public_profile');
+        
+        appleProvider = new OAuthProvider('apple.com');
+        appleProvider.addScope('email');
+        appleProvider.addScope('name');
+        
         db = getFirestore(app);
         storage = getStorage(app);
     } else {
@@ -38,7 +50,7 @@ try {
     console.warn('⚠️ Firebase initialization failed:', error);
 }
 
-export { auth, googleProvider, db, storage };
+export { auth, googleProvider, facebookProvider, appleProvider, db, storage };
 export default app;
 
 // Analytics (only in browser)

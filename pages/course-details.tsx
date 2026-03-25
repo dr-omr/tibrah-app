@@ -101,7 +101,7 @@ export default function CourseDetails() {
 
     // Guard: Wait for router to be ready
     if (!router.isReady) {
-        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div></div>;
     }
 
     const queryClient = useQueryClient();
@@ -141,7 +141,7 @@ export default function CourseDetails() {
     const enrollMutation = useMutation({
         mutationFn: async () => {
             if (!user?.email) throw new Error("User not logged in");
-            return await db.entities.CourseEnrollment.create({
+            return await db.entities.CourseEnrollment.createForUser(user?.id || '', {
                 course_id: courseId,
                 progress_percentage: 0,
                 completed_lessons: [],
@@ -253,7 +253,7 @@ export default function CourseDetails() {
             <div className="px-6 py-6 space-y-6">
                 {/* Instructor */}
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center">
                         <span className="text-white font-bold">د.ع</span>
                     </div>
                     <div>
@@ -289,7 +289,7 @@ export default function CourseDetails() {
                     <div className="glass rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-2">
                             <span className="font-medium text-slate-700">تقدمك في الدورة</span>
-                            <span className="text-[#2D9B83] font-bold">{enrollment.progress_percentage}%</span>
+                            <span className="text-primary font-bold">{enrollment.progress_percentage}%</span>
                         </div>
                         <Progress value={enrollment.progress_percentage} className="h-2" />
                     </div>
@@ -305,7 +305,7 @@ export default function CourseDetails() {
                             className="w-full flex items-center justify-between p-4 hover:bg-slate-50"
                         >
                             <div className="flex items-center gap-3">
-                                <BookOpen className="w-5 h-5 text-[#2D9B83]" />
+                                <BookOpen className="w-5 h-5 text-primary" />
                                 <span className="font-medium">جميع الدروس</span>
                                 <Badge variant="outline" className="text-xs">{lessons.length} درس</Badge>
                             </div>
@@ -326,7 +326,7 @@ export default function CourseDetails() {
                                         >
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-green-100 text-green-600' :
                                                 isLocked ? 'bg-slate-100 text-slate-400' :
-                                                    'bg-[#2D9B83]/10 text-[#2D9B83]'
+                                                    'bg-primary/10 text-primary'
                                                 }`}>
                                                 {isCompleted ? <CheckCircle className="w-4 h-4" /> :
                                                     isLocked ? <Lock className="w-4 h-4" /> :
@@ -339,7 +339,7 @@ export default function CourseDetails() {
                                                     <Clock className="w-3 h-3" />
                                                     <span>{lesson.duration_minutes} دقيقة</span>
                                                     {lesson.is_free_preview && (
-                                                        <Badge className="bg-blue-100 text-blue-600 border-0 text-[10px]">معاينة مجانية</Badge>
+                                                        <Badge className="bg-blue-100 text-blue-600 border-0 text-xs">معاينة مجانية</Badge>
                                                     )}
                                                 </div>
                                             </div>

@@ -14,7 +14,7 @@ export default function HealthReport({ userHealth }) {
         initial: { label: 'المرحلة الأولى', desc: 'التقييم والتشخيص', color: 'bg-blue-500' },
         testing: { label: 'مرحلة الفحوصات', desc: 'جمع البيانات', color: 'bg-purple-500' },
         detox: { label: 'مرحلة الديتوكس', desc: 'تنظيف الجسم', color: 'bg-orange-500' },
-        healing: { label: 'مرحلة الشفاء', desc: 'إعادة البناء', color: 'bg-[#2D9B83]' },
+        healing: { label: 'مرحلة الشفاء', desc: 'إعادة البناء', color: 'bg-primary' },
         maintenance: { label: 'مرحلة الاستمرارية', desc: 'الحفاظ على الصحة', color: 'bg-green-500' },
     };
 
@@ -77,7 +77,7 @@ export default function HealthReport({ userHealth }) {
             </div>
 
             {/* Main Score Card */}
-            <div className="bg-gradient-to-br from-[#2D9B83]/10 to-[#3FB39A]/10 rounded-2xl p-4 mb-5">
+            <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 rounded-2xl p-4 mb-5">
                 <div className="flex items-center justify-between mb-3">
                     <span className="text-slate-600 font-medium">مؤشر الصحة العامة</span>
                     <div className="flex items-center gap-1 text-green-600">
@@ -86,7 +86,7 @@ export default function HealthReport({ userHealth }) {
                     </div>
                 </div>
                 <div className="flex items-end gap-2 mb-2">
-                    <span className="text-5xl font-bold text-[#2D9B83]">{vitalityScore}</span>
+                    <span className="text-5xl font-bold text-primary">{vitalityScore}</span>
                     <span className="text-slate-500 text-lg mb-2">/ ١٠٠</span>
                 </div>
                 <div className="w-full h-3 bg-white rounded-full overflow-hidden">

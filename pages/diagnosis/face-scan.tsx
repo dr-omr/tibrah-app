@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Camera, Upload, ArrowRight, ScanFace, Sparkles, AlertCircle, RefreshCw, ChevronRight, Waves, Zap, Activity } from 'lucide-react';
+import { Camera as LucideCamera, Upload, ArrowRight, ScanFace, Sparkles, AlertCircle, RefreshCw, ChevronRight, Waves, Zap, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { aiClient } from '@/components/ai/aiClient';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { createPageUrl } from '../../utils';
 
@@ -30,6 +32,38 @@ export default function FaceScanPage() {
             analyzeFace(base64, file.type);
         };
         reader.readAsDataURL(file);
+    };
+
+    const handleCapacitorCamera = async (useCamera: boolean) => {
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const photo = await Camera.getPhoto({
+                    quality: 90,
+                    allowEditing: false,
+                    resultType: CameraResultType.Base64,
+                    source: useCamera ? CameraSource.Camera : CameraSource.Photos,
+                });
+                
+                if (photo.base64String) {
+                    const mimeType = `image/${photo.format}`;
+                    const base64 = `data:${mimeType};base64,${photo.base64String}`;
+                    setImage(base64);
+                    analyzeFace(base64, mimeType);
+                }
+            } catch (error) {
+                console.error('Camera interaction failed or cancelled:', error);
+            }
+        } else {
+            // Web fallback
+            if (fileInputRef.current) {
+                if (useCamera) {
+                    fileInputRef.current.setAttribute('capture', 'user'); // Front camera
+                } else {
+                    fileInputRef.current.removeAttribute('capture');
+                }
+                fileInputRef.current.click();
+            }
+        }
     };
 
     const analyzeFace = async (base64: string, mimeType: string) => {
@@ -59,7 +93,7 @@ export default function FaceScanPage() {
             </Head>
 
             {/* Background Gradients */}
-            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-[#2D9B83]/10 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
 
             {/* Header */}
             <div className="relative z-10 p-6 flex items-center justify-between">
@@ -68,7 +102,7 @@ export default function FaceScanPage() {
                     <span>عودة</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <ScanFace className="w-6 h-6 text-[#2D9B83]" />
+                    <ScanFace className="w-6 h-6 text-primary" />
                     <span className="font-bold text-slate-800">ماسح الوجه الذكي</span>
                 </div>
             </div>
@@ -91,8 +125,8 @@ export default function FaceScanPage() {
                     {/* Scanning Animation Overlay */}
                     {analyzing && (
                         <div className="absolute inset-0 z-30 bg-black/40 flex flex-col items-center justify-center backdrop-blur-sm">
-                            <div className="w-full h-1 bg-[#2D9B83] shadow-[0_0_20px_#2D9B83] absolute top-0 animate-[scan_2s_ease-in-out_infinite]" />
-                            <Sparkles className="w-10 h-10 text-[#2D9B83] animate-pulse mb-4" />
+                            <div className="w-full h-1 bg-primary shadow-[0_0_20px_var(--primary)] absolute top-0 animate-[scan_2s_ease-in-out_infinite]" />
+                            <Sparkles className="w-10 h-10 text-primary animate-pulse mb-4" />
                             <p className="text-white font-medium animate-pulse">جاري تحليل ملامح الوجه...</p>
                         </div>
                     )}
@@ -100,31 +134,25 @@ export default function FaceScanPage() {
                     {!image ? (
                         /* Upload State */
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-white/50">
-                            <div className="w-20 h-20 rounded-full bg-[#2D9B83]/10 flex items-center justify-center mb-6 animate-pulse-soft">
-                                <ScanFace className="w-10 h-10 text-[#2D9B83]" />
+                            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 animate-pulse-soft">
+                                <ScanFace className="w-10 h-10 text-primary" />
                             </div>
 
                             <div className="space-y-4 w-full">
                                 <Button
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() => handleCapacitorCamera(false)}
                                     className="w-full h-14 text-lg rounded-xl gradient-primary text-white shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
                                 >
                                     <Upload className="w-5 h-5 ml-2" />
-                                    رفع صورة
+                                    رفع صورة من المعرض
                                 </Button>
 
                                 <Button
-                                    onClick={() => {
-                                        if (fileInputRef.current) {
-                                            fileInputRef.current.setAttribute('capture', 'user'); // Front camera
-                                            fileInputRef.current.click();
-                                            setTimeout(() => fileInputRef.current?.removeAttribute('capture'), 500);
-                                        }
-                                    }}
+                                    onClick={() => handleCapacitorCamera(true)}
                                     variant="outline"
-                                    className="w-full h-14 text-lg rounded-xl border-[#2D9B83] text-[#2D9B83] hover:bg-[#2D9B83]/5"
+                                    className="w-full h-14 text-lg rounded-xl border-primary text-primary hover:bg-primary/5 shadow-sm"
                                 >
-                                    <Camera className="w-5 h-5 ml-2" />
+                                    <LucideCamera className="w-5 h-5 ml-2" />
                                     كاميرا أمامية
                                 </Button>
                             </div>

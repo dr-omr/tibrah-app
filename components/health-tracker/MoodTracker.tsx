@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     Smile, Meh, Frown, Heart, Angry,
     TrendingUp, Calendar, ChevronLeft, Plus, Sparkles,
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
 import { aiClient } from '@/components/ai/aiClient';
+import { motion } from 'framer-motion';
 
 interface MoodEntry {
     mood: number;
@@ -42,6 +44,7 @@ const EMOTIONS = [
 ];
 
 export default function MoodTracker() {
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -54,10 +57,10 @@ export default function MoodTracker() {
 
     // Load today's mood
     const { data: todaysMood } = useQuery({
-        queryKey: ['moodLog', today],
+        queryKey: ['moodLog', today, user?.id],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today, user_id: user?.id });
                 const log = logs?.[0];
                 if (log?.mood_score) {
                     return {
@@ -70,12 +73,13 @@ export default function MoodTracker() {
             } catch {
                 return null;
             }
-        }
+        },
+        enabled: !!user?.id,
     });
 
     // Load mood history
     const { data: moodHistory = [] } = useQuery({
-        queryKey: ['moodHistory'],
+        queryKey: ['moodHistory', user?.id],
         queryFn: async () => {
             const last7Days = [];
             for (let i = 6; i >= 0; i--) {
@@ -84,7 +88,7 @@ export default function MoodTracker() {
             }
 
             const logs = await db.entities.DailyLog.filter({
-                date: { $in: last7Days }
+                date: { $in: last7Days }, user_id: user?.id
             });
 
             return last7Days.map(date => {
@@ -95,7 +99,8 @@ export default function MoodTracker() {
                     day: format(new Date(date), 'EEE', { locale: ar })
                 };
             });
-        }
+        },
+        enabled: !!user?.id,
     });
 
     const toggleEmotion = (emotionId: string) => {
@@ -108,7 +113,7 @@ export default function MoodTracker() {
 
     const saveMoodMutation = useMutation({
         mutationFn: async () => {
-            const logs = await db.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today, user_id: user?.id });
             const data = {
                 mood_score: selectedMood,
                 emotions: selectedEmotions,
@@ -119,7 +124,7 @@ export default function MoodTracker() {
             if (logs?.[0]) {
                 await db.entities.DailyLog.update(logs[0].id as string, data);
             } else {
-                await db.entities.DailyLog.create(data);
+                await db.entities.DailyLog.createForUser(user?.id || '', data);
             }
         },
         onSuccess: () => {
@@ -170,26 +175,58 @@ export default function MoodTracker() {
 
             {/* Today's Mood Display */}
             {todaysMood && !showForm && (
-                <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-5 border border-pink-100">
-                    <div className="flex items-center gap-4">
-                        <span className="text-5xl">
-                            {MOODS.find(m => m.value === todaysMood.mood)?.emoji || '😐'}
-                        </span>
-                        <div>
-                            <p className="font-bold text-lg text-slate-800">
-                                {MOODS.find(m => m.value === todaysMood.mood)?.label || 'عادي'}
-                            </p>
-                            <p className="text-sm text-slate-500">
-                                سجلت اليوم: {todaysMood.emotions.map(e =>
-                                    EMOTIONS.find(em => em.id === e)?.emoji
-                                ).join(' ')}
-                            </p>
+                <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-[var(--radius-xl)] p-5 border border-pink-100 shadow-sm relative overflow-hidden">
+                        <div className="flex items-center gap-4">
+                            <span className="text-5xl drop-shadow-md">
+                                {MOODS.find(m => m.value === todaysMood.mood)?.emoji || '😐'}
+                            </span>
+                            <div>
+                                <p className="font-black text-lg text-slate-800">
+                                    {MOODS.find(m => m.value === todaysMood.mood)?.label || 'عادي'}
+                                </p>
+                                <p className="text-sm font-medium text-slate-500 mt-0.5">
+                                    {todaysMood.emotions.length > 0 ? 'المشاعر: ' : ''}
+                                    {todaysMood.emotions.map(e =>
+                                        EMOTIONS.find(em => em.id === e)?.label
+                                    ).join('، ')}
+                                </p>
+                            </div>
                         </div>
+                        {todaysMood.note && (
+                            <div className="mt-4 text-sm text-slate-700 bg-white/60 rounded-xl p-3 border border-pink-200/50 backdrop-blur-sm">
+                                <p className="italic">"{todaysMood.note}"</p>
+                            </div>
+                        )}
                     </div>
-                    {todaysMood.note && (
-                        <p className="mt-3 text-sm text-slate-600 bg-white/50 rounded-xl p-3">
-                            "{todaysMood.note}"
-                        </p>
+
+                    {/* Auto-suggest Cross-sell */}
+                    {(todaysMood.mood <= 2 || todaysMood.emotions.some(e => ['anxious', 'stressed', 'sad', 'tired', 'angry'].includes(e))) && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ type: 'spring', delay: 0.2 }}
+                            className="bg-white border border-rose-100/50 rounded-[var(--radius-xl)] p-4 shadow-[var(--shadow-premium)] flex gap-4"
+                        >
+                            <div className="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0 border border-orange-100">
+                                <span className="text-3xl">🌿</span>
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5 mb-1">
+                                    <Sparkles className="w-4 h-4 text-orange-500" />
+                                    اقتراح مخصص لحالتك
+                                </h4>
+                                <p className="text-xs text-slate-500 leading-relaxed mb-3">
+                                    يبدو أنك مستنزف اليوم. مستخلص <span className="font-bold text-slate-700">الأشواغاندا النقي (KSM-66)</span> أثبت فعاليته في خفض هرمون التوتر وتحسين المزاج.
+                                </p>
+                                <Button 
+                                    className="w-full h-9 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md shadow-orange-600/20"
+                                    onClick={() => window.location.href = '/product-details?id=ashwagandha-ksm66'}
+                                >
+                                    اكتشف العلاج في الصيدلية
+                                </Button>
+                            </div>
+                        </motion.div>
                     )}
                 </div>
             )}
@@ -211,7 +248,7 @@ export default function MoodTracker() {
                                         }`}
                                 >
                                     <span className="text-3xl">{mood.emoji}</span>
-                                    <span className="text-[10px] text-slate-500 mt-1">{mood.label}</span>
+                                    <span className="text-xs text-slate-500 mt-1">{mood.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -226,7 +263,7 @@ export default function MoodTracker() {
                                     key={emotion.id}
                                     onClick={() => toggleEmotion(emotion.id)}
                                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-all ${selectedEmotions.includes(emotion.id)
-                                        ? 'bg-[#2D9B83] text-white'
+                                        ? 'bg-primary text-white'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                         }`}
                                 >
@@ -272,7 +309,7 @@ export default function MoodTracker() {
             <div className="glass rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-slate-700">مزاجك هذا الأسبوع</h3>
-                    <div className="flex items-center gap-1 text-sm text-[#2D9B83]">
+                    <div className="flex items-center gap-1 text-sm text-primary">
                         <Sparkles className="w-4 h-4" />
                         <span>المتوسط: {averageMood}</span>
                     </div>
@@ -290,7 +327,7 @@ export default function MoodTracker() {
                                         : '#E2E8F0'
                                 }}
                             />
-                            <span className="text-[10px] text-slate-500">{day.day}</span>
+                            <span className="text-xs text-slate-500">{day.day}</span>
                         </div>
                     ))}
                 </div>

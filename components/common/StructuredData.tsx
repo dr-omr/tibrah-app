@@ -242,3 +242,134 @@ export const SERVICES_SCHEMA_DATA = {
         duration: 'P90D',
     },
 };
+
+// ═══════════════════════════════════════════════════════════════
+// Schema.org/Course — for the Courses page
+// ═══════════════════════════════════════════════════════════════
+
+export interface CourseSchemaData {
+    name: string;
+    description: string;
+    provider?: string;
+    duration?: string;
+    price?: string;
+    priceCurrency?: string;
+    isFree?: boolean;
+    level?: 'Beginner' | 'Intermediate' | 'Advanced';
+}
+
+export function CourseSchema({ course }: { course: CourseSchemaData }) {
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'Course',
+        name: course.name,
+        description: course.description,
+        provider: {
+            '@type': 'Organization',
+            name: course.provider || CLINIC_DATA.name,
+            url: CLINIC_DATA.url,
+        },
+        ...(course.duration && { duration: course.duration }),
+        ...(course.level && {
+            educationalLevel: course.level,
+        }),
+        offers: {
+            '@type': 'Offer',
+            price: course.isFree ? '0' : (course.price || '0'),
+            priceCurrency: course.priceCurrency || 'SAR',
+            availability: 'https://schema.org/InStock',
+        },
+        inLanguage: 'ar',
+    };
+
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Page-level Structured Data components
+// ═══════════════════════════════════════════════════════════════
+
+/** Structured Data for /services page */
+export function ServicesPageStructuredData() {
+    const allServices: ServiceData[] = [
+        SERVICES_SCHEMA_DATA.diagnostic,
+        SERVICES_SCHEMA_DATA.program21,
+        SERVICES_SCHEMA_DATA.program90,
+    ];
+
+    return (
+        <Head>
+            <MedicalBusinessSchema />
+            {allServices.map((service, idx) => (
+                <ServiceSchema key={idx} service={service} />
+            ))}
+        </Head>
+    );
+}
+
+/** Structured Data for /about page */
+export function AboutPageStructuredData() {
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'AboutPage',
+        mainEntity: {
+            '@type': 'Physician',
+            name: 'د. عمر العماد',
+            jobTitle: 'استشاري الطب الوظيفي والتكاملي',
+            description: 'طبيب عام متخصص في الطب الوظيفي والتكاملي ،يركز على علاج جذور الأمراض بدلاً من الأعراض',
+            url: CLINIC_DATA.url,
+            telephone: CLINIC_DATA.telephone,
+            email: CLINIC_DATA.email,
+            medicalSpecialty: ['Functional Medicine', 'Integrative Medicine'],
+            worksFor: {
+                '@type': 'MedicalBusiness',
+                name: CLINIC_DATA.name,
+                url: CLINIC_DATA.url,
+            },
+            sameAs: CLINIC_DATA.sameAs,
+        },
+    };
+
+    return (
+        <Head>
+            <MedicalBusinessSchema />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            />
+        </Head>
+    );
+}
+
+/** Structured Data for /courses page (ItemList of courses) */
+export function CoursesPageStructuredData() {
+    const courses: CourseSchemaData[] = [
+        {
+            name: 'أساسيات الطب الوظيفي',
+            description: 'دورة شاملة لتعلم مبادئ الطب الوظيفي والتكاملي من الصفر',
+            level: 'Beginner',
+            isFree: true,
+        },
+        {
+            name: 'التغذية العلاجية المتقدمة',
+            description: 'تعلم كيف تستخدم التغذية كأداة علاجية فعالة للحالات المزمنة',
+            level: 'Intermediate',
+            price: '150',
+            priceCurrency: 'SAR',
+        },
+    ];
+
+    return (
+        <Head>
+            {courses.map((course, idx) => (
+                <CourseSchema key={idx} course={course} />
+            ))}
+        </Head>
+    );
+}
+

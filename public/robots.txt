@@ -1,0 +1,18 @@
+# Tibrah — Digital Health Clinic
+# https://tibrah.com
+
+User-agent: *
+Allow: /
+
+# Disallow private/authenticated routes
+Disallow: /profile
+Disallow: /settings
+Disallow: /medical-file
+Disallow: /my-appointments
+Disallow: /admin-dashboard
+Disallow: /admin
+Disallow: /checkout
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://tibrah.com/sitemap.xml

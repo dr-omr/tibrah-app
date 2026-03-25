@@ -86,9 +86,26 @@ const slideVariants = {
     right: "animate-in slide-in-from-right",
 }
 
+import { motion, useAnimation, PanInfo } from "framer-motion"
+
 const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
     ({ className, children, side = "right", ...props }, ref) => {
         const { open, onOpenChange } = useSheet()
+        const controls = useAnimation()
+
+        // Handle the drag gesture end
+        const handleDragEnd = async (event: any, info: PanInfo) => {
+            const offsetThreshold = 100;
+            const velocityThreshold = 500;
+
+            // Only close if it's a bottom sheet being swiped down
+            if (side === "bottom" && (info.offset.y > offsetThreshold || info.velocity.y > velocityThreshold)) {
+                onOpenChange(false);
+            } else if (side === "bottom") {
+                // Animate back to original position
+                controls.start({ y: 0, transition: { type: "spring", bounce: 0, duration: 0.4 } });
+            }
+        }
 
         if (!open) return null
 
@@ -100,16 +117,25 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
                     onClick={() => onOpenChange(false)}
                 />
                 {/* Content */}
-                <div
+                <motion.div
                     ref={ref}
+                    drag={side === "bottom" ? "y" : false}
+                    dragConstraints={{ top: 0, bottom: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={handleDragEnd}
+                    animate={controls}
                     className={cn(
                         "fixed z-50 gap-4 bg-white p-6 shadow-lg transition ease-in-out",
                         sheetVariants[side],
                         slideVariants[side],
                         className
                     )}
-                    {...props}
+                    {...props as any}
                 >
+                    {/* Native-like Pull Handle for Bottom Sheets */}
+                    {side === "bottom" && (
+                        <div className="mx-auto w-12 h-1.5 bg-slate-300 rounded-full mb-4 opacity-50 absolute top-3 left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing" />
+                    )}
                     {children}
                     <button
                         onClick={() => onOpenChange(false)}
@@ -120,7 +146,7 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
                         </svg>
                         <span className="sr-only">Close</span>
                     </button>
-                </div>
+                </motion.div>
             </div>
         )
     }

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import {
     Flame, Timer, PersonStanding, TrendingUp, Target,
@@ -46,6 +47,8 @@ const DEFAULT_GOALS = {
 export default function ActivityFitnessPro() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
     const [showWorkoutSheet, setShowWorkoutSheet] = useState(false);
     const [selectedWorkout, setSelectedWorkout] = useState(WORKOUTS[0]);
     const [workoutDuration, setWorkoutDuration] = useState(30);
@@ -58,10 +61,10 @@ export default function ActivityFitnessPro() {
 
     // Fetch today's activity
     const { data: activity } = useQuery<ActivityData>({
-        queryKey: ['activityPro', today],
+        queryKey: ['activityPro', today, userId],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
                 const log = logs?.[0];
                 if (log) {
                     return {
@@ -80,6 +83,7 @@ export default function ActivityFitnessPro() {
                 return { ...DEFAULT_GOALS, moveCalories: 0, exerciseMinutes: 0, standHours: 0, steps: 0 };
             }
         },
+        enabled: !!userId,
     });
 
     const movePct = Math.min(100, ((activity?.moveCalories || 0) / (activity?.moveGoal || 500)) * 100);
@@ -104,7 +108,7 @@ export default function ActivityFitnessPro() {
             const newCalories = (activity?.moveCalories || 0) + calories;
             const newMinutes = (activity?.exerciseMinutes || 0) + workoutDuration;
 
-            const logs = await db.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
             const updateData = {
                 exercise: {
                     calories: newCalories,
@@ -116,7 +120,7 @@ export default function ActivityFitnessPro() {
             if (logs?.[0]) {
                 return db.entities.DailyLog.update(logs[0].id as string, updateData);
             }
-            return db.entities.DailyLog.create({ date: today, ...updateData });
+            return db.entities.DailyLog.createForUser(userId || '', { date: today, ...updateData });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['activityPro'] });
@@ -139,12 +143,12 @@ export default function ActivityFitnessPro() {
     const addStandHour = useMutation({
         mutationFn: async () => {
             const newHours = Math.min(24, (activity?.standHours || 0) + 1);
-            const logs = await db.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
 
             if (logs?.[0]) {
                 return db.entities.DailyLog.update(logs[0].id as string, { stand_hours: newHours });
             }
-            return db.entities.DailyLog.create({ date: today, stand_hours: newHours });
+            return db.entities.DailyLog.createForUser(userId || '', { date: today, stand_hours: newHours });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['activityPro'] });
@@ -377,8 +381,8 @@ export default function ActivityFitnessPro() {
                         >
                             <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${item.color} mx-auto mb-2`} />
                             <div className="text-lg font-bold">{item.value}{item.unit}</div>
-                            <div className="text-[10px] text-white/60">/{item.goal}{item.unit}</div>
-                            <div className="text-[9px] text-white/50 mt-1">{Math.round(item.progress)}%</div>
+                            <div className="text-xs text-white/60">/{item.goal}{item.unit}</div>
+                            <div className="text-xs text-white/50 mt-1">{Math.round(item.progress)}%</div>
                         </motion.div>
                     ))}
                 </div>
@@ -414,7 +418,7 @@ export default function ActivityFitnessPro() {
 
             {/* Steps Card - Interactive */}
             <motion.div
-                className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg overflow-hidden relative"
+                className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-sm overflow-hidden relative"
                 whileHover={{ scale: 1.01 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -493,7 +497,7 @@ export default function ActivityFitnessPro() {
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setShowWorkoutSheet(true)}
-                    className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-5 text-white text-right shadow-lg"
+                    className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-5 text-white text-right shadow-sm"
                 >
                     <motion.div
                         animate={{ rotate: [0, 10, -10, 0] }}
@@ -509,7 +513,7 @@ export default function ActivityFitnessPro() {
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => addStandHour.mutate()}
-                    className="bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl p-5 text-white text-right shadow-lg"
+                    className="bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl p-5 text-white text-right shadow-sm"
                 >
                     <motion.div
                         animate={{ y: [0, -5, 0] }}
@@ -558,7 +562,7 @@ export default function ActivityFitnessPro() {
                                             {workout.emoji}
                                         </motion.span>
                                         <span className="text-sm font-bold">{workout.name}</span>
-                                        <span className={`text-[10px] block ${selectedWorkout.id === workout.id ? 'text-white/80' : 'text-slate-500'
+                                        <span className={`text-xs block ${selectedWorkout.id === workout.id ? 'text-white/80' : 'text-slate-500'
                                             }`}>
                                             {workout.caloriesPerMin} سعرة/د
                                         </span>

@@ -99,7 +99,7 @@ export default function MoodSymptomPicker({
                             >
                                 {mood.emoji}
                             </motion.span>
-                            <span className="text-[10px] font-medium text-slate-600">
+                            <span className="text-xs font-medium text-slate-600">
                                 {mood.label}
                             </span>
                         </motion.button>
@@ -128,7 +128,7 @@ export default function MoodSymptomPicker({
                                 }`}
                         >
                             <span className="text-2xl mb-1">{symptom.emoji}</span>
-                            <span className="text-[10px] font-medium text-slate-600 text-center">
+                            <span className="text-xs font-medium text-slate-600 text-center">
                                 {symptom.label}
                             </span>
                         </motion.button>

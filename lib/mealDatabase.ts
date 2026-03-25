@@ -37,6 +37,32 @@ async function loadData(): Promise<void> {
     if (_cachedFoods && _cachedConditions && _cachedRecipes) return;
     if (_loadPromise) return _loadPromise;
 
+    if (typeof window === 'undefined') {
+        // Server-side (during Next.js build)
+        const fs = await import('fs');
+        const path = await import('path');
+        const filePath = path.join(process.cwd(), 'public', 'data', 'meal-database.json');
+        
+        _loadPromise = new Promise((resolve) => {
+            try {
+                const fileContents = fs.readFileSync(filePath, 'utf8');
+                const data = JSON.parse(fileContents);
+                _cachedFoods = data.foodDatabase;
+                _cachedConditions = data.healthConditions;
+                _cachedRecipes = data.recipeDatabase;
+                resolve();
+            } catch (err) {
+                console.error('Failed to read meal database file:', err);
+                _cachedFoods = [];
+                _cachedConditions = [];
+                _cachedRecipes = [];
+                resolve();
+            }
+        });
+        return _loadPromise;
+    }
+
+    // Client-side
     _loadPromise = fetch('/data/meal-database.json')
         .then(res => res.json())
         .then(data => {

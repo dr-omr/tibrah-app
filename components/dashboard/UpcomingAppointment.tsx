@@ -18,7 +18,7 @@ export default function UpcomingAppointments({ appointments = [] }) {
         <div className="glass rounded-3xl p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-800">المواعيد القادمة</h3>
-                <Button variant="ghost" size="sm" className="text-[#2D9B83] text-sm">
+                <Button variant="ghost" size="sm" className="text-primary text-sm">
                     عرض الكل
                     <ArrowLeft className="w-4 h-4 mr-1" />
                 </Button>
@@ -41,7 +41,7 @@ export default function UpcomingAppointments({ appointments = [] }) {
 
                                 <div className="flex items-center gap-4 mt-3">
                                     <div className="flex items-center gap-1 text-sm text-slate-600">
-                                        <Calendar className="w-4 h-4 text-[#2D9B83]" />
+                                        <Calendar className="w-4 h-4 text-primary" />
                                         <span>{appointment.date}</span>
                                     </div>
                                     <div className="flex items-center gap-1 text-sm text-slate-600">

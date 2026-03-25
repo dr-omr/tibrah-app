@@ -35,15 +35,15 @@ export default function FrequencyCard({ frequency, onShowDetails }: FrequencyCar
     return (
         <div
             onClick={onShowDetails}
-            className={`glass p-4 rounded-2xl transition-all duration-300 group hover:shadow-glow cursor-pointer border-l-4 ${isThisPlaying ? 'border-l-[#2D9B83] bg-white/60' : 'border-l-transparent'}`}
+            className={`glass p-4 rounded-2xl transition-all duration-300 group hover:shadow-glow cursor-pointer border-l-4 ${isThisPlaying ? 'border-l-primary bg-white/60' : 'border-l-transparent'}`}
         >
             <div className="flex items-center gap-4">
                 {/* Play Button Icon */}
                 <button
                     onClick={handlePlayClick}
                     className={`rounded-full w-12 h-12 flex items-center justify-center transition-all ${isThisPlaying
-                        ? 'bg-[#2D9B83] text-white shadow-lg scale-110'
-                        : 'bg-slate-100 text-slate-400 group-hover:bg-[#2D9B83] group-hover:text-white'
+                        ? 'bg-primary text-white shadow-lg scale-110'
+                        : 'bg-slate-100 text-slate-400 group-hover:bg-primary group-hover:text-white'
                         }`}
                 >
                     {isThisPlaying ? (
@@ -56,10 +56,10 @@ export default function FrequencyCard({ frequency, onShowDetails }: FrequencyCar
                 {/* Info */}
                 <div className="flex-1">
                     <div className="flex justify-between items-start mb-1">
-                        <h3 className={`font-bold text-lg ${isThisPlaying ? 'text-[#2D9B83]' : 'text-slate-800'}`}>
+                        <h3 className={`font-bold text-lg ${isThisPlaying ? 'text-primary' : 'text-slate-800'}`}>
                             {frequency.name}
                         </h3>
-                        <span className="text-xl font-bold text-slate-200 group-hover:text-[#2D9B83]/20 transition-colors">
+                        <span className="text-xl font-bold text-slate-200 group-hover:text-primary/20 transition-colors">
                             {frequency.frequency_hz} Hz
                         </span>
                     </div>
@@ -70,11 +70,11 @@ export default function FrequencyCard({ frequency, onShowDetails }: FrequencyCar
 
                     {/* Tags */}
                     <div className="flex gap-2">
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-slate-100 text-slate-500">
+                        <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500">
                             {frequency.category}
                         </span>
                         {frequency.benefits?.[0] && (
-                            <span className="text-[10px] px-2 py-1 rounded-full bg-[#2D9B83]/10 text-[#2D9B83]">
+                            <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
                                 {frequency.benefits[0]}
                             </span>
                         )}

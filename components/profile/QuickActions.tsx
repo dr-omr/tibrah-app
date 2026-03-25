@@ -45,14 +45,14 @@ export default function QuickActions({ notifications = [], upcomingAppointment }
                 <h3 className="font-bold text-slate-800 mb-4">إجراءات سريعة</h3>
                 <div className="grid grid-cols-2 gap-2">
                     <Link href={createPageUrl('BookAppointment')}>
-                        <Button variant="outline" className="w-full h-auto py-3 flex flex-col gap-1 hover:bg-[#2D9B83]/5 hover:border-[#2D9B83]/20">
-                            <Calendar className="w-5 h-5 text-[#2D9B83]" />
+                        <Button variant="outline" className="w-full h-auto py-3 flex flex-col gap-1 hover:bg-primary/5 hover:border-primary/20">
+                            <Calendar className="w-5 h-5 text-primary" />
                             <span className="text-xs text-slate-600">حجز موعد</span>
                         </Button>
                     </Link>
                     <Link href={createPageUrl('HealthTracker')}>
-                        <Button variant="outline" className="w-full h-auto py-3 flex flex-col gap-1 hover:bg-[#2D9B83]/5 hover:border-[#2D9B83]/20">
-                            <Plus className="w-5 h-5 text-[#2D9B83]" />
+                        <Button variant="outline" className="w-full h-auto py-3 flex flex-col gap-1 hover:bg-primary/5 hover:border-primary/20">
+                            <Plus className="w-5 h-5 text-primary" />
                             <span className="text-xs text-slate-600">تسجيل قياس</span>
                         </Button>
                     </Link>
@@ -61,7 +61,7 @@ export default function QuickActions({ notifications = [], upcomingAppointment }
 
             {/* Upcoming Appointment */}
             {upcomingAppointment && (
-                <div className="bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] rounded-2xl p-4 text-white">
+                <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl p-4 text-white">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold">موعدك القادم</h3>
                         <Calendar className="w-5 h-5 text-white/70" />
@@ -82,7 +82,7 @@ export default function QuickActions({ notifications = [], upcomingAppointment }
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-slate-800">الإشعارات</h3>
-                    <Badge variant="secondary" className="bg-[#2D9B83]/10 text-[#2D9B83]">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">
                         {displayNotifications.length}
                     </Badge>
                 </div>
@@ -100,7 +100,7 @@ export default function QuickActions({ notifications = [], upcomingAppointment }
                         </div>
                     ))}
                 </div>
-                <Button variant="ghost" className="w-full mt-3 text-[#2D9B83] hover:bg-[#2D9B83]/5">
+                <Button variant="ghost" className="w-full mt-3 text-primary hover:bg-primary/5">
                     عرض الكل
                 </Button>
             </div>
@@ -110,10 +110,10 @@ export default function QuickActions({ notifications = [], upcomingAppointment }
                 <h3 className="font-bold text-slate-800 mb-3">برنامج ٢١ يوم</h3>
                 <div className="flex items-center justify-between text-sm mb-2">
                     <span className="text-slate-500">التقدم</span>
-                    <span className="font-bold text-[#2D9B83]">اليوم ١٤</span>
+                    <span className="font-bold text-primary">اليوم ١٤</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] rounded-full transition-all duration-500" style={{ width: '66%' }} />
+                    <div className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-500" style={{ width: '66%' }} />
                 </div>
                 <p className="text-xs text-slate-400 mt-2 text-center">٧ أيام متبقية</p>
             </div>

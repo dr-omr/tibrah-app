@@ -220,7 +220,7 @@ export default function UserManagement({ users = defaultUsers, isLoading = false
                                 <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center text-white font-bold">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-bold">
                                                 {user.name.charAt(0)}
                                             </div>
                                             <div>

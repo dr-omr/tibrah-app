@@ -39,17 +39,17 @@ export default function LanguageToggle({ variant = 'button' }: LanguageTogglePro
                     onClick={toggle}
                 >
                     <motion.div
-                        className="w-6 h-6 bg-[#2D9B83] rounded-full flex items-center justify-center shadow-md"
+                        className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-md"
                         animate={{ x: language === 'ar' ? 0 : 32 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     >
-                        <span className="text-white text-[9px] font-bold">
+                        <span className="text-white text-xs font-bold">
                             {language === 'ar' ? 'ع' : 'E'}
                         </span>
                     </motion.div>
                     <div className="absolute inset-0 flex items-center justify-between px-2.5 pointer-events-none">
-                        <span className={`text-[10px] font-semibold ${language === 'ar' ? 'text-transparent' : 'text-slate-400 dark:text-slate-500'}`}>ع</span>
-                        <span className={`text-[10px] font-semibold ${language === 'en' ? 'text-transparent' : 'text-slate-400 dark:text-slate-500'}`}>E</span>
+                        <span className={`text-xs font-semibold ${language === 'ar' ? 'text-transparent' : 'text-slate-400 dark:text-slate-500'}`}>ع</span>
+                        <span className={`text-xs font-semibold ${language === 'en' ? 'text-transparent' : 'text-slate-400 dark:text-slate-500'}`}>E</span>
                     </div>
                 </div>
             </div>
@@ -63,7 +63,7 @@ export default function LanguageToggle({ variant = 'button' }: LanguageTogglePro
             onClick={toggle}
             whileTap={{ scale: 0.96 }}
         >
-            <Globe className="w-4 h-4 text-[#2D9B83]" />
+            <Globe className="w-4 h-4 text-primary" />
             <span>{language === 'ar' ? 'English' : 'العربية'}</span>
         </motion.button>
     );

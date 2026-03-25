@@ -7,6 +7,7 @@
 import React, { createContext, useContext, useCallback, ReactNode, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 // ═══════════════════════════════════════════════════════════════
@@ -65,12 +66,15 @@ interface CartProviderProps {
 
 export function CartProvider({ children }: CartProviderProps) {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
 
     // Fetch cart items
     const { data: rawItems = [], isLoading } = useQuery({
-        queryKey: ['cart'],
-        queryFn: () => db.entities.CartItem.list(),
+        queryKey: ['cart', userId],
+        queryFn: () => db.entities.CartItem.listForUser(userId || ''),
         staleTime: 30 * 1000, // 30 seconds
+        enabled: !!userId,
     });
 
     const items: CartItem[] = rawItems as CartItem[];
@@ -104,7 +108,7 @@ export function CartProvider({ children }: CartProviderProps) {
                 });
             }
 
-            return db.entities.CartItem.create({
+            return db.entities.CartItem.createForUser(userId || '', {
                 product_id: product.id,
                 product_name: product.name,
                 price: product.price,
@@ -115,6 +119,16 @@ export function CartProvider({ children }: CartProviderProps) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('تمت الإضافة للسلة ✅');
+            
+            // Reward Points for adding to cart
+            if (typeof window !== 'undefined') {
+                const savedRewards = JSON.parse(localStorage.getItem('tibrahRewards') || '{"points":0}');
+                savedRewards.points = (savedRewards.points || 0) + 50;
+                localStorage.setItem('tibrahRewards', JSON.stringify(savedRewards));
+                setTimeout(() => {
+                    toast.success('💎 +50 نقطة تمت إضافتها لمحفظتك');
+                }, 800);
+            }
         },
         onError: (error: Error) => {
             toast.error(error.message || 'حدث خطأ أثناء الإضافة');

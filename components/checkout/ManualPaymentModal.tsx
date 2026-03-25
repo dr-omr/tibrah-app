@@ -8,23 +8,29 @@ import { toast } from 'sonner';
 interface ManualPaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
-    method: 'jebh' | 'jawali' | 'floosak' | 'kuraimi';
+    method: 'jebh' | 'jawali' | 'floosak' | 'kuraimi' | 'stcpay' | 'stripe' | 'whatsapp_cod';
     amount: number;
     onConfirm: (transactionId: string) => void;
 }
 
-const WALLET_NUMBERS = {
-    kuraimi: '777088577',
-    jawali: '777088577',
-    floosak: '777088577',
-    jebh: '777088577'
+const WALLET_NUMBERS: Record<string, string> = {
+    kuraimi: '771447111',
+    jawali: '771447111',
+    floosak: '771447111',
+    jebh: '771447111',
+    stcpay: '771447111',
+    stripe: 'stripe_checkout',
+    whatsapp_cod: '771447111',
 };
 
-const LABELS = {
+const LABELS: Record<string, string> = {
     kuraimi: 'إم فلوس (الكريمي)',
     jawali: 'محفظة جوالي',
     floosak: 'محفظة فلوسك',
-    jebh: 'محفظة جيب'
+    jebh: 'محفظة جيب',
+    stcpay: 'STC Pay',
+    stripe: 'بطاقة ائتمان / PayPal',
+    whatsapp_cod: 'الدفع عند الاستلام',
 };
 
 export default function ManualPaymentModal({ isOpen, onClose, method, amount, onConfirm }: ManualPaymentModalProps) {
@@ -60,7 +66,7 @@ export default function ManualPaymentModal({ isOpen, onClose, method, amount, on
                     <div className="bg-slate-50 p-4 rounded-2xl space-y-4 border border-slate-100">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-slate-500">المبلغ المطلوب</span>
-                            <span className="font-bold text-[#2D9B83] text-lg">{amount} ر.س</span>
+                            <span className="font-bold text-primary text-lg">{amount} ر.س</span>
                         </div>
                         <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-dashed border-slate-200">
                             <div className="text-right">
@@ -91,7 +97,7 @@ export default function ManualPaymentModal({ isOpen, onClose, method, amount, on
 
                     <Button
                         onClick={handleSubmit}
-                        className="w-full bg-[#2D9B83] hover:bg-[#2D9B83]/90 text-white h-12 rounded-xl text-md font-bold"
+                        className="w-full bg-primary hover:bg-primary/90 text-white h-12 rounded-xl text-md font-bold"
                         disabled={!transactionId.trim() || isSubmitting}
                     >
                         {isSubmitting ? (

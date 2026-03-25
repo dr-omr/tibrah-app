@@ -16,15 +16,18 @@ const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || '';
 
 /**
  * Extract and verify the auth token from request headers
- * Expects: Authorization: Bearer <token> OR x-admin-token: <token>
+ * Expects: Authorization: Bearer <Firebase ID token> OR x-admin-token: <token>
+ * 
+ * SECURITY: Bearer tokens are verified via Firebase Admin SDK.
+ * Tokens that fail verification are REJECTED.
  */
-export function getAuthFromRequest(req: NextApiRequest): {
+export async function getAuthFromRequest(req: NextApiRequest): Promise<{
     authenticated: boolean;
     isAdmin: boolean;
     userId?: string;
     email?: string;
     authMethod: 'firebase' | 'local' | 'none';
-} {
+}> {
     // Check for admin token (used by admin dashboard)
     const adminToken = req.headers['x-admin-token'] as string;
     if (adminToken) {
@@ -41,20 +44,32 @@ export function getAuthFromRequest(req: NextApiRequest): {
         }
     }
 
-    // Check for local auth session token
+    // Verify Firebase ID token via Admin SDK
     const authHeader = req.headers['authorization'] as string;
     if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         if (token && token.length > 10) {
-            // For local auth, the token is a session token stored in localStorage
-            // We can't fully verify it server-side without a shared store,
-            // but we validate it exists and has correct format
-            return {
-                authenticated: true,
-                isAdmin: false, // Would need to check against stored sessions
-                userId: 'local-user',
-                authMethod: 'local',
-            };
+            try {
+                const { verifyIdToken } = await import('@/lib/firebaseAdmin');
+                const decoded = await verifyIdToken(token);
+                const email = (decoded.email || '').toLowerCase();
+                return {
+                    authenticated: true,
+                    isAdmin: ADMIN_EMAILS.includes(email),
+                    userId: decoded.uid,
+                    email,
+                    authMethod: 'firebase',
+                };
+            } catch (e) {
+                // Token verification failed — Firebase Admin may not be configured
+                // or token is invalid/expired. Fail closed.
+                console.warn('[AuthMiddleware] Bearer token verification failed:', (e as Error).message);
+                return {
+                    authenticated: false,
+                    isAdmin: false,
+                    authMethod: 'none',
+                };
+            }
         }
     }
 
@@ -72,7 +87,7 @@ export function requireAuth(
     handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
 ) {
     return async (req: NextApiRequest, res: NextApiResponse) => {
-        const auth = getAuthFromRequest(req);
+        const auth = await getAuthFromRequest(req);
 
         if (!auth.authenticated) {
             return res.status(401).json({
@@ -94,7 +109,7 @@ export function requireAdmin(
     handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
 ) {
     return async (req: NextApiRequest, res: NextApiResponse) => {
-        const auth = getAuthFromRequest(req);
+        const auth = await getAuthFromRequest(req);
 
         if (!auth.authenticated) {
             return res.status(401).json({

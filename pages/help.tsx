@@ -1,314 +1,295 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ArrowRight, HelpCircle, Search, ChevronDown, ChevronUp,
-    MessageCircle, Phone, Mail, Clock, BookOpen, Calendar,
-    CreditCard, Shield, Heart, Sparkles, ExternalLink
+    ArrowRight, Search, ChevronDown, ChevronUp,
+    MessageCircle, Phone, Calendar,
+    CreditCard, Shield, Heart, Sparkles, Brain, Loader2, Send
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-interface FAQItem {
-    question: string;
-    answer: string;
-    category: string;
-}
+import { haptic } from '@/lib/HapticFeedback';
+import { uiSounds } from '@/lib/uiSounds';
+import { db } from '@/lib/db';
 
 const faqCategories = [
-    { id: 'general', label: 'عام', icon: HelpCircle },
+    { id: 'all', label: 'الكل', icon: Sparkles },
     { id: 'appointments', label: 'المواعيد', icon: Calendar },
     { id: 'payments', label: 'الدفع', icon: CreditCard },
     { id: 'health', label: 'الصحة', icon: Heart },
     { id: 'account', label: 'الحساب', icon: Shield },
 ];
 
-const faqData: FAQItem[] = [
-    // General
-    {
-        question: 'ما هو طِبرَا؟',
-        answer: 'طِبرَا هي عيادة رقمية متخصصة في الطب الوظيفي والتكاملي. نقدم استشارات طبية متخصصة، برامج علاجية شخصية، ومتابعة مستمرة لتحقيق الصحة الشاملة.',
-        category: 'general'
-    },
-    {
-        question: 'ما هو الطب الوظيفي؟',
-        answer: 'الطب الوظيفي هو نهج طبي يركز على معالجة الأسباب الجذرية للأمراض بدلاً من علاج الأعراض فقط. نحلل الجسم ككل متكامل ونضع خطة علاجية شخصية تناسب احتياجاتك.',
-        category: 'general'
-    },
-    {
-        question: 'هل الخدمات متاحة لجميع الدول؟',
-        answer: 'نعم، جميع الاستشارات تتم عن بُعد عبر مكالمات الفيديو، لذا يمكنك الاستفادة من خدماتنا من أي مكان في العالم.',
-        category: 'general'
-    },
-    // Appointments
-    {
-        question: 'كيف أحجز موعداً؟',
-        answer: 'يمكنك حجز موعد من خلال الذهاب إلى صفحة "حجز موعد" واختيار نوع الجلسة، التاريخ والوقت المناسب، ثم إدخال بياناتك الشخصية وتأكيد الحجز.',
-        category: 'appointments'
-    },
-    {
-        question: 'ما هي أنواع الجلسات المتاحة؟',
-        answer: '1. الجلسة التشخيصية (45-60 دقيقة): تحليل شامل لحالتك الصحية.\n2. جلسة المتابعة (30 دقيقة): متابعة تقدمك.\n3. استشارة سريعة (15 دقيقة): لسؤال محدد.',
-        category: 'appointments'
-    },
-    {
-        question: 'هل يمكنني إلغاء أو تأجيل الموعد؟',
-        answer: 'نعم، يمكنك إلغاء أو تأجيل الموعد قبل 24 ساعة على الأقل من خلال التواصل معنا عبر واتساب.',
-        category: 'appointments'
-    },
-    {
-        question: 'هل يمكنني الحجز لنفس اليوم؟',
-        answer: 'نعم، يمكنك الحجز لنفس اليوم إذا كانت هناك أوقات متاحة. الاستشارة السريعة متاحة عادة في نفس اليوم.',
-        category: 'appointments'
-    },
-    // Payments
-    {
-        question: 'ما هي طرق الدفع المتاحة؟',
-        answer: 'نقبل الدفع عبر التحويل البنكي، الدفع الإلكتروني، أو من خلال خدمات الدفع المحلية. سيتم إرسال تفاصيل الدفع بعد تأكيد الحجز.',
-        category: 'payments'
-    },
-    {
-        question: 'ما هي أسعار الجلسات؟',
-        answer: 'الجلسة التشخيصية: 350 ر.ي\nجلسة المتابعة: 200 ر.ي\nالاستشارة السريعة: 100 ر.ي',
-        category: 'payments'
-    },
-    {
-        question: 'هل يمكنني استرداد المبلغ؟',
-        answer: 'يمكن استرداد المبلغ كاملاً إذا تم الإلغاء قبل 24 ساعة من الموعد. بعد ذلك، يتم خصم رسوم إدارية بسيطة.',
-        category: 'payments'
-    },
-    // Health
-    {
-        question: 'ما هي الحالات التي تعالجونها؟',
-        answer: 'نتعامل مع مجموعة واسعة من الحالات منها: مشاكل الجهاز الهضمي، الأمراض المناعية، اختلالات الهرمونات، التعب المزمن، مشاكل النوم، وغيرها.',
-        category: 'health'
-    },
-    {
-        question: 'هل تحتاجون تحاليل قبل الجلسة؟',
-        answer: 'يفضل إحضار أي تحاليل أو تقارير طبية سابقة إن وجدت، لكنها ليست إلزامية للجلسة الأولى. قد يُطلب منك إجراء تحاليل محددة لاحقاً.',
-        category: 'health'
-    },
-    {
-        question: 'هل العلاج طبيعي أم أدوية؟',
-        answer: 'نستخدم نهجاً تكاملياً يجمع بين التغذية العلاجية، المكملات الطبيعية، تعديل نمط الحياة، والأدوية عند الضرورة.',
-        category: 'health'
-    },
-    // Account
-    {
-        question: 'كيف أنشئ حساباً؟',
-        answer: 'يمكنك إنشاء حساب من خلال صفحة التسجيل بإدخال بريدك الإلكتروني وكلمة المرور، أو التسجيل بحساب جوجل.',
-        category: 'account'
-    },
-    {
-        question: 'هل بياناتي آمنة؟',
-        answer: 'نعم، نحن نلتزم بأعلى معايير الأمان والخصوصية. جميع بياناتك الصحية مشفرة ومحمية ولا يتم مشاركتها مع أي جهة خارجية.',
-        category: 'account'
-    },
-    {
-        question: 'كيف أغير كلمة المرور؟',
-        answer: 'يمكنك تغيير كلمة المرور من خلال الإعدادات > الأمان والخصوصية > تغيير كلمة المرور.',
-        category: 'account'
-    },
+const faqData = [
+    { question: 'ما هو طِبرَا وكيف يختلف عن العيادات التقليدية؟', answer: 'طِبرَا هي منصة رعاية شمولية تعتمد على الطب الوظيفي. نحن لا نعالج الأعراض، بل نبحث عن الجذر الأساسي للمشكلة (نفسي، جسدي، أو هرموني) ونبني خطة تعافي متكاملة.', category: 'general' },
+    { question: 'هل الجلسات تتم عن بُعد؟', answer: 'نعم، 100% من خدماتنا واستشاراتنا تتم عبر مكالمات فيديو آمنة، لنوفر لك أعلى مستويات الراحة والخصوصية من أي مكان بالعالم.', category: 'general' },
+    { question: 'كيف تعمل ميزة الكونسيرج الذكي؟', answer: 'الكونسيرج الذكي هو مرافقك الطبي المدعوم بالذكاء الاصطناعي، يراقب تقدمك، يجيب على استفساراتك اليومية، ويرسل تنبيهات للدكتور عمر عند ملاحظة أي تراجع في مؤشراتك الحيوية.', category: 'health' },
+    { question: 'هل يمكنني حجز موعد لنفس اليوم؟', answer: 'إذا كنت مشتركاً في (طِبرَا بلس) تتاح لك أولوية الحجز في نفس اليوم للحالات العاجلة. للمستخدمين العاديين، يعتمد الأمر على توفر مقاعد في الجدول.', category: 'appointments' },
+    { question: 'كم تستغرق الجلسة التشخيصية الأولى؟', answer: 'تستغرق الجلسة التشخيصية الأولى من 45 إلى 60 دقيقة. هدفها الغوص في تاريخك الطبي والنفسي بالكامل لرسم خارطة واضحة لرحلة التشافي.', category: 'appointments' },
+    { question: 'هل هناك سياسة استرداد؟', answer: 'نعم، تتيح لك سياسة طِبرَا استرداد كامل المبلغ في حال إلغاء الموعد قبل 24 ساعة من وقته المحدد.', category: 'payments' },
+    { question: 'كيف يتم توصيل المكملات من الصيدلية الذكية؟', answer: 'يتم شحن المكملات فور اعتمادها من الدكتور، وتصلك إلى باب منزلك مجاناً إذا كنت من مشتركي الرعاية الشمولية (VIP).', category: 'payments' },
 ];
 
 export default function Help() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [expandedQuestions, setExpandedQuestions] = useState<number[]>([]);
+    
+    // AI Concierge State
+    const [aiQuery, setAiQuery] = useState('');
+    const [aiResponse, setAiResponse] = useState('');
+    const [isAiTyping, setIsAiTyping] = useState(false);
+    const aiChatRef = useRef<HTMLDivElement>(null);
 
     const toggleQuestion = (index: number) => {
-        setExpandedQuestions(prev =>
-            prev.includes(index)
-                ? prev.filter(i => i !== index)
-                : [...prev, index]
-        );
+        haptic.selection();
+        setExpandedQuestions(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
+    };
+
+    const handleAiSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!aiQuery.trim() || isAiTyping) return;
+        
+        haptic.selection();
+        uiSounds.select();
+        setIsAiTyping(true);
+        setAiResponse('');
+        
+        if (aiChatRef.current) {
+            aiChatRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        try {
+            const result = await db.integrations.Core.InvokeLLM({
+                prompt: `أنت موظف دعم فني ومساعد طبي ذكي في منصة (طِبرَا) للطب الوظيفي برئاسة الدكتور عمر. يسأل المريض: "${aiQuery}". 
+                أجب باختصار شديد، بلطف، ووضوح. إذا كان السؤال يحتاج لتدخل الدكتور، انصحه بحجز جلسة أو التواصل عبر واتساب.`
+            }) as any;
+            
+            setAiResponse(result?.response || result?.answer || "عذراً، لا أستطيع الإجابة حالياً. تفضل بالتواصل معنا عبر واتساب.");
+            haptic.success();
+            uiSounds.success();
+        } catch {
+            setAiResponse("استجابة الكونسيرج غير متاحة الآن. يرجى محاولة التواصل معنا عبر واتساب أسفل الشاشة.");
+            haptic.error();
+        } finally {
+            setIsAiTyping(false);
+        }
     };
 
     const filteredFAQ = faqData.filter(item => {
-        const matchesSearch = searchQuery === '' ||
-            item.question.includes(searchQuery) ||
-            item.answer.includes(searchQuery);
+        const matchesSearch = searchQuery === '' || item.question.includes(searchQuery) || item.answer.includes(searchQuery);
         const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
-            {/* Header */}
-            <div className="bg-gradient-to-br from-[#2D9B83] via-[#3FB39A] to-[#2D9B83] text-white px-6 py-8 rounded-b-[2.5rem] relative overflow-hidden">
-                {/* Decorations */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#D4AF37]/20 rounded-full blur-2xl" />
+        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#020617] text-slate-800 dark:text-white selection:bg-indigo-500/30 font-sans pb-32">
+            <Head>
+                <title>طِبرَا | مركز الدعم والكونسيرج</title>
+            </Head>
 
-                {/* Back Button */}
-                <Link href="/profile" className="absolute top-6 right-6">
-                    <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 rounded-full">
-                        <ArrowRight className="w-6 h-6" />
-                    </Button>
+            {/* ═══ Header ═══ */}
+            <div className="relative pt-12 pb-24 px-6 overflow-hidden bg-gradient-to-b from-indigo-50/50 via-white dark:from-[#050B1A] dark:via-[#020617] to-transparent">
+                {/* Decorative blurs */}
+                <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[radial-gradient(circle,_rgba(99,102,241,0.08)_0%,_transparent_60%)] dark:bg-[radial-gradient(circle,_rgba(99,102,241,0.15)_0%,_transparent_60%)] blur-[80px] pointer-events-none" />
+                <div className="absolute top-[20%] left-[-20%] w-[500px] h-[500px] bg-[radial-gradient(circle,_rgba(20,184,166,0.05)_0%,_transparent_60%)] dark:bg-[radial-gradient(circle,_rgba(20,184,166,0.1)_0%,_transparent_60%)] blur-[80px] pointer-events-none" />
+
+                <Link href="/profile" className="absolute top-6 right-6 z-10" onClick={() => haptic.selection()}>
+                    <div className="w-12 h-12 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/80 dark:border-slate-700 flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors shadow-sm">
+                        <ArrowRight className="w-6 h-6 text-slate-600 dark:text-slate-400 rtl:-scale-x-100" />
+                    </div>
                 </Link>
 
-                <div className="relative pt-8 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                        <HelpCircle className="w-8 h-8" />
-                    </div>
-                    <h1 className="text-2xl font-bold mb-2">مركز المساعدة</h1>
-                    <p className="text-white/80 text-sm">كيف يمكننا مساعدتك؟</p>
-                </div>
+                <div className="relative z-10 text-center max-w-xl mx-auto mt-12">
+                    <motion.div 
+                        initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15 }}
+                        className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 border border-indigo-200/60 dark:border-indigo-500/20 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-indigo-500/10"
+                    >
+                        <Brain className="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
+                    </motion.div>
+                    
+                    <h1 className="text-4xl sm:text-5xl font-black mb-4 text-slate-900 dark:text-white tracking-tighter">الدعم والكونسيرج</h1>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium text-lg leading-relaxed mb-10 max-w-sm mx-auto">
+                        نحن هنا للإجابة على استفساراتك الطبية والتقنية. اسأل المساعد الذكي أو تواصل مباشرة.
+                    </p>
 
-                {/* Search */}
-                <div className="relative mt-6">
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="ابحث عن سؤالك..."
-                        className="w-full h-12 pr-12 rounded-xl bg-white dark:bg-slate-800 border-0 text-slate-800 dark:text-white"
-                    />
+                    {/* AI Chat Input - Ultra Premium */}
+                    <div className="relative group max-w-lg mx-auto" ref={aiChatRef}>
+                        <div className="absolute inset-0 bg-indigo-500/20 rounded-[28px] blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                        <form onSubmit={handleAiSubmit} className="relative bg-white/90 dark:bg-[#0B1121]/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors rounded-[28px] flex items-center p-3 shadow-[0_20px_40px_rgb(0,0,0,0.06)] dark:shadow-[0_20px_40px_rgb(0,0,0,0.3)]">
+                            <div className="px-3 shrink-0">
+                                <Sparkles className="w-6 h-6 text-indigo-400 dark:text-indigo-500 animate-pulse" />
+                            </div>
+                            <input
+                                value={aiQuery}
+                                onChange={(e) => setAiQuery(e.target.value)}
+                                placeholder="اسأل الكونسيرج الذكي أي سؤال..."
+                                className="flex-1 bg-transparent border-0 text-slate-900 dark:text-white placeholder-slate-400 px-2 focus:ring-0 text-base font-medium"
+                            />
+                            <button 
+                                type="submit" 
+                                disabled={isAiTyping || !aiQuery.trim()}
+                                className="w-14 h-14 rounded-[20px] bg-indigo-600 flex items-center justify-center hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_10px_20px_rgba(79,70,229,0.3)] active:scale-95 shrink-0"
+                            >
+                                {isAiTyping ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Send className="w-6 h-6 text-white rtl:-translate-x-0.5 rtl:rotate-180" />}
+                            </button>
+                        </form>
+                    </div>
+
+                    {/* AI Output */}
+                    <AnimatePresence>
+                        {aiResponse && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                className="mt-6 p-6 md:p-8 rounded-[32px] bg-white/80 dark:bg-[#0B1121]/80 backdrop-blur-2xl border border-indigo-100 dark:border-indigo-900/50 text-right shadow-[0_20px_60px_rgba(79,70,229,0.1)] dark:shadow-[0_20px_60px_rgba(79,70,229,0.2)] max-w-lg mx-auto relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] pointer-events-none" />
+                                
+                                <div className="flex gap-4 relative z-10">
+                                    <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 border border-indigo-200/60 dark:border-indigo-500/30 flex items-center justify-center shrink-0 shadow-inner">
+                                        <Brain className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pr-1">
+                                        <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-wide">الكونسيرج الذكي يقول:</p>
+                                        <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-bold break-words w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                            {aiResponse}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
-            <div className="px-4 -mt-4 relative z-10 space-y-6">
+            <div className="px-5 -mt-8 relative z-10 max-w-4xl mx-auto space-y-12">
+                
+                {/* ═══ Contact Cards (Ultra Premium) ═══ */}
+                <div>
+                    <h2 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 px-2">التواصل السريع</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a
+                            href="https://wa.me/967771447111?text=مرحباً%20طِبرَا،"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => haptic.success()}
+                            className="bg-white/90 dark:bg-[#0B1121]/90 backdrop-blur-xl border border-emerald-200/60 dark:border-emerald-900/30 rounded-[32px] p-6 hover:shadow-[0_20px_60px_rgba(16,185,129,0.15)] transition-all group relative overflow-hidden flex items-center gap-5"
+                        >
+                            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-500/30 group-hover:scale-110 transition-transform shadow-inner">
+                                <MessageCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-lg text-slate-900 dark:text-white mb-1">واتساب المنسق الطبي</h3>
+                                <p className="text-sm font-medium text-slate-500">متواجدون للرد الآني</p>
+                            </div>
+                        </a>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-2 gap-3">
-                    <a
-                        href="https://wa.me/967771447111"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center gap-3"
-                    >
-                        <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <MessageCircle className="w-6 h-6 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-slate-800 dark:text-white text-sm">واتساب</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">تواصل مباشر</p>
-                        </div>
-                    </a>
-
-                    <a
-                        href="tel:+967771447111"
-                        className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center gap-3"
-                    >
-                        <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <Phone className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-slate-800 dark:text-white text-sm">اتصال</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">+967 771 447 111</p>
-                        </div>
-                    </a>
+                        <a
+                            href="tel:+967771447111"
+                            onClick={() => haptic.success()}
+                            className="bg-white/90 dark:bg-[#0B1121]/90 backdrop-blur-xl border border-indigo-200/60 dark:border-indigo-900/30 rounded-[32px] p-6 hover:shadow-[0_20px_60px_rgba(99,102,241,0.15)] transition-all group relative overflow-hidden flex items-center gap-5"
+                        >
+                            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-500/30 group-hover:scale-110 transition-transform shadow-inner">
+                                <Phone className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-lg text-slate-900 dark:text-white mb-1">الرقم الموحد المباشر</h3>
+                                <p className="text-sm font-medium text-slate-500" dir="ltr">+967 771 447 111</p>
+                            </div>
+                        </a>
+                    </div>
                 </div>
 
-                {/* Category Tabs */}
-                <div className="overflow-x-auto pb-2 -mx-4 px-4">
-                    <div className="flex gap-2 min-w-max">
-                        <button
-                            onClick={() => setSelectedCategory('all')}
-                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === 'all'
-                                ? 'bg-[#2D9B83] text-white'
-                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                }`}
-                        >
-                            الكل
-                        </button>
+                {/* ═══ Premium FAQ Accordion ═══ */}
+                <div className="bg-white/80 dark:bg-[#0B1121]/80 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 rounded-[48px] p-8 md:p-12 shadow-[0_20px_60px_rgb(0,0,0,0.04)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.2)]">
+                    <div className="mb-8 text-center">
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-3">الأسئلة الشائعة</h2>
+                        <p className="text-base font-medium text-slate-500">إجابات واضحة لأكثر ما يسأله مرضانا</p>
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative mb-8 max-w-xl mx-auto">
+                        <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400" />
+                        <input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="ابحث في الأسئلة..."
+                            className="w-full h-16 pr-14 rounded-[20px] bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-bold text-base shadow-sm"
+                        />
+                    </div>
+
+                    {/* Categories Tabs */}
+                    <div className="flex flex-wrap justify-center gap-3 mb-10">
                         {faqCategories.map(cat => {
                             const Icon = cat.icon;
+                            const isSelected = selectedCategory === cat.id;
                             return (
                                 <button
                                     key={cat.id}
-                                    onClick={() => setSelectedCategory(cat.id)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${selectedCategory === cat.id
-                                        ? 'bg-[#2D9B83] text-white'
-                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                        }`}
+                                    onClick={() => { haptic.selection(); setSelectedCategory(cat.id); }}
+                                    className={`flex items-center gap-2.5 px-6 py-3 rounded-full whitespace-nowrap text-sm font-bold transition-all shadow-sm ${
+                                        isSelected 
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border-transparent' 
+                                        : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/30'
+                                    }`}
                                 >
-                                    <Icon className="w-4 h-4" />
+                                    <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`} />
                                     {cat.label}
                                 </button>
                             );
                         })}
                     </div>
-                </div>
 
-                {/* FAQ List */}
-                <div className="space-y-3">
-                    <h2 className="font-bold text-slate-800 dark:text-white px-1">الأسئلة الشائعة</h2>
+                    {/* Questions List */}
+                    <div className="space-y-4 max-w-3xl mx-auto">
+                        {filteredFAQ.length > 0 ? (
+                            filteredFAQ.map((item, index) => {
+                                const isExpanded = expandedQuestions.includes(index);
+                                return (
+                                    <div 
+                                        key={index} 
+                                        className={`rounded-[24px] border transition-all duration-300 overflow-hidden ${
+                                            isExpanded 
+                                            ? 'bg-white dark:bg-slate-800/80 border-indigo-200/60 dark:border-indigo-500/30 shadow-[0_10px_30px_rgb(0,0,0,0.06)]' 
+                                            : 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-white dark:hover:bg-slate-800/50'
+                                        }`}
+                                    >
+                                        <button
+                                            onClick={() => toggleQuestion(index)}
+                                            className="w-full p-6 md:p-8 flex items-center justify-between text-right"
+                                        >
+                                            <span className={`font-bold text-lg leading-snug select-none pr-2 ${isExpanded ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                {item.question}
+                                            </span>
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors shadow-sm border ${isExpanded ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border-indigo-200/50 dark:border-indigo-500/20' : 'bg-white dark:bg-slate-700 text-slate-400 border-slate-200/80 dark:border-slate-600'}`}>
+                                                {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                            </div>
+                                        </button>
 
-                    {filteredFAQ.length > 0 ? (
-                        filteredFAQ.map((item, index) => (
-                            <div
-                                key={index}
-                                className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden"
-                            >
-                                <button
-                                    onClick={() => toggleQuestion(index)}
-                                    className="w-full p-4 flex items-center justify-between text-right"
-                                >
-                                    <span className="font-medium text-slate-800 dark:text-white flex-1 pr-2">
-                                        {item.question}
-                                    </span>
-                                    {expandedQuestions.includes(index) ? (
-                                        <ChevronUp className="w-5 h-5 text-[#2D9B83] flex-shrink-0" />
-                                    ) : (
-                                        <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                    )}
-                                </button>
-
-                                {expandedQuestions.includes(index) && (
-                                    <div className="px-4 pb-4 pt-0">
-                                        <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-                                            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed whitespace-pre-line">
-                                                {item.answer}
-                                            </p>
-                                        </div>
+                                        <AnimatePresence>
+                                            {isExpanded && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                                >
+                                                    <div className="px-6 md:px-8 pb-8 text-base text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                                                        {item.answer}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
-                                )}
+                                );
+                            })
+                        ) : (
+                            <div className="text-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-[32px] border border-slate-200/60 dark:border-slate-700 border-dashed">
+                                <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                <p className="text-lg text-slate-700 dark:text-slate-200 font-bold mb-2">لم نجد نتائج مطابقة</p>
+                                <p className="text-sm text-slate-500 font-medium">جرب البحث بكلمات أبسط أو اسأل الكونسيرج أعلى الصفحة</p>
                             </div>
-                        ))
-                    ) : (
-                        <div className="text-center py-10">
-                            <HelpCircle className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                            <p className="text-slate-500 dark:text-slate-400">لم يتم العثور على نتائج</p>
-                            <p className="text-sm text-slate-400 mt-1">جرب البحث بكلمات مختلفة</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Contact Section */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white">
-                    <div className="text-center mb-4">
-                        <Sparkles className="w-8 h-8 mx-auto mb-2 text-[#D4AF37]" />
-                        <h3 className="font-bold text-lg">لم تجد إجابة لسؤالك؟</h3>
-                        <p className="text-sm text-slate-400 mt-1">تواصل معنا مباشرة وسنسعد بمساعدتك</p>
-                    </div>
-
-                    <a
-                        href="https://wa.me/967771447111?text=مرحباً، لدي سؤال..."
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <Button className="w-full h-12 bg-green-500 hover:bg-green-600 rounded-xl font-bold">
-                            <MessageCircle className="w-5 h-5 ml-2" />
-                            تواصل عبر واتساب
-                        </Button>
-                    </a>
-                </div>
-
-                {/* Working Hours */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-100 dark:border-slate-700">
-                    <div className="flex items-center gap-3 mb-3">
-                        <Clock className="w-5 h-5 text-[#2D9B83]" />
-                        <h3 className="font-bold text-slate-800 dark:text-white">أوقات العمل</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">السبت - الخميس</span>
-                            <span className="font-medium text-slate-700 dark:text-slate-300">9:00 ص - 5:00 م</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">الجمعة</span>
-                            <span className="font-medium text-red-500">مغلق</span>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

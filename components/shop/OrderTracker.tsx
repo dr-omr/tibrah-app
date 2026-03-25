@@ -104,12 +104,12 @@ export default function OrderTracker({
                                     >
                                         <Icon className="w-5 h-5" />
                                     </motion.div>
-                                    <span className={`text-[10px] font-medium text-center whitespace-nowrap ${isComplete || isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+                                    <span className={`text-xs font-medium text-center whitespace-nowrap ${isComplete || isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
                                         }`}>
                                         {step.label}
                                     </span>
                                     {step.time && (
-                                        <span className="text-[9px] text-slate-400">{step.time}</span>
+                                        <span className="text-xs text-slate-400">{step.time}</span>
                                     )}
                                 </motion.div>
                             );

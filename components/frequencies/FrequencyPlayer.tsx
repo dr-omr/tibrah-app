@@ -132,7 +132,7 @@ export default function FrequencyPlayer({
                         {[...Array(12)].map((_, i) => (
                             <div
                                 key={i}
-                                className="w-1 bg-gradient-to-t from-[#2D9B83] to-[#3FB39A] rounded-full animate-pulse"
+                                className="w-1 bg-gradient-to-t from-primary to-primary-light rounded-full animate-pulse"
                                 style={{
                                     height: `${Math.random() * 24 + 8}px`,
                                     animationDelay: `${i * 0.1}s`,
@@ -217,7 +217,7 @@ export default function FrequencyPlayer({
                             size="icon"
                             variant="ghost"
                             onClick={() => setShowTimer(true)}
-                            className={timerActive ? 'text-[#2D9B83]' : 'text-slate-500'}
+                            className={timerActive ? 'text-primary' : 'text-slate-500'}
                         >
                             <Timer className="w-5 h-5" />
                         </Button>
@@ -270,7 +270,7 @@ export default function FrequencyPlayer({
                         size="icon"
                         variant="ghost"
                         onClick={() => setMusicEnabled(!musicEnabled)}
-                        className={musicEnabled ? 'text-[#2D9B83]' : 'text-slate-500'}
+                        className={musicEnabled ? 'text-primary' : 'text-slate-500'}
                     >
                         <Music className="w-5 h-5" />
                     </Button>

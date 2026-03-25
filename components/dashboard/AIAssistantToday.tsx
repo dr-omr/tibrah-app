@@ -37,12 +37,12 @@ export default function AIAssistantToday() {
     if (!isEnabled()) return null;
 
     return (
-        <div className="glass rounded-2xl p-5 relative overflow-hidden border border-[#2D9B83]/20">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2D9B83] to-[#D4AF37]" />
+        <div className="glass rounded-2xl p-5 relative overflow-hidden border border-primary/20">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-[#D4AF37]" />
 
             <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-[#2D9B83]/10 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-[#2D9B83]" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
                 </div>
                 <h3 className="font-bold text-slate-800">مساعدك الذكي اليوم</h3>
             </div>
@@ -80,7 +80,7 @@ export default function AIAssistantToday() {
                         ))}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-[10px] text-slate-400">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-400">
                         <AlertCircle className="w-3 h-3" />
                         <span>{AI_DISCLAIMER}</span>
                     </div>

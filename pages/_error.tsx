@@ -29,7 +29,7 @@ function Error({ statusCode }: ErrorProps) {
                 onClick={() => window.location.reload()}
                 style={{
                     padding: '0.75rem 1.5rem',
-                    backgroundColor: '#2D9B83',
+                    backgroundColor: 'var(--primary)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '0.5rem',

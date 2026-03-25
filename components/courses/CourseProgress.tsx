@@ -67,7 +67,7 @@ function ProgressRing({ progress, size = 80, strokeWidth = 6 }: { progress: numb
                 </defs>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-black text-[#2D9B83]">{Math.round(progress)}%</span>
+                <span className="text-lg font-black text-primary">{Math.round(progress)}%</span>
             </div>
         </div>
     );
@@ -118,9 +118,19 @@ export default function CourseProgress({ courseId, courseName, lessons, totalLes
             const nextLesson = lessons.find((l, i) => i > lessonIndex && !updated.includes(l.id));
 
             if (updated.length === totalLessons) {
-                toast.success('🎉 مبروك! أكملت الدورة بالكامل!');
+                if (typeof window !== 'undefined') {
+                    const saved = JSON.parse(localStorage.getItem('tibrahRewards') || '{}');
+                    const newPoints = (saved.points || 0) + 110; // 10 for lesson + 100 bonus
+                    localStorage.setItem('tibrahRewards', JSON.stringify({ ...saved, points: newPoints }));
+                }
+                toast.success('🎉 مبروك! أكملت الدورة بالكامل!\nكسبت 110 نقطة مكافأة!', { duration: 5000 });
             } else {
-                toast.success('✅ تم إكمال الدرس');
+                if (typeof window !== 'undefined') {
+                    const saved = JSON.parse(localStorage.getItem('tibrahRewards') || '{}');
+                    const newPoints = (saved.points || 0) + 10;
+                    localStorage.setItem('tibrahRewards', JSON.stringify({ ...saved, points: newPoints }));
+                }
+                toast.success('✅ تم إكمال الدرس\nكسبت 10 نقاط!', { duration: 3000 });
             }
 
             setCurrentLesson(nextLesson?.id || null);
@@ -136,7 +146,7 @@ export default function CourseProgress({ courseId, courseName, lessons, totalLes
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
             {/* Header with Progress Ring */}
-            <div className="p-5 flex items-center gap-4 bg-gradient-to-l from-[#2D9B83]/5 to-transparent">
+            <div className="p-5 flex items-center gap-4 bg-gradient-to-l from-primary/5 to-transparent">
                 <ProgressRing progress={progress} />
                 <div className="flex-1">
                     <h3 className="font-bold text-slate-800 dark:text-white text-sm mb-1">تقدمك في الدورة</h3>
@@ -170,7 +180,7 @@ export default function CourseProgress({ courseId, courseName, lessons, totalLes
                                 className={`w-full flex items-center gap-3 p-3 rounded-xl text-right transition-all ${isCompleted
                                         ? 'bg-emerald-50 dark:bg-emerald-900/15'
                                         : isCurrent
-                                            ? 'bg-[#2D9B83]/5 ring-1 ring-[#2D9B83]/20'
+                                            ? 'bg-primary/5 ring-1 ring-primary/20'
                                             : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
                                     }`}
                                 onClick={() => isAvailable && toggleLesson(lesson.id)}
@@ -193,7 +203,7 @@ export default function CourseProgress({ courseId, courseName, lessons, totalLes
                                     ) : lesson.isLocked ? (
                                         <Lock className="w-5 h-5 text-slate-300 dark:text-slate-600" />
                                     ) : isCurrent ? (
-                                        <div className="w-5 h-5 rounded-full bg-[#2D9B83] flex items-center justify-center">
+                                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                                             <Play className="w-3 h-3 text-white fill-white" />
                                         </div>
                                     ) : (
@@ -227,7 +237,7 @@ export default function CourseProgress({ courseId, courseName, lessons, totalLes
                 {lessons.length > 4 && (
                     <Button
                         variant="ghost"
-                        className="w-full mt-2 text-xs text-slate-500 hover:text-[#2D9B83] h-8"
+                        className="w-full mt-2 text-xs text-slate-500 hover:text-primary h-8"
                         onClick={() => setIsExpanded(!isExpanded)}
                     >
                         {isExpanded ? (

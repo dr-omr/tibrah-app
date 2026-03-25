@@ -125,7 +125,7 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
                         {importing ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <UploadCloud className="w-4 h-4 ml-2" />}
                         استيراد المنتجات
                     </Button>
-                    <Button onClick={handleCreate} className="bg-[#2D9B83] hover:bg-[#258570]">
+                    <Button onClick={handleCreate} className="bg-primary hover:bg-primary-dark">
                         <Plus className="w-4 h-4 ml-2" />
                         إضافة منتج جديد
                     </Button>
@@ -135,7 +135,7 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredProducts.map((product) => (
-                    <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex gap-4 group hover:border-[#2D9B83]/30 transition-all">
+                    <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex gap-4 group hover:border-primary/30 transition-all">
                         <div className="w-20 h-20 rounded-xl bg-slate-100 flex-shrink-0 overflow-hidden">
                             {product.image_url ? (
                                 <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
@@ -149,7 +149,7 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
                             <h3 className="font-bold text-slate-800 line-clamp-1">{product.name}</h3>
                             <p className="text-sm text-slate-500 mb-2">{product.category}</p>
                             <div className="flex items-center justify-between">
-                                <span className="font-bold text-[#2D9B83]">{product.price} ر.س</span>
+                                <span className="font-bold text-primary">{product.price} ر.س</span>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleEdit(product)}>
                                         <Edit className="w-4 h-4 text-slate-500" />
@@ -204,7 +204,7 @@ export default function ProductManager({ products, onSave, onDelete }: ProductMa
                             </div>
                         </div>
 
-                        <Button className="w-full bg-[#2D9B83] hover:bg-[#258570]" onClick={handleSubmit} disabled={isLoading}>
+                        <Button className="w-full bg-primary hover:bg-primary-dark" onClick={handleSubmit} disabled={isLoading}>
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ التغييرات'}
                         </Button>
                     </div>

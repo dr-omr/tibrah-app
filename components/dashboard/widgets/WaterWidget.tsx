@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Droplets, Plus, Minus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -15,6 +16,8 @@ interface WaterWidgetProps {
 export const WaterWidget = ({ initialGlasses, goal, logId, onUpdate }: WaterWidgetProps) => {
     const [glasses, setGlasses] = useState(initialGlasses);
     const [isUpdating, setIsUpdating] = useState(false);
+    const { user } = useAuth();
+    const userId = user?.id;
     const today = format(new Date(), 'yyyy-MM-dd');
 
     // Sync prop changes
@@ -31,7 +34,7 @@ export const WaterWidget = ({ initialGlasses, goal, logId, onUpdate }: WaterWidg
             if (logId) {
                 await db.entities.WaterLog.update(logId, { glasses: newAmount });
             } else {
-                await db.entities.WaterLog.create({
+                await db.entities.WaterLog.createForUser(userId || '', {
                     date: today,
                     glasses: newAmount,
                     goal: goal

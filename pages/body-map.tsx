@@ -3,158 +3,26 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { createPageUrl } from '../utils';
 import {
-    ArrowRight, Search, Heart, Brain, Activity, Sparkles, ShoppingBag, Star, MessageCircle, BookOpen, Loader2
+    ArrowRight, Search, Heart, Activity, Sparkles, MessageCircle
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import InteractiveBody from '@/components/body-map/InteractiveBody';
+import RegionInspectionPanel from '@/components/body-map/RegionInspectionPanel';
+import AnatomySearchModal from '@/components/body-map/AnatomySearchModal';
 import { useQuery } from '@tanstack/react-query';
 import { emotionalDiseases, preloadEmotionalData } from '@/data/emotionalMedicineData';
 import { aiClient } from '@/components/ai/aiClient';
+import { masterDictionary, AnatomicalSystem } from '@/data/anatomy/masterDictionary';
 
 const holisticSections = [
     { name: 'الطب الشعوري', description: 'افهم رسائل جسمك', page: 'emotional-medicine', icon: Heart, color: 'from-pink-500 to-rose-500' },
     { name: 'تحليل الأعراض', description: 'شخص حالتك', page: 'symptom-analysis', icon: Activity, color: 'from-blue-500 to-cyan-500' }
 ];
 
-// Emotional Map Data (Based on Dr. Ahmed Eldemellawy & META-Health Principles)
-const emotionalMap: Record<string, any> = {
-    head: {
-        name: 'الرأس',
-        categoryName: 'مركز القيادة',
-        categoryColor: '#FF6B6B',
-        categoryIcon: '🧠',
-        emotion: 'التوتر والضغط المستمر',
-        description: 'كثرة التفكير (Overthinking) والشعور بمسؤولية مفرطة.',
-        deeperCause: 'الرغبة في السيطرة على كل التفاصيل والخوف من الخطأ.',
-        treatment: ['التفريغ الكتابي', 'التأمل لدقيقة', 'تقبل عدم الكمال'],
-        affirmation: 'أنا أثق في سير الحياة، وأسمح لعقلي بالراحة.'
-    },
-    throat: {
-        name: 'الحلق/الرقبة',
-        categoryName: 'بوابة التعبير',
-        categoryColor: '#4ECDC4',
-        categoryIcon: '🗣️',
-        emotion: 'كبت الكلام والحقيقة',
-        description: 'الشعور بالعجز عن التعبير عن النفس أو "ابتلاع" الغضب.',
-        deeperCause: 'الخوف من الرفض إذا عبرت عن حقيقتك.',
-        treatment: ['الغناء أو الدندنة', 'التحدث بصدق مع النفس', 'شرب الماء بكثرة'],
-        affirmation: 'صوتي مسموع، وأعبر عن نفسي بوضوح وحب.'
-    },
-    shoulders_back: {
-        name: 'أكتاف (خلفي)',
-        categoryName: 'حمل الأعباء',
-        categoryColor: '#FFD93D',
-        categoryIcon: '🎒',
-        emotion: 'أعباء الحياة الثقيلة',
-        description: 'الشعور بأنك تحمل مشاكل العائلة أو العمل وحدك.',
-        deeperCause: 'اعتقادك أن "لا أحد يستطيع فعل ذلك غيري".',
-        treatment: ['تفويض المسؤوليات', 'مساج الأكتاف', 'تعلم طلب المساعدة'],
-        affirmation: 'أنا أسمح للآخرين بتحمل مسؤولياتهم، وأتحرر من الثقل.'
-    },
-    joints: {
-        name: 'المفاصل',
-        categoryName: 'المرونة في الحياة',
-        categoryColor: '#FF8B94',
-        categoryIcon: '🔗',
-        emotion: 'مقاومة التغيير',
-        description: 'صعوبة في التأقلم مع مراحل جديدة في الحياة.',
-        deeperCause: 'التمسك بالماضي أو الخوف من المجهول القادم.',
-        treatment: ['تمارين التمدد (Stretching)', 'الرقص الحر', 'ممارسة الامتنان'],
-        affirmation: 'أنا أتدفق مع تغييرات الحياة بيسر وسهولة.'
-    },
-    liver: {
-        name: 'الكبد',
-        categoryName: 'مصنع المشاعر',
-        categoryColor: '#D4AF37',
-        categoryIcon: '🧪',
-        emotion: 'الغضب المكبوت',
-        description: 'تراكم مشاعر الغضب والاستياء وعدم الرضا.',
-        deeperCause: 'الشعور بالظلم أو الانتقاد الدائم للذات والآخرين.',
-        treatment: ['التخلص من السموم (ديتوكس)', 'التعبير الصحي عن الغضب', 'المسامحة'],
-        affirmation: 'أنا أحرر كل الغضب القديم، وأملأ كياني بالسلام والرضا.'
-    },
-    kidneys: {
-        name: 'الكلى',
-        categoryName: 'العلاقات والمخاوف',
-        categoryColor: '#6C5CE7',
-        categoryIcon: '💧',
-        emotion: 'الخوف وخيبة الأمل',
-        description: 'مخاوف عميقة، غالباً مرتبطة بالعلاقات أو النقد.',
-        deeperCause: 'الشعور بالطفولة (الخوف كالطفل) وعدم الأمان.',
-        treatment: ['شرب الماء بوعي', 'مواجهة المخاوف', 'تعزيز الثقة بالنفس'],
-        affirmation: 'أنا آمن، والحكمة الإلهية ترعاني في كل لحظة.'
-    },
-    spine: {
-        name: 'العمود الفقري',
-        categoryName: 'عمود الدعم',
-        categoryColor: '#2D9B83',
-        categoryIcon: '🦴',
-        emotion: 'الدعم والسند',
-        description: 'الشعور بعدم وجود دعم كافٍ في الحياة.',
-        deeperCause: 'الاعتماد الكلي على الذات ورفض الدعم الخارجي.',
-        treatment: ['اليوجا (وضعية الشجرة)', 'الثقة في دعم الحياة', 'بناء شبكة دعم'],
-        affirmation: 'أنا مدعوم دائماً من الله ومن الكون ومن حولي.'
-    },
-    chest: {
-        name: 'الصدر',
-        categoryName: 'بيت القلب',
-        categoryColor: '#FF6B6B',
-        categoryIcon: '❤️',
-        emotion: 'الحزن والجرح القديم',
-        description: 'كبت المشاعر، أو الشعور بعدم استحقاق الحب.',
-        deeperCause: 'إغلاق القلب لحماية النفس من الألم.',
-        treatment: ['التنفس العميق', 'العطاء والصدقة', 'احتضان من تحب'],
-        affirmation: 'قلبي مفتوح لاستقبال الحب، وأنا أستحق السعادة.'
-    },
-    stomach: {
-        name: 'المعدة',
-        categoryName: 'هضم الأحداث',
-        categoryColor: '#FFD93D',
-        categoryIcon: '🥣',
-        emotion: 'القلق من الجديد',
-        description: 'عدم القدرة على "هضم" موقف جديد أو شخص معين.',
-        deeperCause: 'الخوف من المستقبل والتمسك بالمألوف.',
-        treatment: ['شرب النعناع أو البابونج', 'تقبل التغيير', 'التنفس البطني'],
-        affirmation: 'أنا أهضم تجارب الحياة بسهولة، وكل جديد هو خير لي.'
-    },
-    legs: {
-        name: 'الأرجل',
-        categoryName: 'المضي قدماً',
-        categoryColor: '#2D9B83',
-        categoryIcon: '🦶',
-        emotion: 'الخوف من المستقبل',
-        description: 'التردد في اتخاذ خطوات جديدة أو المضي قدماً.',
-        deeperCause: 'الخوف من الفشل أو الخوف من ترك منطقة الراحة.',
-        treatment: ['المشي في الطبيعة', 'تحديد أهداف صغيرة', 'التجذر (Grounding)'],
-        affirmation: 'أتقدم للأمام بثقة، لأنني أعلم أن طريقي آمن.'
-    },
-    lower_back: {
-        name: 'أسفل الظهر',
-        categoryName: 'الدعم المادي',
-        categoryColor: '#A8E6CF',
-        categoryIcon: '💰',
-        emotion: 'الخوف المالي',
-        description: 'قلق بشأن المال، العمل، أو المستقبل المادي.',
-        deeperCause: 'الشعور بعدم الأمان المادي أو فقدان الدعم.',
-        treatment: ['التخطيط المالي', 'التوكيدات للوفرة', 'الإيمان بالرزق'],
-        affirmation: 'أثق أن رزقي مضمون، والكون يدعمني بوفرة.'
-    },
-    default: {
-        name: 'الجسم',
-        categoryName: 'رسالة جسدية',
-        categoryColor: '#94A3B8',
-        categoryIcon: '🧘',
-        emotion: 'تنبيه للتوازن',
-        description: 'جسدك يناديك لتعود لحالة التوازن (Homeostasis).',
-        deeperCause: 'انفصال مؤقت بين العقل إشارات الجسد.',
-        treatment: ['جلسة سكون', 'شرب الماء', 'النوم المبكر'],
-        affirmation: 'أنا أعود الآن إلى توازني الطبيعي وصحتي المثالية.'
-    }
-};
-
 export default function BodyMap() {
-    const [selectedArea, setSelectedArea] = useState<any>(null);
+    const [selectedSystem, setSelectedSystem] = useState<AnatomicalSystem | null>(null);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    
     const [aiInsight, setAiInsight] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(false);
 
@@ -174,11 +42,11 @@ export default function BodyMap() {
         return allProducts?.slice(0, 3) || [];
     };
 
-    const runAiBodyAnalysis = async (area: any) => {
+    const runAiBodyAnalysis = async (targetName: string, targetEmotion: string) => {
         setAiLoading(true);
         setAiInsight(null);
         try {
-            const result = await aiClient.analyzeBodyMap(area.name, [area.emotion]);
+            const result = await aiClient.analyzeBodyMap(targetName, [targetEmotion]);
             setAiInsight(result);
         } catch (err) {
             console.error('Body map AI error:', err);
@@ -187,256 +55,138 @@ export default function BodyMap() {
         }
     };
 
+    const handleSelectPart = (id: string) => {
+        if (!id) {
+            setSelectedSystem(null);
+            return;
+        }
+        // If clicking from visual SVG, map the ID to the Master Dictionary macro system
+        let mappedId = id;
+        
+        // Manual mappings if the SVG ID doesn't exactly match the dictionary
+        // The new dictionary uses: head, throat, chest, abdomen, back, upper_limb, lower_limb
+        if (['head', 'face', 'brain', 'eyes', 'jaw'].includes(id)) mappedId = 'head';
+        else if (['throat', 'neck', 'thyroid'].includes(id)) mappedId = 'throat';
+        else if (['chest', 'heart', 'lungs'].includes(id)) mappedId = 'chest';
+        else if (['abdomen', 'stomach', 'liver'].includes(id)) mappedId = 'abdomen';
+        else if (['back', 'spine', 'lower_back', 'shoulders_back'].includes(id)) mappedId = 'back';
+        else if (['upper_limb', 'arm', 'shoulder', 'hands'].includes(id)) mappedId = 'upper_limb';
+        else if (['lower_limb', 'legs', 'foot', 'joints'].includes(id)) mappedId = 'lower_limb';
+
+        const data = masterDictionary[mappedId];
+        if (data) {
+            setSelectedSystem(data);
+        } else {
+            console.warn(`No dictionary entry found for mapped ID: ${mappedId} (original: ${id})`);
+        }
+    };
+
+    const handleSelectSubTissue = (systemId: string, tissueId: string) => {
+        const system = masterDictionary[systemId];
+        if (system) {
+            setSelectedSystem(system);
+            // The RegionInspectionPanel handles sub-tissue state internally via a prop or just by user clicking.
+            // Since we want the search to directly open a specific tissue, we would normally pass it as a prop.
+            // However, opening the parent system is sufficient for now, the user can click the tissue chip.
+            // A more advanced version would pass `initialTissueId` to the panel.
+        }
+    };
+
+    // Derived data for the inspection panel
+    const relatedDiseases = selectedSystem ? (() => {
+        const organKeywords = [selectedSystem.name.toLowerCase(), ...selectedSystem.tissues.map(t=>t.name), ...(selectedSystem.organs?.map(o=>o.name) || [])];
+        return emotionalDiseases.filter(d =>
+            organKeywords.some(kw => d.targetOrgan.includes(kw) || d.symptom.includes(kw))
+        ).slice(0, 3);
+    })() : [];
+
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
-            <div className="bg-white p-6 rounded-b-3xl shadow-sm mb-6">
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">خريطة الجسم 🧘‍♂️</h1>
-                <p className="text-slate-500">اضغط على أي منطقة في الجسم لفهم رسالتها الشعورية</p>
+        <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] pb-24 font-sans relative">
+            
+            {/* Top Search Button overlaying the Map */}
+            <div className="fixed top-4 left-4 right-4 z-20 pointer-events-none flex justify-center">
+                <button
+                    onClick={() => setIsSearchOpen(true)}
+                    className="pointer-events-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-lg border border-slate-200 dark:border-slate-700 rounded-full px-5 py-3 flex items-center gap-3 w-full max-w-sm hover:scale-[1.02] transition-transform"
+                >
+                    <Search className="w-5 h-5 text-[#2D9B83]" />
+                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">البحث الشامل في الأطلس...</span>
+                </button>
+            </div>
+
+            <div className="bg-white/90 dark:bg-slate-900/90 pt-20 pb-6 px-6 rounded-b-[2rem] shadow-[0_4px_30px_rgba(0,0,0,0.04)] mb-6 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 z-10 relative">
+                <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-2">الأطلس التشريحي الشامل</h1>
+                <p className="text-[14px] font-semibold text-slate-500">اختر منطقة من المجسم، أو استخدم البحث لاكتشاف العضو والنسيج بدقة لمعرفة دلالاته الشعورية.</p>
             </div>
 
             <InteractiveBody
-                onSelectPart={(id: string) => {
-                    const data = emotionalMap[id] || { ...emotionalMap.default, name: id };
-                    setSelectedArea(data);
-                }}
+                onSelectPart={handleSelectPart}
                 className="mb-8"
             />
 
-            <div className="px-6">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">أقسام الصحة الشمولية</h2>
-                <div className="grid grid-cols-2 gap-3">
-                    {holisticSections.map((section, idx) => {
-                        const Icon = section.icon;
-                        return (
-                            <Link
-                                key={idx}
-                                href={createPageUrl(section.page)}
-                                className="glass rounded-2xl p-4 hover:shadow-lg transition-all"
-                            >
-                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center mb-3`}>
-                                    <Icon className="w-5 h-5 text-white" />
-                                </div>
-                                <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{section.name}</h4>
-                                <p className="text-xs text-slate-500">{section.description}</p>
-                            </Link>
-                        );
-                    })}
+            <div className={`transition-opacity duration-300 ${selectedSystem ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <div className="px-6 mb-8">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">أقسام الصحة الشمولية</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {holisticSections.map((section, idx) => {
+                            const Icon = section.icon;
+                            return (
+                                <Link
+                                    key={idx}
+                                    href={createPageUrl(section.page)}
+                                    className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all"
+                                >
+                                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center mb-3`}>
+                                        <Icon className="w-5 h-5 text-white" />
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{section.name}</h4>
+                                    <p className="text-xs text-slate-500">{section.description}</p>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="mt-8 mx-6 bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] rounded-3xl p-6 text-center shadow-lg">
+                    <h3 className="text-xl font-bold text-white mb-2">هل تحتاج مساعدة متخصصة؟</h3>
+                    <p className="text-white/80 text-sm mb-4">
+                        احجز جلسة تشخيصية مع د. عمر العماد لفهم أعمق لحالتك
+                    </p>
+                    <Button asChild className="bg-white text-[#2D9B83] hover:bg-slate-50 rounded-xl px-6 h-12 font-bold w-full mx-auto max-w-xs shadow-md border-0">
+                        <a
+                            href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر،%20أريد%20جلسة%20تشخيصية%20للطب%20الشعوري"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2"
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            احجز جلستك الآن
+                        </a>
+                    </Button>
                 </div>
             </div>
 
-            {/* CTA */}
-            <div className="mt-8 mx-6 bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] rounded-3xl p-6 text-center">
-                <h3 className="text-xl font-bold text-white mb-2">هل تحتاج مساعدة متخصصة؟</h3>
-                <p className="text-white/80 text-sm mb-4">
-                    احجز جلسة تشخيصية مع د. عمر العماد لفهم أعمق لحالتك
-                </p>
-                <a
-                    href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر،%20أريد%20جلسة%20تشخيصية%20للطب%20الشعوري"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <Button className="bg-white text-[#2D9B83] hover:bg-white/90 rounded-xl px-6 h-12 font-bold">
-                        <MessageCircle className="w-5 h-5 ml-2" />
-                        احجز جلستك الآن
-                    </Button>
-                </a>
+            {/* Premium Floating Clinical Inspection Panel */}
+            <div className="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:w-[450px] z-40 pointer-events-none">
+                <div className="pointer-events-auto">
+                    <RegionInspectionPanel
+                        region={selectedSystem as any}
+                        onClose={() => setSelectedSystem(null)}
+                        aiInsight={aiInsight}
+                        aiLoading={aiLoading}
+                        onRunAiAnalysis={runAiBodyAnalysis}
+                        relatedDiseases={relatedDiseases}
+                        suggestedProducts={selectedSystem ? getSuggestedProducts(selectedSystem.name) : []}
+                    />
+                </div>
             </div>
 
-            {/* Area Detail Sheet */}
-            <Sheet open={!!selectedArea} onOpenChange={() => setSelectedArea(null)}>
-                <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
-                    {selectedArea && (
-                        <>
-                            <SheetHeader className="pb-4">
-                                <div className="flex items-center gap-3">
-                                    <div
-                                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-                                        style={{ backgroundColor: `${selectedArea.categoryColor}15` }}
-                                    >
-                                        {selectedArea.categoryIcon}
-                                    </div>
-                                    <div className="text-right">
-                                        <SheetTitle className="text-xl">{selectedArea.name}</SheetTitle>
-                                        <p className="text-sm text-slate-500">{selectedArea.categoryName}</p>
-                                    </div>
-                                </div>
-                            </SheetHeader>
-
-                            <div className="space-y-6 pb-8">
-                                {/* Emotion */}
-                                <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4">
-                                    <h4 className="font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                                        <Heart className="w-5 h-5 text-red-500" />
-                                        السبب الشعوري
-                                    </h4>
-                                    <p className="text-lg font-semibold text-red-600 mb-2">{selectedArea.emotion}</p>
-                                    <p className="text-slate-600 text-sm">{selectedArea.description}</p>
-                                </div>
-
-                                {/* Deeper Cause */}
-                                <div>
-                                    <h4 className="font-bold text-slate-800 dark:text-white mb-2">السبب العميق</h4>
-                                    <p className="text-slate-600 leading-relaxed">{selectedArea.deeperCause}</p>
-                                </div>
-
-                                {/* Treatment Steps */}
-                                <div>
-                                    <h4 className="font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                                        <Sparkles className="w-5 h-5 text-[#2D9B83]" />
-                                        خطوات العلاج الشعوري
-                                    </h4>
-                                    <div className="space-y-2">
-                                        {selectedArea.treatment.map((step: string, idx: number) => (
-                                            <div key={idx} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
-                                                <div className="w-6 h-6 rounded-full bg-[#2D9B83] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                                    {idx + 1}
-                                                </div>
-                                                <p className="text-slate-700 text-sm">{step}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Affirmation */}
-                                <div className="bg-gradient-to-br from-[#2D9B83]/10 to-[#3FB39A]/10 rounded-2xl p-5">
-                                    <h4 className="font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                                        <Star className="w-5 h-5 text-[#D4AF37]" />
-                                        التأكيد الشفائي
-                                    </h4>
-                                    <p className="text-[#2D9B83] text-lg font-medium leading-relaxed italic">
-                                        "{selectedArea.affirmation}"
-                                    </p>
-                                    <p className="text-sm text-slate-500 mt-3">
-                                        ردد هذا التأكيد 3 مرات يومياً أمام المرآة بإيمان وثقة
-                                    </p>
-                                </div>
-
-                                {/* AI Deep Analysis */}
-                                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 border border-purple-200">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <Brain className="w-5 h-5 text-purple-600" />
-                                            <h4 className="font-bold text-slate-800 text-sm">تحليل ذكي معمق</h4>
-                                        </div>
-                                        <Button
-                                            onClick={() => runAiBodyAnalysis(selectedArea)}
-                                            disabled={aiLoading}
-                                            size="sm"
-                                            className="bg-purple-600 text-white rounded-xl text-xs h-8"
-                                        >
-                                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 ml-1" />}
-                                            {aiLoading ? 'جاري...' : 'حلل بالذكاء الاصطناعي'}
-                                        </Button>
-                                    </div>
-                                    {aiInsight && (
-                                        <div className="space-y-3 mt-2">
-                                            {aiInsight.emotional_connection && (
-                                                <p className="text-sm text-slate-700 leading-relaxed">{aiInsight.emotional_connection}</p>
-                                            )}
-                                            {aiInsight.healing_exercises?.length > 0 && (
-                                                <div>
-                                                    <p className="text-xs font-bold text-purple-700 mb-1">🧘 تمارين الشفاء:</p>
-                                                    {aiInsight.healing_exercises.map((ex: string, i: number) => (
-                                                        <p key={i} className="text-xs text-slate-600 mr-3">• {ex}</p>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            {aiInsight.affirmations?.length > 0 && (
-                                                <div className="bg-white/60 rounded-xl p-3">
-                                                    <p className="text-xs font-bold text-purple-700 mb-1">✨ تأكيدات مخصصة:</p>
-                                                    {aiInsight.affirmations.map((a: string, i: number) => (
-                                                        <p key={i} className="text-xs text-purple-600 italic">"{a}"</p>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            {aiInsight.lifestyle_tips?.length > 0 && (
-                                                <div>
-                                                    <p className="text-xs font-bold text-purple-700 mb-1">💡 نصائح:</p>
-                                                    {aiInsight.lifestyle_tips.map((t: string, i: number) => (
-                                                        <p key={i} className="text-xs text-slate-600 mr-3">• {t}</p>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Related Diseases from Emotional Medicine Database */}
-                                {(() => {
-                                    const organKeywords = [selectedArea.name.toLowerCase()];
-                                    const relatedDiseases = emotionalDiseases.filter(d =>
-                                        organKeywords.some(kw => d.targetOrgan.includes(kw) || d.symptom.includes(kw))
-                                    ).slice(0, 3);
-
-                                    if (relatedDiseases.length > 0) {
-                                        return (
-                                            <div className="mt-6 pt-4 border-t border-slate-100">
-                                                <h4 className="font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                                                    <BookOpen className="w-5 h-5 text-pink-500" />
-                                                    أمراض مرتبطة بـ {selectedArea.name}
-                                                </h4>
-                                                <div className="space-y-2">
-                                                    {relatedDiseases.map((disease, idx) => (
-                                                        <div key={idx} className="bg-pink-50 rounded-xl p-3">
-                                                            <p className="font-medium text-slate-800 dark:text-white text-sm">{disease.symptom}</p>
-                                                            <p className="text-xs text-slate-500 line-clamp-1">{disease.emotionalConflict}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <Link href="/emotional-medicine" className="mt-3 block">
-                                                    <Button variant="outline" className="w-full text-pink-600 border-pink-200 hover:bg-pink-50">
-                                                        عرض جميع الأمراض والمشاعر
-                                                    </Button>
-                                                </Link>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })()}
-
-                                {/* CTA */}
-                                <a
-                                    href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر،%20أريد%20استشارة%20بخصوص%20الخريطة%20الجسمية"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block mt-6"
-                                >
-                                    <Button className="w-full gradient-primary text-white rounded-xl h-14 text-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                                        <MessageCircle className="w-5 h-5 ml-2" />
-                                        استشارة د. عمر العماد
-                                    </Button>
-                                </a>
-
-                                {/* Suggested Products */}
-                                {getSuggestedProducts(selectedArea.name).length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-slate-100">
-                                        <h4 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                            <ShoppingBag className="w-5 h-5 text-[#D4AF37]" />
-                                            منتجات مساعدة مقترحة
-                                        </h4>
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {getSuggestedProducts(selectedArea.name).map((prod: any) => (
-                                                <Link key={prod.id} href={`/product/${prod.id}`}>
-                                                    <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-colors">
-                                                        <div className="w-16 h-16 bg-white rounded-lg overflow-hidden border border-slate-200">
-                                                            <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
-                                                        </div>
-                                                        <div>
-                                                            <h5 className="font-bold text-slate-800 dark:text-white text-sm">{prod.name}</h5>
-                                                            <p className="text-[#2D9B83] text-sm font-bold">{prod.price} ر.س</p>
-                                                        </div>
-                                                        <Button size="sm" variant="outline" className="mr-auto">عرض</Button>
-                                                    </div>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-                </SheetContent>
-            </Sheet>
+            {/* Search Modal */}
+            <AnatomySearchModal 
+                isOpen={isSearchOpen} 
+                onClose={() => setIsSearchOpen(false)} 
+                onSelectSubTissue={handleSelectSubTissue} 
+            />
         </div>
     );
 }

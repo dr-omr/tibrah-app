@@ -222,7 +222,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                                     animate={{ scale: 1, rotate: 0 }}
                                     transition={{ type: 'spring', delay: 0.2, damping: 12 }}
                                 >
-                                    <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center shadow-2xl shadow-[#2D9B83]/30">
+                                    <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shadow-2xl shadow-primary/30">
                                         <span className="text-white text-5xl font-bold">ط</span>
                                     </div>
                                     <motion.div
@@ -324,7 +324,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                                         value={userName}
                                         onChange={e => setUserName(e.target.value)}
                                         placeholder="أدخل اسمك هنا..."
-                                        className="w-full text-center text-xl font-semibold bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 outline-none focus:ring-2 focus:ring-[#2D9B83] border-2 border-transparent focus:border-[#2D9B83]/20 text-slate-800 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 transition-all"
+                                        className="w-full text-center text-xl font-semibold bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 outline-none focus:ring-2 focus:ring-primary border-2 border-transparent focus:border-primary/20 text-slate-800 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 transition-all"
                                         dir="rtl"
                                         autoFocus
                                     />
@@ -500,7 +500,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             {/* Bottom CTA */}
             <div className="px-6 pb-8 safe-bottom">
                 <motion.button
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] text-white font-bold text-lg shadow-xl shadow-[#2D9B83]/25 flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-lg shadow-xl shadow-primary/25 flex items-center justify-center gap-2"
                     onClick={nextStep}
                     whileTap={{ scale: 0.97 }}
                     initial={{ opacity: 0, y: 20 }}

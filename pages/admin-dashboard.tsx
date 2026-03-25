@@ -22,6 +22,9 @@ import SystemConfig from '@/components/admin/SystemConfig';
 import ThemeSettings from '@/components/admin/ThemeSettings';
 import FoodManager from '@/components/admin/FoodManager';
 import RecipeManager from '@/components/admin/RecipeManager';
+import OrderManager from '@/components/admin/OrderManager';
+import DoctorClinicalView from '@/components/admin/DoctorClinicalView';
+import { showNotification } from '@/lib/pushNotifications';
 
 export default function AdminDashboard() {
     const { user, isAdmin, loading: authLoading } = useAuth();
@@ -136,6 +139,12 @@ export default function AdminDashboard() {
         enabled: isAuthenticated
     });
 
+    const { data: orders = [], refetch: refetchOrders } = useQuery({
+        queryKey: ['admin-orders'],
+        queryFn: () => db.entities.Order.list('-date') as any,
+        enabled: isAuthenticated
+    });
+
     // Frequency entity (optional — may not exist in database)
     const { data: frequencies = [], refetch: refetchFrequencies } = useQuery({
         queryKey: ['admin-frequencies'],
@@ -145,6 +154,25 @@ export default function AdminDashboard() {
             }
             return [];
         },
+        enabled: isAuthenticated
+    });
+
+    // ─── Clinical Data for Doctor Dashboard ───
+    const { data: dailyLogs = [] } = useQuery({
+        queryKey: ['admin-daily-logs'],
+        queryFn: () => db.entities.DailyLog.list('-date', 500) as any,
+        enabled: isAuthenticated
+    });
+
+    const { data: symptomLogs = [] } = useQuery({
+        queryKey: ['admin-symptom-logs'],
+        queryFn: () => db.entities.SymptomLog.list('-recorded_at', 500) as any,
+        enabled: isAuthenticated
+    });
+
+    const { data: diagnosticResults = [] } = useQuery({
+        queryKey: ['admin-diagnostic-results'],
+        queryFn: () => db.entities.DiagnosticResult.list() as any,
         enabled: isAuthenticated
     });
 
@@ -234,6 +262,28 @@ export default function AdminDashboard() {
         onSuccess: () => { refetchFrequencies(); toast.success('تم حذف التردد'); }
     });
 
+    // Order Mutations
+    const orderMutation = useMutation({
+        mutationFn: async ({ id, status }: { id: string, status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed' | string }) => {
+            await db.entities.Order.update(id, { status: status as any });
+            return status;
+        },
+        onSuccess: (status) => {
+            refetchOrders();
+            toast.success('تم تحديث حالة الطلب');
+            
+            // Simulate Push Notification to the user
+            const statusToMessage: Record<string, string> = {
+                'confirmed': 'تم تأكيد استلام الدفع الخاص بطلبك بنجاح ✅',
+                'processing': 'بدأنا بتجهيز طلبك وسيتم شحنه قريباً 📦',
+                'delivered': 'تم تسليم طلبك بنجاح. شكراً لتسوقك معنا! 🎉',
+                'cancelled': 'نأسف، تم إلغاء طلبك ❌'
+            };
+            if (statusToMessage[status]) {
+                showNotification(`تحديث حالة الطلب`, { body: statusToMessage[status] });
+            }
+        }
+    });
 
     // ----- VIEW: LOGIN SCREEN -----
     if (!isAuthenticated) {
@@ -241,12 +291,12 @@ export default function AdminDashboard() {
             <div className="min-h-screen bg-[#0F172A] relative overflow-hidden flex items-center justify-center p-6">
                 {/* Background Effects */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#2D9B83]/20 rounded-full blur-[120px] animate-pulse-slow" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
                     <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#D4AF37]/10 rounded-full blur-[120px] animate-pulse-slow delay-1000" />
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl relative z-10 transition-all hover:shadow-[#2D9B83]/20">
-                    <div className="w-24 h-24 bg-gradient-to-br from-[#2D9B83] to-[#1A5F50] rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg transform rotate-3 hover:rotate-6 transition-transform">
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl relative z-10 transition-all hover:shadow-primary/20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-primary to-[#1A5F50] rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg transform rotate-3 hover:rotate-6 transition-transform">
                         <Lock className="w-10 h-10 text-white" />
                     </div>
 
@@ -256,12 +306,12 @@ export default function AdminDashboard() {
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="relative group">
                             <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                <Lock className="w-5 h-5 text-slate-400 group-focus-within:text-[#2D9B83] transition-colors" />
+                                <Lock className="w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                             </div>
                             <Input
                                 type="password"
                                 placeholder="رمز الدخول السري"
-                                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 text-center text-lg h-14 pr-12 rounded-xl focus:ring-2 focus:ring-[#2D9B83] focus:border-transparent transition-all"
+                                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 text-center text-lg h-14 pr-12 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                                 value={passcode}
                                 onChange={(e) => setPasscode(e.target.value)}
                             />
@@ -270,7 +320,7 @@ export default function AdminDashboard() {
                         <Button
                             type="submit"
                             disabled={loginAttempts >= 5}
-                            className="w-full h-14 bg-gradient-to-r from-[#2D9B83] to-[#1A5F50] hover:from-[#258570] hover:to-[#144D40] text-white font-bold text-lg rounded-xl shadow-lg shadow-[#2D9B83]/30 hover:shadow-[#2D9B83]/50 transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full h-14 bg-gradient-to-r from-primary to-[#1A5F50] hover:from-[#258570] hover:to-[#144D40] text-white font-bold text-lg rounded-xl shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             تسجيل الدخول الآمن
                         </Button>
@@ -349,6 +399,17 @@ export default function AdminDashboard() {
                 </div>
             )}
 
+            {activeTab === 'orders' && (
+                <div>
+                    <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">الطلبات والمدفوعات</h2></div>
+                    <OrderManager
+                        orders={orders}
+                        onUpdateStatus={(id, status) => orderMutation.mutate({ id, status })}
+                        isMutating={orderMutation.isPending}
+                    />
+                </div>
+            )}
+
             {activeTab === 'products' && (
                 <div>
                     <div className="mb-6"><h2 className="text-2xl font-bold text-slate-800 dark:text-white">إدارة المنتجات</h2></div>
@@ -405,6 +466,22 @@ export default function AdminDashboard() {
             {activeTab === 'recipes' && (
                 <div>
                     <RecipeManager />
+                </div>
+            )}
+
+            {activeTab === 'patients' && (
+                <div>
+                    <div className="mb-6">
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">مركز الذكاء السريري</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">رؤية شاملة لجميع المرضى وحالاتهم الصحية والشعورية</p>
+                    </div>
+                    <DoctorClinicalView
+                        users={rawUsers as any[]}
+                        appointments={appointments}
+                        dailyLogs={dailyLogs}
+                        symptomLogs={symptomLogs}
+                        diagnosticResults={diagnosticResults}
+                    />
                 </div>
             )}
 

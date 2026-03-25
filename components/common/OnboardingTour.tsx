@@ -25,7 +25,7 @@ const tourSteps: TourStep[] = [
         title: 'أهلاً بك في طِبرَا! 🌿',
         description: 'عيادتك الرقمية المتكاملة. دعنا نأخذك في جولة سريعة.',
         icon: <Sparkles className="w-8 h-8" />,
-        color: 'from-[#2D9B83] to-[#3FB39A]',
+        color: 'from-primary to-primary-light',
     },
     {
         title: 'المتابع الصحي 💊',
@@ -40,7 +40,7 @@ const tourSteps: TourStep[] = [
         color: 'from-purple-400 to-violet-500',
     },
     {
-        title: 'المتجر الصحي 🛒',
+        title: 'الصيدلية والمكملات 🛒',
         description: 'مكملات غذائية ومنتجات صحية معتمدة مع شحن مباشر.',
         icon: <ShoppingBag className="w-8 h-8" />,
         color: 'from-amber-400 to-orange-500',
@@ -115,7 +115,7 @@ export default function OnboardingTour() {
                     {/* Progress bar */}
                     <div className="h-1 bg-slate-100 dark:bg-slate-800">
                         <motion.div
-                            className="h-full bg-[#2D9B83]"
+                            className="h-full bg-primary"
                             animate={{ width: `${progress}%` }}
                             transition={{ duration: 0.3 }}
                         />
@@ -150,8 +150,8 @@ export default function OnboardingTour() {
                         {tourSteps.map((_, idx) => (
                             <div
                                 key={idx}
-                                className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-[#2D9B83]' :
-                                        idx < currentStep ? 'bg-[#2D9B83]/40' : 'bg-slate-200 dark:bg-slate-700'
+                                className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-primary' :
+                                        idx < currentStep ? 'bg-primary/40' : 'bg-slate-200 dark:bg-slate-700'
                                     }`}
                             />
                         ))}

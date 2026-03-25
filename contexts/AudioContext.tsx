@@ -18,6 +18,8 @@ interface AudioContextType {
     closePlayer: () => void;
     volume: number;
     setVolume: (val: number) => void;
+    sleepTimer: number | null; // minutes remaining
+    setSleepTimer: (minutes: number | null) => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
     const [volume, setVolume] = useState(0.5);
+    const [sleepTimer, setSleepTimer] = useState<number | null>(null);
 
     // Audio Engine Refs
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -172,15 +175,61 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         stopAudio();
         setIsPlaying(false);
         setCurrentTrack(null);
+        setSleepTimer(null);
     }, [stopAudio]);
+
+    // Sleep Timer countdown logic
+    useEffect(() => {
+        if (sleepTimer === null) return;
+
+        // If timer hits 0, stop playback
+        if (sleepTimer <= 0) {
+            if (isPlaying) {
+                togglePlay(); // this stops audio and sets isPlaying false
+            }
+            setSleepTimer(null);
+            return;
+        }
+
+        // Tick every 1 minute
+        const interval = setInterval(() => {
+            setSleepTimer(prev => prev !== null ? prev - 1 : null);
+        }, 60000);
+
+        return () => clearInterval(interval);
+    }, [sleepTimer, isPlaying, togglePlay]);
 
     // Cleanup
     useEffect(() => {
         return () => stopAudio();
     }, [stopAudio]);
 
+    // Media Session API for Background Play & Lock Screen
+    useEffect(() => {
+        if ('mediaSession' in navigator && currentTrack) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: currentTrack.title,
+                artist: 'طِبرَا - د. عمر',
+                album: currentTrack.type === 'rife' ? 'ترددات تراكمية' : 'ترددات علاجية',
+                artwork: [
+                    { src: '/images/icon-512x512.png', sizes: '512x512', type: 'image/png' }
+                ]
+            });
+
+            navigator.mediaSession.setActionHandler('play', () => {
+                if (!isPlaying && currentTrack) playTrack(currentTrack);
+            });
+            navigator.mediaSession.setActionHandler('pause', () => {
+                if (isPlaying) togglePlay();
+            });
+            navigator.mediaSession.setActionHandler('stop', () => closePlayer());
+
+            navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+        }
+    }, [currentTrack, isPlaying, playTrack, togglePlay, closePlayer]);
+
     return (
-        <AudioContext.Provider value={{ isPlaying, currentTrack, playTrack, togglePlay, closePlayer, volume, setVolume }}>
+        <AudioContext.Provider value={{ isPlaying, currentTrack, playTrack, togglePlay, closePlayer, volume, setVolume, sleepTimer, setSleepTimer }}>
             {children}
         </AudioContext.Provider>
     );

@@ -168,7 +168,7 @@ function StatCard({ data, index }: { data: StatCardData; index: number }) {
                         <Icon className="w-5 h-5" style={{ color: data.color }} />
                     </div>
                     <motion.div
-                        className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-lg ${isPositive
+                        className={`flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-lg ${isPositive
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                                 : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                             }`}
@@ -197,7 +197,7 @@ function StatCard({ data, index }: { data: StatCardData; index: number }) {
                     {data.liveLabel && (
                         <div className="flex items-center gap-1">
                             <LivePulse color={data.color} />
-                            <span className="text-[10px] text-slate-400">{data.liveLabel}</span>
+                            <span className="text-xs text-slate-400">{data.liveLabel}</span>
                         </div>
                     )}
                 </div>
@@ -237,7 +237,7 @@ function ActivityFeedItem({ item, index }: { item: ActivityItem; index: number }
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{item.text}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {item.time}
                 </p>
@@ -382,10 +382,10 @@ export default function AdminStats({ usersCount, productsCount, coursesCount, ar
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-[#2D9B83]" />
+                            <Activity className="w-5 h-5 text-primary" />
                             <h3 className="font-bold text-slate-800 dark:text-white text-sm">آخر النشاطات</h3>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
                             <LivePulse color="#2D9B83" />
                             تحديث مباشر
                         </div>

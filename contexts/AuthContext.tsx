@@ -1,26 +1,15 @@
 /**
  * Unified Authentication Context
- * Supports both Local Auth and Firebase Auth
- * Automatically falls back to Local Auth if Firebase is not configured
+ * Firebase Auth with migration support for legacy Local Auth sessions
+ * Cookie: Firebase ID token (JWT) for Firebase users, legacy format for local users
  */
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { localAuth, LocalUser } from '../lib/localAuth';
 
-// Try to import Firebase (may fail if not configured)
-let firebaseAuth: typeof import('firebase/auth') | null = null;
-let auth: import('firebase/auth').Auth | null = null;
-let googleProvider: import('firebase/auth').GoogleAuthProvider | null = null;
 
-try {
-    // Dynamic import to prevent build errors if Firebase is not configured
-    const firebase = require('../lib/firebase');
-    auth = firebase.auth;
-    googleProvider = firebase.googleProvider;
-    firebaseAuth = require('firebase/auth');
-} catch (e) {
-    console.log('🔄 Firebase not configured, using Local Auth only');
-}
+// Safely import Firebase instances and auth functions using modern ESM
+import { auth, googleProvider, facebookProvider, appleProvider } from '../lib/firebase';
+import * as firebaseAuth from 'firebase/auth';
 
 // Configurable admin emails (from env or default)
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'dr.omar@tibrah.com')
@@ -43,17 +32,22 @@ export interface UserProfile {
     lastLoginAt?: string;
     isVerified?: boolean;
     authProvider: 'local' | 'firebase';
+    fcm_token?: string;
 }
 
 interface AuthContextType {
     user: UserProfile | null;
     loading: boolean;
     authProvider: 'local' | 'firebase' | 'none';
+    /** Whether Firebase Auth is properly configured and available */
+    isFirebaseAvailable: boolean;
 
     // Auth methods
     signUp: (email: string, password: string, name: string) => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
+    signInWithFacebook: () => Promise<void>;
+    signInWithApple: () => Promise<void>;
     signOut: () => Promise<void>;
 
     // Profile methods
@@ -81,17 +75,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [loading, setLoading] = useState(true);
     const [authProvider, setAuthProvider] = useState<'local' | 'firebase' | 'none'>('none');
 
-    // Sync auth cookie for middleware route protection
+    // Clean up old client-set tibrah_auth cookie (legacy, no longer used)
     useEffect(() => {
-        if (typeof document === 'undefined') return;
-        if (user) {
-            const cookieData = JSON.stringify({ email: user.email, role: user.role });
-            document.cookie = `tibrah_auth=${encodeURIComponent(cookieData)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
-        } else if (!loading) {
-            // Clear cookie on logout (only after initial load)
+        if (typeof document !== 'undefined') {
             document.cookie = 'tibrah_auth=; path=/; max-age=0';
         }
-    }, [user, loading]);
+    }, []);
+
+    // Exchange Firebase ID token for server-set HttpOnly session cookie
+    const syncServerSession = async (idToken: string, attempt = 1) => {
+        try {
+            const res = await fetch('/api/auth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken }),
+            });
+            if (!res.ok && attempt === 1) {
+                // Token may be stale — wait for Firebase to refresh it silently
+                console.warn('[Auth] Session sync failed (attempt 1), the session will be retried on next token refresh.');
+            }
+        } catch (e) {
+            // Network error — session sync will be reattempted on next onIdTokenChanged event
+            console.warn('[Auth] Session sync network error — will retry on next token refresh.');
+        }
+    };
+
+    // Clear the server-set session cookie
+    const clearServerSession = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (e) {
+            console.error('Failed to clear server session:', e);
+        }
+    };
 
     // Check if Firebase is properly configured
     const isFirebaseConfigured = (): boolean => {
@@ -104,20 +120,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     };
 
-    // Convert LocalUser to UserProfile
-    const localUserToProfile = (localUser: LocalUser): UserProfile => ({
-        id: localUser.id,
-        email: localUser.email,
-        name: localUser.name,
-        displayName: localUser.displayName,
-        photoURL: localUser.photoURL,
-        phone: localUser.phone,
-        role: localUser.role,
-        createdAt: localUser.createdAt,
-        lastLoginAt: localUser.lastLoginAt,
-        isVerified: localUser.isVerified,
-        authProvider: 'local',
-    });
 
     // Convert Firebase User to UserProfile
     const firebaseUserToProfile = (firebaseUser: import('firebase/auth').User): UserProfile => ({
@@ -132,43 +134,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Initialize auth listener
     useEffect(() => {
-        let unsubscribeLocal: (() => void) | null = null;
         let unsubscribeFirebase: (() => void) | null = null;
+        
+        // Helper to handle token sync
+        const syncTokenForUser = async (userId: string) => {
+             const token = localStorage.getItem('fcm_token');
+             if (token) {
+                 try {
+                     const dbModule = await import('../lib/db');
+                     await dbModule.default.entities.User.update(userId, { 
+                         fcm_token: token,
+                         platform: typeof window !== 'undefined' && 'Capacitor' in window ? 'android' : 'web' 
+                     });
+                     console.log('✅ Synced FCM token to user profile');
+                 } catch (e) {
+                     console.error('Failed to sync FCM token', e);
+                 }
+             }
+        };
 
         const setupAuth = async () => {
-            // Try Firebase first if configured
+            // ALWAYS force Firebase mode for security architecture (local auth deprecated)
             if (isFirebaseConfigured() && auth && firebaseAuth) {
                 console.log('🔥 Using Firebase Auth');
                 setAuthProvider('firebase');
 
-                unsubscribeFirebase = firebaseAuth.onAuthStateChanged(auth, (firebaseUser) => {
+                // Use onIdTokenChanged instead of onAuthStateChanged
+                // This fires when token refreshes too, keeping the session fresh
+                unsubscribeFirebase = firebaseAuth.onIdTokenChanged(auth, async (firebaseUser) => {
                     if (firebaseUser) {
                         setUser(firebaseUserToProfile(firebaseUser));
+                        syncTokenForUser(firebaseUser.uid);
+                        // Exchange ID token for server-set HttpOnly session cookie
+                        try {
+                            const idToken = await firebaseUser.getIdToken();
+                            await syncServerSession(idToken);
+                        } catch (e) {
+                            console.error('Failed to sync server session:', e);
+                        }
                     } else {
                         setUser(null);
+                        await clearServerSession();
                     }
                     setLoading(false);
                 });
             } else {
-                // Use Local Auth
-                console.log('💾 Using Local Auth');
-                setAuthProvider('local');
-
-                unsubscribeLocal = localAuth.onAuthStateChanged((localUser) => {
-                    if (localUser) {
-                        setUser(localUserToProfile(localUser));
-                    } else {
-                        setUser(null);
-                    }
-                    setLoading(false);
-                });
+                // If Firebase not available, we fail closed (local auth is deprecated)
+                setAuthProvider('none');
+                setLoading(false);
+                console.error('Firebase is not configured. Authentication is offline.');
             }
         };
 
         setupAuth();
 
         return () => {
-            if (unsubscribeLocal) unsubscribeLocal();
             if (unsubscribeFirebase) unsubscribeFirebase();
         };
     }, []);
@@ -180,15 +200,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const signUp = async (email: string, password: string, name: string): Promise<void> => {
         setLoading(true);
         try {
-            if (authProvider === 'firebase' && auth && firebaseAuth) {
-                // Firebase signup
+            if (isFirebaseConfigured() && auth && firebaseAuth) {
+                // Firebase signup — the only allowed path for new accounts
                 const credential = await firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
                 if (credential.user) {
                     await firebaseAuth.updateProfile(credential.user, { displayName: name });
                 }
             } else {
-                // Local signup
-                await localAuth.signUp(email, password, name);
+                // No new local accounts allowed — Firebase must be configured
+                throw { code: 'auth/unavailable', message: 'التسجيل غير متاح حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.' };
             }
         } finally {
             setLoading(false);
@@ -198,12 +218,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const signInWithEmail = async (email: string, password: string): Promise<void> => {
         setLoading(true);
         try {
-            if (authProvider === 'firebase' && auth && firebaseAuth) {
-                // Firebase signin
+            if (isFirebaseConfigured() && auth && firebaseAuth) {
+                // Firebase sign-in — strict primary path
                 await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
             } else {
-                // Local signin
-                await localAuth.signInWithEmail(email, password);
+                // No Firebase → block
+                throw { code: 'auth/unavailable', message: 'تسجيل الدخول غير متاح حالياً. يرجى المحاولة لاحقاً.' };
             }
         } finally {
             setLoading(false);
@@ -213,12 +233,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const signInWithGoogle = async (): Promise<void> => {
         setLoading(true);
         try {
-            if (authProvider === 'firebase' && auth && firebaseAuth && googleProvider) {
-                // Firebase Google signin
+            if (isFirebaseConfigured() && auth && firebaseAuth && googleProvider) {
+                // Firebase Google sign-in — the only allowed path
                 await firebaseAuth.signInWithPopup(auth, googleProvider);
+                setAuthProvider('firebase');
             } else {
-                // Local Google signin (simulation)
-                await localAuth.signInWithGoogle();
+                // No fake Google accounts — Firebase must be configured
+                throw { code: 'auth/google-unavailable', message: 'تسجيل الدخول بجوجل غير متاح حالياً. يرجى استخدام البريد الإلكتروني.' };
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const signInWithFacebook = async (): Promise<void> => {
+        setLoading(true);
+        try {
+            if (isFirebaseConfigured() && auth && firebaseAuth && facebookProvider) {
+                await firebaseAuth.signInWithPopup(auth, facebookProvider);
+                setAuthProvider('firebase');
+            } else {
+                throw { code: 'auth/facebook-unavailable', message: 'تسجيل الدخول بفيسبوك غير متاح حالياً. يرجى استخدام البريد الإلكتروني.' };
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const signInWithApple = async (): Promise<void> => {
+        setLoading(true);
+        try {
+            if (isFirebaseConfigured() && auth && firebaseAuth && appleProvider) {
+                await firebaseAuth.signInWithPopup(auth, appleProvider);
+                setAuthProvider('firebase');
+            } else {
+                throw { code: 'auth/apple-unavailable', message: 'تسجيل الدخول بـ Apple غير متاح حالياً. يرجى استخدام البريد الإلكتروني.' };
             }
         } finally {
             setLoading(false);
@@ -228,11 +277,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const signOut = async (): Promise<void> => {
         setLoading(true);
         try {
-            if (authProvider === 'firebase' && auth && firebaseAuth) {
+            // Clear server session first
+            await clearServerSession();
+            if (isFirebaseConfigured() && auth && firebaseAuth) {
                 await firebaseAuth.signOut(auth);
-            } else {
-                await localAuth.signOut();
             }
+            // Explicitly reset state (don't rely solely on onIdTokenChanged)
+            setUser(null);
+            setAuthProvider('none');
         } finally {
             setLoading(false);
         }
@@ -245,7 +297,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const updateProfile = async (updates: Partial<UserProfile>): Promise<void> => {
         if (!user) throw new Error('يجب تسجيل الدخول أولاً');
 
-        if (authProvider === 'firebase' && auth && firebaseAuth && auth.currentUser) {
+        if (isFirebaseConfigured() && auth && firebaseAuth && auth.currentUser) {
             await firebaseAuth.updateProfile(auth.currentUser, {
                 displayName: updates.displayName || updates.name,
                 photoURL: updates.photoURL,
@@ -253,28 +305,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // Refresh user state
             setUser(prev => prev ? { ...prev, ...updates } : null);
         } else {
-            const updatedUser = await localAuth.updateProfile(updates);
-            setUser(localUserToProfile(updatedUser));
+            throw new Error('تحديث الحساب غير متاح حالياً');
         }
     };
 
     const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
         if (!user) throw new Error('يجب تسجيل الدخول أولاً');
 
-        if (authProvider === 'firebase') {
-            throw new Error('تغيير كلمة المرور غير متاح حالياً لحسابات Firebase');
+        if (isFirebaseConfigured() && auth && firebaseAuth && auth.currentUser && user.email) {
+            // Re-authenticate user first
+            const credential = firebaseAuth.EmailAuthProvider.credential(user.email, currentPassword);
+            await firebaseAuth.reauthenticateWithCredential(auth.currentUser, credential);
+            await firebaseAuth.updatePassword(auth.currentUser, newPassword);
         } else {
-            await localAuth.changePassword(currentPassword, newPassword);
+            throw new Error('تغيير كلمة المرور غير متاح حالياً');
         }
     };
 
     const deleteAccount = async (): Promise<void> => {
         if (!user) throw new Error('يجب تسجيل الدخول أولاً');
 
-        if (authProvider === 'firebase' && auth && auth.currentUser) {
+        if (isFirebaseConfigured() && auth && auth.currentUser) {
             await auth.currentUser.delete();
         } else {
-            await localAuth.deleteAccount();
+            throw new Error('حذف الحساب غير متاح حالياً');
         }
     };
 
@@ -286,10 +340,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         loading,
         authProvider,
+        isFirebaseAvailable: isFirebaseConfigured(),
 
         signUp,
         signInWithEmail,
         signInWithGoogle,
+        signInWithFacebook,
+        signInWithApple,
         signOut,
 
         updateProfile,

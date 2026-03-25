@@ -5,13 +5,27 @@
 
 import { db as firestoreDb } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import localforage from 'localforage';
 
 // Types for entity operations
 interface EntityBase {
     id?: string;
+    user_id?: string;
     created_at?: string;
     updated_at?: string;
     [key: string]: unknown;
+}
+
+export interface EmotionalDiagnosticContext {
+    body_region: string;
+    physical_complaint: string;
+    emotional_diagnostic_pattern: string;
+    psychosomatic_dimension: string;
+    stress_context: string;
+    behavioral_contributors: string[];
+    repeated_pattern_flag: boolean;
+    clinician_summary: string;
+    patient_summary: string;
 }
 
 interface HealthMetric extends EntityBase {
@@ -28,12 +42,14 @@ interface DailyLog extends EntityBase {
     energy_level?: number;
     sleep_quality?: number;
     stress_level?: number;
+    pain_level?: number;
     notes?: string;
     exercise?: {
         type: string;
         duration_minutes: number;
         calories?: number;
     };
+    emotional_diagnostic?: EmotionalDiagnosticContext;
 }
 
 interface FastingSession extends EntityBase {
@@ -82,6 +98,15 @@ interface User extends EntityBase {
     email?: string;
     name?: string;
     settings?: Record<string, unknown>;
+    fcm_token?: string;
+    platform?: 'web' | 'android' | 'ios';
+    tibrah_points?: number;
+    loyalty_tier?: 'silver' | 'gold' | 'platinum';
+    rewards_history?: {
+        date: string;
+        action: string;
+        points: number;
+    }[];
 }
 
 interface CartItemEntity extends EntityBase {
@@ -153,6 +178,49 @@ interface AppointmentEntity extends EntityBase {
     status?: string;
     notes?: string;
     price?: number;
+    health_concern?: string;
+    emotional_diagnostic?: EmotionalDiagnosticContext;
+}
+
+interface TriageRecordEntity extends EntityBase {
+    date: string;
+    user_id?: string;
+    primary_complaint?: string;
+    complaint_label?: string;
+    secondary_complaints?: string[];
+    triage_level: 'routine' | 'near_review' | 'urgent_sameday' | 'emergency';
+    severity_score: number;
+    red_flags_triggered?: { id: string; msg: string; level?: string }[];
+    hpi_answers?: Record<string, unknown>;
+    socrates?: Record<string, unknown>;
+    pmh?: string[];
+    medications?: string;
+    allergies?: string;
+    demographics?: { age: string; gender: string; pregnancy?: string };
+    narrative?: string;
+    additional_notes?: string;
+    emotional_diagnostic?: EmotionalDiagnosticContext;
+    summary_doctor?: string;
+    summary_patient?: string;
+    status: 'pending_review' | 'reviewed' | 'referred';
+}
+
+interface PointTransactionEntity extends EntityBase {
+    user_id?: string;
+    amount: number;
+    reason: string;
+    balance_after: number;
+    timestamp: string;
+}
+
+interface RedemptionEntity extends EntityBase {
+    user_id?: string;
+    reward_id: string;
+    reward_title: string;
+    coupon_code: string;
+    points_spent: number;
+    status: 'active' | 'used' | 'expired';
+    expires_at?: string;
 }
 
 // Fallback event listeners — notify UI when Firebase fails silently
@@ -181,20 +249,20 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
     const storageKey = `tibrah_db_${entityName}`;
     const collectionRef = isFirebaseReady() ? collection(firestoreDb, entityName) : null;
 
-    // --- Local Storage Implementation (Fallback) ---
-    const getLocalAll = (): T[] => {
+    // --- Local Storage Implementation (Fallback via localforage / IndexedDB) ---
+    const getLocalAll = async (): Promise<T[]> => {
         if (typeof window === 'undefined') return [];
         try {
-            const data = localStorage.getItem(storageKey);
+            const data = await localforage.getItem<string>(storageKey);
             return data ? JSON.parse(data) : [];
         } catch {
             return [];
         }
     };
 
-    const saveLocalAll = (items: T[]) => {
+    const saveLocalAll = async (items: T[]) => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem(storageKey, JSON.stringify(items));
+            await localforage.setItem(storageKey, JSON.stringify(items));
         }
     };
 
@@ -225,7 +293,7 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
             }
 
             // Fallback to Local
-            let items = getLocalAll();
+            let items = await getLocalAll();
             if (orderBy) {
                 const desc = orderBy.startsWith('-');
                 const field = desc ? orderBy.slice(1) : orderBy;
@@ -273,8 +341,8 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 }
             }
 
-            // Fallback
-            const items = getLocalAll();
+            // Fallback to Local
+            const items = await getLocalAll();
             return items.find(item => item.id === id) || null;
         },
 
@@ -297,12 +365,12 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 }
             }
 
-            // Fallback
+            // Fallback to Local
             newItem.id = `${entityName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            const items = getLocalAll();
-            items.push(newItem);
-            saveLocalAll(items);
-            return newItem;
+            const items = await getLocalAll();
+            items.push(newItem as Extract<T, T>);
+            await saveLocalAll(items);
+            return newItem as Extract<T, T>;
         },
 
         async update(id: string, data: Partial<T>): Promise<T> {
@@ -322,14 +390,14 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 }
             }
 
-            // Fallback
-            const items = getLocalAll();
+            // Fallback to Local
+            const items = await getLocalAll();
             const index = items.findIndex(item => item.id === id);
-            if (index === -1) throw new Error(`${entityName} with id ${id} not found`);
-
-            items[index] = { ...items[index], ...updateData };
-            saveLocalAll(items);
-            return items[index];
+            if (index === -1) throw new Error(`Document ${id} not found in local storage`);
+            const updatedItem = { ...items[index], ...updateData };
+            items[index] = updatedItem;
+            await saveLocalAll(items);
+            return updatedItem;
         },
 
         async delete(id: string): Promise<void> {
@@ -342,11 +410,30 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 }
             }
 
-            // Fallback
-            const items = getLocalAll();
+            // Fallback to Local
+            const items = await getLocalAll();
             const filtered = items.filter(item => item.id !== id);
-            saveLocalAll(filtered);
-        }
+            await saveLocalAll(filtered);
+        },
+
+        /**
+         * List entities scoped to a specific user.
+         * Use this for all patient/user-specific data reads.
+         * Shared entities (Products, Courses, etc.) should continue using .list().
+         */
+        async listForUser(userId: string, orderBy?: string, limit?: number): Promise<T[]> {
+            if (!userId) return [];
+            return this.filter({ user_id: userId } as Record<string, unknown>, orderBy, limit);
+        },
+
+        /**
+         * Create an entity with user_id automatically set.
+         * Use this for all patient/user-specific data writes.
+         */
+        async createForUser(userId: string, data: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T> {
+            if (!userId) throw new Error('User ID is required for user-scoped data');
+            return this.create({ ...data, user_id: userId } as any);
+        },
     };
 }
 
@@ -383,19 +470,10 @@ export const db = {
         WeightLog: createEntityOperations<WeightLog>('weight_logs'),
         UserHealth: createEntityOperations<UserHealth>('user_health'),
         Order: createEntityOperations<OrderEntity>('orders'),
+        TriageRecord: createEntityOperations<TriageRecordEntity>('triage_records'),
+        PointTransaction: createEntityOperations<PointTransactionEntity>('point_transactions'),
+        Redemption: createEntityOperations<RedemptionEntity>('redemptions'),
     },
-
-    // Legacy aliases (deprecated - use db.entities.* instead)
-    users: createEntityOperations<User>('users'),
-    healthMetrics: createEntityOperations<HealthMetric>('health_metrics'),
-    dailyLogs: createEntityOperations<DailyLog>('daily_logs'),
-    symptomLogs: createEntityOperations<EntityBase>('symptom_logs'),
-    appointments: createEntityOperations<AppointmentEntity>('appointments'),
-    products: createEntityOperations<ProductEntity>('products'),
-    cartItems: createEntityOperations<CartItemEntity>('cart_items'),
-    comments: createEntityOperations<Comment>('comments'),
-    foods: createEntityOperations<EntityBase>('foods'),
-    recipes: createEntityOperations<EntityBase>('recipes'),
 
     // AI Integrations (Simplified)
     integrations: {

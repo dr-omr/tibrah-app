@@ -1,491 +1,335 @@
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { createPageUrl } from '../utils';
+import Head from 'next/head';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    MessageCircle, Instagram, Youtube, Clock, Users, TrendingUp,
-    Check, X, Star, Sparkles, Gift, ArrowLeft, Calendar, Zap,
-    Award, Heart, Brain, Shield, Phone, ExternalLink, Play
+    Activity, ArrowRight, Brain, CheckCircle2, 
+    Crown, Heart, Shield, Sparkles, Star, Stethoscope, 
+    TrendingUp, ArrowUpRight, Zap, Target
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AIContextAssistant from '@/components/ai/AIContextAssistant';
-import { DOCTOR_KNOWLEDGE } from '@/components/ai/knowledge';
-import SEO, { pageSEO } from '../components/common/SEO';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { haptic } from '@/lib/HapticFeedback';
+import { uiSounds } from '@/lib/uiSounds';
+import { createPageUrl } from '@/utils';
 
-export default function Services() {
-    const [activeProgram, setActiveProgram] = useState('21_days');
-
-    const doctorInfo = {
-        name: 'د. عمر العماد',
-        title: 'طبيب عام - خبير الطب الوظيفي',
-        education: 'خريج كلية الطب - جامعة صنعاء',
-        vision: 'أساعدك تفهم جسمك وتتعافى بشكل حقيقي',
-        philosophy: 'علاج السبب الجذري وليس الأعراض فقط',
-        whatsapp: '967771447111',
-        instagram: 'dr.omr369',
-        tiktok: 'dr.omr369',
-        youtube: 'dr.omr369',
-        stats: {
-            content_hours: '2000+',
-            patients: '300+',
-            success_rate: '87%'
-        }
-    };
-
-    // عرض الإطلاق - خصم 90%
-    const mainService = {
-        title: 'الجلسة التشخيصية الشاملة',
-        duration: '45-60 دقيقة',
-        original_price_yer: '3,000',
-        original_price_sar: '25',
-        promo_price_yer: '300', // 10% of 3000
-        promo_price_sar: '2.5', // 10% of 25
-        features: [
-            'مراجعة شاملة للتاريخ الصحي',
-            'تحليل الأعراض بنهج الطب الوظيفي',
-            'خطة علاجية أولية مخصصة',
-            'توصيات للتحاليل (إن لزم)'
-        ]
-    };
-
-    const programs = [
-        {
-            id: 'weekly',
-            title: 'برنامج الأسبوع',
-            duration: '7 أيام',
-            slogan: '7 Days Transformation',
-            icon: '📅',
-            description: 'مناسب للحالات البسيطة أو لمن يريد تحسين جانب معين بسرعة (مثل: تحسين الهضم، النوم، الطاقة).',
-            features: [
-                'خطة غذائية مخصصة لمدة أسبوع',
-                'توصيات يومية عبر WhatsApp',
-                'متابعة يومية للتقدم',
-                'تعديلات فورية عند الحاجة'
-            ],
-            color: 'from-blue-500 to-cyan-500',
-            bgColor: 'from-blue-500/10 to-cyan-500/10'
-        },
-        {
-            id: '21_days',
-            title: 'برنامج ال21 يوم',
-            duration: '21 يوماً',
-            slogan: '3 Weeks Reset',
-            icon: '🌱',
-            popular: true,
-            description: 'البرنامج المثالي لإعادة ضبط الجسم وبناء عادات صحية مستدامة. 21 يوم كافية لتغيير حقيقي يدوم.',
-            features: [
-                'خطة غذائية وعلاجية متكاملة',
-                '3 جلسات متابعة (أسبوعياً)',
-                'دعم يومي عبر WhatsApp',
-                'تقييم شامل في نهاية البرنامج',
-                'محتوى تعليمي مخصص'
-            ],
-            color: 'from-[#2D9B83] to-[#3FB39A]',
-            bgColor: 'from-[#2D9B83]/10 to-[#3FB39A]/10',
-            cta: 'ابدأ التحول الحقيقي'
-        },
-        {
-            id: '3_months',
-            title: 'برنامج ال3 أشهر',
-            duration: '90 يوماً',
-            slogan: '90 Days Complete Transformation',
-            icon: '🚀',
-            description: 'التحول الشامل - للحالات المزمنة والمعقدة. رحلة كاملة نمشيها سوياً حتى تصل لصحة مستدامة بإذن الله.',
-            features: [
-                'برنامج علاجي شامل ومتدرج',
-                '8-10 جلسات متابعة',
-                'دعم مستمر طوال الفترة',
-                'تحليل دوري للتقدم',
-                'خطة صيانة بعد انتهاء البرنامج',
-                'أولوية في الرد والمتابعة'
-            ],
-            color: 'from-[#D4AF37] to-[#F4D03F]',
-            bgColor: 'from-[#D4AF37]/10 to-[#F4D03F]/10',
-            cta: 'معك للنهاية ←'
-        }
-    ];
-
-    const comparisons = [
-        { feature: 'مدة الاستشارة', doctor: '45-60 دقيقة', traditional: '10-15 دقيقة' },
-        { feature: 'النهج العلاجي', doctor: 'علاج السبب الجذري', traditional: 'علاج الأعراض فقط' },
-        { feature: 'المتابعة', doctor: 'دعم مباشر عبر WhatsApp', traditional: 'مواعيد متباعدة' },
-        { feature: 'الخطة العلاجية', doctor: 'مخصصة 100% لحالتك', traditional: 'Protocols عامة' },
-        { feature: 'المحتوى التعليمي', doctor: 'محتوى مجاني مستمر', traditional: 'غير متوفر' },
-    ];
-
-    const whatsappLink = `https://wa.me/${doctorInfo.whatsapp}?text=مرحباً%20د.%20عمر،%20أريد%20حجز%20جلسة%20تشخيصية`;
+// ═══ ANIMATED COUNTER ═══
+function TrustCounter({ end, label, suffix = '', icon: Icon }: any) {
+    const [count, setCount] = useState(0);
+    const [hasTriggered, setHasTriggered] = useState(false);
 
     return (
-        <div className="min-h-screen pb-24">
-            {/* SEO Meta Tags */}
-            <SEO {...pageSEO.services} />
-
-            {/* Hero Section */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] px-6 py-10">
-                <div className="relative z-10 mb-4">
-                    <AIContextAssistant
-                        contextType="services"
-                        contextData={{}}
-                        knowledgeBase={DOCTOR_KNOWLEDGE}
-                        title="اسألني عن خدمات د. عمر"
-                    />
-                </div>
-                <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute bottom-0 right-0 w-48 h-48 bg-[#D4AF37]/20 rounded-full blur-2xl translate-x-1/2 translate-y-1/2" />
-                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
-
-                <div className="relative text-center">
-                    {/* Doctor Image */}
-                    <div className="relative w-32 h-32 mx-auto mb-6">
-                        <div className="absolute inset-0 gradient-gold rounded-full blur-lg opacity-50 scale-110" />
-                        <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-white/30 to-white/10">
-                            <div className="w-full h-full rounded-full overflow-hidden bg-white/20">
-                                <img
-                                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69287e726ff0e068617e81b7/9185440e5_omar.jpg"
-                                    alt={doctorInfo.name}
-                                    className="w-full h-full object-cover object-top"
-                                />
-                            </div>
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                            <Award className="w-4 h-4 text-[#2D9B83]" />
-                        </div>
-                    </div>
-
-                    <h1 className="text-2xl font-bold text-white mb-2">{doctorInfo.name}</h1>
-                    <p className="text-white/90 font-medium mb-2">{doctorInfo.title}</p>
-                    <p className="text-white/70 text-sm mb-6">{doctorInfo.education}</p>
-
-                    <div className="glass rounded-2xl p-4 max-w-sm mx-auto">
-                        <p className="text-slate-700 font-medium">"{doctorInfo.vision}"</p>
-                    </div>
-                </div>
+        <motion.div 
+            onViewportEnter={() => {
+                if (hasTriggered) return;
+                setHasTriggered(true);
+                let current = 0;
+                const totalSteps = 40;
+                const stepVal = Math.max(1, Math.floor(end / totalSteps));
+                const interval = setInterval(() => {
+                    current += stepVal;
+                    if (current >= end) {
+                        setCount(end);
+                        clearInterval(interval);
+                    } else { setCount(current); }
+                }, 40);
+            }}
+            className="flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/50 p-6 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] transition-all group"
+        >
+            <div className="w-14 h-14 rounded-[20px] bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/40 dark:to-emerald-900/40 flex items-center justify-center mb-4 border border-teal-100 dark:border-teal-800 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                <Icon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
             </div>
+            <div className="text-4xl font-black text-slate-800 dark:text-white mb-1.5 tracking-tighter" dir="ltr">
+                {count}{suffix}
+            </div>
+            <div className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">{label}</div>
+        </motion.div>
+    );
+}
 
-            {/* Stats */}
-            <div className="px-6 -mt-6 relative z-10">
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="glass rounded-2xl p-4 text-center shadow-lg">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-800">{doctorInfo.stats.content_hours}</p>
-                        <p className="text-xs text-slate-500">ساعة محتوى مجاني</p>
+// ═══ INTERACTIVE CARE FINDER ═══
+function CarePathfinder() {
+    const [step, setStep] = useState(0);
+    const [goal, setGoal] = useState<string | null>(null);
+
+    const goals = [
+        { id: 'chronic', label: 'علاج مرض مزمن', icon: Activity, desc: 'ضغط، سكري، غدة، روماتيزم' },
+        { id: 'fatigue', label: 'تعب دائم وإرهاق', icon: Zap, desc: 'خمول، صعوبة تركيز، نقص طاقة' },
+        { id: 'weight', label: 'مقاومة نزول الوزن', icon: Target, desc: 'ثبات الوزن، مقاومة إنسولين' },
+        { id: 'mental', label: 'قلق واكتئاب', icon: Brain, desc: 'ضغوط نفسية، ارتباط جسدي' }
+    ];
+
+    return (
+        <div className="bg-white/90 dark:bg-[#0B1121]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 rounded-[48px] p-8 md:p-12 max-w-2xl mx-auto relative overflow-hidden shadow-[0_20px_60px_rgb(0,0,0,0.08)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.4)]">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-[100px] pointer-events-none" />
+            
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-500/30 dark:to-purple-500/30 flex items-center justify-center border border-indigo-500/20">
+                        <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                     </div>
-                    <div className="glass rounded-2xl p-4 text-center shadow-lg">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-800">{doctorInfo.stats.patients}</p>
-                        <p className="text-xs text-slate-500">مريض ساعدهم</p>
-                    </div>
-                    <div className="glass rounded-2xl p-4 text-center shadow-lg">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-800">{doctorInfo.stats.success_rate}</p>
-                        <p className="text-xs text-slate-500">نسبة التحسن</p>
+                    <div>
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-tight">دليلك الذكي للرعاية</h3>
+                        <p className="text-xs text-slate-500 font-bold tracking-wide">مدعوم بالذكاء الاصطناعي</p>
                     </div>
                 </div>
-            </div>
-
-            <div className="px-6 py-8 space-y-8">
-                {/* Main Service */}
-                <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                        <h2 className="text-xl font-bold text-slate-800">الخدمة الرئيسية</h2>
-                    </div>
-
-                    <div className="relative overflow-hidden rounded-3xl shadow-xl">
-                        <div className="absolute inset-0 gradient-primary" />
-                        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]" />
-
-                        <div className="relative p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
-                                    <Brain className="w-7 h-7 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white">{mainService.title}</h3>
-                                    <div className="flex items-center gap-2 text-white/80">
-                                        <Clock className="w-4 h-4" />
-                                        <span>{mainService.duration}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2 mb-6">
-                                {mainService.features.map((feature, idx) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                        <Check className="w-5 h-5 text-white/90" />
-                                        <span className="text-white/90">{feature}</span>
-                                    </div>
+                
+                <AnimatePresence mode="wait">
+                    {step === 0 && (
+                        <motion.div key="step0" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                            <p className="text-slate-600 dark:text-slate-300 text-lg font-bold mb-6">ما هو الهدف الرئيسي الذي تسعى لتحقيقه من خلال زيارتك؟</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {goals.map(g => (
+                                    <button
+                                        key={g.id}
+                                        onClick={() => { haptic.selection(); setGoal(g.id); setTimeout(() => setStep(1), 300); }}
+                                        className={`p-5 rounded-[24px] border-2 text-right transition-all group ${
+                                            goal === g.id 
+                                            ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500' 
+                                            : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/50'
+                                        }`}
+                                    >
+                                        <g.icon className={`w-8 h-8 mb-4 ${goal === g.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-indigo-500'}`} />
+                                        <h4 className="text-base font-black text-slate-800 dark:text-white mb-1.5">{g.label}</h4>
+                                        <p className="text-xs text-slate-500 font-medium">{g.desc}</p>
+                                    </button>
                                 ))}
                             </div>
-
-                            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4">
-                                {/* عرض الإطلاق Badge */}
-                                <div className="flex items-center justify-center gap-2 mb-3">
-                                    <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                                        🔥 عرض إطلاق - خصم 90%
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-white/80">السعر</span>
-                                    <div className="text-left">
-                                        {/* السعر الجديد */}
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-3xl font-bold text-white">{mainService.promo_price_yer}</span>
-                                            <span className="text-white/80">ر.ي</span>
-                                            {/* السعر القديم مشطوب */}
-                                            <span className="text-white/50 text-lg line-through mr-2">{mainService.original_price_yer}</span>
-                                        </div>
-                                        <p className="text-white/60 text-sm">
-                                            أو <span className="font-bold text-white">{mainService.promo_price_sar}</span> ر.س
-                                            <span className="line-through text-white/40 mr-1">{mainService.original_price_sar}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                                <p className="text-white/70 text-sm text-center">
-                                    "عرض لفترة محدودة - استغل الفرصة! 💡"
-                                </p>
+                        </motion.div>
+                    )}
+                    
+                    {step === 1 && (
+                        <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-center py-8">
+                            <div className="w-24 h-24 rounded-[32px] bg-gradient-to-tr from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-teal-500/30">
+                                <CheckCircle2 className="w-12 h-12 text-white" />
                             </div>
-
-                            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                                <Button className="w-full bg-white text-[#2D9B83] hover:bg-white/90 rounded-xl h-14 text-lg font-bold shadow-lg group">
-                                    <MessageCircle className="w-5 h-5 ml-2" />
-                                    احجز جلستك الآن عبر WhatsApp
-                                    <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-                                </Button>
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Free Trial Banner */}
-                <section className="bg-gradient-to-r from-[#FFD700]/20 to-[#FFA500]/20 rounded-3xl p-5 border border-[#D4AF37]/30">
-                    <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-2xl gradient-gold flex items-center justify-center flex-shrink-0">
-                            <Gift className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800 text-lg mb-1">🎁 3 أيام تجربة مجانية</h3>
-                            <p className="text-slate-600 text-sm mb-3">
-                                جميع البرامج تبدأ بفترة تجريبية مجانية. جرب أولاً، وبعدها قرر!
+                            <h4 className="text-3xl font-black text-slate-800 dark:text-white mb-4">الرعاية الشمولية هي الأنسب لك!</h4>
+                            <p className="text-base text-slate-500 dark:text-slate-400 mb-10 max-w-md mx-auto leading-relaxed font-medium">
+                                بناءً على هدفك المشكلة تحتاج تحليل للجذور التراكمية، وليس مسكنات للأعراض. الجلسة التشخيصية الأولى ستكشف لك خطة التعافي الكاملة.
                             </p>
-                            <div className="space-y-1 text-sm text-slate-500">
-                                <p>✓ احجز الجلسة التشخيصية الأولى</p>
-                                <p>✓ نختار البرنامج المناسب معاً</p>
-                                <p>✓ تبدأ 3 أيام مجانية</p>
-                                <p>✓ إذا عجبك النظام، نكمل - وإلا توقف بدون أي رسوم</p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-sm mx-auto">
+                                <Link href={createPageUrl('BookAppointment')} className="flex-1">
+                                    <button className="w-full py-5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-black text-base hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-[0_10px_40px_rgba(13,148,136,0.3)]">
+                                        احجز جلستك الأولى
+                                    </button>
+                                </Link>
+                                <button onClick={() => setStep(0)} className="px-8 py-5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white font-bold text-base hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                    رجوع
+                                </button>
                             </div>
-                            <p className="mt-3 text-[#D4AF37] font-medium text-sm">
-                                💡 "بناء ثقة حقيقية - مش أخذ فلوسك بدون نتائج"
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Programs */}
-                <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Calendar className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="text-xl font-bold text-slate-800">برامج المتابعة الشخصية</h2>
-                    </div>
-
-                    <div className="space-y-4">
-                        {programs.map((program) => (
-                            <div
-                                key={program.id}
-                                className={`relative overflow-hidden rounded-3xl transition-all duration-500 ${program.popular ? 'ring-2 ring-[#2D9B83] shadow-glow' : ''
-                                    }`}
-                            >
-                                {program.popular && (
-                                    <div className="absolute top-0 right-0 bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] text-white text-xs font-bold px-4 py-1.5 rounded-bl-2xl z-10">
-                                        <span className="flex items-center gap-1">
-                                            <Star className="w-3 h-3" fill="currentColor" />
-                                            الأكثر شعبية
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div className={`absolute inset-0 bg-gradient-to-br ${program.bgColor}`} />
-
-                                <div className="relative glass backdrop-blur-sm p-5">
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${program.color} flex items-center justify-center shadow-lg text-3xl`}>
-                                            {program.icon}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-bold text-slate-800 mb-1">{program.title}</h3>
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <Badge variant="outline" className="text-xs border-slate-300">
-                                                    {program.duration}
-                                                </Badge>
-                                                <span className="text-xs text-slate-500">{program.slogan}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-slate-600 text-sm mb-4">{program.description}</p>
-
-                                    <div className="grid grid-cols-1 gap-2 mb-4">
-                                        {program.features.map((feature, idx) => (
-                                            <div key={idx} className="flex items-center gap-2">
-                                                <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${program.color} flex items-center justify-center flex-shrink-0`}>
-                                                    <Check className="w-3 h-3 text-white" />
-                                                </div>
-                                                <span className="text-sm text-slate-600">{feature}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-4 border-t border-slate-200/50">
-                                        <p className="text-sm text-slate-500">
-                                            السعر يُحدد بعد التجربة المجانية
-                                        </p>
-                                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                                            <Button
-                                                className={`rounded-xl px-5 ${program.popular
-                                                    ? `bg-gradient-to-r ${program.color} text-white hover:opacity-90 shadow-lg`
-                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                    }`}
-                                            >
-                                                {program.cta || 'ابدأ الآن'}
-                                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                            </Button>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Comparison Table */}
-                <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Shield className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="text-xl font-bold text-slate-800">ليش تختارني؟</h2>
-                    </div>
-
-                    <div className="glass rounded-3xl overflow-hidden shadow-xl">
-                        <div className="grid grid-cols-3 gap-2 p-4 bg-gradient-to-r from-slate-50 to-slate-100">
-                            <div className="text-sm font-medium text-slate-500">المقارنة</div>
-                            <div className="text-center">
-                                <div className="inline-flex items-center gap-1 gradient-primary text-white px-3 py-1.5 rounded-lg text-xs font-bold">
-                                    مع د. عمر
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <div className="inline-flex items-center gap-1 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs">
-                                    التقليدي
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="divide-y divide-slate-100">
-                            {comparisons.map((item, idx) => (
-                                <div key={idx} className="grid grid-cols-3 gap-2 p-4 items-center">
-                                    <div className="text-sm text-slate-700 font-medium">{item.feature}</div>
-                                    <div className="text-center">
-                                        <div className="inline-flex items-center gap-1 text-green-600 text-sm">
-                                            <Check className="w-4 h-4" />
-                                            <span className="text-xs">{item.doctor}</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-center text-xs text-slate-400">
-                                        {item.traditional}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Free Content */}
-                <section>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Play className="w-5 h-5 text-[#2D9B83]" />
-                        <h2 className="text-xl font-bold text-slate-800">تعلم معي - علم حقيقي ينفعك 📚</h2>
-                    </div>
-
-                    <div className="glass rounded-3xl p-5 shadow-lg">
-                        <p className="text-slate-600 mb-6">
-                            "أشارك محتوى طبي تعليمي مجاني على السوشيال ميديا. هدفي نشر الوعي الصحي الصحيح بعيداً عن الخرافات والتسويق الكاذب."
-                        </p>
-
-                        <div className="grid grid-cols-3 gap-3">
-                            <a
-                                href={`https://instagram.com/${doctorInfo.instagram}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 transition-all duration-300"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
-                                    <Instagram className="w-6 h-6 text-white" />
-                                </div>
-                                <span className="text-xs font-medium text-slate-700">Instagram</span>
-                            </a>
-
-                            <a
-                                href={`https://tiktok.com/@${doctorInfo.tiktok}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-slate-500/10 to-slate-800/10 hover:from-slate-500/20 hover:to-slate-800/20 transition-all duration-300"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-                                    </svg>
-                                </div>
-                                <span className="text-xs font-medium text-slate-700">TikTok</span>
-                            </a>
-
-                            <a
-                                href={`https://youtube.com/@${doctorInfo.youtube}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-600/10 hover:from-red-500/20 hover:to-red-600/20 transition-all duration-300"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                                    <Youtube className="w-6 h-6 text-white" />
-                                </div>
-                                <span className="text-xs font-medium text-slate-700">YouTube</span>
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Final CTA */}
-                <section className="relative overflow-hidden rounded-3xl">
-                    <div className="absolute inset-0 gradient-primary" />
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]" />
-
-                    <div className="relative p-6 text-center">
-                        <h3 className="text-2xl font-bold text-white mb-3">
-                            جاهز تبدأ رحلتك الصحية الحقيقية؟
-                        </h3>
-                        <p className="text-white/80 mb-6">
-                            لا تنتظر - كل يوم تأخر هو يوم صحتك تتعب أكثر. احجز الآن وخلنا نبدأ سوياً.
-                        </p>
-
-                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                            <Button className="bg-white text-[#2D9B83] hover:bg-white/90 rounded-xl px-8 h-14 text-lg font-bold shadow-lg group">
-                                <MessageCircle className="w-5 h-5 ml-2" />
-                                📱 احجز على WhatsApp الآن
-                            </Button>
-                        </a>
-
-                        <p className="text-white/70 text-sm mt-6">
-                            💚 "معي، أنت مش مجرد رقم - كل مريض قصة أهتم فيها شخصياً"
-                        </p>
-                    </div>
-                </section>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
+        </div>
+    );
+}
+
+// ═══ MAIN PAGE COMPONENTS ═══
+export default function ServicesPage() {
+    const router = useRouter();
+
+    return (
+        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-teal-500/30 font-sans pb-32 overflow-hidden">
+            <Head>
+                <title>طِبرَا | الخدمات والرعاية الفائقة</title>
+            </Head>
+
+            {/* ═══ NAV HEADER ═══ */}
+            <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 bg-white/70 dark:bg-[#020617]/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50">
+                <button
+                    onClick={() => { haptic.selection(); router.back(); }}
+                    className="w-12 h-12 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors bg-white/50 dark:bg-transparent"
+                >
+                    <ArrowRight className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                </button>
+                <div className="text-xl font-black tracking-tight text-slate-900 dark:text-white">الخدمات والرعاية</div>
+                <div className="w-12" />
+            </header>
+
+            {/* ═══ SUPER PREMIUM HERO SECTION ═══ */}
+            <section className="relative px-6 pt-32 pb-24 overflow-hidden border-b border-slate-200/50 dark:border-slate-800/50 bg-gradient-to-b from-slate-50 to-white dark:from-[#050B1A] dark:to-[#020617]">
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay pointer-events-none" />
+                <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-[radial-gradient(circle,_rgba(20,184,166,0.08)_0%,_transparent_60%)] dark:bg-[radial-gradient(circle,_rgba(20,184,166,0.15)_0%,_transparent_60%)] blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-[radial-gradient(circle,_rgba(99,102,241,0.05)_0%,_transparent_60%)] dark:bg-[radial-gradient(circle,_rgba(99,102,241,0.1)_0%,_transparent_60%)] blur-[80px] pointer-events-none" />
+
+                <div className="relative z-10 text-center max-w-5xl mx-auto">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-teal-200/60 dark:border-teal-500/30 bg-white/80 dark:bg-teal-500/10 backdrop-blur-md mb-10 shadow-sm"
+                    >
+                        <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                        <span className="text-xs font-black tracking-widest text-teal-800 dark:text-teal-200 uppercase">المركز الرائد للتشافي الجذري بالشرق الأوسط</span>
+                    </motion.div>
+                    
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                        className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 leading-[1.1] tracking-tighter"
+                    >
+                        علاج حقيقي للسبب،<br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-500 via-emerald-500 to-teal-400">ليس تخديرًا للأعراض.</span>
+                    </motion.h1>
+                    
+                    <motion.p 
+                        initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+                        className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed mb-14"
+                    >
+                        لا نكتفي ببرمجة مسكنات الآلام، نحن نعيد هندسة صحتك الجسدية والنفسية بأحدث بروتوكولات الطب الوظيفي والترددات الحيوية.
+                    </motion.p>
+                    
+                    <motion.div 
+                        initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                        className="flex flex-col sm:flex-row items-center justify-center gap-5"
+                    >
+                        <Link href={createPageUrl('BookAppointment')} onClick={() => haptic.success()}>
+                            <button className="px-10 py-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_rgb(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgb(255,255,255,0.1)] focus:outline-none">
+                                ابدأ رحلة التشافي الآن
+                            </button>
+                        </Link>
+                        <a href="https://wa.me/967771447111?text=السلام%20عليكم%20استفسار%20بخصوص%20الخدمات" target="_blank" rel="noreferrer">
+                            <button className="px-10 py-6 rounded-full bg-white dark:bg-[#0B1121] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 transition-all flex items-center gap-3 shadow-sm focus:outline-none">
+                                تواصل مع المنسق الطبي
+                            </button>
+                        </a>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ═══ TRUST METRICS (Premium Variant) ═══ */}
+            <section className="relative z-20 -mt-12 px-6 max-w-6xl mx-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8">
+                    <TrustCounter end={87} suffix="%" label="نسبة التحسن الجذري" icon={TrendingUp} />
+                    <TrustCounter end={15} suffix="+" label="سنوات خبرة سريرية" icon={Shield} />
+                    <TrustCounter end={4} suffix="K+" label="حالة تعافي موثقة" icon={Heart} />
+                    <TrustCounter end={5} suffix=".0" label="تقييم المرضى العالمي" icon={Star} />
+                </div>
+            </section>
+
+            {/* ═══ CORE SERVICES SHOWCASE (Architectural Bento Grid) ═══ */}
+            <section className="py-32 px-6 max-w-[1400px] mx-auto">
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">رعاية استثنائية متعددة الأبعاد</h2>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-xl font-medium leading-relaxed">
+                        خطوط علاجية متوازية تغطي الجسد، الشعور، والكيمياء الحيوية لضمان بناء صحة قوية لا تنهار مجدداً.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                    {/* Main Feature - Large */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }}
+                        className="md:col-span-2 relative h-[500px] rounded-[48px] overflow-hidden group shadow-[0_20px_60px_rgb(0,0,0,0.06)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.4)]"
+                    >
+                        <div className="absolute inset-0 bg-slate-900 overflow-hidden">
+                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2000')] bg-cover bg-center opacity-40 mix-blend-overlay group-hover:scale-105 transition-transform duration-[2s] ease-out" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/80 to-transparent" />
+                        </div>
+                        
+                        <div className="absolute bottom-12 left-12 right-12 z-10">
+                            <div className="w-16 h-16 rounded-[24px] bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/20 mb-8 border-b-white/10">
+                                <Stethoscope className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-4xl lg:text-5xl font-black text-white mb-4 tracking-tighter">الطب الوظيفي التشخيصي</h3>
+                            <p className="text-slate-300 max-w-2xl text-lg font-medium leading-relaxed mb-8">
+                                نغوص في أدق تفاصيل نمط حياتك والتاريخ المرضي لنكتشف الجذر الحقيقي خلف معاناتك. ليس هناك مرض بلا سبب نعجز عن إصلاحه بالمتابعة.
+                            </p>
+                            <Link href={createPageUrl('BookAppointment')} className="inline-flex items-center gap-2 text-white font-black hover:gap-4 transition-all bg-white/10 px-6 py-3 rounded-full hover:bg-white/20 backdrop-blur-md">
+                                احجز جلسة المسار التشخيصية <ArrowUpRight className="w-5 h-5 rtl:-scale-x-100" />
+                            </Link>
+                        </div>
+                    </motion.div>
+
+                    {/* Feature 2 - Small */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }} transition={{ delay: 0.1 }}
+                        className="relative h-[500px] rounded-[48px] bg-white dark:bg-[#0B1121] border border-slate-200/60 dark:border-slate-800 p-10 flex flex-col justify-between shadow-[0_20px_60px_rgb(0,0,0,0.04)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.2)] hover:shadow-[0_20px_60px_rgb(20,184,166,0.1)] transition-all overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-[80px]" />
+                        <div className="relative z-10 w-16 h-16 rounded-[24px] bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center border border-slate-100 dark:border-slate-700">
+                            <Brain className="w-8 h-8 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <div className="relative z-10">
+                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 leading-tight">كونسيرج ذكي<br />يراقبك 24/7</h3>
+                            <p className="text-base text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-8">
+                                نظام ذكاء اصطناعي سريري يحلل بياناتك اليومية ويعدل بروتوكولك بلمح البصر دون انتظار الموعد القادم.
+                            </p>
+                            <Link href="/premium" className="inline-flex items-center gap-2 text-teal-600 dark:text-teal-400 font-black text-lg hover:gap-3 transition-all">
+                                اكتشف باقات طِبرَا+ <ArrowRight className="w-5 h-5 rtl:-scale-x-100" />
+                            </Link>
+                        </div>
+                    </motion.div>
+
+                    {/* Feature 3 - Small */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }}
+                        className="relative h-[500px] rounded-[48px] bg-gradient-to-br from-[#FFFBF0] to-[#FFF3DC] dark:from-[#1F150B] dark:to-[#0A0704] border border-amber-200/60 dark:border-amber-900/50 p-10 flex flex-col justify-between shadow-[0_20px_60px_rgb(0,0,0,0.04)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.2)] hover:shadow-[0_20px_60px_rgb(245,158,11,0.1)] transition-all overflow-hidden"
+                    >
+                        <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] bg-amber-500/20 dark:bg-amber-500/20 rounded-full blur-[80px]" />
+                        <div className="relative z-10 w-16 h-16 rounded-[24px] bg-white dark:bg-[#1A1108] shadow-xl flex items-center justify-center border border-amber-100 dark:border-amber-900/50">
+                            <Activity className="w-8 h-8 text-amber-600 dark:text-amber-500" />
+                        </div>
+                        <div className="relative z-10">
+                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 leading-tight">الطب الشعوري وذبذبات Rife</h3>
+                            <p className="text-base text-amber-900/70 dark:text-amber-200/60 font-medium leading-relaxed mb-8">
+                                الجسد يخزن الصدمات. من خلال الترددات الحيوية وجلسات التحرر، نعيد ضبط جهازك العصبي للتشافي.
+                            </p>
+                            <Link href={createPageUrl('RifeFrequencies')} className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-500 font-black text-lg hover:gap-3 transition-all">
+                                جرب قوة الترددات <ArrowRight className="w-5 h-5 rtl:-scale-x-100" />
+                            </Link>
+                        </div>
+                    </motion.div>
+
+                    {/* Feature 4 - Large */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }} transition={{ delay: 0.1 }}
+                        className="md:col-span-2 relative h-[500px] rounded-[48px] bg-white dark:bg-[#050B1A] border border-slate-200/60 dark:border-indigo-900/30 p-10 md:p-14 flex flex-col justify-center overflow-hidden shadow-[0_20px_60px_rgb(0,0,0,0.04)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.2)]"
+                    >
+                        <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[url('/pharmacy-bg.jpg')] bg-cover bg-left opacity-10 dark:opacity-20 hidden md:block" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white via-white to-transparent dark:from-[#050B1A] dark:via-[#050B1A] dark:to-transparent" />
+                        
+                        <div className="relative z-10 max-w-xl">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 mb-6">
+                                <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                <span className="text-sm font-bold text-indigo-800 dark:text-indigo-200 tracking-wide">الصيدلية الداعمة</span>
+                            </div>
+                            <h3 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-6 tracking-tighter">مكملات فائقة النقاء.</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xl font-medium leading-relaxed mb-10">
+                                لا نستخدم إلا المكملات عالية الامتصاص من أفضل المعامل العالمية، لتصلك إلى باب المنزل وبجدول جرعات ذكي لا يفوتك.
+                            </p>
+                            <Link href={createPageUrl('Shop')}>
+                                <button className="px-10 py-5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-lg hover:scale-[1.03] active:scale-[0.98] transition-all shadow-[0_15px_30px_rgb(0,0,0,0.15)] focus:outline-none">
+                                    تصفح المكملات المعتمدة
+                                </button>
+                            </Link>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ═══ INTERACTIVE CARE FINDER ═══ */}
+            <section className="py-24 px-6 relative bg-slate-50 dark:bg-[#020617] border-y border-slate-200/50 dark:border-slate-800/50">
+                 <CarePathfinder />
+            </section>
+
+            {/* ═══ VIP CALLOUT ═══ */}
+            <section className="py-32 px-6 max-w-4xl mx-auto text-center relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 dark:bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+                
+                <div className="relative z-10">
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] bg-gradient-to-br from-amber-400 to-amber-600 shadow-2xl shadow-amber-500/30 mb-10 border border-amber-300">
+                        <Crown className="w-12 h-12 text-white" />
+                    </div>
+                    <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 tracking-tighter">هل تبحث عن رعاية للـ VIP؟</h2>
+                    <p className="text-2xl text-slate-600 dark:text-slate-400 font-medium mb-14 max-w-3xl mx-auto leading-relaxed">
+                        علق مشاكلك الصحية علينا بالكامل. مع باقات <strong className="text-slate-900 dark:text-white font-black">طِبرَا بلس</strong>، نوفر لك متابعة يومية، أولوية قصوى، وكود رعاية يصمم لك خصيصاً.
+                    </p>
+                    <Link href={createPageUrl('Premium')}>
+                        <button className="px-12 py-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xl hover:scale-105 transition-all shadow-2xl focus:outline-none focus:ring-4 focus:ring-amber-500/50">
+                            استعرض باقات النخبة
+                        </button>
+                    </Link>
+                </div>
+            </section>
         </div>
     );
 }

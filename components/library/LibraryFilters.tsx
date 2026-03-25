@@ -43,7 +43,7 @@ export default function LibraryFilters({
                             onClick={() => setActiveType(type.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 ${isActive
                                 ? 'gradient-primary text-white shadow-md'
-                                : 'glass text-slate-600 hover:bg-[#2D9B83]/10'
+                                : 'glass text-slate-600 hover:bg-primary/10'
                                 }`}
                         >
                             {Icon && <Icon className="w-4 h-4" />}

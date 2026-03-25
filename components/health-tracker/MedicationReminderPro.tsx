@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Pill, Plus, Check, Clock, Bell, Calendar,
@@ -51,6 +52,7 @@ interface DoseLog {
 }
 
 export default function MedicationReminderPro() {
+    const { user } = useAuth();
     const today = format(new Date(), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
 
@@ -64,28 +66,30 @@ export default function MedicationReminderPro() {
 
     // Fetch medications
     const { data: medications = [] } = useQuery<Medication[]>({
-        queryKey: ['medicationsPro'],
+        queryKey: ['medicationsPro', user?.id],
         queryFn: async () => {
             try {
-                const meds = await db.entities.Medication.list();
+                const meds = await db.entities.Medication.listForUser(user?.id || '');
                 return meds as unknown as Medication[];
             } catch {
                 return [];
             }
         },
+        enabled: !!user?.id,
     });
 
     // Fetch today's dose logs
     const { data: todayLogs = [] } = useQuery<DoseLog[]>({
-        queryKey: ['doseLogs', today],
+        queryKey: ['doseLogs', today, user?.id],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DoseLog.filter({ date: today });
+                const logs = await db.entities.DoseLog.filter({ date: today, user_id: user?.id });
                 return logs as unknown as DoseLog[];
             } catch {
                 return [];
             }
         },
+        enabled: !!user?.id,
     });
 
     // Calculate adherence score
@@ -105,7 +109,7 @@ export default function MedicationReminderPro() {
     // Add medication
     const addMedication = useMutation({
         mutationFn: async () => {
-            return db.entities.Medication.create({
+            return db.entities.Medication.createForUser(user?.id || '', {
                 name: newMedName,
                 dosage: newMedDosage,
                 times: selectedTimes,
@@ -133,7 +137,7 @@ export default function MedicationReminderPro() {
                 return db.entities.DoseLog.update(existing.id as string, { taken: !existing.taken });
             }
 
-            return db.entities.DoseLog.create({
+            return db.entities.DoseLog.createForUser(user?.id || '', {
                 medicationId,
                 date: today,
                 time,
@@ -451,7 +455,7 @@ export default function MedicationReminderPro() {
                         <Award className="w-7 h-7 mx-auto mb-2 text-emerald-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-emerald-700">{adherenceScore}%</div>
-                    <div className="text-[10px] text-emerald-600 font-medium">الالتزام اليوم</div>
+                    <div className="text-xs text-emerald-600 font-medium">الالتزام اليوم</div>
                 </motion.div>
 
                 <motion.div
@@ -465,7 +469,7 @@ export default function MedicationReminderPro() {
                         <Pill className="w-7 h-7 mx-auto mb-2 text-blue-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-blue-700">{medications.length}</div>
-                    <div className="text-[10px] text-blue-600 font-medium">أدوية مسجلة</div>
+                    <div className="text-xs text-blue-600 font-medium">أدوية مسجلة</div>
                 </motion.div>
 
                 <motion.div
@@ -479,7 +483,7 @@ export default function MedicationReminderPro() {
                         <Bell className="w-7 h-7 mx-auto mb-2 text-amber-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-amber-700">{totalDosesToday}</div>
-                    <div className="text-[10px] text-amber-600 font-medium">جرعات اليوم</div>
+                    <div className="text-xs text-amber-600 font-medium">جرعات اليوم</div>
                 </motion.div>
             </div>
 

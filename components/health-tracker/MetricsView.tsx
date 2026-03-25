@@ -38,7 +38,7 @@ export default function MetricsView({ metrics, symptoms, onAddMetric }) {
 
             <div className="flex justify-between items-center">
                 <h2 className="font-bold text-slate-800 text-lg">جميع المؤشرات</h2>
-                <Button onClick={onAddMetric} size="sm" className="bg-[#2D9B83] hover:bg-[#1E7A66] text-white rounded-full px-4">
+                <Button onClick={onAddMetric} size="sm" className="bg-primary hover:bg-[#1E7A66] text-white rounded-full px-4">
                     <Plus className="w-4 h-4 ml-1" />
                     قياس جديد
                 </Button>
@@ -74,7 +74,7 @@ export default function MetricsView({ metrics, symptoms, onAddMetric }) {
                     const isSelected = selectedMetric === type;
 
                     return (
-                        <div key={type} className={isSelected ? 'ring-2 ring-[#2D9B83] rounded-2xl' : ''}>
+                        <div key={type} className={isSelected ? 'ring-2 ring-primary rounded-2xl' : ''}>
                             <MetricCard
                                 metric={type}
                                 latestValue={latest?.value}

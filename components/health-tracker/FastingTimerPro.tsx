@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Timer, Play, Pause, RotateCcw, Trophy, Flame,
@@ -46,6 +47,8 @@ interface FastingSession {
 
 export default function FastingTimerPro() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
 
     // State
     const [selectedPreset, setSelectedPreset] = useState(16);
@@ -74,7 +77,7 @@ export default function FastingTimerPro() {
         queryKey: ['fastingSessionPro'],
         queryFn: async () => {
             try {
-                const sessions = await db.entities.FastingSession.filter({ completed: false });
+                const sessions = await db.entities.FastingSession.filter({ completed: false, user_id: userId });
                 if (sessions?.[0]) {
                     return sessions[0] as unknown as FastingSession;
                 }
@@ -138,7 +141,7 @@ export default function FastingTimerPro() {
     const startFasting = useMutation({
         mutationFn: async () => {
             const now = new Date();
-            return db.entities.FastingSession.create({
+            return db.entities.FastingSession.createForUser(userId || '', {
                 startTime: now.toISOString(),
                 targetHours: selectedPreset,
                 completed: false
@@ -522,7 +525,7 @@ export default function FastingTimerPro() {
                     <div className="text-2xl font-bold text-orange-700">
                         {isActive ? Math.round(elapsedHours * 50) : 0}
                     </div>
-                    <div className="text-[10px] text-orange-600 font-medium">سعرات محروقة</div>
+                    <div className="text-xs text-orange-600 font-medium">سعرات محروقة</div>
                 </motion.div>
 
                 <motion.div
@@ -538,7 +541,7 @@ export default function FastingTimerPro() {
                     <div className="text-2xl font-bold text-purple-700">
                         {Math.round(progress)}%
                     </div>
-                    <div className="text-[10px] text-purple-600 font-medium">التقدم</div>
+                    <div className="text-xs text-purple-600 font-medium">التقدم</div>
                 </motion.div>
 
                 <motion.div
@@ -554,7 +557,7 @@ export default function FastingTimerPro() {
                     <div className="text-2xl font-bold text-emerald-700">
                         {FASTING_PHASES.filter(p => elapsedHours >= p.hours).length}
                     </div>
-                    <div className="text-[10px] text-emerald-600 font-medium">مراحل مُكتملة</div>
+                    <div className="text-xs text-emerald-600 font-medium">مراحل مُكتملة</div>
                 </motion.div>
             </div>
 

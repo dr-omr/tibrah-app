@@ -174,7 +174,7 @@ export default function HistoryViewPro({ metrics = [], dailyLogs = [], symptoms 
                                             : 'hover:bg-gray-50'
                                     }`}
                             >
-                                <span className="text-[10px] font-medium mb-0.5">
+                                <span className="text-xs font-medium mb-0.5">
                                     {format(day, 'EEE', { locale: ar })}
                                 </span>
                                 <span className="text-sm font-bold mb-1">
@@ -211,17 +211,17 @@ export default function HistoryViewPro({ metrics = [], dailyLogs = [], symptoms 
                     <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-3 text-center">
                         <Droplets className="w-5 h-5 mx-auto mb-1 text-cyan-600" />
                         <div className="text-lg font-bold text-cyan-700">{selectedLog.water_glasses || 0}</div>
-                        <div className="text-[10px] text-cyan-600">أكواب ماء</div>
+                        <div className="text-xs text-cyan-600">أكواب ماء</div>
                     </div>
                     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-3 text-center">
                         <Moon className="w-5 h-5 mx-auto mb-1 text-indigo-600" />
                         <div className="text-lg font-bold text-indigo-700">{selectedLog.sleep_hours || 0}</div>
-                        <div className="text-[10px] text-indigo-600">ساعات نوم</div>
+                        <div className="text-xs text-indigo-600">ساعات نوم</div>
                     </div>
                     <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-3 text-center">
                         <Heart className="w-5 h-5 mx-auto mb-1 text-pink-600" />
                         <div className="text-lg font-bold text-pink-700">{getMoodValue(selectedLog) || '-'}</div>
-                        <div className="text-[10px] text-pink-600">المزاج</div>
+                        <div className="text-xs text-pink-600">المزاج</div>
                     </div>
                 </div>
             )}

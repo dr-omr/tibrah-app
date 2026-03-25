@@ -14,6 +14,7 @@ export interface LocalProduct {
     in_stock: boolean;
     rating?: number;
     benefits?: string[];
+    is_subscription_eligible?: boolean; // For Subscribe & Save
 }
 
 export const localProducts: LocalProduct[] = [
@@ -25,7 +26,7 @@ export const localProducts: LocalProduct[] = [
         price: 150,
         original_price: 180,
         image_url: '/products/dmso.webp',
-        category: 'supplements',
+        category: 'pain_relief',
         featured: true,
         in_stock: true,
         rating: 4.9,
@@ -33,7 +34,8 @@ export const localProducts: LocalProduct[] = [
             'تخفيف الألم والالتهابات',
             'تحسين امتصاص العلاجات الموضعية',
             'تسريع التئام الجروح'
-        ]
+        ],
+        is_subscription_eligible: false
     },
     {
         id: 'vit-d3-k2-1',
@@ -43,7 +45,7 @@ export const localProducts: LocalProduct[] = [
         price: 120,
         original_price: 150,
         image_url: '/products/vitd3k2.webp',
-        category: 'vitamins',
+        category: 'immunity',
         featured: true,
         in_stock: true,
         rating: 4.8,
@@ -51,7 +53,8 @@ export const localProducts: LocalProduct[] = [
             'تقوية العظام والأسنان',
             'دعم الجهاز المناعي',
             'تحسين امتصاص الكالسيوم'
-        ]
+        ],
+        is_subscription_eligible: true
     },
     {
         id: 'magnesium-1',
@@ -60,15 +63,16 @@ export const localProducts: LocalProduct[] = [
         description: 'مغنيسيوم سيترات عالي الامتصاص - يدعم صحة العضلات والأعصاب والنوم الصحي.',
         price: 95,
         image_url: '/products/magnesium.webp',
-        category: 'minerals',
-        featured: false,
+        category: 'nervous_system',
+        featured: true,
         in_stock: true,
         rating: 4.7,
         benefits: [
             'استرخاء العضلات',
             'تحسين جودة النوم',
             'دعم صحة القلب'
-        ]
+        ],
+        is_subscription_eligible: true
     },
     {
         id: 'probiotic-1',
@@ -78,7 +82,7 @@ export const localProducts: LocalProduct[] = [
         price: 180,
         original_price: 220,
         image_url: '/products/probiotic.png',
-        category: 'gut_health',
+        category: 'gut_healing',
         featured: true,
         in_stock: true,
         rating: 4.9,
@@ -86,7 +90,8 @@ export const localProducts: LocalProduct[] = [
             'تحسين الهضم',
             'تقوية المناعة',
             'توازن فلورا الأمعاء'
-        ]
+        ],
+        is_subscription_eligible: true
     },
     {
         id: 'deodorant-1',
@@ -95,7 +100,7 @@ export const localProducts: LocalProduct[] = [
         description: 'مزيل عرق طبيعي 100% خالي من الألومنيوم والمواد الكيميائية الضارة. فعال لمدة 24 ساعة.',
         price: 85,
         image_url: '/products/deodorant.png',
-        category: 'personal_care',
+        category: 'detox',
         featured: false,
         in_stock: true,
         rating: 4.6,
@@ -103,17 +108,16 @@ export const localProducts: LocalProduct[] = [
             'خالي من الألومنيوم',
             'حماية طبيعية',
             'مناسب للبشرة الحساسة'
-        ]
+        ],
+        is_subscription_eligible: true
     }
 ];
 
 export const productCategories = [
     { id: 'all', name: 'الكل' },
-    { id: 'supplements', name: 'مكملات' },
-    { id: 'vitamins', name: 'فيتامينات' },
-    { id: 'minerals', name: 'معادن' },
-    { id: 'gut_health', name: 'صحة الأمعاء' },
-    { id: 'personal_care', name: 'العناية الشخصية' },
-    { id: 'detox', name: 'ديتوكس' },
-    { id: 'dmso', name: 'DMSO' },
+    { id: 'gut_healing', name: 'تعافي الأمعاء' },
+    { id: 'nervous_system', name: 'تهدئة الأعصاب' },
+    { id: 'immunity', name: 'دعم المناعة' },
+    { id: 'pain_relief', name: 'تسكين الآلام' },
+    { id: 'detox', name: 'تطهير السموم' },
 ];

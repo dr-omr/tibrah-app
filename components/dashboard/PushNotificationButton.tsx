@@ -63,7 +63,7 @@ export default function PushNotificationButton() {
 
             // Save preference to user settings
             if (user?.id) {
-                await db.users.update(user.id, {
+                await db.entities.User.update(user.id, {
                     settings: {
                         notificationsEnabled: true,
                         // pushSubscription: JSON.stringify(subscription)
@@ -84,7 +84,7 @@ export default function PushNotificationButton() {
 
     if (permission === 'granted') {
         return (
-            <Button variant="outline" className="w-full flex items-center gap-2 text-[#2D9B83] border-[#2D9B83]/20 bg-[#2D9B83]/5">
+            <Button variant="outline" className="w-full flex items-center gap-2 text-primary border-primary/20 bg-primary/5">
                 <Bell className="w-4 h-4" />
                 الإشعارات مفعلة
             </Button>
@@ -95,7 +95,7 @@ export default function PushNotificationButton() {
         <Button
             onClick={subscribeUser}
             disabled={loading}
-            className="w-full flex items-center gap-2 bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] text-white"
+            className="w-full flex items-center gap-2 bg-gradient-to-r from-primary to-primary-light text-white"
         >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
             تفعيل الإشعارات

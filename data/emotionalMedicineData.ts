@@ -36,6 +36,30 @@ async function loadData(): Promise<void> {
     if (_cachedDiseases && _cachedSystems) return;
     if (_loadPromise) return _loadPromise;
 
+    if (typeof window === 'undefined') {
+        // Server-side (during Next.js build)
+        const fs = await import('fs');
+        const path = await import('path');
+        const filePath = path.join(process.cwd(), 'public', 'data', 'emotional-diseases.json');
+        
+        _loadPromise = new Promise((resolve) => {
+            try {
+                const fileContents = fs.readFileSync(filePath, 'utf8');
+                const data = JSON.parse(fileContents);
+                _cachedDiseases = data.emotionalDiseases;
+                _cachedSystems = data.organSystems;
+                resolve();
+            } catch (err) {
+                console.error('Failed to read emotional diseases file:', err);
+                _cachedDiseases = [];
+                _cachedSystems = [];
+                resolve();
+            }
+        });
+        return _loadPromise;
+    }
+
+    // Client-side
     _loadPromise = fetch('/data/emotional-diseases.json')
         .then(res => res.json())
         .then(data => {

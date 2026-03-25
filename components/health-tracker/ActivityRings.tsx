@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { Flame, Timer, PersonStanding, ChevronLeft, Plus, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -104,7 +105,7 @@ const ActivityRing = ({ progress, color, size, strokeWidth, icon: Icon, label, v
             <div className="mt-3 text-center">
                 <p className="text-xl font-bold text-slate-800">{value}</p>
                 <p className="text-xs font-medium text-slate-600">{label}</p>
-                <p className="text-[10px] text-slate-400">الهدف: {goal}</p>
+                <p className="text-xs text-slate-400">الهدف: {goal}</p>
             </div>
         </div>
     );
@@ -112,6 +113,8 @@ const ActivityRing = ({ progress, color, size, strokeWidth, icon: Icon, label, v
 
 export default function ActivityRings() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
     const today = format(new Date(), 'yyyy-MM-dd');
 
     const [data, setData] = useState<ActivityData>({
@@ -125,10 +128,10 @@ export default function ActivityRings() {
 
     // Load today's activity
     const { data: activityLog } = useQuery({
-        queryKey: ['activityLog', today],
+        queryKey: ['activityLog', today, userId],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
                 const log = logs?.[0];
                 if (log) {
                     return {
@@ -144,7 +147,8 @@ export default function ActivityRings() {
             } catch {
                 return null;
             }
-        }
+        },
+        enabled: !!userId,
     });
 
     useEffect(() => {
@@ -168,7 +172,7 @@ export default function ActivityRings() {
             };
             setData({ ...data, ...updates[type] });
             // Save to backend
-            const logs = await db.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
             if (logs?.[0]) {
                 await db.entities.DailyLog.update(logs[0].id as string, {
                     exercise: {
@@ -179,7 +183,7 @@ export default function ActivityRings() {
                     stand_hours: type === 'stand' ? data.standHours + 1 : data.standHours
                 });
             } else {
-                await db.entities.DailyLog.create({
+                await db.entities.DailyLog.createForUser(userId || '', {
                     date: today,
                     exercise: {
                         type: 'general',
@@ -308,7 +312,7 @@ export default function ActivityRings() {
                             <Flame className="w-4 h-4 text-[#FF2D55]" />
                         </div>
                         <p className="text-lg font-bold">{data.moveCalories}</p>
-                        <p className="text-[10px] text-slate-400">/{data.moveGoal} سعرة</p>
+                        <p className="text-xs text-slate-400">/{data.moveGoal} سعرة</p>
                     </button>
 
                     <button
@@ -320,7 +324,7 @@ export default function ActivityRings() {
                             <Timer className="w-4 h-4 text-[#A8FF00]" />
                         </div>
                         <p className="text-lg font-bold">{data.exerciseMinutes}</p>
-                        <p className="text-[10px] text-slate-400">/{data.exerciseGoal} دقيقة</p>
+                        <p className="text-xs text-slate-400">/{data.exerciseGoal} دقيقة</p>
                     </button>
 
                     <button
@@ -332,7 +336,7 @@ export default function ActivityRings() {
                             <PersonStanding className="w-4 h-4 text-[#00D4FF]" />
                         </div>
                         <p className="text-lg font-bold">{data.standHours}</p>
-                        <p className="text-[10px] text-slate-400">/{data.standGoal} ساعات</p>
+                        <p className="text-xs text-slate-400">/{data.standGoal} ساعات</p>
                     </button>
                 </div>
             </div>

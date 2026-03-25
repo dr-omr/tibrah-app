@@ -1,9 +1,9 @@
 // components/health-tracker/InsightCard.tsx
-// Apple-style colorful insight cards (inspired by Omo, Flo, iCardiac)
+// iOS-style insight cards with soft tinted backgrounds
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, ChevronLeft } from 'lucide-react';
 
 interface InsightCardProps {
     title: string;
@@ -18,20 +18,20 @@ interface InsightCardProps {
 }
 
 const colorStyles = {
-    pink: 'bg-gradient-to-br from-pink-100 to-pink-200 text-pink-800',
-    blue: 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-800',
-    green: 'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800',
-    purple: 'bg-gradient-to-br from-purple-100 to-purple-200 text-purple-800',
-    orange: 'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-800',
-    teal: 'bg-gradient-to-br from-teal-100 to-teal-200 text-teal-800',
-    red: 'bg-gradient-to-br from-red-100 to-red-200 text-red-800',
-    gradient: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white',
+    pink: 'bg-pink-50 dark:bg-pink-950/20 text-pink-800 dark:text-pink-200 border-pink-100 dark:border-pink-800/30',
+    blue: 'bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-200 border-blue-100 dark:border-blue-800/30',
+    green: 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-200 border-emerald-100 dark:border-emerald-800/30',
+    purple: 'bg-purple-50 dark:bg-purple-950/20 text-purple-800 dark:text-purple-200 border-purple-100 dark:border-purple-800/30',
+    orange: 'bg-orange-50 dark:bg-orange-950/20 text-orange-800 dark:text-orange-200 border-orange-100 dark:border-orange-800/30',
+    teal: 'bg-teal-50 dark:bg-teal-950/20 text-teal-800 dark:text-teal-200 border-teal-100 dark:border-teal-800/30',
+    red: 'bg-red-50 dark:bg-red-950/20 text-red-800 dark:text-red-200 border-red-100 dark:border-red-800/30',
+    gradient: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white border-transparent',
 };
 
 const sizeStyles = {
-    small: 'p-4 min-h-[120px]',
-    medium: 'p-5 min-h-[160px]',
-    large: 'p-6 min-h-[200px]',
+    small: 'p-4 min-h-[100px]',
+    medium: 'p-4 min-h-[120px]',
+    large: 'p-5 min-h-[140px]',
 };
 
 export default function InsightCard({
@@ -47,30 +47,23 @@ export default function InsightCard({
 }: InsightCardProps) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{
-                type: 'spring',
-                stiffness: 400,
-                damping: 25,
-                mass: 0.8
-            }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             onClick={onClick}
             className={`
                 ${colorStyles[color]} 
                 ${sizeStyles[size]}
-                rounded-3xl cursor-pointer overflow-hidden
-                shadow-lg shadow-black/5
+                rounded-2xl cursor-pointer overflow-hidden
+                shadow-sm border
                 relative flex flex-col justify-between
-                backdrop-blur-sm
             `}
         >
             {/* Background Image (optional) */}
             {image && (
                 <div
-                    className="absolute inset-0 opacity-20"
+                    className="absolute inset-0 opacity-15"
                     style={{
                         backgroundImage: `url(${image})`,
                         backgroundSize: 'cover',
@@ -83,28 +76,23 @@ export default function InsightCard({
             <div className="relative z-10">
                 {/* Icon or Emoji */}
                 {(Icon || emoji) && (
-                    <motion.div
-                        className="mb-3"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.1, type: 'spring', stiffness: 500 }}
-                    >
+                    <div className="mb-2">
                         {Icon ? (
-                            <Icon className="w-8 h-8" />
+                            <Icon className="w-6 h-6" />
                         ) : (
-                            <span className="text-3xl">{emoji}</span>
+                            <span className="text-2xl">{emoji}</span>
                         )}
-                    </motion.div>
+                    </div>
                 )}
 
                 {/* Title */}
-                <h3 className="font-bold text-lg leading-tight mb-1">
+                <h3 className="font-bold text-sm leading-tight mb-0.5">
                     {title}
                 </h3>
 
                 {/* Subtitle */}
                 {subtitle && (
-                    <p className="text-sm opacity-80 leading-snug">
+                    <p className="text-xs opacity-70 leading-snug">
                         {subtitle}
                     </p>
                 )}
@@ -117,10 +105,12 @@ export default function InsightCard({
                 </div>
             )}
 
-            {/* Decorative gradient overlay */}
-            <div className="absolute bottom-0 right-0 w-32 h-32 opacity-30 pointer-events-none">
-                <div className="w-full h-full rounded-full bg-white/20 blur-2xl transform translate-x-1/2 translate-y-1/2" />
-            </div>
+            {/* Arrow indicator */}
+            {onClick && (
+                <div className="absolute bottom-3 left-3 opacity-30">
+                    <ChevronLeft className="w-4 h-4" />
+                </div>
+            )}
         </motion.div>
     );
 }

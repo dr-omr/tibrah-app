@@ -60,10 +60,10 @@ export default function WeightBodyTrackerPro() {
 
     // Fetch weight history
     const { data: weightHistory = [] } = useQuery<WeightEntry[]>({
-        queryKey: ['weightHistoryPro'],
+        queryKey: ['weightHistoryPro', userId],
         queryFn: async () => {
             try {
-                const logs = await db.entities.WeightLog.filter({});
+                const logs = await db.entities.WeightLog.filter({ user_id: userId });
                 return logs.map((log: any) => ({
                     id: log.id,
                     date: log.date,
@@ -76,6 +76,7 @@ export default function WeightBodyTrackerPro() {
                 return [];
             }
         },
+        enabled: !!userId,
     });
 
     const latestWeight = weightHistory[0]?.weight || 70;
@@ -104,7 +105,7 @@ export default function WeightBodyTrackerPro() {
             await setUserData(userId, 'userHeight', height);
             await setUserData(userId, 'goalWeight', goalWeight);
 
-            const existing = await db.entities.WeightLog.filter({ date: today });
+            const existing = await db.entities.WeightLog.filter({ date: today, user_id: userId });
             if (existing?.[0]) {
                 return db.entities.WeightLog.update(existing[0].id as string, {
                     weight: newWeight,
@@ -112,7 +113,7 @@ export default function WeightBodyTrackerPro() {
                     goal: goalWeight
                 });
             }
-            return db.entities.WeightLog.create({
+            return db.entities.WeightLog.createForUser(userId || '', {
                 date: today,
                 weight: newWeight,
                 height,
@@ -375,7 +376,7 @@ export default function WeightBodyTrackerPro() {
                 {chartData.length > 1 ? (
                     <div className="relative h-40">
                         {/* Y-axis labels */}
-                        <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[10px] text-slate-400">
+                        <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-xs text-slate-400">
                             <span>{maxWeight.toFixed(0)}</span>
                             <span>{minWeight.toFixed(0)}</span>
                         </div>
@@ -392,7 +393,7 @@ export default function WeightBodyTrackerPro() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
                                     >
-                                        <span className="text-[10px] text-slate-500 font-medium">{entry.weight}</span>
+                                        <span className="text-xs text-slate-500 font-medium">{entry.weight}</span>
                                         <motion.div
                                             className="w-full rounded-xl bg-gradient-to-t from-purple-500 to-violet-400 relative overflow-hidden"
                                             initial={{ height: 0 }}
@@ -406,7 +407,7 @@ export default function WeightBodyTrackerPro() {
                                                 whileHover={{ opacity: 1 }}
                                             />
                                         </motion.div>
-                                        <span className="text-[9px] text-slate-400">
+                                        <span className="text-xs text-slate-400">
                                             {format(new Date(entry.date), 'd/M')}
                                         </span>
                                     </motion.div>
@@ -435,7 +436,7 @@ export default function WeightBodyTrackerPro() {
                         <Ruler className="w-7 h-7 mx-auto mb-2 text-violet-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-violet-700">{height}</div>
-                    <div className="text-[10px] text-violet-600 font-medium">الطول (سم)</div>
+                    <div className="text-xs text-violet-600 font-medium">الطول (سم)</div>
                 </motion.div>
 
                 <motion.div
@@ -449,7 +450,7 @@ export default function WeightBodyTrackerPro() {
                         <Sparkles className="w-7 h-7 mx-auto mb-2 text-emerald-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-emerald-700">{bmi.toFixed(1)}</div>
-                    <div className="text-[10px] text-emerald-600 font-medium">BMI</div>
+                    <div className="text-xs text-emerald-600 font-medium">BMI</div>
                 </motion.div>
 
                 <motion.div
@@ -463,7 +464,7 @@ export default function WeightBodyTrackerPro() {
                         <Award className="w-7 h-7 mx-auto mb-2 text-amber-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-amber-700">{weightHistory.length}</div>
-                    <div className="text-[10px] text-amber-600 font-medium">تسجيل</div>
+                    <div className="text-xs text-amber-600 font-medium">تسجيل</div>
                 </motion.div>
             </div>
 

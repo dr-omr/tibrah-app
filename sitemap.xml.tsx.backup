@@ -1,0 +1,65 @@
+import { GetServerSideProps } from 'next';
+
+/**
+ * Dynamic Sitemap Generator
+ * Generates an XML sitemap for all public pages automatically.
+ * Private/authenticated pages are excluded.
+ */
+
+const SITE_URL = 'https://tibrah.com';
+
+// Public pages with their priorities and change frequencies
+const PAGES = [
+    { path: '/', priority: '1.0', changefreq: 'daily' },
+    { path: '/services', priority: '0.9', changefreq: 'weekly' },
+    { path: '/book-appointment', priority: '0.9', changefreq: 'weekly' },
+    { path: '/courses', priority: '0.8', changefreq: 'weekly' },
+    { path: '/shop', priority: '0.8', changefreq: 'weekly' },
+    { path: '/about', priority: '0.8', changefreq: 'monthly' },
+    { path: '/body-map', priority: '0.7', changefreq: 'monthly' },
+    { path: '/frequencies', priority: '0.7', changefreq: 'monthly' },
+    { path: '/rife-frequencies', priority: '0.7', changefreq: 'monthly' },
+    { path: '/emotional-medicine', priority: '0.7', changefreq: 'monthly' },
+    { path: '/library', priority: '0.7', changefreq: 'weekly' },
+    { path: '/symptom-analysis', priority: '0.7', changefreq: 'monthly' },
+    { path: '/meal-planner', priority: '0.6', changefreq: 'monthly' },
+    { path: '/health-tracker', priority: '0.6', changefreq: 'monthly' },
+    { path: '/rewards', priority: '0.5', changefreq: 'monthly' },
+    { path: '/help', priority: '0.5', changefreq: 'monthly' },
+    { path: '/radio', priority: '0.5', changefreq: 'monthly' },
+    { path: '/breathe', priority: '0.5', changefreq: 'monthly' },
+    { path: '/login', priority: '0.3', changefreq: 'yearly' },
+    { path: '/register', priority: '0.3', changefreq: 'yearly' },
+];
+
+function generateSitemap(): string {
+    const today = new Date().toISOString().split('T')[0];
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${PAGES.map(
+        (page) => `    <url>
+        <loc>${SITE_URL}${page.path}</loc>
+        <lastmod>${today}</lastmod>
+        <changefreq>${page.changefreq}</changefreq>
+        <priority>${page.priority}</priority>
+    </url>`
+    ).join('\n')}
+</urlset>`;
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
+    const sitemap = generateSitemap();
+
+    res.setHeader('Content-Type', 'text/xml');
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate');
+    res.write(sitemap);
+    res.end();
+
+    return { props: {} };
+};
+
+// Component is not rendered — sitemap is served as raw XML
+export default function Sitemap() {
+    return null;
+}

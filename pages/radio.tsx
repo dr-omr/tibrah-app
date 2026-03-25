@@ -33,7 +33,7 @@ export default function RadioPage() {
                 {/* Visualizer / Art Area */}
                 <div className="relative w-72 h-72 sm:w-96 sm:h-96">
                     {/* Glowing effects */}
-                    <div className={`absolute inset-0 bg-gradient-to-tr from-[#2D9B83] to-purple-600 rounded-full blur-[60px] opacity-40 ${isPlaying ? 'animate-pulse' : ''}`} />
+                    <div className={`absolute inset-0 bg-gradient-to-tr from-primary to-purple-600 rounded-full blur-[60px] opacity-40 ${isPlaying ? 'animate-pulse' : ''}`} />
 
                     {/* Circle Container */}
                     <div className="relative w-full h-full rounded-full border-4 border-white/5 bg-white/5 backdrop-blur-3xl flex items-center justify-center shadow-2xl overflow-hidden">
@@ -67,7 +67,7 @@ export default function RadioPage() {
                 <div className="w-full max-w-sm space-y-8">
                     {/* Progress (Visual Decoration for now as tones are infinite) */}
                     <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                        <div className={`h-full bg-gradient-to-r from-[#2D9B83] to-[#3FB39A] ${isPlaying ? 'animate-[progress_2s_linear_infinite]' : 'w-0'}`} />
+                        <div className={`h-full bg-gradient-to-r from-primary to-primary-light ${isPlaying ? 'animate-[progress_2s_linear_infinite]' : 'w-0'}`} />
                     </div>
 
                     {/* Buttons */}
@@ -117,7 +117,7 @@ export default function RadioPage() {
                 {!currentTrack && (
                     <button
                         onClick={() => router.push('/frequencies')}
-                        className="mt-8 px-8 py-3 bg-[#2D9B83] hover:bg-[#25806C] text-white rounded-full font-bold shadow-lg shadow-[#2D9B83]/20 transition-all active:scale-95"
+                        className="mt-8 px-8 py-3 bg-primary hover:bg-primary-dark text-white rounded-full font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
                     >
                         تصفح الترددات
                     </button>

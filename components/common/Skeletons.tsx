@@ -73,7 +73,7 @@ export function HomeSkeleton() {
                         <Skeleton className="h-5 w-56 bg-slate-100 mb-4" />
                         <Skeleton className="h-4 w-full max-w-sm bg-slate-100 mb-2" />
                         <Skeleton className="h-4 w-3/4 max-w-sm bg-slate-100 mb-5" />
-                        <Skeleton className="h-14 w-full max-w-xs rounded-2xl bg-[#2D9B83]/20" />
+                        <Skeleton className="h-14 w-full max-w-xs rounded-2xl bg-primary/20" />
                     </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3 mb-6">

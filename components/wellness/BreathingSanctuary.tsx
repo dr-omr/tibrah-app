@@ -58,7 +58,7 @@ export default function BreathingSanctuary() {
             {/* Ambient Background */}
             <div className="absolute inset-0 z-0">
                 <div className={`absolute inset-0 bg-gradient-to-br from-[#1a2e2a] to-[#0f172a] transition-colors duration-[4000ms] ${phase === 'inhale' ? 'opacity-100' : 'opacity-80'}`} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#2D9B83]/10 rounded-full blur-[100px] animate-pulse-soft" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] animate-pulse-soft" />
             </div>
 
             {/* Header Content */}
@@ -70,15 +70,15 @@ export default function BreathingSanctuary() {
                         </Button>
                     </Link>
                     <div className="flex items-center gap-2">
-                        <Wind className="w-5 h-5 text-[#2D9B83]" />
-                        <span className="text-sm font-medium tracking-wider uppercase text-[#2D9B83]">معبد التنفس</span>
+                        <Wind className="w-5 h-5 text-primary" />
+                        <span className="text-sm font-medium tracking-wider uppercase text-primary">معبد التنفس</span>
                     </div>
                     <div className="w-10" /> {/* Spacer */}
                 </div>
 
                 {!isActive && phase === 'idle' && (
                     <div className="animate-in fade-in slide-in-from-bottom-5 duration-700">
-                        <h1 className="text-3xl font-bold mb-4 font-cairo">استعد للهدوء</h1>
+                        <h1 className="text-3xl font-bold mb-4 font-tajawal">استعد للهدوء</h1>
                         <p className="text-white/60 mb-8 leading-relaxed">
                             تقنية التنفس 4-7-8 تساعد على تهدئة الجهاز العصبي وتقليل التوتر والحصول على نوم عميق خلال دقائق.
                         </p>
@@ -133,7 +133,7 @@ export default function BreathingSanctuary() {
                 {!isActive ? (
                     <Button
                         onClick={() => setIsActive(true)}
-                        className="h-16 px-10 rounded-full bg-[#2D9B83] hover:bg-[#258570] text-white text-xl font-bold shadow-[0_0_30px_rgba(45,155,131,0.4)] transition-all hover:scale-105"
+                        className="h-16 px-10 rounded-full bg-primary hover:bg-primary-dark text-white text-xl font-bold shadow-brand-lg transition-all hover:scale-105"
                     >
                         ابدأ الجلسة
                     </Button>

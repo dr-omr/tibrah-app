@@ -134,22 +134,22 @@ export default function DailyHealthSummary() {
                     <Link href="/health-tracker" className="p-3 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <Droplets className="w-5 h-5 text-blue-500 mx-auto mb-1" />
                         <p className="text-lg font-bold text-slate-800 dark:text-white">{summary.waterCups}</p>
-                        <p className="text-[10px] text-slate-500">كوب ماء</p>
+                        <p className="text-xs text-slate-500">كوب ماء</p>
                     </Link>
                     <Link href="/health-tracker" className="p-3 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <Moon className="w-5 h-5 text-purple-500 mx-auto mb-1" />
                         <p className="text-lg font-bold text-slate-800 dark:text-white">{summary.sleepHours || '-'}</p>
-                        <p className="text-[10px] text-slate-500">ساعة نوم</p>
+                        <p className="text-xs text-slate-500">ساعة نوم</p>
                     </Link>
                     <Link href="/rewards" className="p-3 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <Flame className="w-5 h-5 text-orange-500 mx-auto mb-1" />
                         <p className="text-lg font-bold text-slate-800 dark:text-white">{summary.streak}</p>
-                        <p className="text-[10px] text-slate-500">سلسلة</p>
+                        <p className="text-xs text-slate-500">سلسلة</p>
                     </Link>
                     <Link href="/rewards" className="p-3 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <Trophy className="w-5 h-5 text-amber-500 mx-auto mb-1" />
                         <p className="text-lg font-bold text-slate-800 dark:text-white">{summary.totalBadges}</p>
-                        <p className="text-[10px] text-slate-500">شارة</p>
+                        <p className="text-xs text-slate-500">شارة</p>
                     </Link>
                 </div>
             </div>

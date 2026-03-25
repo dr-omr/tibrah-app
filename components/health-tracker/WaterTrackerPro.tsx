@@ -85,10 +85,10 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
 
     // Fetch today's data
     const { data: todayLog } = useQuery<WaterLog>({
-        queryKey: ['waterLogPro', today],
+        queryKey: ['waterLogPro', today, userId],
         queryFn: async () => {
             try {
-                const logs = await db.entities.WaterLog.filter({ date: today });
+                const logs = await db.entities.WaterLog.filter({ date: today, user_id: userId });
                 if (logs?.[0]) {
                     return {
                         ...logs[0],
@@ -102,15 +102,16 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                 return { date: today, total_ml: 0, goal_ml: dailyGoal, logs: [] };
             }
         },
+        enabled: !!userId,
     });
 
     // Fetch weekly data
     const { data: weeklyData = [] } = useQuery<WaterLog[]>({
-        queryKey: ['waterLogWeekPro'],
+        queryKey: ['waterLogWeekPro', userId],
         queryFn: async () => {
             try {
                 const weekAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
-                const logs = await db.entities.WaterLog.filter({ date: { $gte: weekAgo } });
+                const logs = await db.entities.WaterLog.filter({ date: { $gte: weekAgo }, user_id: userId });
                 return logs.map((log: any) => ({
                     date: log.date,
                     total_ml: log.glasses ? log.glasses * 250 : 0,
@@ -121,6 +122,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                 return [];
             }
         },
+        enabled: !!userId,
     });
 
     const currentMl = todayLog?.total_ml || 0;
@@ -152,11 +154,11 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
             const newTotal = currentMl + amountMl;
             const glasses = Math.round(newTotal / 250);
 
-            const logs = await db.entities.WaterLog.filter({ date: today });
+            const logs = await db.entities.WaterLog.filter({ date: today, user_id: userId });
             if (logs?.[0]) {
                 return db.entities.WaterLog.update(logs[0].id as string, { glasses, goal: Math.round(dailyGoal / 250) });
             }
-            return db.entities.WaterLog.create({ date: today, glasses, goal: Math.round(dailyGoal / 250), logs: [] });
+            return db.entities.WaterLog.createForUser(userId || '', { date: today, glasses, goal: Math.round(dailyGoal / 250), logs: [] });
         },
         onSuccess: (_, amountMl) => {
             queryClient.invalidateQueries({ queryKey: ['waterLogPro'] });
@@ -180,7 +182,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
     // Reset water mutation
     const resetWaterMutation = useMutation({
         mutationFn: async () => {
-            const logs = await db.entities.WaterLog.filter({ date: today });
+            const logs = await db.entities.WaterLog.filter({ date: today, user_id: userId });
             if (logs?.[0]) {
                 return db.entities.WaterLog.update(logs[0].id as string, { glasses: 0, goal: Math.round(dailyGoal / 250) });
             }
@@ -404,7 +406,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                                     {[100, 75, 50, 25].map((level) => (
                                         <div key={level} className="flex items-center gap-1">
                                             <div className="w-3 h-0.5 bg-white/50" />
-                                            <span className="text-[9px] text-white/70">{level}%</span>
+                                            <span className="text-xs text-white/70">{level}%</span>
                                         </div>
                                     ))}
                                 </div>
@@ -490,7 +492,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                             >
                                 {option.icon}
                             </motion.span>
-                            <span className="text-[10px] font-bold">{option.ml}مل</span>
+                            <span className="text-xs font-bold">{option.ml}مل</span>
                         </motion.button>
                     ))}
                 </div>
@@ -548,7 +550,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
             {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-3">
                 <motion.div
-                    className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 text-center shadow-lg"
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                     whileHover={{ y: -3, scale: 1.02 }}
                 >
                     <motion.div
@@ -560,11 +562,11 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                     <div className="text-2xl font-bold text-blue-700">
                         {Math.round(weeklyData.reduce((s, d) => s + d.total_ml, 0) / Math.max(1, weeklyData.length))}
                     </div>
-                    <div className="text-[10px] text-blue-600 font-medium">متوسط (مل)</div>
+                    <div className="text-xs text-blue-600 font-medium">متوسط (مل)</div>
                 </motion.div>
 
                 <motion.div
-                    className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 text-center shadow-lg"
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                     whileHover={{ y: -3, scale: 1.02 }}
                 >
                     <motion.div
@@ -574,11 +576,11 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                         <Flame className="w-7 h-7 mx-auto mb-2 text-orange-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-orange-700">{streak}</div>
-                    <div className="text-[10px] text-orange-600 font-medium">سلسلة أيام 🔥</div>
+                    <div className="text-xs text-orange-600 font-medium">سلسلة أيام 🔥</div>
                 </motion.div>
 
                 <motion.div
-                    className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 text-center shadow-lg"
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 text-center shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                     whileHover={{ y: -3, scale: 1.02 }}
                 >
                     <motion.div
@@ -588,13 +590,13 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                         <Target className="w-7 h-7 mx-auto mb-2 text-emerald-500" />
                     </motion.div>
                     <div className="text-2xl font-bold text-emerald-700">{(dailyGoal / 1000).toFixed(1)}L</div>
-                    <div className="text-[10px] text-emerald-600 font-medium">الهدف</div>
+                    <div className="text-xs text-emerald-600 font-medium">الهدف</div>
                 </motion.div>
             </div>
 
             {/* Weekly Chart */}
             <motion.div
-                className="bg-white rounded-2xl p-5 shadow-lg"
+                className="bg-white dark:bg-slate-800/80 rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -613,7 +615,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                         return (
                             <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
                                 <motion.span
-                                    className="text-[10px] text-slate-500 font-medium"
+                                    className="text-xs text-slate-500 font-medium"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: index * 0.05 }}
@@ -645,7 +647,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                                         </motion.div>
                                     )}
                                 </motion.div>
-                                <span className={`text-[10px] font-medium ${isToday ? 'text-cyan-600 font-bold' : 'text-slate-500'}`}>
+                                <span className={`text-xs font-medium ${isToday ? 'text-cyan-600 font-bold' : 'text-slate-500'}`}>
                                     {day.label}
                                 </span>
                             </div>
@@ -656,7 +658,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
 
             {/* Today's Log History */}
             <motion.div
-                className="bg-white rounded-2xl p-5 shadow-lg"
+                className="bg-white dark:bg-slate-800/80 rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700/50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}

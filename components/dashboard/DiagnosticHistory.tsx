@@ -36,7 +36,7 @@ export default function DiagnosticHistory({ results }) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-5 h-5 text-[#2D9B83]" />
+                <FileText className="w-5 h-5 text-primary" />
                 <h2 className="font-bold text-slate-800">سجل الفحوصات</h2>
             </div>
 
@@ -73,7 +73,7 @@ export default function DiagnosticHistory({ results }) {
                                 <ul className="space-y-1">
                                     {result.recommendations.slice(0, 2).map((rec, idx) => (
                                         <li key={idx} className="text-xs text-slate-700 flex items-start gap-1.5">
-                                            <span className="w-1 h-1 rounded-full bg-[#2D9B83] mt-1.5 flex-shrink-0" />
+                                            <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                                             {rec}
                                         </li>
                                     ))}
@@ -81,7 +81,7 @@ export default function DiagnosticHistory({ results }) {
                             </div>
                         )}
 
-                        <button className="w-full flex items-center justify-center gap-2 text-sm font-medium text-[#2D9B83] hover:bg-[#2D9B83]/5 py-2 rounded-lg transition-colors">
+                        <button className="w-full flex items-center justify-center gap-2 text-sm font-medium text-primary hover:bg-primary/5 py-2 rounded-lg transition-colors">
                             عرض التفاصيل
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         </button>

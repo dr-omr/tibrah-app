@@ -1,0 +1,128 @@
+/* === Button Styles === */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    box-shadow: 0 4px 14px rgba(45, 155, 131, 0.25);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(45, 155, 131, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Button Touch Feedback */
+.btn-touch {
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-touch::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.btn-touch:active::after {
+    opacity: 1;
+}
+
+/* === Floating Action Button === */
+.fab {
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0));
+    left: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 100;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+.fab:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* === Mobile-First Button === */
+@media (max-width: 640px) {
+    .btn-mobile-full {
+        width: 100%;
+        min-height: 52px;
+        font-size: 1rem;
+    }
+    
+    /* Full-width buttons on mobile */
+    .btn-mobile {
+        width: 100%;
+        min-height: 50px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    /* Larger touch targets */
+    .icon-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* ===== Buttons (Dark Mode) ===== */
+.dark .btn-primary,
+.dark [class*="bg-[#2D9B83]"],
+.dark [class*="from-[#2D9B83]"] {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+    box-shadow: var(--shadow-glow);
+}
+
+.dark .btn-secondary {
+    background: var(--fill-primary);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}

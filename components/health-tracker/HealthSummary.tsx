@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     Droplets, Moon, Pill, Heart, Brain, Footprints,
     TrendingUp, ChevronLeft, Sparkles, Calendar, Activity,
-    Flame, Scale, Zap, Thermometer, Timer, Plus, Target
+    Flame, Scale, Zap, Thermometer, Timer, Plus, Target,
+    ChevronDown, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -25,80 +27,85 @@ interface MetricCard {
     value: string | number;
     unit: string;
     icon: React.ElementType;
-    color: string;
-    bgColor: string;
-    gradientFrom: string;
-    gradientTo: string;
+    tintBg: string;
+    tintColor: string;
     trend?: 'up' | 'down' | 'stable';
     trendValue?: string;
     href?: string;
 }
 
 export default function HealthSummary({ className = '' }: HealthSummaryProps) {
+    const { user } = useAuth();
     const today = format(new Date(), 'yyyy-MM-dd');
     const [showAllMetrics, setShowAllMetrics] = useState(false);
 
     // Fetch today's data
     const { data: waterLog, refetch: refetchWater } = useQuery({
-        queryKey: ['waterLog', today],
+        queryKey: ['waterLog', today, user?.id],
         queryFn: async () => {
             try {
-                const logs = await db.entities.WaterLog.filter({ date: today });
+                const logs = await db.entities.WaterLog.filter({ date: today, user_id: user?.id });
                 return logs?.[0] || { glasses: 0, goal: 8 };
             } catch { return { glasses: 0, goal: 8 }; }
         },
+        enabled: !!user?.id,
     });
 
     const { data: sleepLog } = useQuery({
-        queryKey: ['sleepLogLast'],
+        queryKey: ['sleepLogLast', user?.id],
         queryFn: async () => {
             try {
-                const logs = await db.entities.SleepLog.list('-date', 1);
+                const logs = await db.entities.SleepLog.listForUser(user?.id || '', '-date', 1);
                 return logs?.[0] || null;
             } catch { return null; }
         },
+        enabled: !!user?.id,
     });
 
     const { data: medicationLogs = [], refetch: refetchMedLogs } = useQuery({
-        queryKey: ['medicationLogsToday', today],
+        queryKey: ['medicationLogsToday', today, user?.id],
         queryFn: async () => {
             try {
                 const logs = await db.entities.MedicationLog.filter({
-                    taken_at: { $gte: today }
+                    taken_at: { $gte: today }, user_id: user?.id
                 });
                 return logs || [];
             } catch { return []; }
         },
+        enabled: !!user?.id,
     });
 
     const { data: medications = [] } = useQuery({
-        queryKey: ['medicationsActive'],
+        queryKey: ['medicationsActive', user?.id],
         queryFn: async () => {
             try {
-                const meds = await db.entities.Medication.filter({ is_active: true });
+                const meds = await db.entities.Medication.filter({ is_active: true, user_id: user?.id });
                 return meds || [];
             } catch { return []; }
         },
+        enabled: !!user?.id,
     });
 
     const { data: dailyLog, refetch: refetchDaily } = useQuery({
-        queryKey: ['dailyLog', today],
+        queryKey: ['dailyLog', today, user?.id],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today, user_id: user?.id });
                 return logs?.[0] || null;
             } catch { return null; }
         },
+        enabled: !!user?.id,
     });
 
     const { data: healthMetrics = [] } = useQuery({
-        queryKey: ['healthMetricsRecent'],
+        queryKey: ['healthMetricsRecent', user?.id],
         queryFn: async () => {
             try {
-                const metrics = await db.entities.HealthMetric.list('-recorded_at', 10);
+                const metrics = await db.entities.HealthMetric.listForUser(user?.id || '', '-recorded_at', 10);
                 return metrics || [];
             } catch { return []; }
         },
+        enabled: !!user?.id,
     });
 
     // Calculate values with proper type casting
@@ -134,115 +141,70 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
 
     // Activity Rings calculations
     const moveProgress = Math.min(100, (Number(calories) / 500) * 100);
-    const exerciseProgress = energyLevel * 20; // Using energy as proxy for exercise
+    const exerciseProgress = energyLevel * 20;
     const standProgress = sleepPercentage > 50 ? 75 : 50;
 
-    // Primary cards (always visible)
-    // NOTE: We now use interactive widgets for Water, Meds, and Mood.
-    // Sleep remains as a card for now.
+    // Overall daily completion
+    const overallCompletion = Math.round((waterPercentage + sleepPercentage + medPercentage) / 3);
 
-    const sleepCard: MetricCard = {
-        id: 'sleep',
-        title: 'النوم',
-        value: sleepHours.toFixed(1),
-        unit: 'ساعات',
-        icon: Moon,
-        color: 'text-indigo-500',
-        bgColor: 'bg-indigo-500/10',
-        gradientFrom: 'from-indigo-400',
-        gradientTo: 'to-purple-500',
-        trend: sleepHours >= 7 ? 'up' : sleepHours >= 5 ? 'stable' : 'down',
-        href: '/health-tracker?tab=sleep'
-    };
+    const latestEmotionalDiagnostic = (dailyLog as any)?.emotional_diagnostic;
+
     // Additional health metrics
     const additionalCards: MetricCard[] = [
         {
-            id: 'heart_rate',
-            title: 'نبضات القلب',
-            value: heartRate,
-            unit: 'نبضة/دقيقة',
-            icon: Heart,
-            color: 'text-red-500',
-            bgColor: 'bg-red-500/10',
-            gradientFrom: 'from-red-400',
-            gradientTo: 'to-rose-500',
+            id: 'heart_rate', title: 'نبضات القلب', value: heartRate, unit: 'نبضة/دقيقة',
+            icon: Heart, tintBg: 'bg-red-100/80 dark:bg-red-900/20', tintColor: 'text-red-500',
         },
         {
-            id: 'steps',
-            title: 'الخطوات',
-            value: Number(steps).toLocaleString(),
-            unit: 'خطوة',
-            icon: Footprints,
-            color: 'text-green-500',
-            bgColor: 'bg-green-500/10',
-            gradientFrom: 'from-green-400',
-            gradientTo: 'to-emerald-500',
+            id: 'steps', title: 'الخطوات', value: Number(steps).toLocaleString(), unit: 'خطوة',
+            icon: Footprints, tintBg: 'bg-green-100/80 dark:bg-green-900/20', tintColor: 'text-green-500',
         },
         {
-            id: 'calories',
-            title: 'السعرات',
-            value: Number(calories) || '—',
-            unit: 'سعرة حرارية',
-            icon: Flame,
-            color: 'text-orange-500',
-            bgColor: 'bg-orange-500/10',
-            gradientFrom: 'from-orange-400',
-            gradientTo: 'to-amber-500',
+            id: 'calories', title: 'السعرات', value: Number(calories) || '—', unit: 'سعرة حرارية',
+            icon: Flame, tintBg: 'bg-orange-100/80 dark:bg-orange-900/20', tintColor: 'text-orange-500',
         },
         {
-            id: 'weight',
-            title: 'الوزن',
-            value: weight,
-            unit: 'كجم',
-            icon: Scale,
-            color: 'text-blue-500',
-            bgColor: 'bg-blue-500/10',
-            gradientFrom: 'from-blue-400',
-            gradientTo: 'to-sky-500',
+            id: 'weight', title: 'الوزن', value: weight, unit: 'كجم',
+            icon: Scale, tintBg: 'bg-blue-100/80 dark:bg-blue-900/20', tintColor: 'text-blue-500',
         },
         {
-            id: 'energy',
-            title: 'الطاقة',
+            id: 'energy', title: 'الطاقة',
             value: energyLevel > 0 ? `${energyLevel * 20}%` : '—',
             unit: energyLevel > 0 ? ['منخفضة', 'ضعيفة', 'متوسطة', 'جيدة', 'عالية'][energyLevel - 1] || '' : 'سجّل طاقتك',
-            icon: Zap,
-            color: 'text-yellow-500',
-            bgColor: 'bg-yellow-500/10',
-            gradientFrom: 'from-yellow-400',
-            gradientTo: 'to-orange-500',
+            icon: Zap, tintBg: 'bg-yellow-100/80 dark:bg-yellow-900/20', tintColor: 'text-yellow-500',
         },
         {
-            id: 'stress',
-            title: 'التوتر',
+            id: 'stress', title: 'التوتر',
             value: stressLevel > 0 ? `${stressLevel}/5` : '—',
             unit: stressLevel > 0 ? ['مرتاح', 'خفيف', 'متوسط', 'عالي', 'شديد'][stressLevel - 1] || '' : 'سجّل توترك',
-            icon: Activity,
-            color: 'text-teal-500',
-            bgColor: 'bg-teal-500/10',
-            gradientFrom: 'from-teal-400',
-            gradientTo: 'to-cyan-500',
+            icon: Activity, tintBg: 'bg-teal-100/80 dark:bg-teal-900/20', tintColor: 'text-teal-500',
         }
     ];
 
-    const displayCards = showAllMetrics
-        ? additionalCards
-        : [];
+    const displayCards = showAllMetrics ? additionalCards : [];
+
+    // Daily goal progress bars config
+    const goalBars = [
+        { emoji: '💧', label: 'الماء', value: waterPercentage, color: 'from-cyan-400 to-blue-500' },
+        { emoji: '🌙', label: 'النوم', value: sleepPercentage, color: 'from-indigo-400 to-purple-500' },
+        { emoji: '💊', label: 'الأدوية', value: medPercentage, color: 'from-rose-400 to-pink-500' },
+    ];
 
     return (
-        <div className={`space-y-6 ${className}`}>
-            {/* Header */}
-            <div className="flex items-center justify-between">
+        <div className={`space-y-4 ${className}`}>
+            {/* ─── Section Header ─── */}
+            <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                    <h2 className="text-lg font-bold text-slate-800">ملخص صحتك</h2>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <h2 className="text-sm font-bold text-slate-800 dark:text-white">ملخص صحتك</h2>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-slate-500">
-                    <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
+                    <Calendar className="w-3.5 h-3.5" />
                     <span>{format(new Date(), 'EEEE d MMMM', { locale: ar })}</span>
                 </div>
             </div>
 
-            {/* Apple Health Style Activity Rings */}
+            {/* ─── Activity Rings ─── */}
             <AppleHealthRings
                 moveProgress={moveProgress}
                 exerciseProgress={exerciseProgress}
@@ -255,60 +217,81 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
                 currentStand={sleepHours >= 7 ? 10 : Math.round(Number(sleepHours) || 0)}
             />
 
-            {/* Daily Goal Progress */}
-            <div className="glass rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4">
+            {/* ─── Daily Goals Card ─── */}
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <Target className="w-5 h-5 text-[#2D9B83]" />
-                        <h3 className="font-bold text-slate-700">أهداف اليوم</h3>
+                        <Target className="w-4 h-4 text-primary" />
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-white">أهداف اليوم</h3>
                     </div>
-                    <span className="text-sm text-slate-500">
-                        {Math.round((waterPercentage + sleepPercentage + medPercentage) / 3)}% مكتمل
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${overallCompletion >= 80
+                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                        : overallCompletion >= 40
+                            ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
+                            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                        }`}>
+                        {overallCompletion}% مكتمل
                     </span>
                 </div>
 
                 {/* Progress bars */}
-                <div className="space-y-3">
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-600">💧 الماء</span>
-                            <span className="text-cyan-500 font-medium">{waterPercentage}%</span>
+                <div className="space-y-2.5">
+                    {goalBars.map((bar) => (
+                        <div key={bar.label} className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                                <span className="text-slate-600 dark:text-slate-400 font-medium">{bar.emoji} {bar.label}</span>
+                                <span className="font-semibold text-slate-500">{bar.value}%</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full bg-gradient-to-r ${bar.color} rounded-full transition-all duration-500`}
+                                    style={{ width: `${Math.min(bar.value, 100)}%` }}
+                                />
+                            </div>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500"
-                                style={{ width: `${Math.min(waterPercentage, 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-600">🌙 النوم</span>
-                            <span className="text-indigo-500 font-medium">{sleepPercentage}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full transition-all duration-500"
-                                style={{ width: `${Math.min(sleepPercentage, 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-600">💊 الأدوية</span>
-                            <span className="text-rose-500 font-medium">{medPercentage}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-rose-400 to-pink-500 rounded-full transition-all duration-500"
-                                style={{ width: `${Math.min(medPercentage, 100)}%` }}
-                            />
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ─── Emotional Diagnostic Daily Protocol ─── */}
+            {latestEmotionalDiagnostic && (
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-200 dark:border-indigo-800/40 shadow-sm overflow-hidden mb-4">
+                    <div className="bg-indigo-100/50 dark:bg-indigo-800/30 px-4 py-3 border-b border-indigo-100 dark:border-indigo-800/40 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            <h3 className="text-[13px] font-bold text-indigo-900 dark:text-indigo-100">هدف التعافي النفس-جسدي اليوم</h3>
+                        </div>
+                        <span className="text-[10px] font-bold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full shadow-sm">
+                            متابعة مستمرة
+                        </span>
+                    </div>
+                    <div className="p-4 space-y-3">
+                        <p className="text-[13px] text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                            <span className="text-indigo-600 dark:text-indigo-400 font-bold ml-1">بؤرة التركيز:</span>
+                            العمل على فك الارتباط بين النمط الشعوري ({latestEmotionalDiagnostic.emotional_diagnostic_pattern || latestEmotionalDiagnostic.psychosomatic_dimension}) والشكوى العضوية ({latestEmotionalDiagnostic.physical_complaint}).
+                        </p>
+                        
+                        <div className="bg-white/60 dark:bg-slate-800/50 rounded-xl p-3 border border-white dark:border-slate-700 shadow-sm flex items-start gap-2.5">
+                            <Activity className="w-4 h-4 text-emerald-500 mt-0.5" />
+                            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                                مراقبة ذاتية: راقب اليوم أي محفزات شعورية تسبق ظهور الخلل العضوي، وحاول ممارسة تقنيات التنظيم العصبي لدقيقتين عند كل محفز.
+                            </p>
+                        </div>
+
+                        {latestEmotionalDiagnostic.repeated_pattern_flag && (
+                            <div className="flex items-start gap-2 mt-1 bg-rose-50 dark:bg-rose-900/20 px-3 py-2 rounded-xl border border-rose-100 dark:border-rose-800/30">
+                                <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5" />
+                                <p className="text-[11px] font-bold text-rose-700 dark:text-rose-400 leading-relaxed">
+                                    تذكير سريري: سيتم مناقشة تكرار هذا النمط مع الطبيب في الجلسة القادمة لتقييم مدى التشافي جذرياً.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Health Widgets Grid ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Interactive Widgets */}
                 <WaterWidget
                     initialGlasses={Number(waterLog?.glasses) || 0}
@@ -323,63 +306,57 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
                     onUpdate={refetchMedLogs}
                 />
 
+                {/* Sleep Card */}
                 <Link href="/health-tracker?tab=sleep">
-                    <div className="glass rounded-2xl p-4 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden h-full">
-                        <div className={`absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 opacity-0 group-hover:opacity-5 transition-opacity`} />
-                        <div className="relative z-10">
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                                    <Moon className="w-6 h-6 text-indigo-500" />
-                                </div>
-                                <div className="flex items-center gap-1 text-xs text-indigo-500">
-                                    <TrendingUp className="w-3 h-3" />
-                                    <span>{sleepPercentage}%</span>
-                                </div>
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-700/50 hover:shadow-md transition-shadow cursor-pointer h-full">
+                        <div className="flex items-start justify-between mb-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-100/80 dark:bg-indigo-900/20 flex items-center justify-center">
+                                <Moon className="w-5 h-5 text-indigo-500" />
                             </div>
-                            <div className="text-2xl font-bold text-slate-800 mb-1">{sleepHours.toFixed(1)}</div>
-                            <div className="text-xs text-slate-500">ساعات نوم</div>
+                            <div className="flex items-center gap-1 text-xs text-indigo-500 font-semibold">
+                                <TrendingUp className="w-3 h-3" />
+                                <span>{sleepPercentage}%</span>
+                            </div>
                         </div>
+                        <div className="text-2xl font-bold text-slate-800 dark:text-white mb-0.5">{sleepHours.toFixed(1)}</div>
+                        <div className="text-xs text-slate-400 font-medium">ساعات نوم</div>
                     </div>
                 </Link>
 
+                {/* Mood Widget */}
                 <MoodWidget
                     currentMood={Number(dailyLog?.mood_score)}
                     logId={dailyLog?.id}
                     onUpdate={refetchDaily}
                 />
 
-                {/* Additional Metrics (Grid) */}
+                {/* Additional Metrics (expanded) */}
                 {displayCards.map(card => {
                     const Icon = card.icon;
                     const content = (
                         <div
                             key={card.id}
-                            className="glass rounded-2xl p-4 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden h-full"
+                            className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-700/50 hover:shadow-md transition-shadow cursor-pointer h-full"
                         >
-                            {/* Gradient overlay on hover */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo} opacity-0 group-hover:opacity-5 transition-opacity`} />
-
-                            <div className="relative z-10">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className={`w-10 h-10 rounded-xl ${card.bgColor} flex items-center justify-center`}>
-                                        <Icon className={`w-5 h-5 ${card.color}`} />
+                            <div className="flex items-start justify-between mb-3">
+                                <div className={`w-10 h-10 rounded-xl ${card.tintBg} flex items-center justify-center`}>
+                                    <Icon className={`w-5 h-5 ${card.tintColor}`} />
+                                </div>
+                                {card.trend && (
+                                    <div className={`flex items-center gap-1 text-xs font-semibold ${card.trend === 'up' ? 'text-green-500' :
+                                        card.trend === 'down' ? 'text-red-500' :
+                                            'text-amber-500'
+                                        }`}>
+                                        <TrendingUp className={`w-3 h-3 ${card.trend === 'down' ? 'rotate-180' : ''}`} />
+                                        {card.trendValue && <span>{card.trendValue}</span>}
                                     </div>
-                                    {card.trend && (
-                                        <div className={`flex items-center gap-1 text-xs ${card.trend === 'up' ? 'text-green-500' :
-                                            card.trend === 'down' ? 'text-red-500' :
-                                                'text-amber-500'
-                                            }`}>
-                                            <TrendingUp className={`w-3 h-3 ${card.trend === 'down' ? 'rotate-180' : ''}`} />
-                                            {card.trendValue && <span>{card.trendValue}</span>}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-2xl font-bold text-slate-800 mb-1">{card.value}</div>
-                                <div className="text-xs text-slate-500">{card.unit}</div>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs font-medium text-slate-600">{card.title}</span>
-                                    <ChevronLeft className="w-4 h-4 text-slate-300 group-hover:text-[#2D9B83] transition-colors" />
-                                </div>
+                                )}
+                            </div>
+                            <div className="text-2xl font-bold text-slate-800 dark:text-white mb-0.5">{card.value}</div>
+                            <div className="text-xs text-slate-400 font-medium">{card.unit}</div>
+                            <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{card.title}</span>
+                                <ChevronLeft className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                             </div>
                         </div>
                     );
@@ -390,23 +367,22 @@ export default function HealthSummary({ className = '' }: HealthSummaryProps) {
                 })}
             </div>
 
-            {/* Show More Button */}
-            <Button
-                variant="ghost"
-                className="w-full text-[#2D9B83] hover:bg-[#2D9B83]/5"
+            {/* ─── Show More Button ─── */}
+            <button
+                className="flex items-center justify-center gap-1.5 w-full py-2.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-xl transition-colors"
                 onClick={() => setShowAllMetrics(!showAllMetrics)}
             >
-                <Plus className={`w-4 h-4 ml-2 transition-transform ${showAllMetrics ? 'rotate-45' : ''}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAllMetrics ? 'rotate-180' : ''}`} />
                 {showAllMetrics ? 'إخفاء المقاييس الإضافية' : 'عرض المزيد من المقاييس'}
-            </Button>
+            </button>
 
-            {/* Daily Tip */}
-            <div className="glass rounded-2xl p-4 bg-gradient-to-r from-[#2D9B83]/5 to-[#3FB39A]/5">
+            {/* ─── Daily Tip ─── */}
+            <div className="bg-amber-50/80 dark:bg-amber-900/15 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-800/20">
                 <div className="flex items-center gap-3 text-sm">
-                    <span className="text-2xl">💡</span>
+                    <span className="text-xl">💡</span>
                     <div className="flex-1">
-                        <p className="font-medium text-slate-700">نصيحة اليوم</p>
-                        <p className="text-slate-500 text-xs">
+                        <p className="font-semibold text-slate-700 dark:text-slate-200 text-xs">نصيحة اليوم</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 leading-relaxed">
                             {waterGlasses < 4 ? 'اشرب المزيد من الماء للحفاظ على نشاطك' :
                                 sleepHours < 6 ? 'حاول النوم مبكراً الليلة للحصول على راحة أفضل' :
                                     moodScore < 3 ? 'جرب تمارين التنفس لتحسين مزاجك 🧘' :

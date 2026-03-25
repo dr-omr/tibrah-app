@@ -6,11 +6,12 @@ import { motion } from 'framer-motion';
 import {
     TrendingUp, TrendingDown, Minus, Calendar, Droplets, Moon,
     Activity, Heart, Brain, Scale, Share2, Download, ChevronLeft,
-    ChevronRight, Sparkles, Award, Loader2
+    ChevronRight, Sparkles, Award, Loader2, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { aiClient } from '@/components/ai/aiClient';
+import { downloadHealthCSV, downloadHealthReport } from '@/lib/healthExport';
 
 interface WeeklyHealthReportProps {
     dailyLogs: any[];
@@ -173,7 +174,7 @@ export default function WeeklyHealthReport({ dailyLogs, metrics }: WeeklyHealthR
                     <ChevronRight className="w-5 h-5 text-slate-500" />
                 </button>
                 <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#2D9B83]" />
+                    <Calendar className="w-4 h-4 text-primary" />
                     <span className="font-bold text-slate-800 dark:text-white">{currentWeek.label}</span>
                 </div>
                 <button
@@ -187,7 +188,7 @@ export default function WeeklyHealthReport({ dailyLogs, metrics }: WeeklyHealthR
 
             {/* Overall Score */}
             <motion.div
-                className="bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] rounded-3xl p-6 text-center shadow-lg"
+                className="bg-gradient-to-br from-primary to-primary-light rounded-3xl p-6 text-center shadow-lg"
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
             >
@@ -265,7 +266,7 @@ export default function WeeklyHealthReport({ dailyLogs, metrics }: WeeklyHealthR
                                             <span className="text-sm font-bold">ثابت</span>
                                         </div>
                                     )}
-                                    <div className="text-[10px] text-slate-400">
+                                    <div className="text-xs text-slate-400">
                                         الأسبوع الماضي: {item.lastWeek}
                                     </div>
                                 </div>
@@ -336,14 +337,54 @@ export default function WeeklyHealthReport({ dailyLogs, metrics }: WeeklyHealthR
             </motion.div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
                 <Button
                     onClick={handleShare}
                     className="flex-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl h-12"
                     variant="outline"
                 >
                     <Share2 className="w-4 h-4 ml-2" />
-                    مشاركة التقرير
+                    مشاركة
+                </Button>
+                <Button
+                    onClick={() => {
+                        const healthData = dailyLogs.map((log: any) => ({
+                            date: log.date,
+                            water_glasses: log.water_cups || 0,
+                            sleep_hours: log.sleep_hours || 0,
+                            mood: log.mood_score || 0,
+                            weight: 0,
+                            steps: log.steps || 0,
+                            notes: log.notes || '',
+                        }));
+                        downloadHealthCSV(healthData, { period: '30d', includeWater: true, includeSleep: true, includeMood: true, includeWeight: true });
+                        toast.success('تم تحميل ملف CSV! 📊');
+                    }}
+                    className="flex-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl h-12"
+                    variant="outline"
+                >
+                    <Download className="w-4 h-4 ml-2" />
+                    CSV
+                </Button>
+                <Button
+                    onClick={() => {
+                        const healthData = dailyLogs.map((log: any) => ({
+                            date: log.date,
+                            water_glasses: log.water_cups || 0,
+                            sleep_hours: log.sleep_hours || 0,
+                            mood: log.mood_score || 0,
+                            weight: 0,
+                            steps: log.steps || 0,
+                            notes: log.notes || '',
+                        }));
+                        downloadHealthReport(healthData, { period: '30d', includeWater: true, includeSleep: true, includeMood: true, includeWeight: true });
+                        toast.success('تم تحميل التقرير! 📄');
+                    }}
+                    className="flex-1 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl h-12"
+                    variant="outline"
+                >
+                    <FileText className="w-4 h-4 ml-2" />
+                    نص
                 </Button>
             </div>
         </div>

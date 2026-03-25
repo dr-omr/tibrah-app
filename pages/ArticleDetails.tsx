@@ -12,16 +12,25 @@ import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from 'react-markdown';
 import CommentSection from '@/components/library/CommentSection';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useArticleCache } from '@/hooks/useArticleCache';
 
 export default function ArticleDetails() {
     const router = useRouter();
     const { id } = router.query;
     const [article, setArticle] = useState<Article | null>(null);
+    const { isCached, isCaching, toggleCache, getCachedArticle } = useArticleCache(id as string);
 
     useEffect(() => {
         if (id) {
+            // First try to resolve from original source
             const found = localArticles.find(a => a.id === id);
-            setArticle(found || null);
+            if (found) {
+                 setArticle(found);
+            } else {
+                 // Fallback to offline cache if not found (useful for dynamic API articles later)
+                 const cached = getCachedArticle(id as string);
+                 setArticle(cached || null);
+            }
         }
     }, [id]);
 
@@ -54,9 +63,9 @@ export default function ArticleDetails() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] font-sans selection:bg-[#2D9B83]/20">
+        <div className="min-h-screen bg-[#FDFBF7] font-sans selection:bg-primary/20">
             {/* Progress Bar */}
-            <div className="fixed top-0 left-0 h-1 bg-[#2D9B83] z-50 transition-all duration-300 w-full origin-left" />
+            <div className="fixed top-0 left-0 h-1 bg-primary z-50 transition-all duration-300 w-full origin-left" />
 
             {/* Navigation Bar */}
             <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100">
@@ -69,8 +78,20 @@ export default function ArticleDetails() {
                     </Link>
 
                     <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100">
-                            <Bookmark className="w-5 h-5 text-slate-600" />
+                        <Button 
+                            size="icon" 
+                            variant={isCached ? "default" : "ghost"} 
+                            className={`rounded-full transition-colors ${isCached ? 'bg-primary text-white hover:bg-primary-light' : 'hover:bg-slate-100'}`}
+                            onClick={() => toggleCache(article)}
+                            disabled={isCaching}
+                            aria-label={isCached ? "إزالة من المحفوظات" : "حفظ للقراءة بدون إنترنت"}
+                            title={isCached ? "متاح بدون إنترنت" : "حفظ للقراءة بدون إنترنت"}
+                        >
+                            {isCaching ? (
+                                <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-primary animate-spin" />
+                            ) : (
+                                <Bookmark className={`w-5 h-5 ${isCached ? 'fill-current' : 'text-slate-600'}`} />
+                            )}
                         </Button>
                         <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100">
                             <Share2 className="w-5 h-5 text-slate-600" />
@@ -83,7 +104,7 @@ export default function ArticleDetails() {
                 {/* Header Section */}
                 <header className="mb-12 text-center">
                     <div className="flex items-center justify-center gap-3 mb-6">
-                        <Badge variant="outline" className="px-4 py-1.5 text-sm font-medium border-[#2D9B83] text-[#2D9B83] bg-[#2D9B83]/5 rounded-full">
+                        <Badge variant="outline" className="px-4 py-1.5 text-sm font-medium border-primary text-primary bg-primary/5 rounded-full">
                             {categoryLabels[article.category] || article.category}
                         </Badge>
                         <span className="text-slate-300">•</span>
@@ -105,7 +126,7 @@ export default function ArticleDetails() {
                     <div className="flex items-center justify-center gap-4">
                         <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                             <AvatarImage src="/doctor-avatar.jpg" /> {/* Dedicated Author Image if available */}
-                            <AvatarFallback className="bg-[#2D9B83] text-white">د.ع</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-white">د.ع</AvatarFallback>
                         </Avatar>
                         <div className="text-right">
                             <p className="font-bold text-slate-900 text-sm">{article.author || 'د. عمر العماد'}</p>
@@ -145,9 +166,9 @@ export default function ArticleDetails() {
                     <div className="prose prose-lg prose-slate max-w-none 
                         prose-headings:font-bold prose-headings:text-slate-900 
                         prose-p:text-slate-700 prose-p:leading-8 
-                        prose-a:text-[#2D9B83] prose-a:no-underline hover:prose-a:underline
-                        prose-strong:text-[#2D9B83] 
-                        prose-blockquote:border-r-4 prose-blockquote:border-[#2D9B83] prose-blockquote:bg-white prose-blockquote:p-6 prose-blockquote:rounded-xl prose-blockquote:shadow-sm prose-blockquote:not-italic
+                        prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                        prose-strong:text-primary 
+                        prose-blockquote:border-r-4 prose-blockquote:border-primary prose-blockquote:bg-white prose-blockquote:p-6 prose-blockquote:rounded-xl prose-blockquote:shadow-sm prose-blockquote:not-italic
                         prose-img:rounded-2xl prose-img:shadow-lg
                         bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100"
                     >
@@ -197,7 +218,7 @@ ${article.summary}
                 <div className="max-w-3xl mx-auto mt-16 bg-white rounded-3xl p-8 border border-slate-100 flex flex-col md:flex-row items-center gap-6 text-center md:text-right shadow-sm">
                     <Avatar className="w-24 h-24 border-4 border-[#FDFBF7]">
                         <AvatarImage src="/doctor-avatar.jpg" />
-                        <AvatarFallback className="bg-[#2D9B83] text-white text-2xl">ع</AvatarFallback>
+                        <AvatarFallback className="bg-primary text-white text-2xl">ع</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                         <h3 className="text-xl font-bold text-slate-900 mb-2">عن الكاتب: {article.author}</h3>

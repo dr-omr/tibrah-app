@@ -151,3 +151,105 @@ export async function copyHealthReport(report: string): Promise<boolean> {
         return false;
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════════════════════════════
+
+/** Generate CSV content from health data */
+export function generateHealthCSV(
+    data: HealthEntry[],
+    options: ExportOptions = { period: '7d', includeWater: true, includeSleep: true, includeMood: true, includeWeight: true }
+): string {
+    const now = new Date();
+    let cutoff: Date;
+
+    switch (options.period) {
+        case '7d': cutoff = subDays(now, 7); break;
+        case '30d': cutoff = subDays(now, 30); break;
+        default: cutoff = new Date('2000-01-01');
+    }
+
+    const filtered = data
+        .filter(d => new Date(d.date) >= cutoff)
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Build header row
+    const headers: string[] = ['التاريخ'];
+    if (options.includeWater) headers.push('الماء (كوب)');
+    if (options.includeSleep) headers.push('النوم (ساعة)');
+    if (options.includeMood) headers.push('المزاج (1-5)');
+    if (options.includeWeight) headers.push('الوزن (كغ)');
+    headers.push('ملاحظات');
+
+    // Build data rows
+    const rows = filtered.map(entry => {
+        const row: string[] = [format(new Date(entry.date), 'yyyy-MM-dd')];
+        if (options.includeWater) row.push(String(entry.water_glasses || ''));
+        if (options.includeSleep) row.push(String(entry.sleep_hours || ''));
+        if (options.includeMood) row.push(String(entry.mood || ''));
+        if (options.includeWeight) row.push(String(entry.weight || ''));
+        row.push((entry.notes || '').replace(/,/g, '،').replace(/\n/g, ' '));
+        return row;
+    });
+
+    // Combine into CSV string
+    const csvLines = [headers.join(','), ...rows.map(r => r.join(','))];
+    return csvLines.join('\n');
+}
+
+/** Download health data as a CSV file */
+export function downloadHealthCSV(
+    data: HealthEntry[],
+    options?: ExportOptions,
+    filename?: string
+): void {
+    const csv = generateHealthCSV(data, options);
+    const periodLabel = (options?.period || '7d') === '7d' ? 'أسبوع' : (options?.period === '30d' ? 'شهر' : 'كامل');
+    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    const name = filename || `تقرير-طبرا-${periodLabel}-${dateStr}.csv`;
+
+    // Add BOM for UTF-8 to support Arabic in Excel
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
+/** Download health report as a text file */
+export function downloadHealthReport(
+    data: HealthEntry[],
+    options?: ExportOptions
+): void {
+    const report = generateHealthReport(data, options);
+    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    const name = `تقرير-طبرا-${dateStr}.txt`;
+
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + report], { type: 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, 100);
+}

@@ -20,12 +20,11 @@ import { Badge } from "@/components/ui/badge";
 
 const categories = [
     { value: 'all', label: 'الكل' },
-    { value: 'vitamins', label: 'فيتامينات' },
-    { value: 'minerals', label: 'معادن' },
-    { value: 'supplements', label: 'مكملات' },
-    { value: 'dmso', label: 'DMSO' },
-    { value: 'personal_care', label: 'عناية شخصية' },
-    { value: 'detox', label: 'ديتوكس' },
+    { value: 'gut_healing', label: 'تعافي الأمعاء' },
+    { value: 'nervous_system', label: 'تهدئة الأعصاب' },
+    { value: 'immunity', label: 'دعم المناعة' },
+    { value: 'pain_relief', label: 'تسكين الآلام' },
+    { value: 'detox', label: 'تطهير السموم' },
 ];
 
 const sortOptions = [
@@ -60,7 +59,7 @@ export default function ShopFilters({
                         onClick={() => setCategory(cat.value)}
                         className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all duration-300 ${category === cat.value
                             ? 'gradient-primary text-white shadow-md'
-                            : 'glass text-slate-600 dark:text-slate-300 hover:bg-[#2D9B83]/10'
+                            : 'glass text-slate-600 dark:text-slate-300 hover:bg-primary/10'
                             }`}
                     >
                         {cat.label}
@@ -74,7 +73,7 @@ export default function ShopFilters({
                 <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="flex-1 glass border-0 rounded-xl">
                         <div className="flex items-center gap-2">
-                            <SortAsc className="w-4 h-4 text-[#2D9B83]" />
+                            <SortAsc className="w-4 h-4 text-primary" />
                             <SelectValue placeholder="ترتيب حسب" />
                         </div>
                     </SelectTrigger>
@@ -91,7 +90,7 @@ export default function ShopFilters({
                 <Sheet>
                     <SheetTrigger asChild>
                         <Button variant="outline" className="glass border-0 rounded-xl px-4">
-                            <Filter className="w-4 h-4 ml-2 text-[#2D9B83]" />
+                            <Filter className="w-4 h-4 ml-2 text-primary" />
                             فلترة
                         </Button>
                     </SheetTrigger>
@@ -129,7 +128,7 @@ export default function ShopFilters({
                                         {category !== 'all' && (
                                             <Badge
                                                 variant="secondary"
-                                                className="bg-[#2D9B83]/10 text-[#2D9B83] cursor-pointer"
+                                                className="bg-primary/10 text-primary cursor-pointer"
                                                 onClick={() => setCategory('all')}
                                             >
                                                 {categories.find(c => c.value === category)?.label} ✕
@@ -138,7 +137,7 @@ export default function ShopFilters({
                                         {(priceRange[0] > 0 || priceRange[1] < 500) && (
                                             <Badge
                                                 variant="secondary"
-                                                className="bg-[#2D9B83]/10 text-[#2D9B83] cursor-pointer"
+                                                className="bg-primary/10 text-primary cursor-pointer"
                                                 onClick={() => setPriceRange([0, 500])}
                                             >
                                                 {priceRange[0]}-{priceRange[1]} ر.س ✕

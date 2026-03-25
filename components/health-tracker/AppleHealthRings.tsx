@@ -54,7 +54,7 @@ const SingleRing: React.FC<RingProps> = ({ progress, color, size, strokeWidth, l
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-xs font-bold text-slate-700">{value}</span>
-                <span className="text-[10px] text-slate-400">{label}</span>
+                <span className="text-xs text-slate-400">{label}</span>
             </div>
         </div>
     );

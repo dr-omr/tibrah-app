@@ -143,7 +143,7 @@ export default function ArticleManager({ articles, onSave, onDelete }: ArticleMa
                         {importing ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <UploadCloud className="w-4 h-4 ml-2" />}
                         استيراد المحتوى المحلي
                     </Button>
-                    <Button onClick={handleCreate} className="gradient-primary text-white shadow-lg shadow-[#2D9B83]/20">
+                    <Button onClick={handleCreate} className="gradient-primary text-white shadow-lg shadow-primary/20">
                         <Plus className="w-4 h-4 ml-2" />
                         مقال جديد
                     </Button>
@@ -164,11 +164,11 @@ export default function ArticleManager({ articles, onSave, onDelete }: ArticleMa
                             )}
                             <div className="absolute top-2 right-2 flex gap-2">
                                 {article.featured && (
-                                    <div className="px-2 py-1 bg-yellow-400/90 backdrop-blur text-white text-[10px] font-bold rounded-lg shadow-sm">
+                                    <div className="px-2 py-1 bg-yellow-400/90 backdrop-blur text-white text-xs font-bold rounded-lg shadow-sm">
                                         مميز
                                     </div>
                                 )}
-                                <div className="px-2 py-1 bg-black/50 backdrop-blur text-white text-[10px] font-bold rounded-lg">
+                                <div className="px-2 py-1 bg-black/50 backdrop-blur text-white text-xs font-bold rounded-lg">
                                     {(article.views as number) || 0} مشاهدة
                                 </div>
                             </div>
@@ -186,10 +186,10 @@ export default function ArticleManager({ articles, onSave, onDelete }: ArticleMa
 
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-[10px] uppercase tracking-wider text-[#2D9B83] font-bold">
+                                <span className="text-xs uppercase tracking-wider text-primary font-bold">
                                     {libraryCategories.find(c => c.id === article.category)?.name || article.category}
                                 </span>
-                                <span className="text-[10px] text-slate-400">{new Date((article.created_at as string) || Date.now()).toLocaleDateString('ar-EG')}</span>
+                                <span className="text-xs text-slate-400">{new Date((article.created_at as string) || Date.now()).toLocaleDateString('ar-EG')}</span>
                             </div>
                             <h3 className="font-bold text-slate-800 leading-tight line-clamp-2 min-h-[3rem]">
                                 {article.title}
@@ -307,7 +307,7 @@ export default function ArticleManager({ articles, onSave, onDelete }: ArticleMa
 
                         {/* Live Preview (Right) */}
                         <div className={`flex-1 bg-white overflow-y-auto border-r border-slate-200 ${activeTab === 'write' ? 'hidden' : ''} ${activeTab === 'split' ? 'hidden lg:block' : ''}`}>
-                            <div className="max-w-prose mx-auto p-8 prose prose-slate prose-headings:text-[#2D9B83] prose-a:text-[#2D9B83]">
+                            <div className="max-w-prose mx-auto p-8 prose prose-slate prose-headings:text-primary prose-a:text-primary">
                                 <h1 className="mb-4">{formData.title || 'عنوان المقال'}</h1>
                                 {formData.image_url && <img src={formData.image_url} alt="Cover" className="w-full h-48 object-cover rounded-xl mb-6 shadow-md" />}
                                 <ReactMarkdown>

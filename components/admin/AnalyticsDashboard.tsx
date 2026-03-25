@@ -85,7 +85,7 @@ export default function AnalyticsDashboard({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
             >
-                <BarChart3 className="w-5 h-5 text-[#2D9B83]" />
+                <BarChart3 className="w-5 h-5 text-primary" />
                 <h3 className="font-bold text-slate-800 dark:text-white">التحليلات المتقدمة</h3>
             </motion.div>
 

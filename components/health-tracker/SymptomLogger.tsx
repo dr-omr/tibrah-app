@@ -102,7 +102,7 @@ export default function SymptomLogger({ open, onOpenChange, onSubmit }) {
                                     type="button"
                                     onClick={() => setFormData({ ...formData, symptom: s })}
                                     className={`px-3 py-1 rounded-full text-sm transition-all ${formData.symptom === s
-                                            ? 'bg-[#2D9B83] text-white'
+                                            ? 'bg-primary text-white'
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                         }`}
                                 >
@@ -115,7 +115,7 @@ export default function SymptomLogger({ open, onOpenChange, onSubmit }) {
                     {/* Severity */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                            شدة العرض: <span className="text-[#2D9B83] font-bold">{formData.severity}/10</span>
+                            شدة العرض: <span className="text-primary font-bold">{formData.severity}/10</span>
                         </label>
                         <input
                             type="range"
@@ -123,7 +123,7 @@ export default function SymptomLogger({ open, onOpenChange, onSubmit }) {
                             max="10"
                             value={formData.severity}
                             onChange={(e) => setFormData({ ...formData, severity: parseInt(e.target.value) })}
-                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2D9B83]"
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                         <div className="flex justify-between text-xs text-slate-400 mt-1">
                             <span>خفيف</span>
@@ -142,7 +142,7 @@ export default function SymptomLogger({ open, onOpenChange, onSubmit }) {
                                     type="button"
                                     onClick={() => setFormData({ ...formData, body_area: area.id })}
                                     className={`p-3 rounded-xl text-center transition-all ${formData.body_area === area.id
-                                            ? 'bg-[#2D9B83] text-white shadow-md'
+                                            ? 'bg-primary text-white shadow-md'
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                         }`}
                                 >
@@ -177,7 +177,7 @@ export default function SymptomLogger({ open, onOpenChange, onSubmit }) {
                             {formData.triggers.map((trigger) => (
                                 <Badge
                                     key={trigger}
-                                    className="bg-[#2D9B83] text-white cursor-pointer"
+                                    className="bg-primary text-white cursor-pointer"
                                     onClick={() => removeTrigger(trigger)}
                                 >
                                     {trigger} ✕

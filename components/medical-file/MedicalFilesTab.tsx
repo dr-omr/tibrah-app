@@ -3,12 +3,15 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Upload, File, ExternalLink, Trash2, Plus, Loader2, Microscope } from 'lucide-react';
+import { Upload, File, ExternalLink, Trash2, Plus, Loader2, Microscope, Camera as LucideCamera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import LabResultsTracker from './LabResultsTracker';
 
 interface MedicalFileData {
     id?: string;
@@ -21,11 +24,62 @@ interface MedicalFileData {
 interface MedicalFilesTabProps {
     files: MedicalFileData[];
     uploading: boolean;
-    onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onAddFile: (fileData: { name: string, base64: string, type: string }) => void;
     onDelete: (id: string) => void;
 }
 
-export default function MedicalFilesTab({ files, uploading, onUpload, onDelete }: MedicalFilesTabProps) {
+export default function MedicalFilesTab({ files, uploading, onAddFile, onDelete }: MedicalFilesTabProps) {
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleWebUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            onAddFile({
+                name: file.name,
+                base64: reader.result as string,
+                type: file.type
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleNativeCamera = async (useCamera: boolean) => {
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const photo = await Camera.getPhoto({
+                    quality: 90,
+                    allowEditing: false,
+                    resultType: CameraResultType.Base64,
+                    source: useCamera ? CameraSource.Camera : CameraSource.Photos,
+                });
+                
+                if (photo.base64String) {
+                    const mimeType = `image/${photo.format}`;
+                    const base64 = `data:${mimeType};base64,${photo.base64String}`;
+                    onAddFile({
+                        name: `Scanned_Document_${Date.now()}.${photo.format}`,
+                        base64: base64,
+                        type: mimeType
+                    });
+                }
+            } catch (error) {
+                console.error('Camera interaction failed or cancelled:', error);
+            }
+        } else {
+            // Web fallback
+            if (fileInputRef.current) {
+                if (useCamera) {
+                    fileInputRef.current.setAttribute('capture', 'environment'); // Back camera 
+                } else {
+                    fileInputRef.current.removeAttribute('capture');
+                }
+                fileInputRef.current.click();
+            }
+        }
+    };
     return (
         <>
             {/* Upload Section */}
@@ -45,18 +99,36 @@ export default function MedicalFilesTab({ files, uploading, onUpload, onDelete }
                         <h3 className="font-bold text-slate-800 dark:text-white mb-1">إضافة مستند طبي</h3>
                         <p className="text-sm text-slate-500 mb-4">ارفع نتائج التحاليل أو التقارير الطبية</p>
 
-                        <div className="relative">
+                        <div className="flex gap-2 justify-center w-full max-w-xs mx-auto">
                             <input
                                 type="file"
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                onChange={onUpload}
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleWebUpload}
                                 disabled={uploading}
                                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                             />
-                            <motion.div whileTap={{ scale: 0.95 }}>
-                                <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl px-8" disabled={uploading}>
-                                    {uploading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Plus className="w-4 h-4 ml-2" />}
-                                    {uploading ? 'جاري الرفع...' : 'اختر ملف'}
+                            
+                            <motion.div whileTap={{ scale: 0.95 }} className="flex-1 border border-emerald-600 rounded-xl overflow-hidden hover:opacity-90 transition-opacity">
+                                <Button 
+                                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-11 text-white shadow-md border-0" 
+                                    disabled={uploading}
+                                    onClick={() => handleNativeCamera(false)}
+                                >
+                                    {uploading ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Upload className="w-4 h-4 ml-1.5" />}
+                                    <span className="text-xs font-bold leading-none">معرض الصور</span>
+                                </Button>
+                            </motion.div>
+
+                            <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
+                                <Button 
+                                    variant="outline"
+                                    className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50 h-11 shadow-sm font-bold bg-white" 
+                                    disabled={uploading}
+                                    onClick={() => handleNativeCamera(true)}
+                                >
+                                    <LucideCamera className="w-4 h-4 ml-1.5" />
+                                    <span className="text-xs font-bold leading-none">تصوير وثيقة</span>
                                 </Button>
                             </motion.div>
                         </div>
@@ -135,11 +207,7 @@ export default function MedicalFilesTab({ files, uploading, onUpload, onDelete }
                     </TabsContent>
 
                     <TabsContent value="labs" className="mt-4">
-                        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm text-center">
-                            <Microscope className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                            <p className="text-slate-600 dark:text-slate-400 mb-2">نتائج المختبر الرقمية</p>
-                            <p className="text-xs text-slate-400">سيتم عرض نتائج التحاليل هنا</p>
-                        </div>
+                        <LabResultsTracker />
                     </TabsContent>
                 </Tabs>
             </motion.div>

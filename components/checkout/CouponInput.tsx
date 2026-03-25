@@ -150,7 +150,7 @@ export default function CouponInput({ subtotal, onApply, appliedCoupon }: Coupon
             {/* Toggle button */}
             {!isExpanded && (
                 <motion.button
-                    className="flex items-center gap-2 text-sm text-[#2D9B83] font-medium hover:text-[#258570] transition-colors py-1"
+                    className="flex items-center gap-2 text-sm text-primary font-medium hover:text-[#258570] transition-colors py-1"
                     onClick={() => setIsExpanded(true)}
                     whileTap={{ scale: 0.97 }}
                 >
@@ -176,7 +176,7 @@ export default function CouponInput({ subtotal, onApply, appliedCoupon }: Coupon
                                 value={code}
                                 onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(''); }}
                                 placeholder="أدخل كود الخصم..."
-                                className={`pr-10 h-11 rounded-xl uppercase font-mono tracking-wider bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${error ? 'border-red-300 dark:border-red-800' : 'focus:border-[#2D9B83]'}`}
+                                className={`pr-10 h-11 rounded-xl uppercase font-mono tracking-wider bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${error ? 'border-red-300 dark:border-red-800' : 'focus:border-primary'}`}
                                 dir="ltr"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && handleApply()}
@@ -185,7 +185,7 @@ export default function CouponInput({ subtotal, onApply, appliedCoupon }: Coupon
                         <Button
                             onClick={handleApply}
                             disabled={!code.trim() || isValidating}
-                            className="h-11 px-5 rounded-xl bg-[#2D9B83] hover:bg-[#258570] text-white font-semibold"
+                            className="h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold"
                         >
                             {isValidating ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />

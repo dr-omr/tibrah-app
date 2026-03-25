@@ -175,7 +175,7 @@ export default function FoodManager({ initialFoods = [], onSave }: FoodManagerPr
             let customFoods: FoodItem[] = [];
             try {
                 const { db } = await import('@/lib/db');
-                const firebaseFoods = await db.foods.list();
+                const firebaseFoods = await db.entities.Food.list();
                 customFoods = firebaseFoods as unknown as FoodItem[];
             } catch (e) {
                 console.error('Failed to load foods from Firebase:', e);
@@ -238,7 +238,7 @@ export default function FoodManager({ initialFoods = [], onSave }: FoodManagerPr
             // Delete from Firebase
             try {
                 const { db } = await import('@/lib/db');
-                await db.foods.delete(id);
+                await db.entities.Food.delete(id);
             } catch (e) {
                 console.error('Firebase delete failed:', e);
             }
@@ -270,7 +270,7 @@ export default function FoodManager({ initialFoods = [], onSave }: FoodManagerPr
                 // Create new
                 // Remove the temporary 'custom_' ID to let Firebase generate one
                 const { id, ...data } = editingFood;
-                const created = await db.foods.create(data as any);
+                const created = await db.entities.Food.create(data as any);
                 updatedItem = created as unknown as FoodItem;
                 operationSuccess = true;
                 toast.success('تمت إضافة الطعام للسحابة ☁️✅');
@@ -285,7 +285,7 @@ export default function FoodManager({ initialFoods = [], onSave }: FoodManagerPr
                     return;
                 }
 
-                await db.foods.update(editingFood.id, editingFood as any);
+                await db.entities.Food.update(editingFood.id, editingFood as any);
                 operationSuccess = true;
                 toast.success('تم تحديث الطعام في السحابة ☁️✅');
             }
@@ -484,19 +484,19 @@ export default function FoodManager({ initialFoods = [], onSave }: FoodManagerPr
                             <div className="grid grid-cols-4 gap-2 mb-3 text-center">
                                 <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
                                     <div className="text-sm font-bold text-amber-600">{food.nutrition.calories}</div>
-                                    <div className="text-[10px] text-slate-400">سعرة</div>
+                                    <div className="text-xs text-slate-400">سعرة</div>
                                 </div>
                                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-2">
                                     <div className="text-sm font-bold text-red-600">{food.nutrition.protein}غ</div>
-                                    <div className="text-[10px] text-slate-400">بروتين</div>
+                                    <div className="text-xs text-slate-400">بروتين</div>
                                 </div>
                                 <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-2">
                                     <div className="text-sm font-bold text-purple-600">{food.nutrition.carbs}غ</div>
-                                    <div className="text-[10px] text-slate-400">كربو</div>
+                                    <div className="text-xs text-slate-400">كربو</div>
                                 </div>
                                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2">
                                     <div className="text-sm font-bold text-blue-600">{food.nutrition.fat}غ</div>
-                                    <div className="text-[10px] text-slate-400">دهون</div>
+                                    <div className="text-xs text-slate-400">دهون</div>
                                 </div>
                             </div>
 

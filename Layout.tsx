@@ -9,14 +9,16 @@ import { useAuth } from './contexts/AuthContext';
 import { useAudio } from './contexts/AudioContext';
 import { useRouter } from 'next/router';
 import { AnimatePresence } from 'framer-motion';
+import { PROTECTED_PAGE_NAMES, HIDE_NAV_PAGES, HIDE_FOOTER_PAGES } from './lib/routes';
 
 // Dynamic imports — these are client-only interactive components
-const FloatingAssistant = dynamic(() => import('./components/common/FloatingAssistant'), { ssr: false });
+// FloatingAssistant merged into unified FloatingActionButton (in _app.tsx)
 const NetworkStatusBanner = dynamic(() => import('./components/common/NetworkStatusBanner'), { ssr: false });
 const CommandPalette = dynamic(() => import('./components/common/CommandPalette'), { ssr: false });
 const PWAInstallPrompt = dynamic(() => import('./components/common/PWAInstallPrompt'), { ssr: false });
 const GlobalMiniPlayer = dynamic(() => import('./components/frequencies/GlobalMiniPlayer'), { ssr: false });
 const OnboardingFlow = dynamic(() => import('./components/common/OnboardingFlow'), { ssr: false });
+const PredictiveEngine = dynamic(() => import('./components/notifications/PredictiveEngine'), { ssr: false });
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,13 +32,14 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Check if user has completed onboarding
+  // Only show onboarding for logged-in users who haven't completed it
+  // Visitors can browse freely without being blocked
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user) {
       const done = localStorage.getItem('onboardingComplete');
       if (!done) setShowOnboarding(true);
     }
-  }, []);
+  }, [user]);
 
   // Global Ctrl+K / ⌘+K shortcut for Command Palette
   useEffect(() => {
@@ -51,15 +54,8 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   }, []);
 
 
-  // Pages that require authentication
-  const protectedPages = [
-    'AdminDashboard',
-    'Profile',
-    'MedicalFile',
-    'Rewards',
-    'Settings',
-    'MyAppointments',
-  ];
+  // Pages that require authentication — from centralized route config
+  const protectedPages = PROTECTED_PAGE_NAMES as readonly string[];
 
   // Check if current page is protected
   const isProtectedPage = currentPageName && protectedPages.includes(currentPageName);
@@ -84,10 +80,10 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   }
 
   // Pages where navigation should be hidden
-  const hideNav = ['Checkout', 'ProductDetails', 'BookAppointment', 'ProgramDetails', 'ArticleDetails', 'HealthTracker', 'CourseDetails', 'RifeFrequencies', 'AdminDashboard', 'Settings', 'Login'].includes(currentPageName || '');
+  const hideNav = (HIDE_NAV_PAGES as readonly string[]).includes(currentPageName || '');
 
   // Pages where footer should be hidden
-  const hideFooter = ['Checkout', 'BookAppointment', 'Login', 'AdminDashboard', 'Settings'].includes(currentPageName || '');
+  const hideFooter = (HIDE_FOOTER_PAGES as readonly string[]).includes(currentPageName || '');
 
   return (
     <>
@@ -98,7 +94,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
         )}
       </AnimatePresence>
 
-      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 font-cairo overscroll-bounce transition-colors duration-300">
+      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 font-tajawal overscroll-bounce transition-colors duration-300">
         {/* Accessibility: Skip Links */}
         <SkipLinks />
 
@@ -116,9 +112,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
           ${currentTrack ? 'pb-48' : '' /* Extra padding if player is visible */}
           min-h-[calc(100vh-80px)]
         `}>
-            <div className="px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
+            {children}
           </div>
         </MainContent>
 
@@ -131,8 +125,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
           onClose={() => setShowCommandPalette(false)}
         />
 
-        {/* Floating Assistant */}
-        <FloatingAssistant />
+        {/* FloatingAssistant merged into unified FAB in _app.tsx */}
 
         {/* PWA Install Prompt */}
         <PWAInstallPrompt />
@@ -142,6 +135,9 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
 
         {/* Mobile Bottom Nav - iOS Tab Bar Style with safe area */}
         {!hideNav && <BottomNav currentPageName={currentPageName} />}
+
+        {/* Predictive AI Push Notifications Engine (Headless) */}
+        {!hideNav && <PredictiveEngine />}
       </div>
     </>
   );

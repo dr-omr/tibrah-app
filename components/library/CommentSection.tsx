@@ -84,12 +84,12 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
                                 placeholder="اكتب تعليقك هنا..."
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
-                                className="min-h-[100px] bg-slate-50 border-slate-200 focus:border-[#2D9B83]"
+                                className="min-h-[100px] bg-slate-50 border-slate-200 focus:border-primary"
                             />
                             <div className="flex justify-end">
                                 <Button
                                     onClick={handleSubmit}
-                                    className="bg-[#2D9B83] hover:bg-[#268b74] text-white"
+                                    className="bg-primary hover:bg-[#268b74] text-white"
                                     disabled={!commentText.trim()}
                                 >
                                     <Send className="w-4 h-4 ml-2" />
@@ -105,7 +105,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
                         </div>
                         <h4 className="font-semibold text-slate-700 mb-2">سجّل دخولك للمشاركة</h4>
                         <p className="text-slate-500 text-sm mb-4">يجب أن تكون عضواً لتتمكن من كتابة التعليقات والمشاركة في النقاش</p>
-                        <Button variant="outline" className="border-[#2D9B83] text-[#2D9B83] hover:bg-[#2D9B83] hover:text-white">
+                        <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                             تسجيل الدخول
                         </Button>
                     </div>
@@ -133,8 +133,8 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
                                 </p>
                             </div>
                             <div className="flex items-center gap-4 mt-2 mr-2">
-                                <button className="text-xs text-slate-500 hover:text-[#2D9B83] font-medium">إعجاب ({comment.likes})</button>
-                                <button className="text-xs text-slate-500 hover:text-[#2D9B83] font-medium">رد</button>
+                                <button className="text-xs text-slate-500 hover:text-primary font-medium">إعجاب ({comment.likes})</button>
+                                <button className="text-xs text-slate-500 hover:text-primary font-medium">رد</button>
                             </div>
                         </div>
                     </div>

@@ -58,8 +58,8 @@ const bankAccounts = [
 ];
 
 const mobileWallets = [
-    { id: 'jawali', name: 'جوالي', number: '77XXXXXXX', icon: '📱' },
-    { id: 'floosak', name: 'فلوسك', number: '77XXXXXXX', icon: '💳' },
+    { id: 'jawali', name: 'جوالي', number: '771447111', icon: '📱' },
+    { id: 'floosak', name: 'فلوسك', number: '771447111', icon: '💳' },
 ];
 
 // ═══════════════════════════════════════════════════════════════

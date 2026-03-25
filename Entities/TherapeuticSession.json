@@ -1,0 +1,115 @@
+{
+    "name": "TherapeuticSession",
+    "type": "object",
+    "properties": {
+        "title_ar": {
+            "type": "string",
+            "description": "العنوان بالعربية"
+        },
+        "title_en": {
+            "type": "string",
+            "description": "العنوان بالإنجليزية"
+        },
+        "description_ar": {
+            "type": "string",
+            "description": "الوصف بالعربية"
+        },
+        "category": {
+            "type": "string",
+            "enum": [
+                "relaxation", "sleep", "focus", "emotional_regulation",
+                "pain_coping", "breathwork", "meditation_depth",
+                "solfeggio_inspired", "binaural_entrainment", "monroe_inspired",
+                "nature_soundscapes", "guided_healing", "chakra_traditional",
+                "rife_exploratory", "organ_support", "custom"
+            ],
+            "description": "فئة الجلسة"
+        },
+        "evidence_level": {
+            "type": "string",
+            "enum": ["evidence_supported", "emerging_evidence", "traditional_experiential", "exploratory_only"],
+            "description": "مستوى الأدلة العلمية"
+        },
+        "safety_level": {
+            "type": "string",
+            "enum": ["safe_general", "caution_advised", "restricted"],
+            "description": "مستوى الأمان"
+        },
+        "audio_type": {
+            "type": "string",
+            "enum": ["binaural_beat", "isochronic_tone", "pure_tone", "tone_sequence", "guided_audio", "soundscape", "mixed"],
+            "description": "نوع الصوت"
+        },
+        "beat_type": {
+            "type": "string",
+            "enum": ["delta", "theta", "alpha", "beta", "gamma", "none"],
+            "description": "نوع الموجة الدماغية"
+        },
+        "frequency_hz": {
+            "type": "number",
+            "description": "التردد الرئيسي بالهيرتز"
+        },
+        "frequencies": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "ترددات متعددة (لتسلسلات رايف)"
+        },
+        "duration_options": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "خيارات المدة بالدقائق"
+        },
+        "default_duration": {
+            "type": "number",
+            "default": 15,
+            "description": "المدة الافتراضية بالدقائق"
+        },
+        "headphone_required": {
+            "type": "boolean",
+            "default": false,
+            "description": "هل تحتاج سماعات رأس"
+        },
+        "intended_outcome_ar": {
+            "type": "string",
+            "description": "النتيجة المرجوة"
+        },
+        "contraindications_ar": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "موانع الاستخدام"
+        },
+        "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "الوسوم"
+        },
+        "premium": {
+            "type": "boolean",
+            "default": false,
+            "description": "هل هي جلسة مدفوعة"
+        },
+        "featured": {
+            "type": "boolean",
+            "default": false,
+            "description": "هل هي مميزة"
+        },
+        "icon": {
+            "type": "string",
+            "description": "أيقونة الجلسة"
+        },
+        "color": {
+            "type": "string",
+            "description": "لون البطاقة"
+        },
+        "research_source": {
+            "type": "string",
+            "description": "مصدر البحث"
+        }
+    },
+    "required": [
+        "title_ar",
+        "category",
+        "evidence_level",
+        "audio_type"
+    ]
+}

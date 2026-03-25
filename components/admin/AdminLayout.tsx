@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createPageUrl } from '@/utils';
 import {
     LayoutDashboard, Users, ShoppingBag, Calendar,
-    FileText, Settings, LogOut, Menu, X, Bell, Shield, Waves, Utensils, ChefHat
+    FileText, Settings, LogOut, Menu, X, Bell, Shield, Waves, Utensils, ChefHat, Stethoscope
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,7 +20,9 @@ export default function AdminLayout({ children, activeTab, onTabChange, user }: 
 
     const menuItems = [
         { id: 'overview', label: 'لوحة التحكم', icon: LayoutDashboard },
+        { id: 'patients', label: 'الذكاء السريري', icon: Stethoscope },
         { id: 'appointments', label: 'المواعيد', icon: Calendar },
+        { id: 'orders', label: 'الطلبات والمدفوعات', icon: ShoppingBag },
         { id: 'products', label: 'المنتجات', icon: ShoppingBag },
         { id: 'foods', label: 'الأطعمة', icon: Utensils },
         { id: 'recipes', label: 'الوصفات', icon: ChefHat },
@@ -40,7 +42,7 @@ export default function AdminLayout({ children, activeTab, onTabChange, user }: 
             >
                 <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center">
                             <Shield className="h-6 w-6 text-white" />
                         </div>
                         <div>
@@ -68,7 +70,7 @@ export default function AdminLayout({ children, activeTab, onTabChange, user }: 
                                     setIsSidebarOpen(false);
                                 }}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                    ? 'bg-[#2D9B83] text-white shadow-lg shadow-[#2D9B83]/20'
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                     }`}
                             >

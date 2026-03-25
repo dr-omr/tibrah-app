@@ -20,7 +20,7 @@ export default function Custom404() {
             </p>
             <a href="/" style={{
                 padding: '0.75rem 1.5rem',
-                backgroundColor: '#2D9B83',
+                backgroundColor: 'var(--primary)',
                 color: 'white',
                 textDecoration: 'none',
                 borderRadius: '0.5rem',

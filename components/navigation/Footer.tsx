@@ -78,7 +78,7 @@ export default function Footer() {
         { label: 'الدورات', href: '/courses' },
         { label: 'المكتبة', href: '/library' },
         { label: 'حجز موعد', href: '/book-appointment' },
-        { label: 'المتجر', href: '/shop' },
+        { label: 'الصيدلية', href: '/shop' },
     ];
 
     const services = [
@@ -276,7 +276,7 @@ export default function Footer() {
                                         <Download className="w-5 h-5 text-white group-hover:animate-bounce" />
                                     </div>
                                     <div className="text-right flex-1">
-                                        <p className="text-[10px] text-white/70">يعمل على جميع الأجهزة</p>
+                                        <p className="text-xs text-white/70">يعمل على جميع الأجهزة</p>
                                         <p className="text-sm font-bold text-white">تثبيت التطبيق</p>
                                     </div>
                                     <Smartphone className="w-5 h-5 text-white/70" />
@@ -287,6 +287,13 @@ export default function Footer() {
                             </p>
                         </div>
                     </div>
+                </div>
+
+                {/* Medical Disclaimer */}
+                <div className="mb-8 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <p className="text-xs text-slate-500 leading-relaxed text-center">
+                        ⚕️ المحتوى المقدم في طِبرَا لأغراض تثقيفية وتوجيهية. لا يُغني عن الفحص الطبي المباشر. استشر طبيبك قبل تغيير أي بروتوكول علاجي.
+                    </p>
                 </div>
 
                 {/* Bottom Bar */}

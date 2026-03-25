@@ -18,10 +18,10 @@ export default function GlobalMiniPlayer() {
             <div className="container-app mx-auto">
                 <div
                     className="bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-white/10 flex items-center p-3 gap-3"
-                    onClick={() => router.push('/frequencies')} // Go to frequencies page on click (could be expanded)
+                    onClick={() => router.push('/frequencies')} // Navigate to Therapeutic Audio Hub
                 >
                     {/* Visualizer / Icon */}
-                    <div className="w-12 h-12 rounded-xl bg-[#2D9B83] flex items-center justify-center shrink-0 relative overflow-hidden">
+                    <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shrink-0 relative overflow-hidden">
                         {isPlaying ? (
                             <div className="flex items-center gap-0.5 h-4">
                                 <div className="w-1 bg-white/80 rounded-full animate-[music-bar_1s_ease-in-out_infinite]" style={{ animationDelay: '0s' }} />

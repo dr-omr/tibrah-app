@@ -30,7 +30,7 @@ const quickReplies = [
 function TypingIndicator() {
     return (
         <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#2D9B83] flex items-center justify-center flex-shrink-0 mt-1">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
                 <Bot className="w-4 h-4 text-white" />
             </div>
             <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-none p-4 shadow-sm">
@@ -38,7 +38,7 @@ function TypingIndicator() {
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
-                            className="w-2 h-2 bg-[#2D9B83] rounded-full"
+                            className="w-2 h-2 bg-primary rounded-full"
                             animate={{ y: [0, -6, 0] }}
                             transition={{
                                 duration: 0.6,
@@ -222,12 +222,12 @@ export default function ChatInterface() {
     return (
         <div className="flex flex-col h-full relative z-10 text-right" dir="rtl">
             {/* Header */}
-            <div className={`p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between ${voiceMode ? 'bg-[#2D9B83]/10' : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md'
+            <div className={`p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between ${voiceMode ? 'bg-primary/10' : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md'
                 } transition-colors duration-300`}>
                 <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-100 animate-pulse' : 'bg-[#2D9B83]/10'
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-100 animate-pulse' : 'bg-primary/10'
                         }`}>
-                        <HeartPulse className={`w-6 h-6 ${isListening ? 'text-red-500' : 'text-[#2D9B83]'}`} />
+                        <HeartPulse className={`w-6 h-6 ${isListening ? 'text-red-500' : 'text-primary'}`} />
                     </div>
                     <div>
                         <h2 className="font-bold text-slate-800 dark:text-white">مساعد طِبرَا {voiceMode && '🎤'}</h2>
@@ -242,7 +242,7 @@ export default function ChatInterface() {
                         size="icon"
                         variant="ghost"
                         onClick={() => setVoiceMode(!voiceMode)}
-                        className={`rounded-full transition-all active:scale-95 ${voiceMode ? 'bg-[#2D9B83] text-white hover:bg-[#2D9B83]/90 ring-4 ring-[#2D9B83]/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                        className={`rounded-full transition-all active:scale-95 ${voiceMode ? 'bg-primary text-white hover:bg-primary/90 ring-4 ring-primary/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                     >
                         {voiceMode ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5 text-slate-400" />}
@@ -267,11 +267,11 @@ export default function ChatInterface() {
                         animate={{ opacity: 1, y: 0 }}
                     >
                         <motion.div
-                            className="w-20 h-20 bg-gradient-to-br from-[#2D9B83]/10 to-[#3FB39A]/10 rounded-full mx-auto mb-4 flex items-center justify-center"
+                            className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary-light/10 rounded-full mx-auto mb-4 flex items-center justify-center"
                             animate={{ scale: [1, 1.05, 1] }}
                             transition={{ duration: 3, repeat: Infinity }}
                         >
-                            <Sparkles className="w-10 h-10 text-[#2D9B83]" />
+                            <Sparkles className="w-10 h-10 text-primary" />
                         </motion.div>
                         <p className="font-semibold text-slate-700 dark:text-slate-300 mb-1">مرحباً بك! أنا مساعدك الصحي الذكي 🌿</p>
                         <p className="text-sm text-slate-400">اسألني عن صحتك، تغذيتك، أو منتجاتنا</p>
@@ -285,7 +285,7 @@ export default function ChatInterface() {
                                     return (
                                         <motion.button
                                             key={idx}
-                                            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:border-[#2D9B83] hover:text-[#2D9B83] transition-all shadow-sm"
+                                            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-all shadow-sm"
                                             onClick={() => handleSend(reply.text)}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
@@ -312,7 +312,7 @@ export default function ChatInterface() {
                     >
                         <div className={`
                             w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1
-                            ${msg.role === 'user' ? 'bg-slate-800 dark:bg-slate-600' : 'bg-[#2D9B83]'}
+                            ${msg.role === 'user' ? 'bg-slate-800 dark:bg-slate-600' : 'bg-primary'}
                         `}>
                             {msg.role === 'user' ? (
                                 <User className="w-4 h-4 text-white" />
@@ -331,7 +331,7 @@ export default function ChatInterface() {
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                             {msg.isStreaming && (
                                 <motion.span
-                                    className="inline-block w-0.5 h-4 bg-[#2D9B83] ml-1 align-middle"
+                                    className="inline-block w-0.5 h-4 bg-primary ml-1 align-middle"
                                     animate={{ opacity: [1, 0, 1] }}
                                     transition={{ duration: 0.8, repeat: Infinity }}
                                 />
@@ -368,7 +368,7 @@ export default function ChatInterface() {
                                 return (
                                     <motion.button
                                         key={idx}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:border-[#2D9B83] hover:text-[#2D9B83] transition-all"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-all"
                                         onClick={() => handleSend(reply.text)}
                                         initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -392,7 +392,7 @@ export default function ChatInterface() {
                 {/* Image Upload Preview */}
                 {selectedImage && (
                     <div className="mb-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg flex items-center justify-between animate-in slide-in-from-bottom-2">
-                        <span className="text-xs text-[#2D9B83] font-medium flex items-center gap-1">
+                        <span className="text-xs text-primary font-medium flex items-center gap-1">
                             <Sparkles className="w-3 h-3" /> جاري تحليل الصورة...
                         </span>
                         <Button variant="ghost" size="sm" onClick={() => setSelectedImage(null)} className="h-6 w-6 p-0 rounded-full">
@@ -412,7 +412,7 @@ export default function ChatInterface() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={isListening ? "جاري الاستماع..." : "اكتب سؤالك هنا..."}
-                        className={`flex-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-[#2D9B83] rounded-xl h-12 dark:text-white ${isListening ? 'animate-pulse border-[#2D9B83] text-[#2D9B83]' : ''
+                        className={`flex-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary rounded-xl h-12 dark:text-white ${isListening ? 'animate-pulse border-primary text-primary' : ''
                             }`}
                         disabled={isLoading || isListening || isStreaming}
                     />
@@ -439,7 +439,7 @@ export default function ChatInterface() {
                     <Button
                         type="submit"
                         disabled={isLoading || isStreaming || (!input.trim() && !isListening && !selectedImage)}
-                        className="h-12 w-12 rounded-xl bg-[#2D9B83] hover:bg-[#258570] text-white shadow-lg shadow-[#2D9B83]/20 active:scale-95 transition-transform"
+                        className="h-12 w-12 rounded-xl bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/20 active:scale-95 transition-transform"
                     >
                         {isLoading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />

@@ -88,7 +88,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
 
     const addCommentMutation = useMutation({
         mutationFn: async () => {
-            return db.entities.Comment.create({
+            return db.entities.Comment.createForUser(user?.id || '', {
                 content: newComment,
                 rating: showRating ? rating : null,
                 target_type: targetType,
@@ -162,7 +162,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                     {/* Rating Summary */}
                     {showRating && comments.length > 0 && (
                         <div className="text-center">
-                            <div className="text-4xl font-bold text-[#2D9B83]">{avgRating}</div>
+                            <div className="text-4xl font-bold text-primary">{avgRating}</div>
                             <div className="flex justify-center gap-0.5 my-1">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <Star
@@ -201,7 +201,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
             {/* Add Comment Form */}
             <form onSubmit={handleSubmit} className="glass rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center flex-shrink-0">
                         <User className="w-5 h-5 text-white" />
                     </div>
                     <div>
@@ -241,7 +241,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                     placeholder="شاركنا رأيك أو تجربتك..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-[100px] resize-none border-slate-200 focus:border-[#2D9B83] rounded-xl"
+                    className="min-h-[100px] resize-none border-slate-200 focus:border-primary rounded-xl"
                 />
 
                 <div className="flex items-center justify-end">
@@ -265,7 +265,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
             {/* Comments List */}
             {isLoading ? (
                 <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#2D9B83]" />
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
             ) : isError ? (
                 <div className="text-center py-12 glass rounded-2xl">
@@ -275,7 +275,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                     <Button
                         onClick={() => refetch()}
                         variant="outline"
-                        className="text-[#2D9B83] border-[#2D9B83]"
+                        className="text-primary border-primary"
                     >
                         إعادة المحاولة
                     </Button>
@@ -292,7 +292,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                         <div key={comment.id} className="glass rounded-2xl p-5 hover:shadow-md transition-shadow">
                             <div className="flex items-start gap-4">
                                 {/* Avatar */}
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D9B83] to-[#3FB39A] flex items-center justify-center flex-shrink-0">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center flex-shrink-0">
                                     <User className="w-6 h-6 text-white" />
                                 </div>
 
@@ -337,8 +337,8 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                                         <button
                                             onClick={() => handleLike(comment.id)}
                                             className={`flex items-center gap-1.5 text-sm transition-colors ${likedComments.has(comment.id)
-                                                ? 'text-[#2D9B83]'
-                                                : 'text-slate-400 hover:text-[#2D9B83]'
+                                                ? 'text-primary'
+                                                : 'text-slate-400 hover:text-primary'
                                                 }`}
                                         >
                                             <Heart className={`w-4 h-4 ${likedComments.has(comment.id) ? 'fill-current' : ''
@@ -347,7 +347,7 @@ export default function CommentsSection({ targetType, targetId, showRating = tru
                                         </button>
                                         <button
                                             onClick={() => handleReply(comment.id)}
-                                            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-[#2D9B83] transition-colors"
+                                            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-primary transition-colors"
                                         >
                                             <Reply className="w-4 h-4" />
                                             <span>رد</span>

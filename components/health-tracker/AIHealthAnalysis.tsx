@@ -331,7 +331,7 @@ ${analysis.doctor_notes || 'لا توجد ملاحظات'}
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center animate-pulse">
                     <Brain className="w-10 h-10 text-white" />
                 </div>
-                <Loader2 className="w-10 h-10 mx-auto text-[#2D9B83] animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 mx-auto text-primary animate-spin mb-4" />
                 <p className="text-lg text-slate-700 font-medium mb-2">جاري التحليل المتقدم...</p>
                 <p className="text-sm text-slate-400">يتم تحليل {metrics.length} قياس و {symptoms.length} عرض</p>
                 <div className="mt-6 space-y-2">
@@ -446,7 +446,7 @@ ${analysis.doctor_notes || 'لا توجد ملاحظات'}
                 </div>
 
                 {/* Summary */}
-                <div className="bg-gradient-to-br from-[#2D9B83]/10 to-[#3FB39A]/10 rounded-2xl p-4">
+                <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 rounded-2xl p-4">
                     <p className="text-slate-700 leading-relaxed">{analysis.summary}</p>
                 </div>
             </div>
@@ -474,7 +474,7 @@ ${analysis.doctor_notes || 'لا توجد ملاحظات'}
                     {/* New Charts Section */}
                     <div className="glass rounded-2xl p-4 mb-4">
                         <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <BarChart3 className="w-5 h-5 text-[#2D9B83]" />
+                            <BarChart3 className="w-5 h-5 text-primary" />
                             الرسوم البيانية للاتجاهات
                         </h4>
                         <LongTermHealthChart metrics={metrics} dailyLogs={dailyLogs} symptoms={symptoms} />
@@ -617,7 +617,7 @@ ${analysis.doctor_notes || 'لا توجد ملاحظات'}
                                         <ul className="space-y-1">
                                             {risk.preventive_measures.map((measure, mIdx) => (
                                                 <li key={mIdx} className="text-sm text-slate-600 flex items-start gap-2">
-                                                    <Shield className="w-4 h-4 text-[#2D9B83] mt-0.5 flex-shrink-0" />
+                                                    <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                                                     {measure}
                                                 </li>
                                             ))}
@@ -657,12 +657,12 @@ ${analysis.doctor_notes || 'لا توجد ملاحظات'}
                     {analysis.recommendations?.length > 0 && (
                         <div className="glass rounded-2xl p-4">
                             <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-[#2D9B83]" />
+                                <TrendingUp className="w-5 h-5 text-primary" />
                                 التوصيات العلاجية
                             </h4>
                             <div className="space-y-3">
                                 {analysis.recommendations.map((rec, idx) => (
-                                    <div key={idx} className="bg-white/50 rounded-xl p-3 border-r-4 border-[#2D9B83]">
+                                    <div key={idx} className="bg-white/50 rounded-xl p-3 border-r-4 border-primary">
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-xs text-slate-400">{rec.category}</span>
                                             <Badge className={

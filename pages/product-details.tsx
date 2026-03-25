@@ -6,12 +6,16 @@ import { useRouter } from 'next/router';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, ShoppingCart, Heart, Star, Check,
-    Minus, Plus, Truck, Shield, RefreshCw
+    Minus, Plus, Truck, Shield, RefreshCw, Sparkles
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import CommentsSection from '../components/common/CommentsSection';
+import { motion, AnimatePresence } from 'framer-motion';
+import { haptic } from '@/lib/HapticFeedback';
+import { uiSounds } from '@/lib/uiSounds';
+import { useAuth } from '@/contexts/AuthContext';
 
 // TypeScript interfaces
 interface Product {
@@ -26,6 +30,7 @@ interface Product {
     featured?: boolean;
     in_stock?: boolean;
     benefits?: string[];
+    is_subscription_eligible?: boolean;
 }
 
 interface CartItem {
@@ -35,13 +40,16 @@ interface CartItem {
     price: number;
     quantity: number;
     image_url?: string;
+    is_subscription?: boolean;
 }
 
 export default function ProductDetails() {
     const router = useRouter();
     const productId = router.query.id as string;
     const [quantity, setQuantity] = useState(1);
+    const [purchaseType, setPurchaseType] = useState<'onetime' | 'subscription'>('onetime');
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: product, isLoading } = useQuery<Product | null>({
         queryKey: ['product', productId],
@@ -53,39 +61,44 @@ export default function ProductDetails() {
     });
 
     const { data: cartItems = [] } = useQuery<CartItem[]>({
-        queryKey: ['cart'],
+        queryKey: ['cart', user?.id],
         queryFn: async (): Promise<CartItem[]> => {
-            return db.entities.CartItem.list() as unknown as CartItem[];
+            return db.entities.CartItem.listForUser(user?.id || '') as unknown as CartItem[];
         },
+        enabled: !!user?.id,
     });
 
     const addToCartMutation = useMutation({
         mutationFn: async () => {
             // Read fresh cart data to avoid stale closure
             const currentCart = queryClient.getQueryData<CartItem[]>(['cart']) || [];
-            const existingItem = currentCart.find((item: CartItem) => item.product_id === productId);
+            // Match product ID and subscription type
+            const existingItem = currentCart.find((item: CartItem) => item.product_id === productId && item.is_subscription === (purchaseType === 'subscription'));
             if (existingItem) {
                 return db.entities.CartItem.update(existingItem.id, {
                     quantity: existingItem.quantity + quantity
                 });
             }
-            return db.entities.CartItem.create({
+            return db.entities.CartItem.createForUser(user?.id || '', {
                 product_id: productId,
                 product_name: product?.name || '',
-                price: product?.price || 0,
+                price: purchaseType === 'subscription' ? Math.round((product?.price || 0) * 0.85) : (product?.price || 0),
                 quantity: quantity,
-                image_url: product?.image_url || ''
+                image_url: product?.image_url || '',
+                is_subscription: purchaseType === 'subscription'
             });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
-            toast.success('تمت الإضافة للسلة');
+            haptic.success();
+            uiSounds.success();
+            toast.success('تمت الإضافة للسلة', { icon: '🛒' });
         },
     });
 
     // Guard: Wait for router to be ready
     if (!router.isReady) {
-        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-[#2D9B83] border-t-transparent rounded-full"></div></div>;
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div></div>;
     }
 
     const features = [
@@ -131,23 +144,39 @@ export default function ProductDetails() {
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 z-20 px-4 py-4 flex items-center justify-between">
                 <Link href={createPageUrl('Shop')}>
-                    <Button size="icon" variant="secondary" className="rounded-full bg-white/80 backdrop-blur-sm">
-                        <ArrowRight className="w-5 h-5" />
-                    </Button>
+                    <motion.div whileTap={{ scale: 0.9 }}>
+                        <Button size="icon" variant="secondary" className="rounded-full bg-white/80 backdrop-blur-sm shadow-sm">
+                            <ArrowRight className="w-5 h-5" />
+                        </Button>
+                    </motion.div>
                 </Link>
                 <div className="flex gap-2">
-                    <Button size="icon" variant="secondary" className="rounded-full bg-white/80 backdrop-blur-sm">
-                        <Heart className="w-5 h-5" />
-                    </Button>
-                    <Link href={createPageUrl('Checkout')}>
-                        <Button size="icon" variant="secondary" className="rounded-full bg-white/80 backdrop-blur-sm relative">
-                            <ShoppingCart className="w-5 h-5" />
-                            {totalCartItems > 0 && (
-                                <Badge className="absolute -top-1 -left-1 w-5 h-5 p-0 flex items-center justify-center gradient-primary text-white text-xs border-0">
-                                    {totalCartItems}
-                                </Badge>
-                            )}
+                    <motion.div whileTap={{ scale: 0.9 }}>
+                        <Button size="icon" variant="secondary" className="rounded-full bg-white/80 backdrop-blur-sm shadow-sm" onClick={() => haptic.tap()}>
+                            <Heart className="w-5 h-5" />
                         </Button>
+                    </motion.div>
+                    <Link href={createPageUrl('Checkout')}>
+                        <motion.div whileTap={{ scale: 0.9 }}>
+                            <Button size="icon" variant="secondary" className="rounded-full bg-white/80 backdrop-blur-sm relative shadow-sm">
+                                <ShoppingCart className="w-5 h-5" />
+                                <AnimatePresence>
+                                    {totalCartItems > 0 && (
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            exit={{ scale: 0 }}
+                                            transition={{ type: 'spring' }}
+                                            className="absolute -top-1 -left-1"
+                                        >
+                                            <Badge className="w-5 h-5 p-0 flex items-center justify-center gradient-primary text-white text-xs border-0 shadow-sm shadow-primary/20">
+                                                {totalCartItems}
+                                            </Badge>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </Button>
+                        </motion.div>
                     </Link>
                 </div>
             </div>
@@ -180,7 +209,7 @@ export default function ProductDetails() {
             {/* Product Info */}
             <div className="px-6 py-6">
                 {/* Category */}
-                <Badge variant="outline" className="mb-3 text-[#2D9B83] border-[#2D9B83]">
+                <Badge variant="outline" className="mb-3 text-primary border-primary">
                     {product.category === 'vitamins' && 'فيتامينات'}
                     {product.category === 'minerals' && 'معادن'}
                     {product.category === 'supplements' && 'مكملات'}
@@ -209,12 +238,91 @@ export default function ProductDetails() {
                     <span className="text-sm text-slate-500">(٤.٨) • ١٢٣ تقييم</span>
                 </div>
 
-                {/* Price */}
-                <div className="flex items-baseline gap-3 mb-6">
-                    <span className="text-3xl font-bold text-[#2D9B83]">{product.price}</span>
-                    <span className="text-lg text-slate-500">ر.س</span>
-                    {hasDiscount && (
-                        <span className="text-lg text-slate-400 line-through">{product.original_price} ر.س</span>
+                {/* Purchase Options - Subscribe & Save */}
+                <div className="mb-6 space-y-3">
+                    
+                    {/* Clinical Evidence Snippet */}
+                    <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-2xl p-4 mb-4">
+                        <div className="flex items-center gap-2 mb-2 text-primary">
+                            <Sparkles className="w-4 h-4" />
+                            <h4 className="font-bold text-sm">لماذا اختاره أطباؤنا؟</h4>
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            هذا المنتج مصمم سريرياً بناءً على أحدث الأبحاث لدعم الخطة العلاجية الخاصة بك، لضمان أعلى درجات الامتصاص والفعالية دون أعراض جانبية للمعدة.
+                        </p>
+                    </div>
+
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">خيارات الشراء</h3>
+                    <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                            setPurchaseType('onetime');
+                            haptic.tap();
+                            uiSounds.select();
+                        }}
+                        className={`w-full p-4 rounded-2xl border-2 text-right transition-all flex items-center justify-between ${
+                            purchaseType === 'onetime'
+                                ? 'border-primary bg-primary/5 shadow-sm shadow-primary/5'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                    >
+                        <div>
+                            <p className="font-bold text-slate-800 dark:text-white mb-1">شراء لمرة واحدة</p>
+                            <p className="text-sm text-slate-500 font-semibold">{product.price} ر.س</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            purchaseType === 'onetime' ? 'border-primary' : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                            {purchaseType === 'onetime' && (
+                                <motion.div layoutId="purchase-selector" className="w-2.5 h-2.5 rounded-full bg-primary" />
+                            )}
+                        </div>
+                    </motion.button>
+
+                    {product.is_subscription_eligible && (
+                        <>
+                            <motion.button
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                    setPurchaseType('subscription');
+                                    haptic.selection();
+                                    uiSounds.select();
+                                }}
+                                className={`w-full p-4 rounded-2xl border-2 text-right transition-all flex items-center justify-between relative overflow-hidden ${
+                                    purchaseType === 'subscription'
+                                        ? 'border-emerald-500 bg-emerald-500/5 shadow-sm shadow-emerald-500/5'
+                                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600'
+                                }`}
+                            >
+                                {purchaseType === 'subscription' && (
+                                    <motion.div layoutId="subscription-bar" className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500" />
+                                )}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="font-bold text-slate-800 dark:text-white">اشتراك شهري</p>
+                                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 shadow-none text-[10px] px-1.5 py-0 rounded font-bold">
+                                            وفر ١٥٪
+                                        </Badge>
+                                    </div>
+                                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-bold">
+                                        {Math.round(product.price * 0.85)} ر.س <span className="text-xs text-slate-400 font-medium line-through mr-1">{product.price} ر.س</span>
+                                    </p>
+                                </div>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    purchaseType === 'subscription' ? 'border-emerald-500' : 'border-slate-300 dark:border-slate-600'
+                                }`}>
+                                    {purchaseType === 'subscription' && (
+                                        <motion.div layoutId="purchase-selector" className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                    )}
+                                </div>
+                            </motion.button>
+                            {purchaseType === 'subscription' && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 px-2 mt-2">
+                                    <Shield className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                                    توصيل تلقائي كل شهر. يمكنك الإلغاء في أي وقت بدون رسوم.
+                                </p>
+                            )}
+                        </>
                     )}
                 </div>
 
@@ -250,7 +358,7 @@ export default function ProductDetails() {
                             const Icon = feature.icon;
                             return (
                                 <div key={index} className="text-center">
-                                    <Icon className="w-6 h-6 mx-auto text-[#2D9B83] mb-2" />
+                                    <Icon className="w-6 h-6 mx-auto text-primary mb-2" />
                                     <p className="text-xs text-slate-600">{feature.text}</p>
                                 </div>
                             );
@@ -266,35 +374,51 @@ export default function ProductDetails() {
             <div className="fixed bottom-0 left-0 right-0 glass p-4 border-t">
                 <div className="flex items-center gap-4">
                     {/* Quantity */}
-                    <div className="flex items-center gap-3 glass rounded-xl p-2">
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="w-8 h-8"
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        >
-                            <Minus className="w-4 h-4" />
-                        </Button>
-                        <span className="w-8 text-center font-semibold">{quantity}</span>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="w-8 h-8"
-                            onClick={() => setQuantity(quantity + 1)}
-                        >
-                            <Plus className="w-4 h-4" />
-                        </Button>
+                    <div className="flex items-center gap-3 bg-white/50 backdrop-blur-md rounded-2xl p-2 border border-slate-200/50 shadow-sm">
+                        <motion.button whileTap={{ scale: 0.85 }}>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-9 h-9 rounded-xl text-slate-500 hover:text-slate-800"
+                                onClick={() => {
+                                    setQuantity(Math.max(1, quantity - 1));
+                                    haptic.tap();
+                                }}
+                            >
+                                <Minus className="w-4 h-4" />
+                            </Button>
+                        </motion.button>
+                        <span className="w-6 text-center font-bold text-slate-800">{quantity}</span>
+                        <motion.button whileTap={{ scale: 0.85 }}>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-9 h-9 rounded-xl text-slate-500 hover:text-slate-800"
+                                onClick={() => {
+                                    setQuantity(quantity + 1);
+                                    haptic.tap();
+                                }}
+                            >
+                                <Plus className="w-4 h-4" />
+                            </Button>
+                        </motion.button>
                     </div>
 
                     {/* Add to Cart */}
-                    <Button
-                        onClick={() => addToCartMutation.mutate()}
-                        disabled={addToCartMutation.isPending || product.in_stock === false}
-                        className="flex-1 h-14 gradient-primary rounded-2xl text-lg font-bold"
-                    >
-                        <ShoppingCart className="w-5 h-5 ml-2" />
-                        {product.in_stock === false ? 'نفذت الكمية' : 'أضف للسلة'}
-                    </Button>
+                    <motion.div className="flex-1" whileTap={{ scale: 0.98 }}>
+                        <Button
+                            onClick={() => addToCartMutation.mutate()}
+                            disabled={addToCartMutation.isPending || product.in_stock === false}
+                            className="w-full h-14 gradient-primary rounded-2xl text-base font-bold shadow-lg shadow-primary/20"
+                        >
+                            {addToCartMutation.isPending ? (
+                                <RefreshCw className="w-5 h-5 ml-2 animate-spin" />
+                            ) : (
+                                <ShoppingCart className="w-5 h-5 ml-2" />
+                            )}
+                            {product.in_stock === false ? 'نفذت الكمية' : 'أضف للسلة'}
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
         </div>

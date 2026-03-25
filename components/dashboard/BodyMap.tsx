@@ -35,7 +35,7 @@ export default function BodyMap({ userHealth }) {
                 <h3 className="font-bold text-slate-800">خريطة الجسم</h3>
                 <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full bg-[#2D9B83]" />
+                        <div className="w-3 h-3 rounded-full bg-primary" />
                         <span className="text-slate-500">سليم</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -75,12 +75,12 @@ export default function BodyMap({ userHealth }) {
                         }}
                     >
                         <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg ${organ.status === 'healthy' ? 'bg-[#2D9B83]' : 'bg-[#D4AF37] animate-pulse'
+                            className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg ${organ.status === 'healthy' ? 'bg-primary' : 'bg-[#D4AF37] animate-pulse'
                                 }`}
                         >
                             <div className="w-2 h-2 bg-white rounded-full" />
                         </div>
-                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-slate-500 whitespace-nowrap">
+                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-slate-500 whitespace-nowrap">
                             {organ.name}
                         </span>
                     </button>
@@ -137,7 +137,7 @@ export default function BodyMap({ userHealth }) {
                                 <div className="space-y-2">
                                     {selectedOrgan.tips.map((tip, index) => (
                                         <div key={index} className="flex items-center gap-2 text-sm text-slate-600">
-                                            <div className="w-2 h-2 rounded-full bg-[#2D9B83]" />
+                                            <div className="w-2 h-2 rounded-full bg-primary" />
                                             {tip}
                                         </div>
                                     ))}

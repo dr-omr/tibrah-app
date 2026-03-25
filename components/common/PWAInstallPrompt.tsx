@@ -99,15 +99,15 @@ export default function PWAInstallPrompt() {
                         <p className="text-slate-600 text-sm">اتبع الخطوات التالية:</p>
                         <div className="space-y-2">
                             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <span className="w-6 h-6 rounded-full bg-[#2D9B83] text-white text-sm flex items-center justify-center font-bold">1</span>
+                                <span className="w-6 h-6 rounded-full bg-primary text-white text-sm flex items-center justify-center font-bold">1</span>
                                 <span className="text-slate-700 text-sm">اضغط على زر المشاركة <span className="inline-block px-1.5 py-0.5 bg-slate-200 rounded text-xs">⬆️</span></span>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <span className="w-6 h-6 rounded-full bg-[#2D9B83] text-white text-sm flex items-center justify-center font-bold">2</span>
+                                <span className="w-6 h-6 rounded-full bg-primary text-white text-sm flex items-center justify-center font-bold">2</span>
                                 <span className="text-slate-700 text-sm">اختر "إضافة إلى الشاشة الرئيسية"</span>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <span className="w-6 h-6 rounded-full bg-[#2D9B83] text-white text-sm flex items-center justify-center font-bold">3</span>
+                                <span className="w-6 h-6 rounded-full bg-primary text-white text-sm flex items-center justify-center font-bold">3</span>
                                 <span className="text-slate-700 text-sm">اضغط "إضافة" ✓</span>
                             </div>
                         </div>
@@ -142,15 +142,15 @@ export default function PWAInstallPrompt() {
                 <div className="p-4 space-y-4">
                     <ul className="space-y-2 text-sm text-slate-600">
                         <li className="flex items-center gap-2">
-                            <span className="text-[#2D9B83]">✓</span>
+                            <span className="text-primary">✓</span>
                             <span>وصول سريع من الشاشة الرئيسية</span>
                         </li>
                         <li className="flex items-center gap-2">
-                            <span className="text-[#2D9B83]">✓</span>
+                            <span className="text-primary">✓</span>
                             <span>يعمل بملء الشاشة بدون متصفح</span>
                         </li>
                         <li className="flex items-center gap-2">
-                            <span className="text-[#2D9B83]">✓</span>
+                            <span className="text-primary">✓</span>
                             <span>تحميل أسرع وتجربة أفضل</span>
                         </li>
                     </ul>

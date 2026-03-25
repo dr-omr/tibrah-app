@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart, Smile, Brain, BookOpen, Sparkles, Lightbulb,
@@ -55,6 +56,8 @@ interface MentalEntry {
 export default function MentalHealthHub() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
 
     // State
     const [selectedMood, setSelectedMood] = useState<number | null>(null);
@@ -72,10 +75,10 @@ export default function MentalHealthHub() {
 
     // Fetch today's entry
     const { data: todayEntry } = useQuery<MentalEntry | null>({
-        queryKey: ['mentalHealth', today],
+        queryKey: ['mentalHealth', today, userId],
         queryFn: async () => {
             try {
-                const logs = await db.entities.DailyLog.filter({ date: today });
+                const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
                 if (logs?.[0] && logs[0].mood) {
                     const mood = logs[0].mood as any;
                     return {
@@ -91,15 +94,16 @@ export default function MentalHealthHub() {
                 return null;
             }
         },
+        enabled: !!userId,
     });
 
     // Fetch weekly mood data
     const { data: weeklyMoods = [] } = useQuery<MentalEntry[]>({
-        queryKey: ['mentalHealthWeek'],
+        queryKey: ['mentalHealthWeek', userId],
         queryFn: async () => {
             try {
                 const weekAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
-                const logs = await db.entities.DailyLog.filter({ date: { $gte: weekAgo } });
+                const logs = await db.entities.DailyLog.filter({ date: { $gte: weekAgo }, user_id: userId });
                 return logs.map((log: any) => {
                     const mood = log.mood as any;
                     return {
@@ -114,6 +118,7 @@ export default function MentalHealthHub() {
                 return [];
             }
         },
+        enabled: !!userId,
     });
 
     // Load today's data
@@ -152,11 +157,11 @@ export default function MentalHealthHub() {
                 notes: gratitudeText
             };
 
-            const logs = await db.entities.DailyLog.filter({ date: today });
+            const logs = await db.entities.DailyLog.filter({ date: today, user_id: userId });
             if (logs?.[0]) {
                 return db.entities.DailyLog.update(logs[0].id as string, { mood: moodData as any });
             }
-            return db.entities.DailyLog.create({ date: today, mood: moodData as any });
+            return db.entities.DailyLog.createForUser(userId || '', { date: today, mood: moodData as any });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['mentalHealth'] });
@@ -298,7 +303,7 @@ export default function MentalHealthHub() {
                             >
                                 {mood.emoji}
                             </motion.span>
-                            <span className={`text-[10px] font-medium ${selectedMood === mood.value ? 'text-slate-700' : 'text-white/80'
+                            <span className={`text-xs font-medium ${selectedMood === mood.value ? 'text-slate-700' : 'text-white/80'
                                 }`}>
                                 {mood.label}
                             </span>
@@ -545,7 +550,7 @@ export default function MentalHealthHub() {
                                         <span className="text-slate-300 text-xs">-</span>
                                     )}
                                 </motion.div>
-                                <span className={`text-[10px] font-medium ${isToday ? 'text-emerald-600 font-bold' : 'text-slate-500'}`}>
+                                <span className={`text-xs font-medium ${isToday ? 'text-emerald-600 font-bold' : 'text-slate-500'}`}>
                                     {day.label}
                                 </span>
                             </motion.div>

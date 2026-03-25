@@ -112,7 +112,7 @@ export default function FrequencyManager({ frequencies, onSave, onDelete }: Freq
                             <p className="text-xs text-slate-500 mb-1">{freq.category}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                                 {Array.isArray(freq.benefits) && freq.benefits.slice(0, 2).map((b, i) => (
-                                    <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{b}</span>
+                                    <span key={i} className="text-xs px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{b}</span>
                                 ))}
                             </div>
                         </div>

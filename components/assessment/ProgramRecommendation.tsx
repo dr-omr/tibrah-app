@@ -154,7 +154,7 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
     const getProgramDetails = (id) => {
         const programs = [
             { id: 'weekly', name: 'البرنامج الأسبوعي', color: 'bg-blue-500' },
-            { id: '21_days', name: 'برنامج ٢١ يوم', color: 'bg-[#2D9B83]' },
+            { id: '21_days', name: 'برنامج ٢١ يوم', color: 'bg-primary' },
             { id: '3_months', name: 'برنامج ٣ أشهر', color: 'bg-[#D4AF37]' }
         ];
         return programs.find(p => p.id === id) || programs[1];
@@ -179,7 +179,7 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
                     <div className="py-4">
                         {loading ? (
                             <div className="text-center py-10">
-                                <Loader2 className="w-12 h-12 mx-auto text-[#2D9B83] animate-spin mb-4" />
+                                <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin mb-4" />
                                 <p className="text-slate-600 font-medium">جاري تحليل بياناتك وتصميم خطتك...</p>
                                 <p className="text-xs text-slate-400 mt-2">نستخدم الذكاء الاصطناعي لمطابقة حالتك مع برامج د. عمر</p>
                             </div>
@@ -208,15 +208,15 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
                                                         });
                                                     }}
                                                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all will-change-transform ${isSelected
-                                                        ? 'border-[#2D9B83] bg-[#2D9B83]/5'
-                                                        : 'border-slate-100 hover:border-[#2D9B83]/30'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-slate-100 hover:border-primary/30'
                                                         }`}
                                                 >
                                                     <div className="flex items-center justify-between">
-                                                        <span className={`font-medium ${isSelected ? 'text-[#2D9B83]' : 'text-slate-600'}`}>
+                                                        <span className={`font-medium ${isSelected ? 'text-primary' : 'text-slate-600'}`}>
                                                             {option.label}
                                                         </span>
-                                                        {isSelected && <Check className="w-5 h-5 text-[#2D9B83]" />}
+                                                        {isSelected && <Check className="w-5 h-5 text-primary" />}
                                                     </div>
                                                 </div>
                                             );
@@ -258,7 +258,7 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
                             <div className={`text-xl font-bold text-white py-2 px-6 rounded-xl inline-block my-2 ${getProgramDetails(recommendation.recommended_program_id).color}`}>
                                 {getProgramDetails(recommendation.recommended_program_id).name}
                             </div>
-                            <p className="text-[#2D9B83] font-bold text-sm">
+                            <p className="text-primary font-bold text-sm">
                                 نسبة التطابق: {recommendation.match_percentage}%
                             </p>
                         </div>

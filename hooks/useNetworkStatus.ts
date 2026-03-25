@@ -52,7 +52,11 @@ export default function useNetworkStatus(): NetworkStatus {
         const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
         // تحديد ما إذا كان الاتصال بطيء
-        const isSlowConnection = connection
+        // Skip slow-connection detection on localhost (dev environment)
+        const isLocalhost = typeof window !== 'undefined' && (
+            window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        );
+        const isSlowConnection = !isLocalhost && connection
             ? connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g' || (connection.rtt && connection.rtt > 500)
             : false;
 

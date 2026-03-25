@@ -9,9 +9,14 @@ export default function Document() {
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
 
-                {/* Fonts - preloaded for faster rendering */}
+                {/* Font preloading — Tajawal (premium Arabic) + Inter (Latin) */}
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap"
+                    rel="preload"
+                    href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+                    as="style"
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
                     rel="stylesheet"
                 />
 
@@ -63,7 +68,7 @@ export default function Document() {
                 <meta name="msapplication-TileColor" content="#2D9B83" />
                 <meta name="msapplication-tap-highlight" content="no" />
             </Head>
-            <body className="bg-slate-50">
+            <body className="bg-slate-50 font-sans">
                 <Main />
                 <NextScript />
             </body>

@@ -90,7 +90,7 @@ export default function NotificationBell({ variant = 'header', className = '' }:
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors"
             >
-                <Bell className={`w-5 h-5 ${isOpen ? 'text-[#2D9B83]' : 'text-slate-600'}`} />
+                <Bell className={`w-5 h-5 ${isOpen ? 'text-primary' : 'text-slate-600'}`} />
                 {unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
                         {unreadCount > 99 ? '99+' : unreadCount}
@@ -114,7 +114,7 @@ export default function NotificationBell({ variant = 'header', className = '' }:
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => markAllAsRead()}
-                                    className="text-xs text-[#2D9B83] hover:text-[#2D9B83] hover:bg-[#2D9B83]/10"
+                                    className="text-xs text-primary hover:text-primary hover:bg-primary/10"
                                 >
                                     <Check className="w-3 h-3 ml-1" />
                                     قراءة الكل
@@ -171,7 +171,7 @@ export default function NotificationBell({ variant = 'header', className = '' }:
                                                             e.stopPropagation();
                                                             setIsOpen(false);
                                                         }}
-                                                        className="inline-flex items-center gap-1 text-xs text-[#2D9B83] mt-2 hover:underline"
+                                                        className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline"
                                                     >
                                                         {notif.action.label}
                                                         <ExternalLink className="w-3 h-3" />
@@ -200,7 +200,7 @@ export default function NotificationBell({ variant = 'header', className = '' }:
                     {notifications.length > 20 && (
                         <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
                             <Link href="/notifications">
-                                <span className="text-sm text-[#2D9B83] hover:underline">
+                                <span className="text-sm text-primary hover:underline">
                                     عرض كل الإشعارات ({notifications.length})
                                 </span>
                             </Link>

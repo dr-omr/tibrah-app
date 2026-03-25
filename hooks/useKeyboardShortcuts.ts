@@ -65,6 +65,6 @@ export const shortcutsList = [
     { keys: 'Ctrl + K', label: 'بحث سريع' },
     { keys: 'Ctrl + /', label: 'المساعد الذكي' },
     { keys: 'Alt + H', label: 'المتابع الصحي' },
-    { keys: 'Alt + S', label: 'المتجر' },
+    { keys: 'Alt + S', label: 'الصيدلية' },
     { keys: 'Alt + B', label: 'حجز موعد' },
 ];

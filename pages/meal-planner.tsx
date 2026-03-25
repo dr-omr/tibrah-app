@@ -9,7 +9,7 @@ import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import {
-    Target, Calendar, Utensils, ChefHat, TrendingUp, Sparkles, Loader2, Brain
+    Target, Calendar, Utensils, ChefHat, TrendingUp, Sparkles, Loader2, Brain, ArrowRight
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -94,11 +94,11 @@ export default function MealPlanner() {
         const loadCustomData = async () => {
             try {
                 const { db } = await import('@/lib/db');
-                const firebaseFoods = await db.foods.list();
+                const firebaseFoods = await db.entities.Food.list();
                 if (firebaseFoods.length > 0) {
                     setCustomFoods(firebaseFoods as unknown as FoodItem[]);
                 }
-                const firebaseRecipes = await db.recipes.list();
+                const firebaseRecipes = await db.entities.Recipe.list();
                 if (firebaseRecipes.length > 0) {
                     setCustomRecipes(firebaseRecipes as unknown as Recipe[]);
                 }
@@ -141,6 +141,15 @@ export default function MealPlanner() {
         const start = startOfWeek(selectedDate, { weekStartsOn: 6 });
         return Array.from({ length: 7 }, (_, i) => addDays(start, i));
     }, [selectedDate]);
+
+    // Check if a date has meals
+    const dateHasMeals = useCallback((date: Date): boolean => {
+        if (typeof window === 'undefined') return false;
+        const key = `meals_${format(date, 'yyyy-MM-dd')}`;
+        const saved = localStorage.getItem(key);
+        if (!saved) return false;
+        try { return JSON.parse(saved).length > 0; } catch { return false; }
+    }, []);
 
     const addMeal = useCallback((foodId: string, amount: number, mealType: string) => {
         const entry: MealEntry = {
@@ -220,90 +229,118 @@ export default function MealPlanner() {
         }
     }, [healthProfile]);
 
+    const caloriePercent = Math.min(Math.round((dailyTotals.calories / healthProfile.goals.calories) * 100), 100);
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
-            {/* Header */}
+            {/* ─── Premium Header ─── */}
             <motion.div
-                className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white px-6 py-6 rounded-b-[2rem]"
+                className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white overflow-hidden"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h1 className="text-2xl font-bold">تخطيط الوجبات 🥗</h1>
-                        <p className="text-white/70 text-sm">خطة غذائية مخصصة</p>
+                {/* Decorative circles */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute -top-12 -left-12 w-40 h-40 border-[2px] border-white/10 rounded-full" />
+                    <div className="absolute top-8 -right-8 w-24 h-24 border-[2px] border-white/10 rounded-full" />
+                    <div className="absolute -bottom-10 left-1/3 w-32 h-32 border-[2px] border-white/10 rounded-full" />
+                </div>
+
+                <div className="relative px-5 pt-5 pb-4">
+                    {/* Top Row */}
+                    <div className="flex items-center justify-between mb-5">
+                        <div>
+                            <h1 className="text-[22px] font-extrabold tracking-tight">تخطيط الوجبات</h1>
+                            <p className="text-white/60 text-sm mt-0.5">
+                                {format(selectedDate, 'EEEE، d MMMM', { locale: ar })}
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <motion.button
+                                className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10"
+                                whileTap={{ scale: 0.9 }}
+                                onClick={generateAiMealPlan}
+                                disabled={aiMealLoading}
+                            >
+                                {aiMealLoading ? (
+                                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-5 h-5 text-white" />
+                                )}
+                            </motion.button>
+                            <motion.button
+                                className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10"
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setShowSettingsSheet(true)}
+                            >
+                                <Target className="w-5 h-5 text-white" />
+                            </motion.button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <motion.button
-                            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
-                            whileTap={{ scale: 0.9 }}
-                            onClick={generateAiMealPlan}
-                            disabled={aiMealLoading}
-                        >
-                            {aiMealLoading ? (
-                                <Loader2 className="w-5 h-5 text-white animate-spin" />
-                            ) : (
-                                <Sparkles className="w-5 h-5 text-white" />
-                            )}
-                        </motion.button>
-                        <motion.button
-                            className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setShowSettingsSheet(true)}
-                        >
-                            <Target className="w-5 h-5 text-white" />
-                        </motion.button>
+
+                    {/* Week Calendar — improved touch targets */}
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                        {weekDates.map((date, index) => {
+                            const isSelected = isSameDay(date, selectedDate);
+                            const hasMeals = dateHasMeals(date);
+                            return (
+                                <motion.button
+                                    key={index}
+                                    className={`flex-shrink-0 w-[13%] min-w-[46px] h-[72px] rounded-2xl flex flex-col items-center justify-center transition-all relative ${isSelected
+                                        ? 'bg-white text-emerald-600 shadow-lg shadow-emerald-900/20'
+                                        : 'bg-white/10 text-white hover:bg-white/20'
+                                        }`}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => setSelectedDate(date)}
+                                >
+                                    <span className={`text-[11px] font-semibold ${isSelected ? 'text-emerald-500' : 'opacity-60'}`}>
+                                        {format(date, 'EEE', { locale: ar })}
+                                    </span>
+                                    <span className={`text-lg font-bold mt-0.5 ${isSelected ? 'text-emerald-600' : ''}`}>
+                                        {format(date, 'd')}
+                                    </span>
+                                    {/* Meal indicator dot */}
+                                    {hasMeals && (
+                                        <div className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-500' : 'bg-white/80'}`} />
+                                    )}
+                                </motion.button>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* Week Calendar */}
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
-                    {weekDates.map((date, index) => (
-                        <motion.button
-                            key={index}
-                            className={`flex-shrink-0 w-12 h-16 rounded-xl flex flex-col items-center justify-center transition-all ${isSameDay(date, selectedDate)
-                                ? 'bg-white text-emerald-600'
-                                : 'bg-white/20 text-white hover:bg-white/30'
-                                }`}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setSelectedDate(date)}
-                        >
-                            <span className="text-[10px] font-medium opacity-70">
-                                {format(date, 'EEE', { locale: ar })}
-                            </span>
-                            <span className="text-lg font-bold">{format(date, 'd')}</span>
-                        </motion.button>
-                    ))}
-                </div>
+                {/* Rounded bottom edge */}
+                <div className="h-5 bg-slate-50 dark:bg-slate-900 rounded-t-[1.5rem]" />
             </motion.div>
 
-            {/* Daily Summary */}
+            {/* ─── Daily Summary ─── */}
             <DailySummary dailyTotals={dailyTotals} goals={healthProfile.goals} />
 
-            {/* Tabs */}
-            <div className="px-4 pt-4">
-                <div className="flex gap-2 overflow-x-auto pb-2">
+            {/* ─── Premium Tab Bar ─── */}
+            <div className="px-4 pt-5 pb-1 sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl">
+                <div className="flex gap-1 bg-white dark:bg-slate-800 rounded-2xl p-1.5 shadow-card border border-slate-100 dark:border-slate-700">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
                         return (
                             <motion.button
                                 key={tab.id}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm transition-all relative ${isActive
+                                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                                     }`}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setActiveTab(tab.id)}
                             >
                                 <Icon className="w-4 h-4" />
-                                {tab.label}
+                                <span className="text-[13px]">{tab.label}</span>
                             </motion.button>
                         );
                     })}
                 </div>
             </div>
 
-            {/* Tab Content */}
+            {/* ─── Tab Content ─── */}
             <div className="px-4 pt-4 space-y-4">
                 <AnimatePresence mode="wait">
                     {activeTab === 'plan' && (
@@ -357,7 +394,7 @@ export default function MealPlanner() {
                 </AnimatePresence>
             </div>
 
-            {/* Add Food Sheet */}
+            {/* ─── Add Food Sheet ─── */}
             <Sheet open={showAddFoodSheet} onOpenChange={setShowAddFoodSheet}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
                     <SheetHeader>
@@ -372,7 +409,7 @@ export default function MealPlanner() {
                 </SheetContent>
             </Sheet>
 
-            {/* Food Detail Sheet */}
+            {/* ─── Food Detail Sheet ─── */}
             <Sheet open={showFoodDetailSheet} onOpenChange={setShowFoodDetailSheet}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
                     {selectedFood && (
@@ -388,7 +425,7 @@ export default function MealPlanner() {
                 </SheetContent>
             </Sheet>
 
-            {/* Settings Sheet */}
+            {/* ─── Settings Sheet ─── */}
             <Sheet open={showSettingsSheet} onOpenChange={setShowSettingsSheet}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
                     <SheetHeader>
@@ -409,61 +446,150 @@ export default function MealPlanner() {
                 </SheetContent>
             </Sheet>
 
-            {/* AI Meal Plan Sheet */}
+            {/* ─── AI Meal Plan Sheet (Therapeutic Kitchen) ─── */}
             <Sheet open={showAiPlanSheet} onOpenChange={setShowAiPlanSheet}>
-                <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
-                    <SheetHeader>
-                        <SheetTitle className="text-right flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-emerald-500" />
-                            خطة وجبات ذكية
-                        </SheetTitle>
-                    </SheetHeader>
-                    {aiMealPlan && (
-                        <div className="space-y-4 mt-4 pb-8" dir="rtl">
-                            {aiMealPlan.daily_calories && (
-                                <div className="bg-emerald-50 rounded-xl p-3 text-center">
-                                    <span className="text-sm text-emerald-700 font-bold">
-                                        🔥 السعرات المقترحة: {aiMealPlan.daily_calories} سعرة
-                                    </span>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto bg-slate-50 dark:bg-slate-900 border-none p-0">
+                    <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 p-5 pt-8">
+                        <SheetTitle className="text-right flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                    <Sparkles className="w-5 h-5 text-emerald-500" />
                                 </div>
-                            )}
-                            {aiMealPlan.meals?.map((meal: any, i: number) => (
-                                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-bold text-slate-800">{meal.name}</h4>
-                                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">
-                                            {meal.time} • {meal.calories} سعرة
-                                        </span>
+                                <div>
+                                    <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight">الطباخ العلاجي الذكي</h2>
+                                    <p className="text-xs text-slate-500 font-medium">خطة مصممة كدواء خصيصاً لحالتك</p>
+                                </div>
+                            </div>
+                        </SheetTitle>
+                    </div>
+
+                    {aiMealPlan && (
+                        <div className="p-5 pb-12 space-y-5">
+                            {/* Calories & Goal */}
+                            {aiMealPlan.daily_calories && (
+                                <motion.div 
+                                    className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-500/20 relative overflow-hidden"
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                >
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                                    <div className="relative z-10 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-emerald-100 text-xs font-bold mb-1">الهدف السعري العلاجي</p>
+                                            <p className="text-3xl font-black">{aiMealPlan.daily_calories} <span className="text-sm font-semibold opacity-80">سعرة</span></p>
+                                        </div>
+                                        <Target className="w-10 h-10 text-emerald-200/50" />
                                     </div>
-                                    <div className="flex flex-wrap gap-1 mb-2">
-                                        {meal.foods?.map((food: string, j: number) => (
-                                            <span key={j} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg">{food}</span>
+                                    <div className="mt-4 pt-4 border-t border-white/20">
+                                        <p className="text-xs font-medium text-emerald-50 flex items-center gap-1.5">
+                                            <Brain className="w-4 h-4" /> تم التصميم بناءً على ملفك الطبي الدقيق
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Grocery List (Therapeutic) */}
+                            {aiMealPlan.grocery_list && aiMealPlan.grocery_list.length > 0 && (
+                                <motion.div 
+                                    className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+                                >
+                                    <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-3">
+                                        <span className="w-6 h-6 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center text-xs">🛒</span>
+                                        قائمة التسوق العلاجية
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {aiMealPlan.grocery_list.map((item: string, i: number) => (
+                                            <span key={i} className="text-xs font-bold bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-600">
+                                                {item}
+                                            </span>
                                         ))}
                                     </div>
-                                    {meal.benefits && (
-                                        <p className="text-xs text-slate-500">💚 {meal.benefits}</p>
-                                    )}
-                                </div>
-                            ))}
-                            {aiMealPlan.snacks?.length > 0 && (
-                                <div className="bg-amber-50 rounded-xl p-3">
-                                    <p className="text-xs font-bold text-amber-700 mb-1">🍎 وجبات خفيفة:</p>
-                                    {aiMealPlan.snacks.map((s: any, i: number) => (
-                                        <p key={i} className="text-xs text-amber-600">• {s.name} ({s.time}): {s.foods?.join('، ')}</p>
-                                    ))}
-                                </div>
+                                </motion.div>
                             )}
+
+                            {/* Core Meals */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 px-1">الوجبات المطلوبة</h3>
+                                {aiMealPlan.meals?.map((meal: any, i: number) => (
+                                    <motion.div
+                                        key={i}
+                                        className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-transparent hover:border-emerald-100 dark:hover:border-emerald-900/50 p-4 shadow-sm transition-colors"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 + 0.2 }}
+                                    >
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-sm">
+                                                    {meal.name.includes('فطور') ? '🌅' : meal.name.includes('غداء') ? '☀️' : '🌙'}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-slate-800 dark:text-white text-sm">{meal.name}</h4>
+                                                    <span className="text-[10px] font-bold text-slate-400">{meal.time}</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full font-bold">
+                                                {meal.calories} سعرة
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="space-y-2 mb-3 pl-10">
+                                            {meal.foods?.map((food: string, j: number) => (
+                                                <div key={j} className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                                    <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                                                    {food}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {meal.benefits && (
+                                            <div className="bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl p-3 border border-emerald-100/50 dark:border-emerald-800/30">
+                                                <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-relaxed flex items-start gap-1.5">
+                                                    <span className="text-emerald-500 mt-0.5">⚕️</span>
+                                                    {meal.benefits}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* Additional Info */}
+                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                {aiMealPlan.hydration_plan && (
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-100 dark:border-blue-800/30">
+                                        <p className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-1.5 flex items-center gap-1">💧 الارتواء</p>
+                                        <p className="text-xs font-medium text-blue-600/80 dark:text-blue-300/80 leading-relaxed">{aiMealPlan.hydration_plan}</p>
+                                    </div>
+                                )}
+                                {aiMealPlan.supplements && aiMealPlan.supplements.length > 0 && (
+                                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 border border-purple-100 dark:border-purple-800/30">
+                                        <p className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-1.5 flex items-center gap-1">💊 مكملات</p>
+                                        <ul className="space-y-1">
+                                            {aiMealPlan.supplements.map((s: string, i: number) => (
+                                                <li key={i} className="text-xs font-medium text-purple-600/80 dark:text-purple-300/80 leading-relaxed">• {s}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+
                             {aiMealPlan.tips?.length > 0 && (
-                                <div className="bg-blue-50 rounded-xl p-3">
-                                    <p className="text-xs font-bold text-blue-700 mb-1">💡 نصائح:</p>
-                                    {aiMealPlan.tips.map((t: string, i: number) => (
-                                        <p key={i} className="text-xs text-blue-600">• {t}</p>
-                                    ))}
+                                <div className="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-800/20 text-center">
+                                    <Sparkles className="w-5 h-5 text-amber-500 mx-auto mb-2" />
+                                    <p className="text-xs font-bold text-amber-700 dark:text-amber-400 leading-relaxed">
+                                        {aiMealPlan.tips[0]}
+                                    </p>
                                 </div>
                             )}
-                            {aiMealPlan.hydration_plan && (
-                                <p className="text-xs text-cyan-600 text-center">💧 {aiMealPlan.hydration_plan}</p>
-                            )}
+
+                            <Button 
+                                className="w-full h-12 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold mt-4"
+                                onClick={() => setShowAiPlanSheet(false)}
+                            >
+                                اعتماد هذه الخطة
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
                         </div>
                     )}
                 </SheetContent>

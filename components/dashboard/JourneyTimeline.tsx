@@ -24,7 +24,7 @@ export default function JourneyTimeline({ events = defaultEvents }) {
 
             <div className="relative">
                 {/* Timeline line */}
-                <div className="absolute right-[15px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#2D9B83] via-[#2D9B83]/50 to-slate-200" />
+                <div className="absolute right-[15px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-slate-200" />
 
                 <div className="space-y-6">
                     {events.map((event, index) => (
@@ -33,13 +33,13 @@ export default function JourneyTimeline({ events = defaultEvents }) {
                             <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${event.completed
                                     ? 'gradient-primary'
                                     : event.current
-                                        ? 'bg-white border-2 border-[#2D9B83] shadow-glow'
+                                        ? 'bg-white border-2 border-primary shadow-glow'
                                         : 'bg-slate-100'
                                 }`}>
                                 {event.completed ? (
                                     <Check className="w-4 h-4 text-white" />
                                 ) : (
-                                    <Circle className={`w-3 h-3 ${event.current ? 'text-[#2D9B83] fill-[#2D9B83]' : 'text-slate-300'}`} />
+                                    <Circle className={`w-3 h-3 ${event.current ? 'text-primary fill-primary' : 'text-slate-300'}`} />
                                 )}
                             </div>
 
@@ -57,7 +57,7 @@ export default function JourneyTimeline({ events = defaultEvents }) {
                                     {event.description}
                                 </p>
                                 {event.current && (
-                                    <span className="inline-block mt-2 text-xs px-2 py-1 rounded-full bg-[#2D9B83]/20 text-[#2D9B83]">
+                                    <span className="inline-block mt-2 text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
                                         جاري الآن
                                     </span>
                                 )}

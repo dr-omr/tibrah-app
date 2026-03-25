@@ -185,7 +185,7 @@ export function ChatMessageSkeleton({ isUser = false }: { isUser?: boolean }) {
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
             <div className={`max-w-[80%] ${isUser ? 'order-2' : ''}`}>
                 {!isUser && <Skeleton variant="circular" width={32} height={32} className="mb-2" />}
-                <div className={`rounded-2xl p-4 ${isUser ? 'bg-[#2D9B83]/10' : 'bg-slate-100'}`}>
+                <div className={`rounded-2xl p-4 ${isUser ? 'bg-primary/10' : 'bg-slate-100'}`}>
                     <div className="space-y-2">
                         <Skeleton variant="text" width="100%" height={14} />
                         <Skeleton variant="text" width="80%" height={14} />
@@ -256,7 +256,7 @@ export function HealthSummarySkeleton() {
             </div>
 
             {/* Daily Tip */}
-            <div className="glass rounded-2xl p-4 bg-gradient-to-r from-[#2D9B83]/5 to-[#3FB39A]/5">
+            <div className="glass rounded-2xl p-4 bg-gradient-to-r from-primary/5 to-primary-light/5">
                 <div className="flex items-center gap-3">
                     <Skeleton variant="text" width={32} height={32} />
                     <div className="flex-1 space-y-1">

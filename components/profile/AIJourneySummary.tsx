@@ -62,7 +62,7 @@ export default function AIJourneySummary({ user, healthData }) {
                     <p className="text-sm text-slate-600 leading-relaxed text-justify">
                         {typeof summary === 'string' ? summary.replace(/"/g, '') : summary}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-3 text-left">{AI_DISCLAIMER}</p>
+                    <p className="text-xs text-slate-400 mt-3 text-left">{AI_DISCLAIMER}</p>
                 </div>
             )}
         </div>

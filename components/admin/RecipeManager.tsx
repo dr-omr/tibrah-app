@@ -112,7 +112,7 @@ export default function RecipeManager() {
             let customRecipes: Recipe[] = [];
             try {
                 const { db } = await import('@/lib/db');
-                const firebaseRecipes = await db.recipes.list();
+                const firebaseRecipes = await db.entities.Recipe.list();
                 customRecipes = firebaseRecipes as unknown as Recipe[];
             } catch (e) {
                 console.error('Failed to load recipes from Firebase:', e);
@@ -175,7 +175,7 @@ export default function RecipeManager() {
             // Delete from Firebase
             try {
                 const { db } = await import('@/lib/db');
-                await db.recipes.delete(id);
+                await db.entities.Recipe.delete(id);
             } catch (e) {
                 console.error('Firebase delete failed:', e);
             }
@@ -204,7 +204,7 @@ export default function RecipeManager() {
             const { db } = await import('@/lib/db');
             if (isNew) {
                 const { id, ...data } = editingRecipe;
-                const created = await db.recipes.create(data as any);
+                const created = await db.entities.Recipe.create(data as any);
                 updatedRecipe = created as unknown as Recipe;
                 success = true;
                 toast.success('تمت إضافة الوصفة للسحابة ☁️✅');
@@ -214,7 +214,7 @@ export default function RecipeManager() {
                     toast.error('لا يمكن تعديل الوصفات الافتراضية. أنشئ وصفة جديدة بدلاً من ذلك.');
                     return;
                 }
-                await db.recipes.update(editingRecipe.id, editingRecipe as any);
+                await db.entities.Recipe.update(editingRecipe.id, editingRecipe as any);
                 success = true;
                 toast.success('تم تحديث الوصفة في السحابة ☁️✅');
             }
