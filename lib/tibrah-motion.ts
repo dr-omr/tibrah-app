@@ -101,7 +101,7 @@ export const PULSE_LIVE = {
     transition: {
         duration: 1.8,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
     },
 };
 
@@ -114,13 +114,13 @@ export const PULSE_RING = {
 /** Shimmer (horizontal sweep) — for CTA buttons */
 export const SHIMMER_SWEEP = {
     animate: { x: ['-100%', '100%'] },
-    transition: { duration: 1.6, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 },
+    transition: { duration: 1.6, repeat: Infinity, ease: 'linear' as const, repeatDelay: 1.5 },
 };
 
 /** Arrow bounce — for navigation arrows */
 export const ARROW_BOUNCE = {
     animate: { x: [0, -4, 0] },
-    transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+    transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' as const },
 };
 
 /* ─── Easing Curves ─────────────────────────────── */
