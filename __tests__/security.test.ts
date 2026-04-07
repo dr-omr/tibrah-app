@@ -8,27 +8,30 @@ import { checkRateLimit, sanitizeString, validateRequired } from '@/lib/apiMiddl
 
 describe('API Middleware', () => {
     describe('checkRateLimit', () => {
-        test('should allow requests within limit', () => {
-            const result = checkRateLimit('test-ip-1', 5, 60000);
+        it('allows requests under the limit', async () => {
+            const result = await checkRateLimit('test-ip-1', 5, 60000);
             expect(result.limited).toBe(false);
+            expect(result.remaining).toBe(4);
         });
 
-        test('should block requests over limit', () => {
-            const ip = 'test-ip-overload-' + Date.now();
-            // Make requests up to the limit
+        it('blocks requests over the limit', async () => {
+            const ip = 'test-ip-2';
             for (let i = 0; i < 3; i++) {
-                checkRateLimit(ip, 3, 60000);
+                await checkRateLimit(ip, 3, 60000);
             }
-            // Next one should be limited
-            const result = checkRateLimit(ip, 3, 60000);
+
+            const result = await checkRateLimit(ip, 3, 60000);
             expect(result.limited).toBe(true);
+            expect(result.remaining).toBe(0);
         });
 
-        test('should use separate counters per IP', () => {
-            const ip1 = 'ip-a-' + Date.now();
-            const ip2 = 'ip-b-' + Date.now();
-            checkRateLimit(ip1, 1, 60000);
-            const result = checkRateLimit(ip2, 1, 60000);
+        it('isolates different IPs', async () => {
+            const ip1 = 'test-ip-3';
+            const ip2 = 'test-ip-4';
+
+            await checkRateLimit(ip1, 1, 60000);
+            const result = await checkRateLimit(ip2, 1, 60000);
+
             expect(result.limited).toBe(false);
         });
     });
@@ -132,54 +135,111 @@ describe('Error Monitoring', () => {
 // ===== SecureStorage Tests =====
 import { secureSet, secureGet, secureRemove, secureSetJSON, secureGetJSON } from '@/lib/secureStorage';
 
+import { webcrypto } from 'crypto';
+import { TextEncoder, TextDecoder } from 'util';
+
 describe('Secure Storage', () => {
+    beforeAll(() => {
+        // Expose TextEncoder/TextDecoder for jsdom
+        if (typeof global.TextEncoder === 'undefined') {
+            global.TextEncoder = TextEncoder as any;
+            global.TextDecoder = TextDecoder as any;
+        }
+
+        // Provide a valid crypto implementation for jsdom so AES encryption activates
+        if (typeof window !== 'undefined') {
+            Object.defineProperty(window, 'crypto', { value: webcrypto });
+        }
+        
+        // Provide a simple mock for indexedDB which is used for key storage
+        if (typeof indexedDB === 'undefined' && typeof window !== 'undefined') {
+            const mockIDB = {
+                open: () => {
+                    const req: any = {};
+                    setTimeout(() => {
+                        req.result = {
+                            objectStoreNames: { contains: () => true },
+                            transaction: () => {
+                                const tx: any = {
+                                    objectStore: () => ({
+                                        get: () => {
+                                            const r: any = {};
+                                            // Return undefined so it generates a real CryptoKey
+                                            setTimeout(() => { r.result = undefined; r.onsuccess && r.onsuccess(); }, 0);
+                                            return r;
+                                        },
+                                        put: () => {
+                                            const r: any = {};
+                                            setTimeout(() => { r.onsuccess && r.onsuccess(); }, 0);
+                                            return r;
+                                        }
+                                    }),
+                                    oncomplete: null,
+                                    onerror: null
+                                };
+                                setTimeout(() => { tx.oncomplete && tx.oncomplete(); }, 10);
+                                return tx;
+                            },
+                            close: () => {}
+                        };
+                        req.onsuccess && req.onsuccess();
+                    }, 0);
+                    return req;
+                }
+            };
+            Object.defineProperty(window, 'indexedDB', { value: mockIDB });
+        }
+    });
+
     beforeEach(() => {
         localStorage.clear();
         sessionStorage.clear();
     });
 
-    test('should store and retrieve non-sensitive data as-is', () => {
-        secureSet('test_key', 'hello');
-        const result = secureGet('test_key');
+    test('should store and retrieve non-sensitive data as-is', async () => {
+        await secureSet('test_key', 'hello');
+        const result = await secureGet('test_key');
         expect(result).toBe('hello');
     });
 
-    test('should store and retrieve sensitive health data (encrypted)', () => {
-        secureSet('tibrah_health_memory', '{"conditions": ["diabetes"]}');
-        const result = secureGet('tibrah_health_memory');
+    test('should store and retrieve sensitive health data (encrypted)', async () => {
+        await secureSet('tibrah_health_memory', '{"conditions": ["diabetes"]}');
+        const result = await secureGet('tibrah_health_memory');
         expect(result).toBe('{"conditions": ["diabetes"]}');
     });
 
-    test('should mark sensitive keys as encrypted', () => {
-        secureSet('tibrah_health_memory', 'test data');
-        expect(localStorage.getItem('tibrah_health_memory_enc')).toBe('1');
+    test('should mark sensitive keys as encrypted', async () => {
+        await secureSet('tibrah_health_memory', 'test data');
+        expect(localStorage.getItem('tibrah_health_memory_enc')).toBe('aes');
     });
 
-    test('should not mark non-sensitive keys as encrypted', () => {
-        secureSet('regular_key', 'test data');
+    test('should not mark non-sensitive keys as encrypted', async () => {
+        await secureSet('regular_key', 'test data');
         expect(localStorage.getItem('regular_key_enc')).toBeNull();
     });
 
-    test('should remove item and encryption flag', () => {
-        secureSet('tibrah_health_memory', 'test');
+    test('should remove item and encryption flag', async () => {
+        await secureSet('tibrah_health_memory', 'test');
         secureRemove('tibrah_health_memory');
-        expect(secureGet('tibrah_health_memory')).toBeNull();
+        const result = await secureGet('tibrah_health_memory');
+        expect(result).toBeNull();
         expect(localStorage.getItem('tibrah_health_memory_enc')).toBeNull();
     });
 
-    test('should handle JSON data', () => {
+    test('should handle JSON data', async () => {
         const data = { weight: 75, mood: 8, sleep: 7 };
-        secureSetJSON('test_json', data);
-        const result = secureGetJSON('test_json', {});
+        await secureSetJSON('test_json', data);
+        const result = await secureGetJSON('test_json', {});
         expect(result).toEqual(data);
     });
 
-    test('should return fallback for missing JSON keys', () => {
-        const result = secureGetJSON('nonexistent', { default: true });
+    test('should return fallback for missing JSON keys', async () => {
+        const result = await secureGetJSON('nonexistent', { default: true });
         expect(result).toEqual({ default: true });
     });
 
-    test('should return null for missing keys', () => {
-        expect(secureGet('nonexistent_key')).toBeNull();
+    test('should return null for missing keys', async () => {
+        const result = await secureGet('nonexistent_key');
+        expect(result).toBeNull();
     });
 });

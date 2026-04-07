@@ -129,4 +129,73 @@
     --z-modal: 300;
     --z-popover: 400;
     --z-tooltip: 500;
+
+    /* ═══════════════════════════════════════════════
+       TIBRAH 2.0 — Motion Design Tokens
+       مبني على Apple HIG spring curves
+       ═══════════════════════════════════════════════ */
+
+    /* Spring easing curves */
+    --spring-bouncy:  cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --spring-smooth:  cubic-bezier(0.25,  0.46,  0.45, 0.94);
+    --spring-snappy:  cubic-bezier(0.68, -0.55,  0.265, 1.55);
+    --spring-ios:     cubic-bezier(0.25,  0.46,  0.45, 0.94);
+
+    /* Duration tokens */
+    --duration-instant:  80ms;
+    --duration-fast:     150ms;
+    --duration-normal:   240ms;
+    --duration-slow:     380ms;
+    --duration-slowest:  550ms;
+
+    /* ═══════════════════════════════════════════════
+       TIBRAH 2.0 — Semantic Color Palette
+       ألوان منسجمة بنظام HSL
+       ═══════════════════════════════════════════════ */
+
+    /* Brand Teal — من تحليل الهوية */
+    --tibrah-900: #0a3d35;
+    --tibrah-700: #0d6b5a;
+    --tibrah-600: #0d9488;   /* primary main */
+    --tibrah-500: #14b8a6;   /* primary light */
+    --tibrah-200: #99f6e4;
+    --tibrah-100: #ccfbf1;
+    --tibrah-50:  #f0fdfa;
+
+    /* Health Semantic */
+    --health-excellent: #0d9488;
+    --health-good:      #22c55e;
+    --health-warning:   #f59e0b;
+    --health-critical:  #ef4444;
+
+    /* Surface System — 3-Layer Depth */
+    --surface-base:    #f7fafa;
+    --surface-raised:  rgba(255, 255, 255, 0.75);
+    --surface-overlay: rgba(255, 255, 255, 0.65);
+
+    /* Dark Mode Surface */
+    --surface-dark-base:    #080d13;
+    --surface-dark-raised:  rgba(30, 36, 44, 0.85);
+    --surface-dark-overlay: rgba(22, 28, 36, 0.80);
+
+    /* ═══════════════════════════════════════════════
+       ACCESSIBILITY — WCAG AA Enforcement
+       ═══════════════════════════════════════════════ */
+
+    /* Minimum text sizes per WCAG 2.1 */
+    --font-min-caption:  0.6875rem;   /* 11px — absolute minimum */
+    --font-min-body:     0.8125rem;   /* 13px — body text */
+    --font-min-label:    0.75rem;     /* 12px — labels */
+
+    /* Touch targets per Apple HIG (44×44pt) */
+    --touch-target-min: 44px;
+    --touch-target-comfortable: 52px;
+    --touch-target-large: 60px;
+}
+
+/* Dark mode overrides */
+html.dark {
+    --surface-base:    var(--surface-dark-base);
+    --surface-raised:  var(--surface-dark-raised);
+    --surface-overlay: var(--surface-dark-overlay);
 }

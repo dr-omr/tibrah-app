@@ -1,8 +1,8 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { Auth, getAuth, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider } from 'firebase/auth';
+import { Firestore, getFirestore } from 'firebase/firestore';
+import { FirebaseStorage, getStorage } from 'firebase/storage';
+import { Analytics, getAnalytics, isSupported } from 'firebase/analytics';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -16,13 +16,13 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once (singleton pattern for hot-reload safety)
-let app: any = null;
-let auth: any = null;
-let googleProvider: any = null;
-let facebookProvider: any = null;
-let appleProvider: any = null;
-let db: any = null;
-let storage: any = null;
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
+let facebookProvider: FacebookAuthProvider | null = null;
+let appleProvider: OAuthProvider | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
 try {
     if (firebaseConfig.apiKey && firebaseConfig.projectId) {
@@ -54,8 +54,8 @@ export { auth, googleProvider, facebookProvider, appleProvider, db, storage };
 export default app;
 
 // Analytics (only in browser)
-export const initAnalytics = async () => {
-    if (typeof window !== 'undefined') {
+export const initAnalytics = async (): Promise<Analytics | null> => {
+    if (typeof window !== 'undefined' && app) {
         const supported = await isSupported();
         if (supported) {
             return getAnalytics(app);
@@ -63,5 +63,3 @@ export const initAnalytics = async () => {
     }
     return null;
 };
-
-

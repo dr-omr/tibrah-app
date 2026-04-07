@@ -38,11 +38,9 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     handleReset = () => {
+        // UX-4 FIX: Re-render the component tree instead of full page reload
+        // window.location.reload() would lose unsaved form data
         this.setState({ hasError: false, error: null, errorInfo: null });
-        // إعادة تحميل الصفحة
-        if (typeof window !== 'undefined') {
-            window.location.reload();
-        }
     };
 
     render() {

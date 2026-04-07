@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import dynamic from 'next/dynamic';
 import {
     Target, Calendar, Utensils, ChefHat, TrendingUp, Sparkles, Loader2, Brain, ArrowRight

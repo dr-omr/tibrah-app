@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, X, Send, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { useHealthDashboard } from '@/hooks/useHealthDashboard';
 
 interface Message {
     id: string;
@@ -11,6 +13,8 @@ interface Message {
 }
 
 export default function CompanionBot() {
+    const { user } = useAuth();
+    const dashboard = useHealthDashboard();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -41,12 +45,24 @@ export default function CompanionBot() {
 
         try {
             // Include message history for context, limit to last 6 messages
-            const history = [...messages.slice(-5), userMsg].map(m => ({ role: m.role, content: m.content }));
+            const history = [...messages.slice(-5)];
+            
+            const healthContext = user ? {
+                name: user.name || 'مستخدم طِبرَا',
+                waterToday: dashboard.waterToday * 250, // Convert cups to ml
+                sleepHours: dashboard.sleepHoursLabel !== '—' ? dashboard.sleepHoursLabel : undefined,
+                mood: dashboard.latestMood,
+                healthScore: dashboard.healthScore
+            } : undefined;
 
-            const res = await fetch('/api/triage', {
+            const res = await fetch('/api/chat-gemini', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: history })
+                body: JSON.stringify({ 
+                    message: input.trim(), 
+                    history,
+                    healthContext
+                })
             });
 
             if (!res.ok) throw new Error('Network error');
@@ -55,7 +71,7 @@ export default function CompanionBot() {
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: data.reply
+                content: data.text || 'حدث خطأ في قراءة الرد.'
             }]);
         } catch (error) {
             setMessages(prev => [...prev, {

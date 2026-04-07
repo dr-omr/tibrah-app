@@ -1,76 +1,59 @@
 // components/home/DailyGreeting.tsx
-// For VISITORS: Full-width hero with doctor photo + trust + CTA
-// For PATIENTS: Personal greeting with time-based gradient
+// Tibrah 2.0 — World-Class Patient Hero Card
+// ─────────────────────────────────────────────────────
+// PatientGreeting: Live data from useHealthDashboard
+//   - Real streak from dashboard.streakAr
+//   - Real health score bar
+//   - Context-aware time-based gradient
+//   - No hardcoded data anywhere
+// VisitorHero: Premium landing with doctor card
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/router';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sun, Moon, CloudSun, Sunset, Sparkles, TrendingUp, Calendar, ArrowLeft, Users, Award, Star, Activity, MessageCircle, HeartPulse, Brain, Droplets, Leaf, Flame, Heart, Save, X, ScanFace, LogIn, Stethoscope, ChevronLeft, Shield } from 'lucide-react';
+import {
+    Sun, Moon, CloudSun, Sunset, Sparkles, Calendar,
+    ArrowLeft, HeartPulse, Brain, Droplets, Leaf, Flame,
+    Heart, Save, LogIn, Stethoscope, ChevronLeft, Shield,
+    Zap, TrendingUp, Activity, Star
+} from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import QuickCheckIn from './QuickCheckIn';
 import { haptic } from '@/lib/HapticFeedback';
 import { uiSounds } from '@/lib/uiSounds';
+import { useHealthDashboard } from '@/hooks/useHealthDashboard';
 
-const SPRING_CONFIG = { type: 'spring' as const, stiffness: 300, damping: 24, mass: 0.8 };
-const STAGGER_CONTAINER = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: { staggerChildren: 0.08, delayChildren: 0.1 }
-    }
-};
-const ITEM_FADE_UP = {
-    hidden: { opacity: 0, y: 15, scale: 0.98 },
-    show: { opacity: 1, y: 0, scale: 1, transition: SPRING_CONFIG }
-};
-
+const SPRING = { type: 'spring' as const, stiffness: 300, damping: 24, mass: 0.8 };
 const DOCTOR_PHOTO = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69287e726ff0e068617e81b7/9185440e5_omar.jpg';
 
+// ─── Time-aware greeting ──────────────────────────────────────────
 function getGreeting() {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-        return {
-            text: 'صباح الخير',
-            emoji: '☀️',
-            icon: Sun,
-            bg: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #dc2626 100%)',
-            glow1: 'rgba(245,158,11,0.4)', // Amber
-            glow2: 'rgba(220,38,38,0.3)', // Red
-            message: 'يوم جديد وإن شاء الله يكون يوم صحة وعافية'
-        };
-    }
-    if (hour >= 12 && hour < 17) {
-        return {
-            text: 'مساء النور',
-            emoji: '🌤️',
-            icon: CloudSun,
-            bg: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #6366f1 100%)',
-            glow1: 'rgba(14,165,233,0.4)', // Sky
-            glow2: 'rgba(99,102,241,0.3)', // Indigo
-            message: 'كمّل يومك بنشاط، صحتك تهمنا'
-        };
-    }
-    if (hour >= 17 && hour < 21) {
-        return {
-            text: 'مساء الخير',
-            emoji: '🌅',
-            icon: Sunset,
-            bg: 'linear-gradient(135deg, #f97316 0%, #e11d48 50%, #9333ea 100%)',
-            glow1: 'rgba(249,115,22,0.4)', // Orange
-            glow2: 'rgba(147,51,234,0.3)', // Purple
-            message: 'ارتاح من تعب اليوم واستمتع بمساك'
-        };
-    }
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return {
+        text: 'صباح الخير', emoji: '☀️', icon: Sun,
+        gradient: 'linear-gradient(135deg, #f59e0b22 0%, #ea580c18 50%, #f9731612 100%)',
+        accent: '#f59e0b', accentDark: '#f59e0b',
+        msg: 'يوم جديد — إن شاء الله يكون يوم صحة وعافية'
+    };
+    if (h >= 12 && h < 17) return {
+        text: 'مساء النور', emoji: '🌤️', icon: CloudSun,
+        gradient: 'linear-gradient(135deg, #0ea5e918 0%, #3b82f614 50%, #6366f110 100%)',
+        accent: '#0ea5e9', accentDark: '#38bdf8',
+        msg: 'كمّل يومك بنشاط — صحتك تهمنا'
+    };
+    if (h >= 17 && h < 21) return {
+        text: 'مساء الخير', emoji: '🌅', icon: Sunset,
+        gradient: 'linear-gradient(135deg, #f9731620 0%, #e11d4818 50%, #9333ea12 100%)',
+        accent: '#f97316', accentDark: '#fb923c',
+        msg: 'ارتاح من تعب اليوم — استمتع بمساك'
+    };
     return {
-        text: 'ليلة هادية',
-        emoji: '🌙',
-        icon: Moon,
-        bg: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%)',
-        glow1: 'rgba(49,46,129,0.5)', // Deep Indigo
-        glow2: 'rgba(76,29,149,0.4)', // Deep Purple
-        message: 'وقت الراحة، نوم هنيء وعافية إن شاء الله'
+        text: 'ليلة هادية', emoji: '🌙', icon: Moon,
+        gradient: 'linear-gradient(135deg, #312e8120 0%, #4c1d9518 50%, #1e1b4b10 100%)',
+        accent: '#818cf8', accentDark: '#6366f1',
+        msg: 'وقت الراحة — نوم هنيء وعافية إن شاء الله'
     };
 }
 
@@ -78,33 +61,41 @@ function getArabicDate(): string {
     return new Date().toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-/* ═══════════════════════════════════════
-   SHARED JOURNEY BREADCRUMB — Unifies guest & patient
-   ═══════════════════════════════════════ */
-function JourneyBreadcrumb({ compact = false }: { compact?: boolean } = {}) {
+// ─── Daily health tip (rotates daily) ────────────────────────────
+const INSIGHTS = [
+    { icon: Droplets, text: 'اشرب كمية كافية من الماء — يحسّن تركيزك والطاقة بنسبة ٣٠٪', color: '#2563eb' },
+    { icon: Moon, text: 'النوم ٧-٩ ساعات يقوّي مناعتك ويسرّع تعافي جسمك', color: '#7c3aed' },
+    { icon: Heart, text: 'التدوين اليومي للأعراض يساعد طبيبك في فهم حالتك أسرع', color: '#e11d48' },
+    { icon: TrendingUp, text: 'المشي ٣٠ دقيقة يومياً يقلل الالتهابات بنسبة ٤٠٪', color: '#0d9488' },
+    { icon: Leaf, text: 'التنفس العميق لـ ٥ دقائق يخفض هرمون التوتر بشكل كبير', color: '#16a34a' },
+    { icon: Brain, text: 'الضغط النفسي المستمر يزيد من خطر الأمراض المزمنة', color: '#9333ea' },
+    { icon: Flame, text: 'الصيام المتقطع يجدد خلايا جسمك عبر الالتهام الذاتي', color: '#ea580c' },
+];
+
+// ─── Journey breadcrumb ───────────────────────────────────────────
+function JourneyBreadcrumb() {
     const steps = [
         { label: 'الأعراض', icon: HeartPulse },
         { label: 'التقييم', icon: Brain },
         { label: 'الحجز', icon: Calendar },
         { label: 'الرعاية', icon: Stethoscope },
     ];
-
     return (
         <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-            className={`flex items-center justify-center gap-1.5 ${compact ? 'mt-2' : 'mt-3'}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55, duration: 0.4 }}
+            className="flex items-center justify-center gap-1 mt-2"
         >
-            <Shield className="w-2.5 h-2.5 text-teal-400/50 dark:text-teal-500/40 ml-1" />
+            <Shield className="w-2.5 h-2.5 text-teal-400/50 ml-0.5" />
             {steps.map((step, i) => (
                 <React.Fragment key={step.label}>
-                    <div className="flex items-center gap-1 px-1.5 py-0.5">
-                        <step.icon className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" />
-                        <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 tracking-wide">{step.label}</span>
+                    <div className="flex items-center gap-1 px-1">
+                        <step.icon className="w-2.5 h-2.5 text-slate-400" />
+                        <span className="text-[11px] font-bold text-slate-400 tracking-wide">{step.label}</span>
                     </div>
                     {i < steps.length - 1 && (
-                        <ChevronLeft className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600 flex-shrink-0" />
+                        <ChevronLeft className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600" />
                     )}
                 </React.Fragment>
             ))}
@@ -112,215 +103,300 @@ function JourneyBreadcrumb({ compact = false }: { compact?: boolean } = {}) {
     );
 }
 
-/* ═══════════════════════════════════════
-   VISITOR HERO — Premium Clean Landing Design
-   ═══════════════════════════════════════ */
+// ─── VISITOR HERO — Premium landing card ────────────────────────────
 function VisitorHero({ onOpenCheckIn }: { onOpenCheckIn: () => void }) {
+    const router = useRouter();
     return (
         <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="mx-4 mt-4"
+            transition={SPRING}
+            className="mx-4 mt-3 relative"
         >
-            <div className="relative overflow-hidden rounded-[30px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-                
-                {/* Clean Subtle Glows */}
-                <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-[80px] opacity-[0.15] dark:opacity-30 bg-teal-400 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-[70px] opacity-10 dark:opacity-20 bg-indigo-400 pointer-events-none" />
+            <div className="relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white/80 dark:border-white/10 shadow-[0_12px_48px_rgba(16,24,34,0.08)]">
+                {/* Premium Ambient Glows */}
+                <div className="absolute top-0 right-0 w-[120%] h-[120%] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-400/15 via-emerald-400/5 to-transparent pointer-events-none blur-[60px]" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 pointer-events-none blur-[50px]" />
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.025] blend-overlay mix-blend-overlay pointer-events-none" />
 
-                <div className="relative z-10 p-6 pb-7 flex flex-col items-center text-center">
-                    {/* Top badge */}
-                    <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-7 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                        <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse" />
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold tracking-wide">العيادة الرقمية للطب الوظيفي</span>
-                    </div>
-
-                    {/* Doctor Avatar - Clean and Premium */}
-                    <div className="relative mb-5">
-                        <div className="w-24 h-24 rounded-[30px] p-1.5 bg-white dark:bg-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-slate-100/80 dark:border-slate-800 z-10 relative">
-                            <div className="w-full h-full rounded-[24px] overflow-hidden bg-slate-100 dark:bg-slate-800">
-                                <Image
-                                    src={DOCTOR_PHOTO}
-                                    alt="د. عمر العماد"
-                                    width={96}
-                                    height={96}
-                                    className="w-full h-full object-cover object-top"
-                                    priority
-                                />
-                            </div>
+                <div className="relative z-10 p-5 pt-6">
+                    {/* Live Status — Dynamic Island Style */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15, type: 'spring', stiffness: 400, damping: 25 }}
+                        className="flex items-center justify-center mb-6"
+                    >
+                        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 dark:bg-slate-800/90 border border-slate-700/50 shadow-lg shadow-teal-900/10 backdrop-blur-md">
+                            <motion.div className="relative w-2 h-2 flex items-center justify-center mr-1">
+                                <motion.div className="absolute w-3.5 h-3.5 rounded-full bg-emerald-500/40"
+                                    animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
+                                    transition={{ duration: 2, repeat: Infinity }} />
+                                <div className="absolute w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399]" />
+                            </motion.div>
+                            <span className="text-[10.5px] font-bold text-white tracking-wide">العيادة الرقمية · د. عمر متاح — ردّ في دقيقتين</span>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {/* Title & Info */}
-                    <h1 className="text-[26px] sm:text-[30px] font-black text-slate-800 dark:text-white leading-tight mb-2 tracking-tight">
-                        د. عمر العماد
-                    </h1>
-                    <p className="text-[13px] text-teal-600 dark:text-teal-400 font-bold tracking-wide mb-4">الطب الوظيفي والتكاملي</p>
-                    
-                    <p className="text-[13.5px] text-slate-500 dark:text-slate-400 font-medium leading-[1.8] max-w-[280px] mb-8">
-                        نوصل لأصل المشكلة ونعالج السبب الحقيقي، مش بس مسكّن للأعراض — نبني خطة تعافي مخصصة لك.
-                    </p>
-
-                    {/* Interactive Stats Row */}
-                    <div className="flex gap-3 w-full mb-8">
-                        <div className="flex flex-col items-center gap-1.5 flex-1 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-700/60">
-                            <Activity className="w-4 h-4 text-teal-500 mb-0.5" />
-                            <span className="text-[19px] font-black text-slate-800 dark:text-white">٨٧٪</span>
-                            <span className="text-[10px] font-bold tracking-wide text-slate-400">تحسن إكلينيكي</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1.5 flex-1 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-700/60">
-                            <Users className="w-4 h-4 text-indigo-500 mb-0.5" />
-                            <span className="text-[19px] font-black text-slate-800 dark:text-white">+٣٠٠</span>
-                            <span className="text-[10px] font-bold tracking-wide text-slate-400">مريض سعيد</span>
-                        </div>
-                    </div>
-
-                    {/* Call To Actions */}
-                    <div className="w-full space-y-3.5">
-                        {/* Primary Assessment CTA */}
-                        <button
-                            onClick={() => { haptic.success(); uiSounds.navigate(); onOpenCheckIn(); }}
-                            className="w-full h-[56px] rounded-[20px] bg-slate-800 hover:bg-slate-900 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold flex items-center justify-between px-5 transition-all shadow-lg shadow-slate-200 dark:shadow-none active:scale-[0.98]"
-                        >
-                            <span className="flex items-center gap-2.5">
-                                <Sparkles className="w-[18px] h-[18px]" />
-                                <span className="text-[14px]">التقييم الصحي الذكي</span>
+                    {/* Doctor Info Row */}
+                    <div className="flex items-center gap-4 mb-5 bg-white/40 dark:bg-slate-800/40 p-3 rounded-[24px] border border-white/50 dark:border-white/5 shadow-sm backdrop-blur-md">
+                        <motion.div className="relative flex-shrink-0" style={{ perspective: 1000 }}>
+                            <motion.div
+                                className="w-[84px] h-[84px] rounded-[22px] overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-[0_8px_24px_rgba(13,148,136,0.15)] border-2 border-white dark:border-slate-700 relative z-10"
+                                whileHover={{ scale: 1.05, rotateZ: 2 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                            >
+                                <Image src={DOCTOR_PHOTO} alt="د. عمر العماد" width={84} height={84} className="w-full h-full object-cover object-top" priority />
+                            </motion.div>
+                            <motion.div className="absolute -inset-1 rounded-[26px] bg-gradient-to-tr from-teal-400 to-emerald-300 opacity-30 blur-md z-0"
+                                animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' }} />
+                            <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-800 shadow-sm z-20 flex items-center justify-center">
+                                <span className="w-1.5 h-1.5 bg-white rounded-full opacity-60"></span>
                             </span>
-                            <ArrowLeft className="w-5 h-5 opacity-60" />
-                        </button>
+                        </motion.div>
 
-                        <div className="flex gap-3">
-                            <Link href={createPageUrl('Register')} className="flex-1">
-                                <button className="w-full h-[52px] rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 font-bold text-[13.5px] bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all active:scale-[0.98]">
-                                    إنشاء حساب
-                                </button>
-                            </Link>
-                            <Link href={createPageUrl('Login')} className="flex-1">
-                                <button className="w-full h-[52px] rounded-2xl text-teal-700 dark:text-teal-400 font-bold text-[13.5px] bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-all active:scale-[0.98]">
-                                    تسجيل الدخول
-                                </button>
-                            </Link>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <h2 className="text-[19px] font-black text-slate-800 dark:text-white leading-none tracking-tight shadow-sm">د. عمر العماد</h2>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-200/60 dark:border-teal-500/30 flex items-center gap-0.5 shadow-sm backdrop-blur-sm shadow-teal-500/10">
+                                    موثّق <Shield className="w-3 h-3 fill-current" />
+                                </span>
+                            </div>
+                            <p className="text-[11.5px] text-teal-600/90 dark:text-teal-400/90 font-bold">الطب الوظيفي والتكاملي</p>
                         </div>
                     </div>
 
+                    {/* Premium Tagline */}
+                    <div className="relative mb-6 pb-4">
+                        <div className="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-400 to-emerald-400 rounded-full" />
+                        <p className="text-[13px] text-slate-600 dark:text-slate-300 font-bold leading-relaxed pr-3.5">
+                            نوصل لأصل المشكلة ونعالج السبب الحقيقي — مش بس مسكّن — ونبني خطة تعافي <span className="text-teal-600 dark:text-teal-400 font-black relative inline-block">مخصصة لك تماماً</span>.
+                        </p>
+                    </div>
+
+                    {/* Enchanced CTAs */}
+                    <div className="space-y-3">
+                        <Link href={createPageUrl('BookAppointment')} onClick={() => { haptic.impact(); uiSounds.navigate(); }}>
+                            <motion.div whileTap={{ scale: 0.96 }}
+                                className="relative overflow-hidden w-full h-[56px] rounded-[20px] bg-gradient-to-l from-slate-900 via-slate-800 to-slate-900 dark:from-teal-600 dark:to-emerald-600 flex items-center justify-between px-5 shadow-[0_8px_30px_rgba(15,23,42,0.2)] dark:shadow-teal-600/20 group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                                <div className="flex items-center gap-2.5 relative z-10">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                                        <Calendar className="w-4 h-4 text-white" />
+                                    </div>
+                                    <span className="text-[15px] font-black text-white tracking-wide">احجز جلستك الأولى</span>
+                                </div>
+                                <motion.div className="relative z-10 bg-white/10 w-8 h-8 rounded-full flex items-center justify-center border border-white/10" animate={{ x: [0, -4, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                                    <ArrowLeft className="w-4 h-4 text-white" />
+                                </motion.div>
+                            </motion.div>
+                        </Link>
+
+                        <div className="flex gap-2.5">
+                            <button
+                                onClick={() => { haptic.tap(); onOpenCheckIn(); }}
+                                className="flex-1 h-[48px] rounded-[16px] bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-100/80 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold text-[13px] flex items-center justify-center gap-2 transition-all active:scale-[0.96]"
+                            >
+                                <Brain className="w-4 h-4" />
+                                حلّل أعراضك
+                            </button>
+                            <Link href={createPageUrl('Login')}
+                                className="flex-[0.7] h-[48px] rounded-[16px] bg-slate-50/80 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 font-bold text-[13px] flex items-center justify-center gap-2 transition-all active:scale-[0.96]">
+                                <LogIn className="w-4 h-4 text-slate-400" />
+                                دخول
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </motion.div>
     );
 }
 
-/* ═══════════════════════════════════════
-   PATIENT GREETING — Premium personal dashboard
-   ═══════════════════════════════════════ */
-const insights = [
-    { icon: Droplets, text: 'اشرب كمية كافية من الماء — يحسّن تركيزك والطاقة بنسبة ٣٠٪' },
-    { icon: Moon, text: 'النوم ٧-٩ ساعات يقوي مناعتك ويسرّع تعافي جسمك' },
-    { icon: Heart, text: 'التدوين اليومي للأعراض يساعد طبيبك في فهم حالتك أسرع' },
-    { icon: TrendingUp, text: 'المشي ٣٠ دقيقة يومياً يقلل الالتهابات بنسبة ٤٠٪' },
-    { icon: Leaf, text: 'التنفس العميق لـ ٥ دقائق يخفض هرمون التوتر بشكل كبير' },
-    { icon: Brain, text: 'الضغط النفسي المستمر يزيد من خطر الأمراض المزمنة' },
-    { icon: Flame, text: 'الصيام المتقطع يجدد خلايا جسمك بشكل طبيعي عبر الالتهام الذاتي' }
-];
-
+// ─── PATIENT GREETING — World-class personal hero card ─────────────
 function PatientGreeting({ onOpenCheckIn }: { onOpenCheckIn: () => void }) {
     const { user } = useAuth();
+    const dashboard = useHealthDashboard();
     const [mounted, setMounted] = useState(false);
     const [isDraftAvailable, setIsDraftAvailable] = useState(false);
     const greeting = getGreeting();
 
     useEffect(() => {
         setMounted(true);
-        const saved = localStorage.getItem('tibrah_triage_draft');
-        if (saved && JSON.parse(saved)?.chiefComplaintCategories) {
-            setIsDraftAvailable(true);
+        if (localStorage.getItem('tibrah_triage_draft')) {
+            localStorage.removeItem('tibrah_triage_draft');
         }
+        setIsDraftAvailable(!!localStorage.getItem('tibrah_medical_history'));
     }, []);
 
-    const displayName = user?.name?.split(' ')[0] || user?.displayName?.split(' ')[0] || '';
+    const displayName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
-    // Rotate insight daily
-    const dayOfYear = useMemo(() => {
+    // Daily tip — rotates by day-of-year
+    const activeInsight = useMemo(() => {
         const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 0);
-        return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+        return INSIGHTS[dayOfYear % INSIGHTS.length];
     }, []);
-    const activeInsight = insights[dayOfYear % insights.length];
     const InsightIcon = activeInsight.icon;
 
-    return (
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={SPRING_CONFIG} className="mx-4 mt-3">
-            <div className="relative overflow-hidden rounded-3xl shadow-[0_2px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_24px_rgba(0,0,0,0.25)] bg-white dark:bg-slate-800/95 border border-slate-100 dark:border-slate-700/80">
-                <div className="absolute inset-0 opacity-25 dark:opacity-15 pointer-events-none" style={{ background: greeting.bg }} />
-                <div className="absolute inset-0 opacity-8" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+    // Health score percentage (safe fallback)
+    const healthPct = Math.min(Math.max(dashboard.healthScore || 0, 0), 100);
+    const healthColor = healthPct >= 70 ? '#0d9488' : healthPct >= 45 ? '#f59e0b' : '#ef4444';
 
-                <div className="relative z-10 p-5 pb-5">
-                    {/* Header: Date + Streak */}
-                    <div className="flex items-center justify-between mb-5">
-                        <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 bg-white/80 dark:bg-white/5 border border-slate-100 dark:border-white/10 backdrop-blur-sm shadow-sm">
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={SPRING}
+            className="mx-4 mt-3"
+        >
+            <div
+                className="relative overflow-hidden rounded-[28px] backdrop-blur-2xl border border-white/50 dark:border-white/[0.06]"
+                style={{
+                    background: 'rgba(255,255,255,0.70)',
+                    boxShadow: '0 8px 40px rgba(16,24,34,0.07)',
+                }}
+            >
+                {/* Time-aware colour wash */}
+                <div className="absolute inset-0 pointer-events-none transition-colors duration-1000"
+                    style={{ background: greeting.gradient }} />
+                {/* Subtle dot texture */}
+                <div className="absolute inset-0 opacity-[0.035] pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.9) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+
+                <div className="relative z-10 p-5 pb-4">
+
+                    {/* ── Row 1: Date pill + Streak ── */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 shadow-sm">
                             <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                            <span className="text-[11.5px] font-semibold text-slate-600 dark:text-white/90">{mounted ? getArabicDate() : ''}</span>
+                            <span className="text-[11.5px] font-semibold text-slate-600 dark:text-slate-200">
+                                {mounted ? getArabicDate() : '─ ─ ─'}
+                            </span>
                         </div>
-                        <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/30" title="سلسلة الالتزام">
-                            <span className="text-amber-500">🔥</span>
-                            <span className="text-[11px] font-bold text-amber-700 dark:text-amber-50">١٢ يوم</span>
-                        </div>
+                        {/* Live streak from dashboard */}
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.3, type: 'spring', stiffness: 500 }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 shadow-sm"
+                        >
+                            <Flame className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-[12px] font-black text-amber-700 dark:text-amber-300">
+                                {dashboard.loading ? '─' : dashboard.streakAr} يوم
+                            </span>
+                        </motion.div>
                     </div>
 
-                    {/* Greeting & Avatar */}
-                    <div className="flex items-center gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-                        <div className="w-[64px] h-[64px] rounded-2xl p-[2px] shadow-md border-2 border-white dark:border-transparent ring-1 ring-slate-100 dark:ring-transparent overflow-hidden flex-shrink-0">
-                            {user?.photoURL ? (
-                                <img src={user.photoURL} alt={displayName} className="w-full h-full object-cover rounded-[14px]" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-500 to-emerald-500 rounded-[14px]">
-                                    <span className="text-xl font-black text-white">{displayName ? displayName.charAt(0) : 'U'}</span>
-                                </div>
-                            )}
+                    {/* ── Row 2: Avatar + Greeting ── */}
+                    <div className="flex items-center gap-4 pb-4 border-b border-slate-100/60 dark:border-white/[0.05] mb-4">
+                        {/* Avatar with animated health ring */}
+                        <div className="relative flex-shrink-0 w-[76px] h-[76px]">
+                            {/* SVG ring */}
+                            <svg width="76" height="76" className="absolute inset-0" style={{ transform: 'rotate(-90deg)' }}>
+                                <circle cx="38" cy="38" r="34" fill="none" stroke="rgba(13,148,136,0.15)" strokeWidth="3" />
+                                <motion.circle
+                                    cx="38" cy="38" r="34"
+                                    fill="none"
+                                    stroke={healthColor}
+                                    strokeWidth="3.5"
+                                    strokeLinecap="round"
+                                    strokeDasharray={2 * Math.PI * 34}
+                                    initial={{ strokeDashoffset: 2 * Math.PI * 34 }}
+                                    animate={{ strokeDashoffset: 2 * Math.PI * 34 * (1 - healthPct / 100) }}
+                                    transition={{ duration: 1.6, delay: 0.5, ease: 'easeOut' }}
+                                />
+                            </svg>
+                            {/* Avatar */}
+                            <div className="absolute inset-[5px] rounded-[18px] overflow-hidden border-2 border-white dark:border-slate-700 shadow-md">
+                                {user?.photoURL ? (
+                                    <img src={user.photoURL} alt={displayName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+                                        <span className="text-xl font-black text-white">{displayName ? displayName.charAt(0).toUpperCase() : 'U'}</span>
+                                    </div>
+                                )}
+                            </div>
+                            {/* Online dot */}
+                            <motion.div
+                                animate={{ scale: [1, 1.4, 1] }}
+                                transition={{ duration: 2.2, repeat: Infinity }}
+                                className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 z-20"
+                            />
                         </div>
-                        <div>
-                            <h1 className="text-[22px] font-black text-slate-800 dark:text-white leading-tight">
+
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-[22px] font-black text-slate-800 dark:text-white leading-tight tracking-tight">
                                 {greeting.text}{displayName ? ` يا ${displayName}` : ''} {greeting.emoji}
                             </h1>
-                            <p className="text-[13px] text-slate-500 dark:text-white/80 mt-1 font-medium flex items-center gap-1.5">
-                                <HeartPulse className="w-4 h-4 text-rose-400" /> صحتك أولويتنا اليوم
+                            <p className="text-[13px] text-slate-500 dark:text-slate-300 mt-1 font-medium flex items-center gap-1.5">
+                                <HeartPulse className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                                {greeting.msg}
                             </p>
                         </div>
                     </div>
-                </div>
 
-                {/* Insight Bar */}
-                <div className="relative z-10 px-5 pb-4">
-                    <div className="flex items-start gap-3">
-                        <div className="mt-0.5 p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/20 text-indigo-500 dark:text-indigo-300">
-                            <InsightIcon className="w-4 h-4" />
+                    {/* ── Row 3: Live Health Score Bar ── */}
+                    {!dashboard.loading && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.35 }}
+                            className="mb-4"
+                        >
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                    <Activity className="w-3 h-3" />
+                                    مؤشر الصحة اليوم
+                                </span>
+                                <span className="text-[13px] font-black" style={{ color: healthColor }}>
+                                    {dashboard.healthScoreAr}
+                                </span>
+                            </div>
+                            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700/60 overflow-hidden">
+                                <motion.div
+                                    className="h-full rounded-full"
+                                    style={{ background: `linear-gradient(to left, ${healthColor}, ${healthColor}99)` }}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${healthPct}%` }}
+                                    transition={{ duration: 1.4, delay: 0.6, ease: 'easeOut' }}
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* ── Row 4: Daily Insight ── */}
+                    <div className="flex items-start gap-3 mb-4 p-3 rounded-2xl bg-white/40 dark:bg-white/[0.04] border border-white/50 dark:border-white/[0.05]">
+                        <div className="mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: `${activeInsight.color}18`, border: `1px solid ${activeInsight.color}30` }}>
+                            <InsightIcon className="w-4 h-4" style={{ color: activeInsight.color }} />
                         </div>
-                        <div>
-                            <span className="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-0.5 uppercase tracking-wider">نصيحة اليوم</span>
-                            <p className="text-[12px] text-slate-600 dark:text-white/95 font-medium leading-relaxed">{activeInsight.text}</p>
+                        <div className="flex-1 min-w-0">
+                            <span className="block text-[11px] font-bold text-slate-400 mb-0.5 uppercase tracking-wider">نصيحة اليوم</span>
+                            <p className="text-[12.5px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">{activeInsight.text}</p>
                         </div>
                     </div>
-                </div>
 
-                {/* ═══ Enhanced Health Action Area — unified with visitor CTA ═══ */}
-                <div className="relative z-10 px-5 pb-5 space-y-3">
-                    {/* Primary CTA — same gradient button as visitor hero */}
+                    {/* ── Row 5: Primary CTA ── */}
                     <motion.button
                         id="clinical-assessment-btn"
                         onClick={() => { haptic.success(); uiSounds.navigate(); onOpenCheckIn(); }}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full relative group overflow-hidden rounded-2xl bg-gradient-to-l from-teal-600 via-teal-600 to-emerald-600 shadow-lg shadow-teal-600/20 dark:shadow-teal-900/30"
+                        className="w-full relative group overflow-hidden rounded-[18px] bg-gradient-to-l from-teal-600 via-teal-600 to-emerald-600 shadow-lg shadow-teal-600/20 mb-3"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-[150%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/8 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="flex items-center justify-between px-5 py-4">
                             <div className="flex flex-col items-start">
-                                <span className="text-[14px] font-bold text-white tracking-wide">{isDraftAvailable ? 'استكمال التقييم' : 'التقييم السريري'}</span>
-                                <span className="text-[10.5px] text-teal-100/80 font-medium mt-0.5 flex items-center gap-1">
-                                    <Brain className="w-3 h-3" /> تقييم ذكي بالذكاء الاصطناعي
+                                <span className="text-[14px] font-black text-white tracking-wide">
+                                    {isDraftAvailable ? 'استكمال التاريخ المرضي' : 'التاريخ المرضي الشامل'}
+                                </span>
+                                <span className="text-[11px] text-teal-100/80 font-medium mt-0.5 flex items-center gap-1">
+                                    <Brain className="w-3 h-3" />
+                                    تحليل سريري دقيق
                                 </span>
                             </div>
                             <motion.div
-                                className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center"
+                                className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center border border-white/20"
                                 animate={{ x: [0, -3, 0] }}
                                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                             >
@@ -329,99 +405,23 @@ function PatientGreeting({ onOpenCheckIn }: { onOpenCheckIn: () => void }) {
                         </div>
                     </motion.button>
 
-                    {/* Journey breadcrumb — shared with visitor hero */}
-                    <JourneyBreadcrumb compact />
-
-                    {/* Secondary actions: Book + Symptom Analysis */}
-                    <div className="flex gap-2.5">
-                        <Link href={createPageUrl('BookAppointment')} className="flex-1">
-                            <motion.div
-                                whileTap={{ scale: 0.97 }}
-                                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600/60 text-slate-600 dark:text-slate-300 font-bold text-[12.5px] hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors"
-                            >
-                                <Calendar className="w-3.5 h-3.5" />
-                                احجز موعد
-                            </motion.div>
-                        </Link>
-                        <Link href={createPageUrl('BodyMap')} className="flex-1" onClick={() => { haptic.success(); uiSounds.navigate(); }}>
-                            <motion.div
-                                whileTap={{ scale: 0.97 }}
-                                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-indigo-200 dark:border-indigo-700/50 text-indigo-600 dark:text-indigo-300 font-bold text-[12.5px] bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
-                            >
-                                <ScanFace className="w-3.5 h-3.5" />
-                                تحليل الأعراض
-                            </motion.div>
-                        </Link>
-                    </div>
+                    <JourneyBreadcrumb />
                 </div>
             </div>
         </motion.div>
     );
 }
 
-
-/* ═══════════════════════════════════════ */
-/* Full-Screen Clinical Assessment Overlay */
-function CheckInOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    key="checkin-overlay"
-                    initial={{ opacity: 0, y: '100%' }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: '100%' }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                    className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col"
-                    style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-                >
-                    {/* Drag handle + close */}
-                    <div className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-2 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
-                        <button
-                            onClick={() => { haptic.tap(); onClose(); }}
-                            className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                        <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
-                        <div className="w-9" />
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        <QuickCheckIn />
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
-}
-
-/* ═══════════════════════════════════════ */
+// ─── Export ───────────────────────────────────────────────────────
 export default function DailyGreeting() {
     const { user, loading } = useAuth();
-    const [checkInOpen, setCheckInOpen] = useState(false);
-
-    // Prevent body scroll when overlay is open
-    useEffect(() => {
-        if (checkInOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [checkInOpen]);
-
-    if (loading) {
-        return (
-            <div className="mx-4 mt-3 rounded-[24px] bg-slate-800 animate-pulse h-[220px]" />
-        );
-    }
-
+    const router = useRouter();
     return (
         <>
-            {user
-                ? <PatientGreeting onOpenCheckIn={() => setCheckInOpen(true)} />
-                : <VisitorHero onOpenCheckIn={() => setCheckInOpen(true)} />}
-            <CheckInOverlay isOpen={checkInOpen} onClose={() => setCheckInOpen(false)} />
+            {user && !loading
+                ? <PatientGreeting onOpenCheckIn={() => router.push('/medical-history')} />
+                : <VisitorHero onOpenCheckIn={() => router.push('/medical-history')} />
+            }
         </>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Play, Pause, Volume2, VolumeX, Timer, Music, X, Waves } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -121,6 +121,13 @@ export default function FrequencyPlayer({
 
     const timerPresets = [5, 10, 15, 30, 60];
 
+    // PERF-1 FIX: Pre-compute random bar dimensions once
+    const visualizerBars = useMemo(() =>
+        Array.from({ length: 12 }, () => ({
+            height: Math.random() * 24 + 8,
+            duration: 0.5 + Math.random() * 0.5,
+        })), []);
+
     if (!frequency) return null;
 
     return (
@@ -129,14 +136,14 @@ export default function FrequencyPlayer({
                 {/* Visualizer */}
                 {isPlaying && (
                     <div className="flex items-center justify-center gap-1 mb-4">
-                        {[...Array(12)].map((_, i) => (
+                        {visualizerBars.map((bar, i) => (
                             <div
                                 key={i}
                                 className="w-1 bg-gradient-to-t from-primary to-primary-light rounded-full animate-pulse"
                                 style={{
-                                    height: `${Math.random() * 24 + 8}px`,
+                                    height: `${bar.height}px`,
                                     animationDelay: `${i * 0.1}s`,
-                                    animationDuration: `${0.5 + Math.random() * 0.5}s`
+                                    animationDuration: `${bar.duration}s`
                                 }}
                             />
                         ))}

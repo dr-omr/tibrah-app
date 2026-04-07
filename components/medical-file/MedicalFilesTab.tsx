@@ -204,6 +204,34 @@ export default function MedicalFilesTab({ files, uploading, onAddFile, onDelete 
                                 <p className="text-slate-500">لا توجد ملفات مرفقة بعد</p>
                             </div>
                         )}
+
+                        {/* Lab Review CTA */}
+                        {files.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-5 rounded-2xl shadow-lg relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
+                                <div className="relative z-10 flex items-center justify-between">
+                                    <div className="text-white">
+                                        <h4 className="font-bold text-lg mb-1 flex items-center gap-2">
+                                            <Microscope className="w-5 h-5" />
+                                            طلب مراجعة مخبرية
+                                        </h4>
+                                        <p className="text-emerald-100 text-xs max-w-[200px] leading-relaxed">
+                                            احصل على تقييم دقيق لتحاليلك وربطها بالأعراض من قِبل د. عمر العماد.
+                                        </p>
+                                    </div>
+                                    <Button 
+                                        className="bg-white text-emerald-700 hover:bg-emerald-50 font-bold shadow-md h-12 px-6 rounded-xl shrink-0"
+                                        onClick={() => window.location.href = '/digital-services'}
+                                    >
+                                        طلب المراجعة
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="labs" className="mt-4">

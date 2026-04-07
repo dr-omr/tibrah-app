@@ -1,9 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
 import { checkRateLimit, getClientIp } from '@/lib/apiMiddleware';
-
-// Initialize Gemini API (server-side only)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { verifyApiSession } from '@/lib/verifySession';
+import { genAI } from '@/lib/ai';
 
 export const config = {
     api: {
@@ -54,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Rate limiting — 10 image analyses per minute per IP
     const ip = getClientIp(req);
-    const { limited } = checkRateLimit(ip, 10, 60 * 1000);
+    const { limited } = await checkRateLimit(ip, 10, 60 * 1000);
     if (limited) {
         return res.status(429).json({
             error: 'Too many requests',
@@ -63,11 +61,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     }
 
+    // 🔒 Authentication required — medical image analysis must be protected
+    const session = await verifyApiSession(req);
+    if (!session) {
+        return res.status(401).json({ error: 'Unauthorized', message: 'يرجى تسجيل الدخول أولاً', success: false });
+    }
+
     try {
         const { imageBase64, mimeType, mode } = req.body;
 
         if (!imageBase64) {
             return res.status(400).json({ error: "Image data is required" });
+        }
+
+        if (!genAI) {
+            return res.status(503).json({ error: "AI service not configured", success: false });
         }
 
         // Select prompt based on mode

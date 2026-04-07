@@ -17,10 +17,11 @@ import { ProfileQuickActions } from '@/components/profile/ProfileQuickActions';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { ProfileSupport } from '@/components/profile/ProfileSupport';
 import { QRCodeModal } from '@/components/profile/QRCodeModal';
+import FamilyManagement from '@/components/profile/FamilyManagement';
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { createPageUrl } from '../utils';
 
 interface UserData {
@@ -96,7 +97,7 @@ export default function Profile() {
             }
 
             try {
-                const stats = await fetchUserStats();
+                const stats = await fetchUserStats(authUser.id);
                 setStatsData(stats);
 
                 const dbUser = await db.entities.User.get(authUser.id) as unknown as UserData;
@@ -168,6 +169,11 @@ export default function Profile() {
                 updateSetting={updateSetting}
                 toggleDarkMode={toggleDarkMode}
             />
+            
+            <div className="px-4 mt-6">
+                <FamilyManagement />
+            </div>
+
             <ProfileSupport />
 
             {/* Logout Button */}

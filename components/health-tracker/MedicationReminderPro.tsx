@@ -1,7 +1,7 @@
 // components/health-tracker/MedicationReminderPro.tsx
 // PREMIUM Interactive Medication Manager with Pill Box Visual
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format, isToday, subDays, isSameDay } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -175,6 +175,16 @@ export default function MedicationReminderPro() {
         return medications.filter(med => med.times.includes(timeSlot));
     };
 
+    // PERF-1 FIX: Pre-compute random particle positions once
+    const pillParticles = useMemo(() =>
+        Array.from({ length: 8 }, () => ({
+            top: Math.random() * 100,
+            left: Math.random() * 100,
+            xDrift: Math.random() * 10 - 5,
+            duration: 3 + Math.random() * 2,
+            delay: Math.random() * 2,
+        })), []);
+
     return (
         <motion.div
             className="space-y-5"
@@ -189,24 +199,24 @@ export default function MedicationReminderPro() {
             >
                 {/* Floating pills */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(8)].map((_, i) => (
+                    {pillParticles.map((p, i) => (
                         <motion.div
                             key={i}
                             className="absolute text-2xl"
                             style={{
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
+                                top: `${p.top}%`,
+                                left: `${p.left}%`,
                             }}
                             animate={{
                                 y: [0, -20, 0],
-                                x: [0, Math.random() * 10 - 5, 0],
+                                x: [0, p.xDrift, 0],
                                 rotate: [0, 10, -10, 0],
                                 opacity: [0.3, 0.6, 0.3],
                             }}
                             transition={{
-                                duration: 3 + Math.random() * 2,
+                                duration: p.duration,
                                 repeat: Infinity,
-                                delay: Math.random() * 2,
+                                delay: p.delay,
                             }}
                         >
                             💊

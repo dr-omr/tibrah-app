@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Save } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 

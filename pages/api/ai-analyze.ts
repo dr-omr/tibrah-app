@@ -4,11 +4,10 @@
  * Uses Gemini 2.5 Flash for all operations
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
 import { checkRateLimit, getClientIp, sanitizeString } from '@/lib/apiMiddleware';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+import { verifyApiSession } from '@/lib/verifySession';
+import { getGeminiModel, isGeminiConfigured } from '@/lib/ai';
 
 // Analysis types and their specialized prompts
 const ANALYSIS_PROMPTS: Record<string, string> = {
@@ -271,7 +270,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Rate limiting — 20 requests per minute
     const ip = getClientIp(req);
-    const { limited } = checkRateLimit(ip, 20, 60 * 1000);
+    const { limited, resetIn } = await checkRateLimit(ip, 20, 60 * 1000);
     if (limited) {
         return res.status(429).json({
             error: "Too many requests",
@@ -280,7 +279,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     }
 
-    if (!GEMINI_API_KEY) {
+    // 🔒 Authentication required — medical AI endpoints must be protected
+    const session = await verifyApiSession(req);
+    if (!session) {
+        return res.status(401).json({ error: 'Unauthorized', message: 'يرجى تسجيل الدخول أولاً', success: false });
+    }
+
+    if (!isGeminiConfigured) {
         return res.status(503).json({ error: "AI service not configured", success: false });
     }
 
@@ -304,16 +309,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             userMessage += `\n\nسياق إضافي:\n${JSON.stringify(context, null, 2)}`;
         }
 
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
+        const model = getGeminiModel({
             systemInstruction: systemPrompt,
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 2000,
-                responseMimeType: "application/json",
-            }
+            temperature: 0.7,
+            maxOutputTokens: 2000,
+            responseMimeType: "application/json",
         });
+
+        if (!model) {
+            return res.status(503).json({ error: "AI model not available", success: false });
+        }
 
         const result = await model.generateContent(userMessage);
         const text = result.response.text();

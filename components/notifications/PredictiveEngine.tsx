@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotifications } from '@/components/notification-engine';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/db';
 import { format } from 'date-fns';
@@ -41,11 +41,10 @@ export default function PredictiveEngine() {
                 // Helper to safely add notification
                 const checkAndNotify = (title: string, body: string, actionHref: string) => {
                     if (!hasNotificationToday(title)) {
-                        addNotification({
-                            title,
+                        addNotification(title, {
                             body,
                             type: 'info',
-                            action: { label: 'عرض', href: actionHref }
+                            addToFeed: true,
                         });
                     }
                 };

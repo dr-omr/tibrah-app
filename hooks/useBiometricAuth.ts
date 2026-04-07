@@ -1,22 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
-import { Capacitor } from '@capacitor/core';
-import { toast } from 'sonner';
+import { bridge } from '@/lib/native/NativeBridge';
+import { toast } from '@/components/notification-engine';
+import { haptic } from '@/lib/HapticFeedback';
 
 export function useBiometricAuth() {
     const [isAvailable, setIsAvailable] = useState(false);
+    const [biometricType, setBiometricType] = useState<'face' | 'fingerprint' | 'none'>('none');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isChecking, setIsChecking] = useState(true);
 
-    useEffect(() => {
-        checkAvailability();
-    }, []);
-
-    const checkAvailability = async () => {
+    const checkAvailability = useCallback(async () => {
         setIsChecking(true);
-        if (!Capacitor.isNativePlatform()) {
+        if (!bridge.isNative) {
             // Not native platform - fail open for web testing or handle separately
             setIsAvailable(false);
+            setBiometricType('none');
             setIsChecking(false);
             return;
         }
@@ -24,16 +23,31 @@ export function useBiometricAuth() {
         try {
             const result = await NativeBiometric.isAvailable();
             setIsAvailable(result.isAvailable);
+            
+            // Determine type (FaceID vs TouchID/Fingerprint)
+            const typeValue = String(result.biometryType).toUpperCase();
+            if (typeValue.includes('FACE') || typeValue.includes('IRIS')) {
+                setBiometricType('face');
+            } else if (typeValue.includes('FINGERPRINT') || typeValue.includes('TOUCH')) {
+                setBiometricType('fingerprint');
+            } else {
+                setBiometricType('none');
+            }
         } catch (error) {
-            console.error('Biometric availability error:', error);
+            console.error('[Biometric] availability error:', error);
             setIsAvailable(false);
+            setBiometricType('none');
         } finally {
             setIsChecking(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        checkAvailability();
+    }, [checkAvailability]);
 
     const authenticate = async (reason: string = 'الرجاء توثيق هويتك للمتابعة'): Promise<boolean> => {
-        if (!Capacitor.isNativePlatform()) {
+        if (!bridge.isNative) {
              // For web testing, bypass or simulate prompt
              toast.info('تم تجاوز البصمة (نسخة الويب)');
              setIsAuthenticated(true);
@@ -46,32 +60,42 @@ export function useBiometricAuth() {
         }
 
         try {
-            const verified = await NativeBiometric.verifyIdentity({
+            haptic.trigger('light'); // خفيفة قبل الـ prompt
+            await NativeBiometric.verifyIdentity({
                 reason: reason,
-                title: 'تأمين البيانات',
-                subtitle: 'استخدم البصمة أو FaceID',
-                description: 'مطلوب للوصول إلى بياناتك الصحية الحساسة'
+                title: 'تأمين البيانات الذكي',
+                subtitle: biometricType === 'face' ? 'استخدم FaceID' : 'استخدم البصمة',
+                description: 'مطلوب للوصول إلى السجل الطبي وتجنب الاحتيال',
             });
 
+            haptic.success(); // اهتزاز نجاح
             setIsAuthenticated(true);
             return true;
         } catch (error) {
-            console.error('Biometric auth failed:', error);
+            console.error('[Biometric] auth failed:', error);
+            haptic.error(); // اهتزاز خطأ
             setIsAuthenticated(false);
-            toast.error('فشلت المصادقة');
+            
+            // We shouldn't show error if user just cancelled
+            const errStr = String(error).toLowerCase();
+            if (!errStr.includes('cancel') && !errStr.includes('user_cancel')) {
+                toast.error('فشلت المصادقة');
+            }
             return false;
         }
     };
     
-    const resetAuthentication = () => {
+    const resetAuthentication = useCallback(() => {
         setIsAuthenticated(false);
-    };
+    }, []);
 
     return {
         isAvailable,
+        biometricType,
         isAuthenticated,
         isChecking,
         authenticate,
         resetAuthentication
     };
 }
+

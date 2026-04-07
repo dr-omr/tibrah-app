@@ -8,7 +8,7 @@ import {
     Info, ChevronLeft, LogIn, User, BookOpen, GraduationCap,
     Heart, Radio, Crown, Shield, Activity,
     Sparkles, Utensils, Wind, Fingerprint, Zap, Brain, Hexagon,
-    Target, Stethoscope, Droplets, Camera, Lock
+    Target, Stethoscope, Droplets, Camera, Lock, FileText, Cloud
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { haptic } from '@/lib/HapticFeedback';
@@ -208,7 +208,7 @@ export default function More() {
                             <h3 className="text-[11px] font-black tracking-[0.15em] text-slate-500 uppercase">المسح والتحليل المتقدم</h3>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3 h-[380px]">
+                        <div className="grid grid-cols-2 gap-3 auto-rows-[120px]">
                             {/* Medical Dossier - Large Tile */}
                             <BentoTile 
                                 href={createPageUrl('MedicalFile')}
@@ -231,6 +231,18 @@ export default function More() {
                                 iconColor="text-teal-600"
                                 size="medium"
                                 pattern="dots"
+                            />
+
+                            {/* Symptom Checker - NEW */}
+                            <BentoTile 
+                                href="/symptom-checker"
+                                icon={Brain}
+                                title="مدقق الأعراض"
+                                subtitle="استبيان ذكي بمعايير إكلينيكية"
+                                gradient="bg-gradient-to-br from-violet-50 to-purple-50"
+                                iconColor="text-violet-600"
+                                size="medium"
+                                badge="جديد"
                             />
                             
                             {/* Health Tracker - Small Tile */}
@@ -291,6 +303,13 @@ export default function More() {
                         </div>
                         
                         <div className="space-y-0">
+                            {/* Health Report — NEW */}
+                            <ElegantRow 
+                                href="/health-report"
+                                icon={FileText}
+                                title="التقرير الصحي الشامل 📊"
+                                subtitle="تحليل أسبوعي/شهري مع توصيات ذكية مخصصة لك."
+                            />
                             <ElegantRow 
                                 href={createPageUrl('Shop')}
                                 icon={ShoppingBag}

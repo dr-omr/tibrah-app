@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Check, Copy, Loader2, Upload } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 interface ManualPaymentModalProps {
     isOpen: boolean;

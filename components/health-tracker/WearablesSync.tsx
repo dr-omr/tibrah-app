@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Watch, Heart, Footprints, Wind, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 export default function WearablesSync() {
     const [isConnecting, setIsConnecting] = useState(false);

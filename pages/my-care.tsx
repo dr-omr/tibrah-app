@@ -17,9 +17,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import SEO from '@/components/common/SEO';
-import { TodayCarePlan } from '@/components/care-hub/TodayCarePlan';
 import { evaluateCrisisState, CrisisState } from '@/lib/crisisEngine';
-import SOSRescueView from '@/components/care-hub/SOSRescueView';
+import dynamic from 'next/dynamic';
+
+const TodayCarePlan = dynamic(() => import('@/components/care-hub/TodayCarePlan').then(mod => mod.TodayCarePlan), { ssr: false });
+const SOSRescueView = dynamic(() => import('@/components/care-hub/SOSRescueView'), { ssr: false });
 
 // Tab configuration
 const tabs = [
@@ -94,6 +96,14 @@ export default function MyCare() {
         queryFn: () => db.entities.Medication.listForUser(user?.id || ''),
         enabled: !!user,
     });
+
+    // Fetch active clinical cases
+    const { data: activeCases = [] } = useQuery({
+        queryKey: ['clinical_cases', user?.id],
+        queryFn: () => db.entities.ClinicalCase.listForUser(user?.id || ''),
+        enabled: !!user,
+    });
+    const activeCase = activeCases.find((c: any) => c.status !== 'closed');
 
     const upcomingAppointments = appointments.filter(
         (a: any) => new Date(a.date) >= new Date()
@@ -208,6 +218,40 @@ export default function MyCare() {
                             transition={{ duration: 0.2 }}
                             className="space-y-5"
                         >
+                            {/* ─── ACTIVE CASE TRACKER ─── */}
+                            {activeCase && (
+                                <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-5 shadow-lg shadow-indigo-900/20 text-white relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
+                                    
+                                    <div className="relative z-10">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="bg-indigo-500/30 text-indigo-100 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                                                <Activity className="w-3 h-3" />
+                                                ملف طبي نشط
+                                            </span>
+                                            <span className="text-xs font-bold text-indigo-200">
+                                                {activeCase.triage_level === 'manageable' ? 'مستقر' : 
+                                                 activeCase.triage_level === 'emergency' ? 'حرج' : 'يتطلب مراجعة'}
+                                            </span>
+                                        </div>
+                                        
+                                        <h3 className="font-bold text-lg mb-1">{activeCase.chief_complaint === 'chest_pain' ? 'ألم في الصدر' : 'تقييم سريري قيد المعالجة'}</h3>
+                                        <p className="text-indigo-200 text-xs leading-relaxed mb-4">
+                                            لقد قمت بإرسال بيانتك السريرية مؤخراً. يرجى المتابعة لإكمال خطة الرعاية الخاصة بك.
+                                        </p>
+                                        
+                                        <div className="flex gap-2">
+                                            <Button className="flex-1 bg-white hover:bg-slate-50 text-indigo-900 font-bold h-10 text-xs rounded-xl" onClick={() => window.location.href = '/digital-services'}>
+                                                الخدمات المتاحة
+                                            </Button>
+                                            <Button variant="outline" className="flex-1 border-indigo-400 text-indigo-100 hover:bg-indigo-700/50 hover:text-white font-bold h-10 text-xs rounded-xl bg-transparent">
+                                                تحديث الحالة
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* ─── NEXT APPOINTMENT — iOS grouped card ─── */}
                             <div className="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm">
                                 <div className="p-4">

@@ -1,0 +1,471 @@
+/**
+ * TIBRAH LIQUID GLASS SYSTEM — v5.0 (Complete Surface Hierarchy)
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * Built from reverse-engineering iOS 18 App Library (HIG).
+ *
+ * SURFACE DEPTH HIERARCHY (lightest → heaviest blur):
+ *   liquid-icon    →  20px  — micro chips, badges
+ *   liquid-card    →  40px  — widget cells, notification rows
+ *   liquid-panel   →  50px  — main content containers (App Library folders)
+ *   liquid-nav     →  60px  — tab bar / status bar level
+ *   liquid-sidebar →  60px  — side navigation drawer
+ *   liquid-modal   →  70px  — dialogs, action sheets
+ *   liquid-sheet   →  80px  — full-height bottom sheets
+ *   liquid-overlay →  80px  — scrim/dimmer behind modals
+ *   liquid-toast   →  30px  — notification pills (compact)
+ *
+ * APPLE HIG KEYS:
+ *   Warm tint rgba(250,248,245)  — NOT pure white
+ *   saturate(190%) — makes blurred colors richer
+ *   brightness(1.05) — lifts glass above blur layer
+ *   0.5px inset specular — THE defining Apple glass edge
+ *   Warm dark rgba(28,26,24) — NOT cold gray
+ */
+
+/* ═══════════════════════════════════════════════
+   GLASS SYSTEM CUSTOM PROPERTIES
+   ═══════════════════════════════════════════════ */
+:root {
+    /* Light mode tint — warm white absorbs wallpaper warmth */
+    --glass-tint-warm:       rgba(250, 248, 245, 1);
+    --glass-tint-icon:       rgba(250, 248, 245, 0.12);
+    --glass-tint-card:       rgba(250, 248, 245, 0.16);
+    --glass-tint-panel:      rgba(250, 248, 245, 0.20);
+    --glass-tint-nav:        rgba(250, 248, 245, 0.72);
+    --glass-tint-sidebar:    rgba(250, 248, 245, 0.68);
+    --glass-tint-modal:      rgba(250, 248, 245, 0.65);
+    --glass-tint-sheet:      rgba(250, 248, 245, 0.75);
+    --glass-tint-toast:      rgba(250, 248, 245, 0.88);
+
+    /* Specular highlight — 0.5px inset top border */
+    --glass-specular:        inset 0 0.5px 0 rgba(255, 255, 255, 0.20);
+    --glass-specular-light:  inset 0 0.5px 0 rgba(255, 255, 255, 0.10);
+    --glass-specular-heavy:  inset 0 0.5px 0 rgba(255, 255, 255, 0.35);
+    --glass-specular-toast:  inset 0 0.5px 0 rgba(255, 255, 255, 0.45);
+
+    /* Backdrop filter values */
+    --glass-blur-icon:       blur(20px) saturate(160%);
+    --glass-blur-card:       blur(40px) saturate(180%) brightness(1.02);
+    --glass-blur-panel:      blur(50px) saturate(190%) brightness(1.02);
+    --glass-blur-nav:        blur(60px) saturate(190%) brightness(1.05);
+    --glass-blur-sidebar:    blur(60px) saturate(185%) brightness(1.03);
+    --glass-blur-modal:      blur(70px) saturate(195%) brightness(1.03);
+    --glass-blur-sheet:      blur(80px) saturate(200%) brightness(1.04);
+    --glass-blur-toast:      blur(30px) saturate(170%) brightness(1.06);
+
+    /* Spring animation for interactive glass */
+    --glass-spring:          cubic-bezier(0.34, 1.56, 0.64, 1);
+    --glass-ease:            cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+html.dark {
+    --glass-tint-icon:       rgba(32, 30, 28, 0.28);
+    --glass-tint-card:       rgba(32, 30, 28, 0.32);
+    --glass-tint-panel:      rgba(28, 26, 24, 0.42);
+    --glass-tint-nav:        rgba(28, 26, 24, 0.78);
+    --glass-tint-sidebar:    rgba(28, 26, 24, 0.74);
+    --glass-tint-modal:      rgba(22, 20, 18, 0.72);
+    --glass-tint-sheet:      rgba(20, 18, 16, 0.82);
+    --glass-tint-toast:      rgba(38, 36, 34, 0.92);
+
+    --glass-specular:        inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+    --glass-specular-light:  inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+    --glass-specular-heavy:  inset 0 0.5px 0 rgba(255, 255, 255, 0.10);
+    --glass-specular-toast:  inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+
+    --glass-blur-card:       blur(40px) saturate(180%) brightness(0.98);
+    --glass-blur-panel:      blur(50px) saturate(190%) brightness(0.98);
+    --glass-blur-nav:        blur(60px) saturate(190%) brightness(0.95);
+    --glass-blur-sidebar:    blur(60px) saturate(185%) brightness(0.96);
+    --glass-blur-modal:      blur(70px) saturate(195%) brightness(0.96);
+    --glass-blur-sheet:      blur(80px) saturate(200%) brightness(0.97);
+    --glass-blur-toast:      blur(30px) saturate(170%) brightness(0.98);
+}
+
+
+/* ═══════════════════════════════════════════════
+   1. LIQUID ICON — Micro Chips / Badges (20px)
+   ═══════════════════════════════════════════════ */
+.liquid-icon {
+    background:         var(--glass-tint-icon);
+    backdrop-filter:    var(--glass-blur-icon);
+    -webkit-backdrop-filter: var(--glass-blur-icon);
+    box-shadow:         var(--glass-specular-light);
+    border:             none;
+    transform:          translateZ(0);
+}
+
+
+/* ═══════════════════════════════════════════════
+   2. LIQUID CARD — Widget Cells / Rows (40px)
+   iOS App Library: individual app item
+   ═══════════════════════════════════════════════ */
+.liquid-card {
+    background:         var(--glass-tint-card);
+    backdrop-filter:    var(--glass-blur-card);
+    -webkit-backdrop-filter: var(--glass-blur-card);
+    box-shadow:
+        0 0.5px 1px  rgba(0, 0, 0, 0.03),
+        0 2px  8px   rgba(0, 0, 0, 0.02),
+        var(--glass-specular-light);
+    border:             none;
+    transform:          translateZ(0);
+    transition:         transform 0.18s var(--glass-spring),
+                        box-shadow 0.18s var(--glass-ease),
+                        background 0.2s ease;
+    will-change:        transform;
+}
+
+/* Card press state (uses :active for mobile + JS class) */
+.liquid-card:active,
+.liquid-card.pressed {
+    transform: scale(0.97) translateZ(0);
+    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.04), var(--glass-specular-light);
+}
+
+/* Card hover (desktop) */
+@media (hover: hover) {
+    .liquid-card:hover {
+        transform: translateY(-2px) translateZ(0);
+        box-shadow:
+            0 1px 2px  rgba(0, 0, 0, 0.04),
+            0 6px 20px rgba(0, 0, 0, 0.04),
+            var(--glass-specular-light);
+    }
+}
+
+/* Diagonal specular catch (looks like light hitting it from top-left) */
+.liquid-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 50%
+    );
+    z-index: 0;
+}
+
+
+/* ═══════════════════════════════════════════════
+   3. LIQUID PANEL — Main Containers (50px)
+   iOS App Library: folder background
+   ═══════════════════════════════════════════════ */
+.liquid-panel {
+    background:         var(--glass-tint-panel);
+    backdrop-filter:    var(--glass-blur-panel);
+    -webkit-backdrop-filter: var(--glass-blur-panel);
+    box-shadow:
+        0 0.5px 2px  rgba(0, 0, 0, 0.04),
+        0 4px  16px  rgba(0, 0, 0, 0.02),
+        var(--glass-specular);
+    border:             none;
+    transform:          translateZ(0);
+}
+
+
+/* ═══════════════════════════════════════════════
+   4. LIQUID NAV — Tab Bar / Header (60px)
+   iOS App Library: top search bar + folder labels
+   ═══════════════════════════════════════════════ */
+.liquid-nav {
+    background:         var(--glass-tint-nav);
+    backdrop-filter:    var(--glass-blur-nav);
+    -webkit-backdrop-filter: var(--glass-blur-nav);
+    box-shadow:
+        0 0.5px 0 rgba(0, 0, 0, 0.05),
+        var(--glass-specular-heavy);
+    border:             none;
+    position:           relative;
+    transform:          translateZ(0);
+}
+
+/* Diagonal light catch — subtle, left-to-right */
+.liquid-nav::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(
+        210deg,
+        rgba(255, 255, 255, 0.06) 0%,
+        transparent 40%
+    );
+    border-radius: inherit;
+}
+
+
+/* ═══════════════════════════════════════════════
+   5. LIQUID SIDEBAR — Side Navigation (60px) [NEW]
+   ═══════════════════════════════════════════════ */
+.liquid-sidebar {
+    background:         var(--glass-tint-sidebar);
+    backdrop-filter:    var(--glass-blur-sidebar);
+    -webkit-backdrop-filter: var(--glass-blur-sidebar);
+    box-shadow:
+        1px 0 0 rgba(0, 0, 0, 0.04),
+        var(--glass-specular);
+    border:             none;
+    transform:          translateZ(0);
+}
+
+
+/* ═══════════════════════════════════════════════
+   6. LIQUID MODAL — Dialogs / Action Sheets (70px) [NEW]
+   ═══════════════════════════════════════════════ */
+.liquid-modal {
+    background:         var(--glass-tint-modal);
+    backdrop-filter:    var(--glass-blur-modal);
+    -webkit-backdrop-filter: var(--glass-blur-modal);
+    box-shadow:
+        0 0.5px 2px  rgba(0, 0, 0, 0.06),
+        0 8px  32px  rgba(0, 0, 0, 0.06),
+        0 32px 64px  rgba(0, 0, 0, 0.04),
+        var(--glass-specular-heavy);
+    border:             none;
+    transform:          translateZ(0);
+    position:           relative;
+}
+
+/* Modal dismiss handle pill */
+.liquid-modal::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+html.dark .liquid-modal::before {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+
+/* ═══════════════════════════════════════════════
+   7. LIQUID SHEET — Full Bottom Sheets (80px) [NEW]
+   ═══════════════════════════════════════════════ */
+.liquid-sheet {
+    background:         var(--glass-tint-sheet);
+    backdrop-filter:    var(--glass-blur-sheet);
+    -webkit-backdrop-filter: var(--glass-blur-sheet);
+    box-shadow:
+        0 -0.5px 0   rgba(0, 0, 0, 0.06),
+        0 -8px  32px rgba(0, 0, 0, 0.04),
+        var(--glass-specular-heavy);
+    border:             none;
+    transform:          translateZ(0);
+    position:           relative;
+}
+
+/* Sheet dismiss handle */
+.liquid-sheet::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 5px;
+    border-radius: 2.5px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+html.dark .liquid-sheet::before {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+
+/* ═══════════════════════════════════════════════
+   8. LIQUID TOAST — Notification Pills (30px) [NEW]
+   Compact, floating above everything else
+   ═══════════════════════════════════════════════ */
+.liquid-toast {
+    background:         var(--glass-tint-toast);
+    backdrop-filter:    var(--glass-blur-toast);
+    -webkit-backdrop-filter: var(--glass-blur-toast);
+    box-shadow:
+        0 1px 2px  rgba(0, 0, 0, 0.06),
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        var(--glass-specular-toast);
+    border:             none;
+    transform:          translateZ(0);
+}
+
+/* Toast variants */
+.liquid-toast.toast-success {
+    background: rgba(34, 197, 94, 0.88);
+    --glass-specular-toast: inset 0 0.5px 0 rgba(255, 255, 255, 0.30);
+}
+.liquid-toast.toast-error {
+    background: rgba(239, 68, 68, 0.88);
+}
+.liquid-toast.toast-warning {
+    background: rgba(245, 158, 11, 0.88);
+}
+.liquid-toast.toast-info {
+    background: rgba(59, 130, 246, 0.88);
+}
+
+
+/* ═══════════════════════════════════════════════
+   9. LIQUID OVERLAY — Modal Scrim (80px) [NEW]
+   Dims content behind modals/sheets
+   Uses heavy blur to make content unreadable
+   ═══════════════════════════════════════════════ */
+.liquid-overlay {
+    background:      rgba(0, 0, 0, 0.30);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+html.dark .liquid-overlay {
+    background: rgba(0, 0, 0, 0.55);
+}
+
+
+/* ═══════════════════════════════════════════════
+   10. GLOBAL AUTO-GLASS (Tailwind Class Intercept)
+   Converts standard bg-white cards to Liquid Glass
+   Warm-tinted, Apple-authentic, saturated
+   ═══════════════════════════════════════════════ */
+
+/* Large containers → panel tier */
+[class*="bg-white"][class*="rounded-2xl"],
+[class*="bg-white"][class*="rounded-3xl"],
+[class*="bg-white"][class*="rounded-[2"] {
+    background:         var(--glass-tint-panel) !important;
+    backdrop-filter:    var(--glass-blur-panel);
+    -webkit-backdrop-filter: var(--glass-blur-panel);
+    box-shadow:
+        0 0.5px 2px rgba(0,0,0,0.04),
+        0 4px 16px  rgba(0,0,0,0.02),
+        var(--glass-specular) !important;
+    border-color:       transparent !important;
+    transform:          translateZ(0);
+}
+
+/* Medium cards → card tier */
+[class*="bg-white"][class*="rounded-xl"] {
+    background:         var(--glass-tint-card) !important;
+    backdrop-filter:    var(--glass-blur-card);
+    -webkit-backdrop-filter: var(--glass-blur-card);
+    box-shadow:
+        0 0.5px 1px rgba(0,0,0,0.03),
+        var(--glass-specular-light) !important;
+    border-color:       transparent !important;
+    transform:          translateZ(0);
+}
+
+/* Small elements → icon tier */
+[class*="bg-white"][class*="rounded-lg"],
+[class*="bg-white"][class*="rounded-full"] {
+    background:         var(--glass-tint-icon) !important;
+    backdrop-filter:    var(--glass-blur-icon);
+    -webkit-backdrop-filter: var(--glass-blur-icon);
+    box-shadow:         var(--glass-specular-light) !important;
+    border-color:       transparent !important;
+}
+
+/* Slate frost variants */
+[class*="bg-slate-50"][class*="rounded-2xl"],
+[class*="bg-slate-50"][class*="rounded-3xl"],
+[class*="bg-slate-50"][class*="rounded-xl"] {
+    background:         rgba(248, 246, 242, 0.10) !important;
+    backdrop-filter:    blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    box-shadow:         var(--glass-specular-light) !important;
+    border-color:       transparent !important;
+}
+
+[class*="bg-slate-100"][class*="rounded-2xl"],
+[class*="bg-slate-100"][class*="rounded-xl"],
+[class*="bg-slate-100"][class*="rounded-lg"] {
+    background:         rgba(245, 243, 238, 0.08) !important;
+    backdrop-filter:    blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow:         var(--glass-specular-light) !important;
+    border-color:       transparent !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   11. DARK MODE AUTO-GLASS OVERRIDES
+   Warm dark tints — Apple iOS dark mode authentic
+   ═══════════════════════════════════════════════ */
+html.dark [class*="bg-white"][class*="rounded-2xl"],
+html.dark [class*="bg-white"][class*="rounded-3xl"],
+html.dark [class*="bg-white"][class*="rounded-[2"] {
+    background: var(--glass-tint-panel) !important;
+    backdrop-filter: var(--glass-blur-panel);
+    -webkit-backdrop-filter: var(--glass-blur-panel);
+    box-shadow:
+        0 0.5px 2px rgba(0,0,0,0.15),
+        0 4px 16px  rgba(0,0,0,0.10),
+        var(--glass-specular) !important;
+}
+
+html.dark [class*="bg-white"][class*="rounded-xl"] {
+    background: var(--glass-tint-card) !important;
+    backdrop-filter: var(--glass-blur-card);
+    -webkit-backdrop-filter: var(--glass-blur-card);
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.12), var(--glass-specular-light) !important;
+}
+
+html.dark [class*="bg-white"][class*="rounded-lg"],
+html.dark [class*="bg-white"][class*="rounded-full"] {
+    background: var(--glass-tint-icon) !important;
+    backdrop-filter: var(--glass-blur-icon);
+    -webkit-backdrop-filter: var(--glass-blur-icon);
+    box-shadow: var(--glass-specular-light) !important;
+}
+
+html.dark [class*="bg-slate-50"][class*="rounded-2xl"],
+html.dark [class*="bg-slate-50"][class*="rounded-3xl"],
+html.dark [class*="bg-slate-50"][class*="rounded-xl"] {
+    background: rgba(24, 22, 20, 0.28) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    box-shadow: var(--glass-specular-light) !important;
+}
+
+html.dark [class*="bg-slate-100"][class*="rounded-2xl"],
+html.dark [class*="bg-slate-100"][class*="rounded-xl"],
+html.dark [class*="bg-slate-100"][class*="rounded-lg"] {
+    background: rgba(26, 24, 22, 0.22) !important;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: var(--glass-specular-light) !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   12. FALLBACK — No Backdrop Filter Support
+   Solid semi-transparent for older browsers
+   ═══════════════════════════════════════════════ */
+@supports not (backdrop-filter: blur(1px)) {
+    .liquid-icon   { background: rgba(245, 245, 245, 0.92); }
+    .liquid-card   { background: rgba(248, 248, 248, 0.94); }
+    .liquid-panel  { background: rgba(250, 250, 250, 0.95); }
+    .liquid-nav    { background: rgba(252, 252, 252, 0.97); }
+    .liquid-modal  { background: rgba(252, 252, 252, 0.97); }
+    .liquid-sheet  { background: rgba(252, 252, 252, 0.98); }
+    .liquid-toast  { background: rgba(255, 255, 255, 0.98); }
+    .liquid-sidebar   { background: rgba(250, 250, 250, 0.97); }
+
+    html.dark .liquid-icon    { background: rgba(30, 28, 26, 0.92); }
+    html.dark .liquid-card    { background: rgba(28, 26, 24, 0.94); }
+    html.dark .liquid-panel   { background: rgba(24, 22, 20, 0.95); }
+    html.dark .liquid-nav     { background: rgba(22, 20, 18, 0.97); }
+    html.dark .liquid-modal   { background: rgba(20, 18, 16, 0.97); }
+    html.dark .liquid-sheet   { background: rgba(18, 16, 14, 0.98); }
+    html.dark .liquid-toast   { background: rgba(38, 36, 34, 0.98); }
+    html.dark .liquid-sidebar { background: rgba(22, 20, 18, 0.97); }
+}

@@ -2,59 +2,58 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Shield } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { motion } from 'framer-motion';
+
+import AuthHandoff from '@/components/auth/AuthHandoff';
+import AuthGate from '@/components/auth/AuthGate';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
     requireAuth?: boolean;
     requireDoctor?: boolean; // For future doctor dashboard protecting
+    sectionName?: string; // e.g. "الملف الطبي"
 }
 
-export default function ProtectedRoute({ children, requireAuth = true, requireDoctor = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({ 
+    children, 
+    requireAuth = true, 
+    requireDoctor = false,
+    sectionName = 'القسم المحمي'
+}: ProtectedRouteProps) {
     const { user, loading } = useAuth();
     const router = useRouter();
     const [isChecking, setIsChecking] = useState(true);
+    const [showGate, setShowGate] = useState(false);
+    const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
         if (!loading) {
             if (requireAuth && !user) {
-                // Not authenticated, redirect to login
-                router.replace(createPageUrl('Login'));
+                // Not authenticated, gracefully trap them in the AuthGate instead of hard bouncing
+                setShowGate(true);
+                setIsChecking(false);
             } else if (requireDoctor && (user?.role as string) !== 'doctor') {
-                // Not a doctor, redirect to patient home
+                // Valid auth, but wrong role: Hard bounce to home for security
                 router.replace(createPageUrl('Home'));
             } else {
-                // Authorized
-                setIsChecking(false);
+                // Authorized successfully
+                setIsAuthorized(true);
+                // Artificial delay to show the "Verifying Session" premium state if coming from another state
+                setTimeout(() => setIsChecking(false), 800);
             }
         }
     }, [user, loading, router, requireAuth, requireDoctor]);
 
-    if (loading || isChecking) {
-        // Ultra-Premium Fullscreen Loading State to prevent UI flashing
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-6">
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-center"
-                >
-                    <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 flex items-center justify-center mb-6 relative">
-                        <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-0 border-[3px] border-t-primary border-r-primary border-b-transparent border-l-transparent rounded-3xl opacity-50"
-                        />
-                        <Shield className="w-8 h-8 text-primary animate-pulse" />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-500 tracking-wider uppercase">جارِ التوثيق المأمون...</h3>
-                </motion.div>
-            </div>
-        );
+    if (loading || (isChecking && !showGate && !isAuthorized)) {
+        return <AuthHandoff status="checking" />;
+    }
+
+    if (showGate) {
+        return <AuthGate destinationName={sectionName} targetUrl={router.asPath} />;
+    }
+
+    if (!isAuthorized) {
+        return null;
     }
 
     return <>{children}</>;

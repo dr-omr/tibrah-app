@@ -11,7 +11,7 @@ import {
     Sparkles, Clock, Zap, Heart, Brain, Battery, Loader2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format, differenceInSeconds, differenceInHours, addHours } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { aiClient } from '@/components/ai/aiClient';

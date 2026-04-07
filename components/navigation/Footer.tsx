@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 export default function Footer() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -39,17 +39,10 @@ export default function Footer() {
 
     const handleInstallClick = async () => {
         if (isIOS) {
-            toast.info(
-                <div className="text-right">
-                    <p className="font-bold mb-2">لتثبيت التطبيق على iOS:</p>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                        <li>اضغط على أيقونة المشاركة <span className="inline-block">⬆️</span></li>
-                        <li>اختر "إضافة إلى الشاشة الرئيسية"</li>
-                        <li>اضغط "إضافة"</li>
-                    </ol>
-                </div>,
-                { duration: 8000 }
-            );
+            toast.info('لتثبيت التطبيق على iOS', {
+                body: '1. اضغط على أيقونة المشاركة ⬆️\n2. اختر "إضافة إلى الشاشة الرئيسية"\n3. اضغط "إضافة"',
+                duration: 8000
+            });
             return;
         }
 
@@ -126,11 +119,13 @@ export default function Footer() {
     ];
 
     return (
-        <footer className="bg-gradient-to-b from-slate-900 to-slate-950 text-white relative overflow-hidden">
-            {/* Background decorations */}
+        <footer className="text-white relative overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(15,23,42,0.88) 0%, rgba(2,6,14,0.95) 100%)', backdropFilter: 'blur(30px) saturate(160%)', WebkitBackdropFilter: 'blur(30px) saturate(160%)' }}>
+            {/* Liquid Glass top highlight bar */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+            {/* Background decorations — softened for glass */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
+                <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gold/6 rounded-full blur-3xl" />
             </div>
 
             {/* Main Footer Content */}

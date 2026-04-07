@@ -1,0 +1,176 @@
+/**
+ * TIBRAH LIVING BACKGROUND SYSTEM — v1.0
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * The secret of Apple's App Library glass effect:
+ * Glass doesn't create color — it ABSORBS the wallpaper.
+ * This background IS the wallpaper. Everything above it
+ * is glass that lets this living color bleed through.
+ *
+ * TECHNIQUE:
+ *   - 4 radial gradient "orbs" positioned at edges
+ *   - They drift slowly using keyframes (30s cycle)
+ *   - The orbs are the same Tibrah brand hues: teal, purple,
+ *     indigo, emerald — health-premium color story
+ *   - Blended via mix-blend-mode on fixed pseudo-element
+ *   - Zero layout impact — purely cosmetic canvas
+ */
+
+/* ═══════════════════════════════════════════════
+   ROOT BACKGROUND VARIABLES
+   ═══════════════════════════════════════════════ */
+:root {
+    /* Orb colors — health-themed, rich */
+    --bg-orb-1: hsla(171, 57%, 30%, 0.55);   /* Teal (brand)    */
+    --bg-orb-2: hsla(263, 60%, 35%, 0.45);   /* Deep purple     */
+    --bg-orb-3: hsla(220, 65%, 30%, 0.40);   /* Indigo          */
+    --bg-orb-4: hsla(152, 50%, 28%, 0.35);   /* Emerald         */
+    --bg-base:  #0b0f14;                      /* Near-black base */
+
+    /* Preset palette tokens for themed sections */
+    --bg-theme-health:  hsla(171, 57%, 30%, 0.6);
+    --bg-theme-calm:    hsla(220, 65%, 30%, 0.6);
+    --bg-theme-energy:  hsla(15,  70%, 30%, 0.6);
+    --bg-theme-mind:    hsla(290, 55%, 30%, 0.6);
+}
+
+/* Dark mode — slightly warmer, denser orbs */
+html.dark {
+    --bg-orb-1: hsla(171, 57%, 25%, 0.65);
+    --bg-orb-2: hsla(263, 60%, 28%, 0.55);
+    --bg-orb-3: hsla(220, 65%, 24%, 0.50);
+    --bg-orb-4: hsla(152, 50%, 22%, 0.42);
+    --bg-base:  #080b10;
+}
+
+/* Light mode — washed out, soft pastels */
+html:not(.dark) {
+    --bg-orb-1: hsla(171, 57%, 88%, 0.70);
+    --bg-orb-2: hsla(263, 60%, 90%, 0.60);
+    --bg-orb-3: hsla(220, 65%, 91%, 0.55);
+    --bg-orb-4: hsla(152, 50%, 89%, 0.50);
+    --bg-base:  #f0f4f8;
+}
+
+
+/* ═══════════════════════════════════════════════
+   BODY — STATIC BASE COLOR
+   Orbs layer on top via pseudo-element
+   ═══════════════════════════════════════════════ */
+body {
+    background-color: var(--bg-base);
+    min-height: 100dvh;
+    position: relative;
+    isolation: isolate; /* creates stacking context */
+}
+
+
+/* ═══════════════════════════════════════════════
+   LIVING BACKGROUND LAYER
+   Fixed, covers entire viewport, behind everything
+   ═══════════════════════════════════════════════ */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    /* 4 drifting orbs as radial gradients */
+    background:
+        radial-gradient(ellipse 80% 60% at 15% 10%,  var(--bg-orb-1) 0%, transparent 65%),
+        radial-gradient(ellipse 70% 55% at 85% 20%,  var(--bg-orb-2) 0%, transparent 65%),
+        radial-gradient(ellipse 75% 65% at 80% 85%,  var(--bg-orb-3) 0%, transparent 65%),
+        radial-gradient(ellipse 65% 50% at 10% 80%,  var(--bg-orb-4) 0%, transparent 65%),
+        var(--bg-base);
+
+    /* Slow drift animation — 30s full cycle */
+    animation: tibrah-bg-drift 30s ease-in-out infinite alternate;
+
+    /* Performance: compositor layer only */
+    will-change: background-position;
+    transform: translateZ(0);
+}
+
+/* ═══════════════════════════════════════════════
+   DRIFT KEYFRAMES
+   Each orb drifts subtle distances — feels alive,
+   never distracting. Max shift: 8% of viewport.
+   ═══════════════════════════════════════════════ */
+@keyframes tibrah-bg-drift {
+    0% {
+        background:
+            radial-gradient(ellipse 80% 60% at 15% 10%,  var(--bg-orb-1) 0%, transparent 65%),
+            radial-gradient(ellipse 70% 55% at 85% 20%,  var(--bg-orb-2) 0%, transparent 65%),
+            radial-gradient(ellipse 75% 65% at 80% 85%,  var(--bg-orb-3) 0%, transparent 65%),
+            radial-gradient(ellipse 65% 50% at 10% 80%,  var(--bg-orb-4) 0%, transparent 65%),
+            var(--bg-base);
+    }
+    33% {
+        background:
+            radial-gradient(ellipse 85% 65% at 20% 15%,  var(--bg-orb-1) 0%, transparent 65%),
+            radial-gradient(ellipse 75% 60% at 80% 28%,  var(--bg-orb-2) 0%, transparent 65%),
+            radial-gradient(ellipse 70% 60% at 75% 78%,  var(--bg-orb-3) 0%, transparent 65%),
+            radial-gradient(ellipse 70% 55% at 18% 74%,  var(--bg-orb-4) 0%, transparent 65%),
+            var(--bg-base);
+    }
+    66% {
+        background:
+            radial-gradient(ellipse 75% 55% at 12% 18%,  var(--bg-orb-1) 0%, transparent 65%),
+            radial-gradient(ellipse 80% 65% at 88% 15%,  var(--bg-orb-2) 0%, transparent 65%),
+            radial-gradient(ellipse 80% 70% at 82% 90%,  var(--bg-orb-3) 0%, transparent 65%),
+            radial-gradient(ellipse 60% 45% at 8%  82%,  var(--bg-orb-4) 0%, transparent 65%),
+            var(--bg-base);
+    }
+    100% {
+        background:
+            radial-gradient(ellipse 82% 62% at 18% 8%,   var(--bg-orb-1) 0%, transparent 65%),
+            radial-gradient(ellipse 68% 52% at 82% 24%,  var(--bg-orb-2) 0%, transparent 65%),
+            radial-gradient(ellipse 78% 68% at 78% 88%,  var(--bg-orb-3) 0%, transparent 65%),
+            radial-gradient(ellipse 68% 52% at 14% 76%,  var(--bg-orb-4) 0%, transparent 65%),
+            var(--bg-base);
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   SUBTLE NOISE TEXTURE OVERLAY
+   Adds the grain Apple screens have —
+   prevents banding in smooth gradients
+   ═══════════════════════════════════════════════ */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    mix-blend-mode: overlay;
+}
+
+html.dark body::after {
+    opacity: 0.04; /* slightly more visible on dark */
+}
+
+
+/* ═══════════════════════════════════════════════
+   THEMED PAGE VARIANTS
+   Apply to <body> or page wrapper for section
+   tone shifts (wellness / clinic / shop)
+   ═══════════════════════════════════════════════ */
+.bg-theme-health body::before  { --bg-orb-1: var(--bg-theme-health); }
+.bg-theme-calm  body::before   { --bg-orb-1: var(--bg-theme-calm);   }
+.bg-theme-energy body::before  { --bg-orb-1: var(--bg-theme-energy); }
+.bg-theme-mind  body::before   { --bg-orb-1: var(--bg-theme-mind);   }
+
+
+/* ═══════════════════════════════════════════════
+   ACCESSIBILITY — REDUCE MOTION
+   Freeze the background animation completely
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    body::before {
+        animation: none;
+    }
+}

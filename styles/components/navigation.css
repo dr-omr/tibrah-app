@@ -1,0 +1,535 @@
+/**
+ * TIBRAH NAVIGATION COMPONENTS CSS — v1.0
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * iOS-authentic navigation components:
+ * Tab Bar, Top Header, Search Bar, Back Button,
+ * Notification Badge, Section Headers, Breadcrumb
+ *
+ * Design Language: Apple HIG — liquid glass + iOS sizing standards
+ * Safe areas: env(safe-area-inset-*) for all devices
+ */
+
+
+/* ═══════════════════════════════════════════════
+   1. BOTTOM TAB BAR — iOS Standard
+   44pt minimum tap targets, 49pt bar height
+   ═══════════════════════════════════════════════ */
+
+.tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-fixed, 200);
+
+    /* Safe area for iPhone notch / home indicator */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+
+    /* Liquid Glass — nav tier (heaviest) */
+    background:          var(--glass-tint-nav, rgba(250, 248, 245, 0.72));
+    backdrop-filter:     var(--glass-blur-nav, blur(60px) saturate(190%) brightness(1.05));
+    -webkit-backdrop-filter: var(--glass-blur-nav);
+
+    /* Top separator line — subtle */
+    box-shadow:
+        0 -0.5px 0 rgba(0, 0, 0, 0.08),
+        var(--glass-specular-heavy, inset 0 0.5px 0 rgba(255,255,255,0.35));
+
+    /* Tab row */
+    display: flex;
+    align-items: stretch;
+    border: none;
+}
+
+html.dark .tab-bar {
+    box-shadow:
+        0 -0.5px 0 rgba(255, 255, 255, 0.06),
+        var(--glass-specular, inset 0 0.5px 0 rgba(255,255,255,0.06));
+}
+
+
+/* Individual tab item */
+.tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 49px;
+    padding: 8px 4px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-decoration: none;
+    color: inherit;
+}
+
+.tab-item:active {
+    transform: scale(0.88);
+}
+
+/* Tab icon wrapper */
+.tab-icon-wrap {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                color 0.15s ease;
+    color: var(--text-tertiary, #94a3b8);
+}
+html.dark .tab-icon {
+    color: rgba(255,255,255,0.35);
+}
+
+/* Tab label */
+.tab-label {
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--text-tertiary, #94a3b8);
+    transition: color 0.15s ease;
+    white-space: nowrap;
+    line-height: 1;
+}
+html.dark .tab-label {
+    color: rgba(255,255,255,0.35);
+}
+
+/* ── Active tab state ── */
+.tab-item.active .tab-icon {
+    color: var(--primary, #2D9B83);
+    transform: scale(1.10);
+}
+html.dark .tab-item.active .tab-icon {
+    color: var(--primary-light, #3FB39A);
+}
+
+.tab-item.active .tab-label {
+    color: var(--primary, #2D9B83);
+    font-weight: 600;
+}
+html.dark .tab-item.active .tab-label {
+    color: var(--primary-light, #3FB39A);
+}
+
+/* Active indicator dot */
+.tab-item.active .tab-icon-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary, #2D9B83);
+}
+
+/* Notification badge on tab icon */
+.tab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #FF2D55;
+    color: white;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 0 0 1.5px var(--glass-tint-nav, rgba(250,248,245,0.72));
+    pointer-events: none;
+}
+
+
+/* ═══════════════════════════════════════════════
+   2. TOP APP HEADER — Page Header
+   Sticky, glass blur, RTL-aware
+   ═══════════════════════════════════════════════ */
+
+.app-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky, 100);
+
+    /* Top safe area for notch */
+    padding-top: env(safe-area-inset-top, 0px);
+
+    background: var(--glass-tint-nav, rgba(250, 248, 245, 0.72));
+    backdrop-filter: var(--glass-blur-nav, blur(60px) saturate(190%) brightness(1.05));
+    -webkit-backdrop-filter: var(--glass-blur-nav);
+
+    box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.06);
+
+    /* Header row */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    min-height: 56px;
+}
+
+html.dark .app-header {
+    box-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Header title */
+.header-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary, #0f172a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    text-align: center;
+}
+html.dark .header-title {
+    color: rgba(255,255,255,0.95);
+}
+
+/* Hero large title (profile / home style) */
+.header-title-large {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    padding: 0 var(--space-page-x, 1.25rem);
+    padding-top: 0.25rem;
+    padding-bottom: 0.5rem;
+    color: var(--text-primary, #0f172a);
+    line-height: 1.2;
+}
+html.dark .header-title-large {
+    color: rgba(255,255,255,0.95);
+}
+
+/* Header action buttons (left / right) */
+.header-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--primary, #2D9B83);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+}
+html.dark .header-action-btn { color: var(--primary-light, #3FB39A); }
+
+.header-action-btn:active {
+    transform: scale(0.88);
+    background: rgba(0,0,0,0.05);
+}
+html.dark .header-action-btn:active {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Back button (RTL-aware) */
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--primary, #2D9B83);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 6px 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.12s ease;
+}
+.back-btn:active { opacity: 0.6; }
+
+/* RTL flip the chevron arrow */
+[dir="rtl"] .back-btn svg,
+.rtl .back-btn svg {
+    transform: scaleX(-1);
+}
+
+
+/* ═══════════════════════════════════════════════
+   3. SEARCH BAR — iOS-style
+   Rounded, glass background, magnifier icon
+   ═══════════════════════════════════════════════ */
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.875rem;
+    border-radius: 100px;
+    background: var(--glass-tint-card, rgba(250, 248, 245, 0.16));
+    backdrop-filter: var(--glass-blur-card, blur(40px) saturate(180%));
+    -webkit-backdrop-filter: var(--glass-blur-card);
+    box-shadow: var(--glass-specular-light, inset 0 0.5px 0 rgba(255,255,255,0.1));
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    cursor: text;
+}
+
+.search-bar:focus-within {
+    background: var(--glass-tint-panel, rgba(250, 248, 245, 0.22));
+    box-shadow:
+        0 0 0 2px rgba(45, 155, 131, 0.35),
+        var(--glass-specular-light);
+}
+
+.search-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--text-tertiary, #94a3b8);
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    font-weight: 400;
+    color: var(--text-primary, #0f172a);
+    min-width: 0;
+    font-family: inherit;
+}
+html.dark .search-input { color: rgba(255,255,255,0.92); }
+
+.search-input::placeholder {
+    color: var(--text-tertiary, #94a3b8);
+}
+
+.search-clear-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text-tertiary, #94a3b8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease;
+    color: white;
+    font-size: 0.625rem;
+}
+
+.search-clear-btn:hover { opacity: 0.8; }
+
+
+/* ═══════════════════════════════════════════════
+   4. SECTION HEADER — Category / Module Title
+   Name + optional "See All" link
+   ═══════════════════════════════════════════════ */
+
+.section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding: 0 var(--space-page-x, 1.25rem);
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary, #0f172a);
+    line-height: 1.2;
+}
+html.dark .section-title { color: rgba(255,255,255,0.95); }
+
+/* Colored accent variants */
+.section-title.accent-health  { color: var(--section-health, #0d9488); }
+.section-title.accent-medical { color: var(--section-medical, #3b82f6); }
+.section-title.accent-shop    { color: var(--section-shop, #ea580c); }
+.section-title.accent-mind    { color: var(--section-community, #8b5cf6); }
+
+.section-see-all {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary, #2D9B83);
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.12s ease;
+    white-space: nowrap;
+}
+.section-see-all:active { opacity: 0.6; }
+html.dark .section-see-all { color: var(--primary-light, #3FB39A); }
+
+
+/* ═══════════════════════════════════════════════
+   5. MODULE HUB GRID — App Library style 2×2
+   Category sections like iOS App Library folders
+   ═══════════════════════════════════════════════ */
+
+.hub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+    padding: 0 var(--space-page-x, 1.25rem);
+}
+
+.hub-card {
+    position: relative;
+    border-radius: var(--radius-2xl, 1.75rem);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    min-height: 140px;
+    overflow: hidden;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.18s ease;
+}
+
+.hub-card:active {
+    transform: scale(0.96);
+}
+
+@media (hover: hover) {
+    .hub-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.10);
+    }
+}
+
+/* Color themes for hub cards */
+.hub-card-health  { background: linear-gradient(145deg, rgba(13,148,136,0.25) 0%, rgba(45,155,131,0.15) 100%); }
+.hub-card-medical { background: linear-gradient(145deg, rgba(59,130,246,0.25) 0%, rgba(99,102,241,0.15) 100%); }
+.hub-card-shop    { background: linear-gradient(145deg, rgba(234,88,12,0.22)  0%, rgba(245,158,11,0.15) 100%); }
+.hub-card-mind    { background: linear-gradient(145deg, rgba(139,92,246,0.25) 0%, rgba(168,85,247,0.15) 100%); }
+.hub-card-care    { background: linear-gradient(145deg, rgba(236,72,153,0.22) 0%, rgba(239,68,68,0.15) 100%); }
+.hub-card-learn   { background: linear-gradient(145deg, rgba(16,185,129,0.22) 0%, rgba(52,211,153,0.15) 100%); }
+
+/* Background icon — large, faded, decorative */
+.hub-card-bg-icon {
+    position: absolute;
+    bottom: -8px;
+    right: -4px;
+    font-size: 4.5rem;
+    opacity: 0.12;
+    pointer-events: none;
+    transform: rotate(-10deg);
+    line-height: 1;
+    filter: grayscale(20%);
+}
+[dir="rtl"] .hub-card-bg-icon,
+.rtl .hub-card-bg-icon {
+    right: auto;
+    left: -4px;
+    transform: scaleX(-1) rotate(-10deg);
+}
+
+.hub-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: rgba(255,255,255,0.18);
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.3);
+}
+
+.hub-card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text-primary, #0f172a);
+    line-height: 1.2;
+}
+html.dark .hub-card-title { color: rgba(255,255,255,0.95); }
+
+.hub-card-subtitle {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.3;
+}
+html.dark .hub-card-subtitle { color: rgba(255,255,255,0.5); }
+
+
+/* ═══════════════════════════════════════════════
+   6. PAGE CONTENT AREA
+   Proper spacing for tab bar + header
+   ═══════════════════════════════════════════════ */
+
+.page-content {
+    /* Space above content (header height) */
+    padding-top: 56px;
+    /* Space below content (tab bar + safe area) */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    min-height: 100dvh;
+}
+
+/* Safe-area-aware horizontal padding */
+.page-x-pad {
+    padding-left:  max(var(--space-page-x, 1.25rem), env(safe-area-inset-left));
+    padding-right: max(var(--space-page-x, 1.25rem), env(safe-area-inset-right));
+}
+
+
+/* ═══════════════════════════════════════════════
+   7. PULL-TO-REFRESH INDICATOR
+   iOS-authentic circular spinner
+   ═══════════════════════════════════════════════ */
+
+.pull-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+    color: var(--text-tertiary, #94a3b8);
+    font-size: 0.8125rem;
+    gap: 0.5rem;
+    transition: opacity 0.2s ease;
+}
+
+.pull-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0,0,0,0.06);
+    border-top-color: var(--primary, #2D9B83);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+html.dark .pull-spinner {
+    border-color: rgba(255,255,255,0.06);
+    border-top-color: var(--primary-light, #3FB39A);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

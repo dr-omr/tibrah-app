@@ -12,6 +12,9 @@ import { localArticles, Article } from '@/lib/articles';
 import type { GetStaticProps, InferGetStaticPropsType } from 'next';
 import { useRouter } from 'next/router';
 import { createPageUrl } from '@/utils';
+import ContentPlayer from '@/components/library/ContentPlayer';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export const getStaticProps: GetStaticProps<{ initialArticles: Article[] }> = async () => {
     return { props: { initialArticles: localArticles } };
@@ -27,8 +30,74 @@ const CATEGORIES = [
 
 export default function Library({ initialArticles }: InferGetStaticPropsType<typeof getStaticProps>) {
     const router = useRouter();
+    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
+    
+    // Player State
+    const [playerConfig, setPlayerConfig] = useState<any>(null);
+    
+    // Dynamic Bookmarks (saved locally in user.settings.bookmarks)
+    const [bookmarks, setBookmarks] = useState<string[]>([]);
+    const [userSettings, setUserSettings] = useState<any>({});
+    
+    useEffect(() => {
+        const fetchSettings = async () => {
+            if (user?.id) {
+                const dbUser = await db.entities.User.get(user.id) as any;
+                if (dbUser?.settings) {
+                    setUserSettings(dbUser.settings);
+                    if (dbUser.settings.bookmarks) {
+                        setBookmarks(dbUser.settings.bookmarks);
+                    }
+                }
+            }
+        };
+        fetchSettings();
+    }, [user?.id]);
+
+    const toggleBookmark = async (e: React.MouseEvent, articleId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        haptic.selection();
+        
+        if (!user) {
+            toast.error('يجب تسجيل الدخول لحفظ المقالات');
+            return;
+        }
+
+        const newBookmarks = bookmarks.includes(articleId) 
+            ? bookmarks.filter(id => id !== articleId)
+            : [...bookmarks, articleId];
+            
+        setBookmarks(newBookmarks);
+        
+        try {
+            await db.entities.User.update(user.id, {
+                settings: { ...userSettings, bookmarks: newBookmarks }
+            });
+            setUserSettings({ ...userSettings, bookmarks: newBookmarks });
+            if (!bookmarks.includes(articleId)) {
+                toast.success('تمت الإضافة إلى المراجع المحفوظة');
+            }
+        } catch (e) {
+            toast.error('فشل حفظ التغييرات');
+        }
+    };
+    
+    // Handle Media Playback
+    const playMedia = (e: React.MouseEvent, article: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        haptic.selection();
+        setPlayerConfig({
+            title: article.title,
+            subtitle: article.category || 'مكتبة طِبرَا',
+            type: article.type === 'video' ? 'video' : 'audio',
+            src: '#', // In a real app this would be article.media_url
+            thumbnail: article.image_url
+        });
+    };
     
     // AI Semantic Search State
     const [aiAnswer, setAiAnswer] = useState<string | null>(null);
@@ -227,8 +296,15 @@ export default function Library({ initialArticles }: InferGetStaticPropsType<typ
                                             <div className="px-3 py-1 bg-white/95 backdrop-blur-md rounded-full border border-white/20 shadow-sm">
                                                 <span className="text-[10px] font-bold text-teal-700 uppercase tracking-widest">{article.category}</span>
                                             </div>
-                                            <button className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center hover:bg-white/30 transition-colors">
-                                                <Bookmark className="w-4 h-4 text-white" />
+                                            <button 
+                                                onClick={(e) => toggleBookmark(e, article.id)}
+                                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border ${
+                                                    bookmarks.includes(article.id) 
+                                                    ? 'bg-teal-500 text-white border-teal-500' 
+                                                    : 'bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30'
+                                                }`}
+                                            >
+                                                <Bookmark className={`w-4 h-4 ${bookmarks.includes(article.id) ? 'fill-current' : ''}`} />
                                             </button>
                                         </div>
 
@@ -237,10 +313,13 @@ export default function Library({ initialArticles }: InferGetStaticPropsType<typ
                                             <p className="text-[13px] text-white/90 font-medium line-clamp-2 mb-4 leading-relaxed">{article.summary}</p>
                                             
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-600/30">
+                                                <button 
+                                                    onClick={(e) => (article.type === 'video' || article.type === 'audio') && playMedia(e, article)}
+                                                    className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-600/30 active:scale-95 transition-transform"
+                                                >
                                                     <PlayCircle className="w-5 h-5 text-white ml-0.5" />
-                                                </div>
-                                                <span className="text-xs font-bold text-white uppercase tracking-widest">{article.type === 'video' ? 'شاهد الآن' : 'اقرأ الآن'}</span>
+                                                </button>
+                                                <span className="text-xs font-bold text-white uppercase tracking-widest">{article.type === 'video' ? 'شاهد الآن' : article.type === 'audio' ? 'استمع الآن' : 'اقرأ الآن'}</span>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -306,6 +385,18 @@ export default function Library({ initialArticles }: InferGetStaticPropsType<typ
                     )}
                 </section>
             </main>
+
+            {/* Global Content Player */}
+            {playerConfig && (
+                <ContentPlayer 
+                    title={playerConfig.title}
+                    subtitle={playerConfig.subtitle}
+                    type={playerConfig.type}
+                    src={playerConfig.src}
+                    thumbnail={playerConfig.thumbnail}
+                    onClose={() => setPlayerConfig(null)}
+                />
+            )}
         </div>
     );
 }

@@ -1,14 +1,18 @@
 // components/common/OnboardingFlow.tsx
 // Premium animated onboarding experience for new users
+// Syncs preferences to Firestore for personalized experience
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
 import {
     Heart, Activity, Brain, Sparkles, ChevronLeft,
     Shield, Zap, Star, CheckCircle2, ArrowRight,
-    Stethoscope, Utensils, Moon, Droplets, Flame
+    Stethoscope, Utensils, Moon, Droplets, Flame,
+    Target, Dumbbell, Pill
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { db } from '@/lib/db';
 
 // ============================================
 // ONBOARDING STEPS DATA
@@ -35,34 +39,56 @@ const healthInterests = [
     { id: 'weight', label: 'إدارة الوزن', icon: Activity, color: '#14B8A6', emoji: '⚖️' },
 ];
 
+const healthGoals = [
+    { id: 'lose_weight', label: 'إنقاص الوزن', icon: Target, color: '#EF4444', emoji: '🎯' },
+    { id: 'build_muscle', label: 'بناء العضلات', icon: Dumbbell, color: '#8B5CF6', emoji: '💪' },
+    { id: 'better_sleep', label: 'نوم أفضل', icon: Moon, color: '#6366F1', emoji: '🌙' },
+    { id: 'reduce_stress', label: 'تقليل التوتر', icon: Brain, color: '#EC4899', emoji: '🧘' },
+    { id: 'eat_healthy', label: 'أكل صحي', icon: Utensils, color: '#22C55E', emoji: '🥗' },
+    { id: 'manage_chronic', label: 'إدارة مرض مزمن', icon: Pill, color: '#F59E0B', emoji: '💊' },
+    { id: 'more_energy', label: 'طاقة أكثر', icon: Flame, color: '#F97316', emoji: '⚡' },
+    { id: 'gut_health', label: 'صحة الأمعاء', icon: Heart, color: '#14B8A6', emoji: '🦠' },
+];
+
 // ============================================
 // ANIMATED PARTICLES
 // ============================================
 
 function FloatingParticles({ color }: { color: string }) {
+    // PERF-1 FIX: Pre-compute random particle data once per mount
+    const particles = useMemo(() =>
+        Array.from({ length: 12 }, () => ({
+            width: Math.random() * 8 + 4,
+            left: Math.random() * 100,
+            top: Math.random() * 100,
+            xDrift: Math.random() * 20 - 10,
+            duration: Math.random() * 3 + 3,
+            delay: Math.random() * 2,
+        })), []);
+
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {Array.from({ length: 12 }).map((_, i) => (
+            {particles.map((p, i) => (
                 <motion.div
                     key={i}
                     className="absolute rounded-full"
                     style={{
-                        width: Math.random() * 8 + 4,
-                        height: Math.random() * 8 + 4,
+                        width: p.width,
+                        height: p.width,
                         backgroundColor: `${color}30`,
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
+                        left: `${p.left}%`,
+                        top: `${p.top}%`,
                     }}
                     animate={{
                         y: [0, -30, 0],
-                        x: [0, Math.random() * 20 - 10, 0],
+                        x: [0, p.xDrift, 0],
                         opacity: [0.3, 0.8, 0.3],
                         scale: [1, 1.5, 1],
                     }}
                     transition={{
-                        duration: Math.random() * 3 + 3,
+                        duration: p.duration,
                         repeat: Infinity,
-                        delay: Math.random() * 2,
+                        delay: p.delay,
                         ease: 'easeInOut',
                     }}
                 />
@@ -104,24 +130,76 @@ interface OnboardingFlowProps {
 
 export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     const router = useRouter();
+    const { user } = useAuth();
     const [step, setStep] = useState(0);
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+    const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
     const [userName, setUserName] = useState('');
     const [direction, setDirection] = useState(1);
+    const [saving, setSaving] = useState(false);
 
-    const totalSteps = 4;
+    const totalSteps = 5;
 
-    const nextStep = () => {
+    // Pre-fill name from auth profile
+    useEffect(() => {
+        if (user?.name && user.name !== 'مستخدم') {
+            setUserName(user.name);
+        } else if (user?.displayName) {
+            setUserName(user.displayName);
+        }
+    }, [user]);
+
+    const saveOnboardingData = async () => {
+        setSaving(true);
+        try {
+            // Always cache locally for fast reads
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('onboardingComplete', 'true');
+                localStorage.setItem('healthInterests', JSON.stringify(selectedInterests));
+                localStorage.setItem('healthGoals', JSON.stringify(selectedGoals));
+                if (userName) localStorage.setItem('userName', userName);
+            }
+
+            // Sync to Firestore if we have an authenticated user
+            if (user?.id) {
+                try {
+                    await db.entities.User.update(user.id, {
+                        onboarding_complete: true,
+                        health_interests: selectedInterests,
+                        health_goals: selectedGoals,
+                        display_name: userName || user.name || 'مستخدم',
+                        onboarding_completed_at: new Date().toISOString(),
+                    });
+                    console.log('✅ Onboarding data synced to Firestore');
+                } catch (e) {
+                    // If update fails (user doc doesn't exist yet), try create
+                    try {
+                        await db.entities.User.create({
+                            id: user.id,
+                            email: user.email,
+                            name: userName || user.name || 'مستخدم',
+                            onboarding_complete: true,
+                            health_interests: selectedInterests,
+                            health_goals: selectedGoals,
+                            display_name: userName || user.name || 'مستخدم',
+                            onboarding_completed_at: new Date().toISOString(),
+                        } as any);
+                    } catch (createErr) {
+                        console.warn('Onboarding sync failed, data saved locally', createErr);
+                    }
+                }
+            }
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const nextStep = async () => {
         if (step < totalSteps - 1) {
             setDirection(1);
             setStep(s => s + 1);
         } else {
-            // Complete onboarding
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('onboardingComplete', 'true');
-                localStorage.setItem('healthInterests', JSON.stringify(selectedInterests));
-                if (userName) localStorage.setItem('userName', userName);
-            }
+            await saveOnboardingData();
             onComplete();
         }
     };
@@ -139,9 +217,20 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         );
     };
 
-    const skipOnboarding = () => {
+    const toggleGoal = (id: string) => {
+        setSelectedGoals(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const skipOnboarding = async () => {
         if (typeof window !== 'undefined') {
             localStorage.setItem('onboardingComplete', 'true');
+        }
+        if (user?.id) {
+            try {
+                await db.entities.User.update(user.id, { onboarding_complete: true });
+            } catch { /* ignore */ }
         }
         onComplete();
     };
@@ -426,8 +515,92 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                             </div>
                         )}
 
-                        {/* Step 3: Ready */}
+                        {/* Step 3: Health Goals */}
                         {step === 3 && (
+                            <div className="flex-1 flex flex-col items-center pt-8 relative">
+                                <FloatingParticles color="#F59E0B" />
+
+                                <motion.div
+                                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6 shadow-xl shadow-amber-500/25"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', delay: 0.1 }}
+                                >
+                                    <Target className="w-9 h-9 text-white" />
+                                </motion.div>
+
+                                <motion.h2
+                                    className="text-2xl font-bold text-slate-900 dark:text-white mb-2 text-center"
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    ما هدفك الصحي الرئيسي؟
+                                </motion.h2>
+                                <motion.p
+                                    className="text-slate-500 dark:text-slate-400 mb-6 text-center"
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    اختر أهدافك ونساعدك تحققها 🎯
+                                </motion.p>
+
+                                <motion.div
+                                    className="grid grid-cols-2 gap-3 w-full max-w-sm overflow-y-auto flex-1 pb-4"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                >
+                                    {healthGoals.map((goal, idx) => {
+                                        const isSelected = selectedGoals.includes(goal.id);
+                                        const Icon = goal.icon;
+                                        return (
+                                            <motion.button
+                                                key={goal.id}
+                                                className={`relative p-4 rounded-2xl border-2 transition-all text-right ${isSelected
+                                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                                                    : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-200 dark:hover:border-slate-700'
+                                                    }`}
+                                                onClick={() => toggleGoal(goal.id)}
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.4 + idx * 0.06 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                {isSelected && (
+                                                    <motion.div
+                                                        className="absolute top-2 left-2"
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: 1 }}
+                                                        transition={{ type: 'spring', stiffness: 500 }}
+                                                    >
+                                                        <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                                                    </motion.div>
+                                                )}
+                                                <div className="text-2xl mb-2">{goal.emoji}</div>
+                                                <div className="font-semibold text-sm text-slate-800 dark:text-white">{goal.label}</div>
+                                            </motion.button>
+                                        );
+                                    })}
+                                </motion.div>
+
+                                {selectedGoals.length > 0 && (
+                                    <motion.div
+                                        className="text-center py-2"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                    >
+                                        <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                                            {selectedGoals.length} أهداف محددة ✓
+                                        </span>
+                                    </motion.div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Step 4: Ready */}
+                        {step === 4 && (
                             <div className="flex-1 flex flex-col items-center justify-center text-center relative">
                                 <FloatingParticles color="#F59E0B" />
 
@@ -475,8 +648,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                                     transition={{ delay: 0.6 }}
                                 >
                                     {[
-                                        { num: '25+', label: 'أداة صحية', color: '#2D9B83' },
-                                        { num: '100+', label: 'وصفة طبية', color: '#8B5CF6' },
+                                        { num: selectedInterests.length > 0 ? `${selectedInterests.length}` : '25+', label: selectedInterests.length > 0 ? 'اهتمام صحي' : 'أداة صحية', color: '#2D9B83' },
+                                        { num: selectedGoals.length > 0 ? `${selectedGoals.length}` : '100+', label: selectedGoals.length > 0 ? 'هدف محدد' : 'وصفة طبية', color: '#8B5CF6' },
                                         { num: 'AI', label: 'ذكاء اصطناعي', color: '#F59E0B' },
                                     ].map((stat, idx) => (
                                         <motion.div
@@ -500,14 +673,24 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             {/* Bottom CTA */}
             <div className="px-6 pb-8 safe-bottom">
                 <motion.button
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-lg shadow-xl shadow-primary/25 flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-lg shadow-xl shadow-primary/25 flex items-center justify-center gap-2 disabled:opacity-60"
                     onClick={nextStep}
+                    disabled={saving}
                     whileTap={{ scale: 0.97 }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                 >
-                    {step === totalSteps - 1 ? (
+                    {saving ? (
+                        <>
+                            <motion.div
+                                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            />
+                            جاري الحفظ...
+                        </>
+                    ) : step === totalSteps - 1 ? (
                         <>
                             <Sparkles className="w-5 h-5" />
                             ابدأ تجربتك

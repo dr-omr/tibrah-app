@@ -9,7 +9,7 @@ import {
     ChevronRight, Sparkles, Award, Loader2, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { aiClient } from '@/components/ai/aiClient';
 import { downloadHealthCSV, downloadHealthReport } from '@/lib/healthExport';
 

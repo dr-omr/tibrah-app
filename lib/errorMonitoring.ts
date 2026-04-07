@@ -57,6 +57,32 @@ function saveToStorage(): void {
     }
 }
 
+let isSyncing = false;
+async function syncErrorsToServer(): Promise<void> {
+    if (typeof window === 'undefined' || !navigator.onLine || errorStore.length === 0 || isSyncing) return;
+    
+    // Throttle global error syncs to once every 2 minutes
+    const lastSync = parseInt(localStorage.getItem('tibrah_last_err_sync') || '0', 10);
+    if (Date.now() - lastSync < 2 * 60 * 1000) return;
+
+    isSyncing = true;
+    try {
+        const response = await fetch('/api/telemetry/errors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ errors: errorStore })
+        });
+
+        if (response.ok) {
+            localStorage.setItem('tibrah_last_err_sync', Date.now().toString());
+        }
+    } catch {
+        // Fail silently to prevent cascade errors
+    } finally {
+        isSyncing = false;
+    }
+}
+
 function generateId(message: string, source: string): string {
     // Simple hash for deduplication
     let hash = 0;
@@ -119,6 +145,11 @@ export function trackError(
     }
 
     saveToStorage();
+    
+    // Async synchronization to central server
+    if (severity === 'critical' || severity === 'high') {
+        syncErrorsToServer();
+    }
 }
 
 /**

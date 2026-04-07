@@ -5,6 +5,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    html, body {
+        /* This applies the elite Canvas & Obsidian colors instantly to all pages */
+        @apply bg-tibrah-canvas text-tibrah-obsidian font-sans overflow-x-hidden antialiased;
+    }
+    
+    ::selection {
+        @apply bg-tibrah-teal text-white;
+    }
+}
+
 /* ===================================================
    TIBRAH Design System - Modules
    =================================================== */
@@ -14,11 +25,13 @@
 @import './base/dark-variables.css';
 @import './base/base.css';
 @import './base/typography.css';
+@import './base/background.css';
 
 /* Layout & Utilities */
 @import './utilities/layout.css';
 @import './utilities/mobile.css';
 @import './utilities/animations.css';
+@import './utilities/liquid.css';
 
 /* Components */
 @import './components/common.css';
@@ -27,6 +40,10 @@
 @import './components/cards.css';
 @import './components/ui.css';
 @import './components/therapeutic.css';
+@import './components/health.css';
+@import './components/navigation.css';
+@import './components/auth.css';
+@import './components/auth-premium.css';
 
 /* ===================================================
    Accessibility: High Contrast Mode Overrides

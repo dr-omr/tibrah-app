@@ -10,11 +10,12 @@ import {
     Activity, ArrowLeft, Brain, HeartPulse, ActivitySquare, Zap, Clock, AlertCircle, ShieldAlert, Sparkles, Stethoscope, AlertTriangle, ChevronLeft, ChevronRight, MessageCircle, Thermometer, Wind, PhoneCall, ListChecks, FileText, UserCog, Edit3, Save, RefreshCw
 } from 'lucide-react';
 import { haptic } from '@/lib/HapticFeedback';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import Link from 'next/link';
 import { clinicalPathways, socratesQuestions, findSuggestedCategories, TriageLevel } from '@/lib/clinicalPathways';
 import { getRelevantProducts, getComplaintSuggestionMeta } from '@/lib/triageProductMap';
 import { localProducts } from '@/lib/products';
+import { getNativeItem, setNativeItem, removeNativeItem } from '@/lib/useCloudSync';
 
 // Clinical Flow Steps
 type IntakeStep = 'welcome' | 'demographics' | 'chief_complaint' | 'primary_selection' | 'routing_validation' | 'red_flags' | 'hpi_dynamic' | 'socrates' | 'pmh' | 'emotional' | 'review' | 'analyzing' | 'complete';
@@ -157,33 +158,33 @@ export default function QuickCheckIn() {
         setStep('complete');
     };
 
-    // Auto-save logic
+    // Auto-save logic (Native Offline Support)
     useEffect(() => {
-        const saved = localStorage.getItem('tibrah_triage_draft');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (parsed && typeof parsed === 'object' && parsed.chiefComplaintCategories) setIsDraftAvailable(true);
-            } catch(e) {}
-        }
+        const checkDraft = async () => {
+            const saved = await getNativeItem('tibrah_triage_draft');
+            if (saved && typeof saved === 'object' && saved.chiefComplaintCategories) {
+                setIsDraftAvailable(true);
+            }
+        };
+        checkDraft();
     }, []);
 
     useEffect(() => {
         if (step !== 'welcome' && step !== 'analyzing' && step !== 'complete') {
             const timeout = setTimeout(() => {
-                localStorage.setItem('tibrah_triage_draft', JSON.stringify(clinicalData));
+                setNativeItem('tibrah_triage_draft', clinicalData);
             }, 1000);
             return () => clearTimeout(timeout);
         }
     }, [clinicalData, step]);
 
-    const loadDraft = () => {
+    const loadDraft = async () => {
         haptic.selection();
-        const saved = localStorage.getItem('tibrah_triage_draft');
+        const saved = await getNativeItem('tibrah_triage_draft');
         if (saved) {
-            setClinicalData(JSON.parse(saved));
+            setClinicalData(saved);
             setStep('review'); 
-            toast.success('تم استعادة الجلسة السابقة');
+            toast.success('تم استعادة الجلسة السابقة المشفرة');
         }
     };
 
@@ -255,10 +256,10 @@ export default function QuickCheckIn() {
 
             return triageRecord;
         },
-        onSuccess: () => {
+        onSuccess: async () => {
             queryClient.invalidateQueries({ queryKey: ['clinical-triage'] });
             queryClient.invalidateQueries({ queryKey: ['triage-records'] });
-            localStorage.removeItem('tibrah_triage_draft');
+            await removeNativeItem('tibrah_triage_draft');
             setStep('complete');
             if (clinicalData.highestTriageLevel === 'routine' || clinicalData.highestTriageLevel === 'near_review') {
                 setShowConfetti(true);
@@ -268,9 +269,10 @@ export default function QuickCheckIn() {
             
             // Reward points for clinical triage completion
             if (typeof window !== 'undefined') {
-                const saved = JSON.parse(localStorage.getItem('tibrahRewards') || '{}');
-                const newPoints = (saved.points || 0) + 20;
-                localStorage.setItem('tibrahRewards', JSON.stringify({ ...saved, points: newPoints }));
+                const savedRewards = await getNativeItem('tibrahRewards') || {};
+                const newPoints = (savedRewards.points || 0) + 20;
+                await setNativeItem('tibrahRewards', { ...savedRewards, points: newPoints });
+                
                 // Also persist to DB for durability
                 db.entities.PointTransaction.createForUser(user?.id || '', {
                     user_id: user?.id || 'guest',
@@ -545,7 +547,7 @@ export default function QuickCheckIn() {
             window.open(waUrl, '_blank');
         } else {
             navigator.clipboard.writeText(text);
-            toast.success(`تم النسخ بنجاح!`, { description: target === 'doctor' ? 'تم نسخ التقرير الطبي الموحد (SOAP Note)' : 'تم نسخ الملخص الشخصي المبسط.'});
+            toast.success(`تم النسخ بنجاح!`, { body: target === 'doctor' ? 'تم نسخ التقرير الطبي الموحد (SOAP Note)' : 'تم نسخ الملخص الشخصي المبسط.'});
         }
     };
 
@@ -600,7 +602,7 @@ export default function QuickCheckIn() {
                                 </p>
                                 <div className="space-y-3 mt-auto flex flex-col gap-3">
                                     {isDraftAvailable && (
-                                        <button onClick={loadDraft} className="w-full py-3.5 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold text-[13px] flex items-center justify-center gap-2">
+                                        <button onClick={() => loadDraft()} className="w-full py-3.5 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold text-[13px] flex items-center justify-center gap-2">
                                             <Save className="w-4 h-4" /> استكمال الجلسة المحفوظة سابقاً
                                         </button>
                                     )}

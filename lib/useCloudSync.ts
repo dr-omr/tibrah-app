@@ -1,4 +1,4 @@
-// React hooks for Firestore cloud sync
+// React hooks for Firestore cloud sync and Native storage
 import { useState, useEffect, useCallback } from 'react';
 import firestoreService, {
     CloudEmotionalDisease,
@@ -289,6 +289,110 @@ export function useCloudSettings(): UseSettingsResult {
 
     return { settings, isLoading, syncStatus, updateSettings };
 }
+
+// ═══════════════════════════════════════════════════════════════
+// GENERAL CLOUD SYNC HOOK
+// ═══════════════════════════════════════════════════════════════
+
+export interface UseCloudSyncResult {
+    status: SyncStatus;
+    isOnline: boolean;
+}
+
+export function useCloudSync(): UseCloudSyncResult {
+    const [status, setStatus] = useState<SyncStatus>(() =>
+        isFirestoreAvailable() ? 'idle' : 'offline'
+    );
+    const [isOnline, setIsOnline] = useState<boolean>(
+        typeof navigator !== 'undefined' ? navigator.onLine : true
+    );
+
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true);
+            setStatus(isFirestoreAvailable() ? 'synced' : 'idle');
+        };
+        const handleOffline = () => {
+            setIsOnline(false);
+            setStatus('offline');
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        // Initial check
+        if (!isFirestoreAvailable()) {
+            setStatus('offline');
+        } else {
+            // Simulate a brief syncing state on mount
+            setStatus('syncing');
+            const timer = setTimeout(() => setStatus('synced'), 1500);
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener('online', handleOnline);
+                window.removeEventListener('offline', handleOffline);
+            };
+        }
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    return { status, isOnline };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NATIVE OFFLINE STORAGE HOOK (Capacitor Preferences)
+// ═══════════════════════════════════════════════════════════════
+
+export async function setNativeItem(key: string, value: any): Promise<void> {
+    const isCapacitor = typeof window !== 'undefined' && 'Capacitor' in window;
+    try {
+        const stringValue = JSON.stringify(value);
+        if (isCapacitor) {
+            const { Preferences } = await import('@capacitor/preferences');
+            await Preferences.set({ key, value: stringValue });
+        } else {
+            localStorage.setItem(key, stringValue);
+        }
+    } catch (e) {
+        console.error('Failed to set native offline item:', e);
+    }
+}
+
+export async function getNativeItem(key: string): Promise<any | null> {
+    const isCapacitor = typeof window !== 'undefined' && 'Capacitor' in window;
+    try {
+        if (isCapacitor) {
+            const { Preferences } = await import('@capacitor/preferences');
+            const { value } = await Preferences.get({ key });
+            return value ? JSON.parse(value) : null;
+        } else {
+            const val = localStorage.getItem(key);
+            return val ? JSON.parse(val) : null;
+        }
+    } catch (e) {
+        console.error('Failed to get native offline item:', e);
+        return null;
+    }
+}
+
+export async function removeNativeItem(key: string): Promise<void> {
+    const isCapacitor = typeof window !== 'undefined' && 'Capacitor' in window;
+    try {
+        if (isCapacitor) {
+            const { Preferences } = await import('@capacitor/preferences');
+            await Preferences.remove({ key });
+        } else {
+            localStorage.removeItem(key);
+        }
+    } catch (e) {
+        console.error('Failed to remove native offline item:', e);
+    }
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // SYNC INDICATOR COMPONENT

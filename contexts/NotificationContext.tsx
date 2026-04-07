@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 // Types
 export interface Notification {

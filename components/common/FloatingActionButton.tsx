@@ -22,12 +22,11 @@ const ChatInterface = dynamic(() => import('../agents/ChatInterface'), {
     ),
 });
 
-interface FloatingActionButtonProps {
-    onSearchOpen?: () => void;
-}
+import { useSearch } from '@/components/search-engine';
 
-export default function FloatingActionButton({ onSearchOpen }: FloatingActionButtonProps) {
+export default function FloatingActionButton() {
     const router = useRouter();
+    const { openSearch } = useSearch();
     const [isExpanded, setIsExpanded] = useState(false);
     const [showChat, setShowChat] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -58,13 +57,13 @@ export default function FloatingActionButton({ onSearchOpen }: FloatingActionBut
                 router.push('/book-appointment');
                 break;
             case 'search':
-                onSearchOpen?.();
+                openSearch();
                 break;
             case 'whatsapp':
                 window.open('https://wa.me/967771447111', '_blank');
                 break;
         }
-    }, [router, onSearchOpen]);
+    }, [router, openSearch]);
 
     if (isHidden) return null;
 

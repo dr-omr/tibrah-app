@@ -9,12 +9,17 @@ import { getUserData, setUserData } from '@/lib/userDataService';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
     Droplets, Plus, Minus, Target, TrendingUp, Clock,
-    Sparkles, Award, Settings2, Flame, Waves, Zap, RotateCcw
+    Sparkles, Award, Settings2, Flame, Waves, Zap, RotateCcw,
+    Bell, BellOff
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { 
+    getReminders, saveReminder, deleteReminder, 
+    getDefaultWaterReminders, initializeNotifications 
+} from '@/lib/pushNotifications';
 
 // Quick add options with emojis
 const QUICK_ADD_OPTIONS = [
@@ -54,6 +59,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
     const [showCelebration, setShowCelebration] = useState(false);
     const [dailyGoal, setDailyGoal] = useState(Math.round(userWeight * 35));
     const [goalLoaded, setGoalLoaded] = useState(false);
+    const [remindersEnabled, setRemindersEnabled] = useState(false);
 
     // Load user-specific goal from cloud/localStorage
     useEffect(() => {
@@ -61,9 +67,32 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
             const savedGoal = await getUserData(userId, 'waterGoalMl', Math.round(userWeight * 35));
             setDailyGoal(savedGoal);
             setGoalLoaded(true);
+
+            // Check if reminders are enabled
+            const activeReminders = getReminders().filter(r => r.type === 'water' && r.enabled);
+            setRemindersEnabled(activeReminders.length > 0);
         };
         loadGoal();
     }, [userId, userWeight]);
+
+    const toggleReminders = async () => {
+        if (!remindersEnabled) {
+            const granted = await initializeNotifications(userId || undefined);
+            if (granted) {
+                const defaults = getDefaultWaterReminders();
+                defaults.forEach(r => saveReminder(r));
+                setRemindersEnabled(true);
+                toast.success('تم تفعيل إشعارات الماء التلقائية 🔔');
+            } else {
+                toast.error('لم نتمكن من تفعيل الإشعارات. يرجى التحقق من صلاحيات المتصفح/التطبيق.');
+            }
+        } else {
+            const currentReminders = getReminders().filter(r => r.type === 'water');
+            currentReminders.forEach(r => deleteReminder(r.id));
+            setRemindersEnabled(false);
+            toast.success('تم إيقاف إشعارات الماء 🔕');
+        }
+    };
 
     // Animated values
     const animatedProgress = useMotionValue(0);
@@ -82,6 +111,21 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
             delay: i * 0.4
         })),
         []);
+
+    // PERF-1 FIX: Pre-compute add bubble and confetti positions
+    const addBubbles = useMemo(() =>
+        Array.from({ length: 8 }, () => ({
+            size: 4 + Math.random() * 8,
+            left: 10 + Math.random() * 80,
+            duration: 0.8 + Math.random() * 0.5,
+        })), []);
+
+    const confettiPositions = useMemo(() =>
+        Array.from({ length: 20 }, () => ({
+            x: (Math.random() - 0.5) * 300,
+            y: (Math.random() - 0.5) * 300,
+            rotate: Math.random() * 360,
+        })), []);
 
     // Fetch today's data
     const { data: todayLog } = useQuery<WaterLog>({
@@ -137,13 +181,13 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
     // Weekly stats
     const streak = calculateStreak(weeklyData, dailyGoal);
 
-    // Get motivational message
-    const getMessage = () => {
-        if (percentage === 0) return MESSAGES.start[Math.floor(Math.random() * MESSAGES.start.length)];
-        if (percentage >= 100) return MESSAGES.completed[Math.floor(Math.random() * MESSAGES.completed.length)];
-        if (percentage >= 80) return MESSAGES.almostThere[Math.floor(Math.random() * MESSAGES.almostThere.length)];
-        return MESSAGES.progress[Math.floor(Math.random() * MESSAGES.progress.length)];
-    };
+    // PERF-1 FIX: Stable message per percentage bracket
+    const getMessage = useMemo(() => {
+        if (percentage === 0) return MESSAGES.start[percentage % MESSAGES.start.length];
+        if (percentage >= 100) return MESSAGES.completed[percentage % MESSAGES.completed.length];
+        if (percentage >= 80) return MESSAGES.almostThere[percentage % MESSAGES.almostThere.length];
+        return MESSAGES.progress[percentage % MESSAGES.progress.length];
+    }, [percentage]);
 
     // Add water mutation with animations
     const addWaterMutation = useMutation({
@@ -274,7 +318,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            {getMessage()}
+                            {getMessage}
                         </motion.p>
                     </div>
                 </div>
@@ -334,6 +378,25 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                                     <RotateCcw className="w-5 h-5" />
                                 </motion.button>
                             </div>
+                            <div className="mt-3 pt-3 border-t border-slate-100">
+                                <Button
+                                    variant="outline"
+                                    className={`w-full flex items-center justify-center gap-2 rounded-xl ${remindersEnabled ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-700' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                                    onClick={toggleReminders}
+                                >
+                                    {remindersEnabled ? (
+                                        <>
+                                            <Bell className="w-4 h-4" />
+                                            <span>إشعارات التشجيع مفعلة</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <BellOff className="w-4 h-4" />
+                                            <span>تفعيل الإشعارات التلقائية</span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -384,19 +447,19 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                                     </motion.div>
 
                                     {/* Bubbles inside water */}
-                                    {isAddingWater && [...Array(8)].map((_, i) => (
+                                    {isAddingWater && addBubbles.map((b, i) => (
                                         <motion.div
                                             key={i}
                                             className="absolute rounded-full bg-white/50"
                                             style={{
-                                                width: 4 + Math.random() * 8,
-                                                height: 4 + Math.random() * 8,
-                                                left: `${10 + Math.random() * 80}%`,
+                                                width: b.size,
+                                                height: b.size,
+                                                left: `${b.left}%`,
                                                 bottom: 0,
                                             }}
                                             initial={{ y: 0, opacity: 0 }}
                                             animate={{ y: [-100, -200], opacity: [0, 0.8, 0] }}
-                                            transition={{ duration: 0.8 + Math.random() * 0.5, delay: i * 0.05 }}
+                                            transition={{ duration: b.duration, delay: i * 0.05 }}
                                         />
                                     ))}
                                 </motion.div>
@@ -524,7 +587,7 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                             </motion.div>
 
                             {/* Confetti */}
-                            {[...Array(20)].map((_, i) => (
+                            {confettiPositions.map((c, i) => (
                                 <motion.div
                                     key={i}
                                     className="absolute w-3 h-3 rounded-full"
@@ -534,9 +597,9 @@ export default function WaterTrackerPro({ userWeight = 70 }: { userWeight?: numb
                                         left: '50%',
                                     }}
                                     animate={{
-                                        x: (Math.random() - 0.5) * 300,
-                                        y: (Math.random() - 0.5) * 300,
-                                        rotate: Math.random() * 360,
+                                        x: c.x,
+                                        y: c.y,
+                                        rotate: c.rotate,
                                         opacity: [1, 0],
                                     }}
                                     transition={{ duration: 1.5, ease: "easeOut" }}

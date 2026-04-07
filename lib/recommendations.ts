@@ -2,35 +2,43 @@ import { db } from '@/lib/db';
 
 export interface Recommendation {
     id: string;
-    type: 'product' | 'frequency' | 'article';
+    type: 'product' | 'frequency' | 'article' | 'action';
     title: string;
     subtitle: string;
-    image?: string; // or icon
+    image?: string;
     reason: string;
     actionLabel: string;
     actionLink: string;
     priority: number; // 99 = highest
 }
 
-export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
+export const generateRecommendations = async (userId: string): Promise<Recommendation[]> => {
     const recs: Recommendation[] = [];
+    if (!userId) return recs;
     const today = new Date().toISOString().split('T')[0];
 
-    // 1. Fetch User Data
-    const dailyLogs = await db.entities.DailyLog.filter({ date: today });
+    // 1. Fetch User Data (parallel)
+    const [dailyLogs, sleepLogs, waterLogs, userProfile] = await Promise.all([
+        db.entities.DailyLog.filter({ date: today, user_id: userId }).catch(() => []),
+        db.entities.SleepLog.listForUser(userId, '-date', 1).catch(() => []),
+        db.entities.WaterLog.filter({ date: today, user_id: userId }).catch(() => []),
+        db.entities.User.get(userId).catch(() => null),
+    ]);
+
     const log = dailyLogs[0] || null;
-
-    const sleepLogs = await db.entities.SleepLog.list('-date', 1);
     const lastSleep = sleepLogs[0] || null;
-
-    const waterLogs = await db.entities.WaterLog.filter({ date: today });
     const water = waterLogs[0] || { glasses: 0 };
 
-    // 2. Logic Rules
+    // Extract user goals and interests from onboarding profile
+    const goals = (userProfile as any)?.health_goals as string[] || [];
+    const interests = (userProfile as any)?.health_interests as string[] || [];
+
+    // ═══════════════════════════════════════════════════════════
+    // REAL-TIME HEALTH DATA RULES
+    // ═══════════════════════════════════════════════════════════
 
     // --- Rule A: Low Energy ---
     if (log?.energy_level && Number(log.energy_level) <= 2) {
-        // Fetch High Energy Products
         const vitamins = await db.entities.Product.filter({ category: 'vitamins' }, undefined, 1);
         if (vitamins[0]) {
             recs.push({
@@ -46,9 +54,7 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
             });
         }
 
-        // Suggest Energy Frequency
         const freqs = await db.entities.RifeFrequency.filter({ category: 'disease_support' }, undefined, 1);
-        // Note: In real app, we'd search for "Fatigue" or "Energy" tags
         if (freqs[0]) {
             recs.push({
                 id: 'rec_energy_freq',
@@ -72,7 +78,7 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
             subtitle: 'دقيقة واحدة للهدوء',
             reason: 'مستوى توترك مرتفع 😰',
             actionLabel: 'ابدأ التمرين',
-            actionLink: '/library/breathing-exercise', // Mock link
+            actionLink: '/meditation',
             priority: 95
         });
 
@@ -101,28 +107,138 @@ export const getSmartRecommendations = async (): Promise<Recommendation[]> => {
             subtitle: 'هل تعلم أن الجفاف يقلل التركيز؟',
             reason: 'لم تشرب كفايتك بعد 💧',
             actionLabel: 'سجل كوب ماء',
-            actionLink: '/health-tracker', // Should trigger widget focus ideally
+            actionLink: '/health-tracker',
             priority: 80
         });
     }
 
     // --- Rule D: Poor Sleep ---
     if (lastSleep && Number(lastSleep.duration_hours) < 5) {
-        const sleepFreq = await db.entities.RifeFrequency.list('-created_at', 1); // Mock: get any freq
-        if (sleepFreq[0]) {
+        recs.push({
+            id: 'rec_sleep_freq',
+            type: 'frequency',
+            title: 'نوم عميق',
+            subtitle: 'ترددات دلتا للنوم',
+            reason: 'نعوض نقص النوم الليلة 🌙',
+            actionLabel: 'تشغيل',
+            actionLink: '/meditation',
+            priority: 92
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PERSONALIZED GOAL-BASED RECOMMENDATIONS
+    // Uses onboarding health_goals + health_interests
+    // ═══════════════════════════════════════════════════════════
+
+    if (goals.includes('lose_weight') && !recs.find(r => r.id.includes('weight'))) {
+        recs.push({
+            id: 'rec_goal_weight',
+            type: 'action',
+            title: 'خطة إنقاص الوزن',
+            subtitle: 'نظام صيام متقطع + تغذية',
+            reason: 'مطابق لهدفك: إنقاص الوزن ⚖️',
+            actionLabel: 'عرض الخطة',
+            actionLink: '/meal-planner',
+            priority: 75
+        });
+    }
+
+    if (goals.includes('better_sleep') && !(lastSleep && Number(lastSleep.duration_hours) < 5)) {
+        recs.push({
+            id: 'rec_goal_sleep',
+            type: 'action',
+            title: 'روتين نوم ذهبي',
+            subtitle: 'استرخاء مسائي لنوم عميق',
+            reason: 'مطابق لهدفك: نوم أفضل 🌙',
+            actionLabel: 'ابدأ الروتين',
+            actionLink: '/meditation',
+            priority: 70
+        });
+    }
+
+    if (goals.includes('reduce_stress') && !(log?.stress_level && Number(log.stress_level) >= 4)) {
+        recs.push({
+            id: 'rec_goal_stress',
+            type: 'action',
+            title: 'تأمل الهدوء الداخلي',
+            subtitle: '5 دقائق يومياً تصنع الفرق',
+            reason: 'مطابق لهدفك: تقليل التوتر 🧘',
+            actionLabel: 'ابدأ',
+            actionLink: '/meditation',
+            priority: 68
+        });
+    }
+
+    if (goals.includes('eat_healthy')) {
+        recs.push({
+            id: 'rec_goal_nutrition',
+            type: 'action',
+            title: 'مخطط وجبات مخصص',
+            subtitle: 'وجبات صحية مبنية على حالتك',
+            reason: 'مطابق لهدفك: أكل صحي 🥗',
+            actionLabel: 'خطط وجباتك',
+            actionLink: '/meal-planner',
+            priority: 72
+        });
+    }
+
+    if (goals.includes('manage_chronic')) {
+        recs.push({
+            id: 'rec_goal_chronic',
+            type: 'action',
+            title: 'احجز جلسة تشخيصية',
+            subtitle: '25 ر.س فقط — مع د. عمر العماد',
+            reason: 'لإدارة حالتك المزمنة بشكل أفضل 💊',
+            actionLabel: 'احجز الآن',
+            actionLink: '/book-appointment',
+            priority: 85
+        });
+    }
+
+    if (goals.includes('more_energy') && !(log?.energy_level && Number(log.energy_level) <= 2)) {
+        recs.push({
+            id: 'rec_goal_energy',
+            type: 'action',
+            title: 'بروتوكول الطاقة اليومي',
+            subtitle: 'حركة + تغذية + ترددات',
+            reason: 'مطابق لهدفك: طاقة أكثر ⚡',
+            actionLabel: 'عرض البروتوكول',
+            actionLink: '/health-tracker',
+            priority: 65
+        });
+    }
+
+    if (goals.includes('gut_health')) {
+        recs.push({
+            id: 'rec_goal_gut',
+            type: 'action',
+            title: 'صحة الأمعاء والميكروبيوم',
+            subtitle: 'دعم البروبيوتيك والألياف',
+            reason: 'مطابق لهدفك: صحة الأمعاء 🦠',
+            actionLabel: 'اكتشف',
+            actionLink: '/library',
+            priority: 60
+        });
+    }
+
+    // Interest-based: if user is interested in fasting but no active session
+    if (interests.includes('fasting')) {
+        const activeFasting = await db.entities.FastingSession.filter({ completed: false, user_id: userId }).catch(() => []);
+        if (activeFasting.length === 0) {
             recs.push({
-                id: 'rec_sleep_freq',
-                type: 'frequency',
-                title: 'نوم عميق',
-                subtitle: 'ترددات دلتا للنوم',
-                reason: 'نعوض نقص النوم الليلة 🌙',
-                actionLabel: 'تشغيل',
-                actionLink: `/frequencies/${sleepFreq[0].id}`,
-                priority: 92
+                id: 'rec_interest_fasting',
+                type: 'action',
+                title: 'ابدأ جلسة صيام جديدة',
+                subtitle: 'الصيام المتقطع يعزز الأيض',
+                reason: 'مبني على اهتمامك بالصيام 🔥',
+                actionLabel: 'ابدأ صيام',
+                actionLink: '/health-tracker',
+                priority: 55
             });
         }
     }
 
-    // Sort by priority
-    return recs.sort((a, b) => b.priority - a.priority);
+    // Sort by priority (highest first), limit to top 6
+    return recs.sort((a, b) => b.priority - a.priority).slice(0, 6);
 };

@@ -324,3 +324,65 @@ export interface Reminder extends EntityBase {
     active?: boolean;
     notes?: string;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// DIGITAL CARE ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+export interface ClinicalCase extends EntityBase {
+    user_id: string;
+    status: 'open' | 'in_review' | 'closed' | 'urgent_escalation';
+    chief_complaint?: string;
+    triage_level?: 'emergency' | 'needs_doctor' | 'manageable' | 'suitable_for_review';
+    payment_status?: 'pending' | 'paid' | 'manual' | 'failed';
+    created_at: string;
+    updated_at: string;
+    notes?: string;
+}
+
+export interface TriageResult extends EntityBase {
+    case_id: string;
+    urgency_level: 'emergency' | 'high' | 'medium' | 'low';
+    recommended_action: string;
+    red_flags_detected: string[];
+    summary: string;
+}
+
+export interface UploadedFile extends EntityBase {
+    user_id: string;
+    case_id?: string;
+    file_type: 'lab_report' | 'prescription' | 'scan' | 'photo' | 'other';
+    file_url: string;
+    file_name: string;
+    review_status: 'pending' | 'reviewed';
+    upload_date: string;
+}
+
+export interface ServiceProduct extends EntityBase {
+    name: string;
+    description: string;
+    price: number;
+    turnaround_time_hours: number;
+    features: string[];
+    is_active: boolean;
+}
+
+export interface ServiceOrder extends EntityBase {
+    user_id: string;
+    product_id: string;
+    case_id?: string;
+    status: 'pending' | 'paid' | 'in_progress' | 'completed' | 'failed';
+    amount: number;
+    payment_method?: string;
+    order_date: string;
+}
+
+export interface CarePlan extends EntityBase {
+    user_id: string;
+    case_id?: string;
+    daily_instructions: string[];
+    medications: string[]; // Medication IDs or names
+    notes: string;
+    next_review_date?: string;
+    progress: number;
+}

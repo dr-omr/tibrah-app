@@ -3,7 +3,7 @@ import { Droplets, Plus, Minus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format } from 'date-fns';
 
 interface WaterWidgetProps {

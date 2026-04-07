@@ -28,6 +28,7 @@ const SymptomLogger = dynamic(() => import('@/components/health-tracker/SymptomL
 const DailyCheckIn = dynamic(() => import('@/components/health-tracker/DailyCheckIn'), { ssr: false });
 const AIContextAssistant = dynamic(() => import('@/components/ai/AIContextAssistant'), { ssr: false });
 const InsightCard = dynamic(() => import('@/components/health-tracker/InsightCard'), { ssr: false });
+const InsightCards = dynamic(() => import('@/components/health-tracker/InsightCards'), { ssr: false });
 const ActionGrid = dynamic(() => import('@/components/health-tracker/ActionGrid'), { ssr: false });
 const MoodSymptomPicker = dynamic(() => import('@/components/health-tracker/MoodSymptomPicker'), { ssr: false });
 const WeeklyHealthReport = dynamic(() => import('@/components/health-tracker/WeeklyHealthReport'), { ssr: false });
@@ -94,6 +95,9 @@ export default function HealthTracker() {
                             
                             {/* WEARABLES SYNC WIDGET */}
                             <WearablesSync />
+
+                            {/* DYNAMIC HEALTH INSIGHTS ENGINE */}
+                            <InsightCards />
 
                             {/* Hero Insight Cards Grid */}
                             <div className="grid grid-cols-2 gap-3">

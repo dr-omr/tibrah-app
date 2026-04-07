@@ -19,7 +19,8 @@ const SERVER_ADMIN_EMAILS = (
     process.env.ADMIN_EMAILS || 'dr.omar@tibrah.com'
 ).split(',').map(e => e.trim().toLowerCase());
 
-const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
+// BUG-4 FIX: Reduced from 7 days to 1 day to limit exposure for revoked Firebase users
+const SESSION_MAX_AGE = 60 * 60 * 24 * 1; // 1 day in seconds
 
 function getSessionSecret(): Uint8Array {
     const secret = process.env.SESSION_SECRET;
@@ -83,9 +84,9 @@ export default async function handler(
         const securePart = isProduction ? '; Secure' : '';
 
         res.setHeader('Set-Cookie', [
-            `tibrah_session=${sessionToken}; HttpOnly; Path=/; Max-Age=${SESSION_MAX_AGE}; SameSite=Lax${securePart}`,
+            `tibrah_session=${sessionToken}; HttpOnly; Path=/; Max-Age=${SESSION_MAX_AGE}; SameSite=Strict${securePart}`,
             // Clear old client-set cookie reliably
-            `tibrah_auth=; Path=/; Max-Age=0; SameSite=Lax${securePart}`,
+            `tibrah_auth=; Path=/; Max-Age=0; SameSite=Strict${securePart}`,
         ]);
 
         return res.status(200).json({ ok: true });

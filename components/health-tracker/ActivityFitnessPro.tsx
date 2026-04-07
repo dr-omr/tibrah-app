@@ -1,7 +1,7 @@
 // components/health-tracker/ActivityFitnessPro.tsx
 // PREMIUM Interactive Activity & Fitness with Apple Watch Style Rings
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -122,20 +122,27 @@ export default function ActivityFitnessPro() {
             }
             return db.entities.DailyLog.createForUser(userId || '', { date: today, ...updateData });
         },
-        onSuccess: () => {
+        onSuccess: async () => {
             queryClient.invalidateQueries({ queryKey: ['activityPro'] });
             setShowWorkoutSheet(false);
 
             const newCalories = (activity?.moveCalories || 0) + (selectedWorkout.caloriesPerMin * workoutDuration);
-            const newMinutes = (activity?.exerciseMinutes || 0) + workoutDuration;
 
             // Check if completed rings
             if (newCalories >= DEFAULT_GOALS.moveGoal && (activity?.moveCalories || 0) < DEFAULT_GOALS.moveGoal) {
                 setShowCelebration(true);
                 setTimeout(() => setShowCelebration(false), 3000);
+                
+                // Reward Points for completing move goal!
+                if (typeof window !== 'undefined') {
+                    const saved = JSON.parse(localStorage.getItem('tibrahRewards') || '{"points":0}');
+                    saved.points += 50;
+                    localStorage.setItem('tibrahRewards', JSON.stringify(saved));
+                    toast.success('🎉 هدف ملأ حلقة النشاط تحقق! +50 نقطة مكافأة', { duration: 5000 });
+                }
+            } else {
+                toast.success(`🔥 +${selectedWorkout.caloriesPerMin * workoutDuration} سعرة! إضافة ناجحة.`);
             }
-
-            toast.success(`🔥 +${selectedWorkout.caloriesPerMin * workoutDuration} سعرة!`);
         },
     });
 
@@ -202,6 +209,21 @@ export default function ActivityFitnessPro() {
         );
     };
 
+    // PERF-1 FIX: Pre-compute random particle positions once
+    const activityParticles = useMemo(() =>
+        Array.from({ length: 15 }, () => ({
+            top: Math.random() * 100,
+            left: Math.random() * 100,
+            duration: 3 + Math.random() * 2,
+            delay: Math.random() * 3,
+        })), []);
+
+    const footprintParticles = useMemo(() =>
+        Array.from({ length: 8 }, () => ({
+            top: Math.random() * 100,
+            left: Math.random() * 100,
+        })), []);
+
     return (
         <motion.div
             className="space-y-5"
@@ -216,14 +238,14 @@ export default function ActivityFitnessPro() {
             >
                 {/* Animated particles */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(15)].map((_, i) => (
+                    {activityParticles.map((p, i) => (
                         <motion.div
                             key={i}
                             className="absolute w-1 h-1 rounded-full"
                             style={{
                                 background: ['#FF2D55', '#A8FF00', '#00D4FF'][i % 3],
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
+                                top: `${p.top}%`,
+                                left: `${p.left}%`,
                             }}
                             animate={{
                                 y: [0, -30, 0],
@@ -231,9 +253,9 @@ export default function ActivityFitnessPro() {
                                 scale: [0, 1.5, 0],
                             }}
                             transition={{
-                                duration: 3 + Math.random() * 2,
+                                duration: p.duration,
                                 repeat: Infinity,
-                                delay: Math.random() * 3,
+                                delay: p.delay,
                             }}
                         />
                     ))}
@@ -426,13 +448,13 @@ export default function ActivityFitnessPro() {
             >
                 {/* Background footprints */}
                 <div className="absolute inset-0 opacity-10">
-                    {[...Array(8)].map((_, i) => (
+                    {footprintParticles.map((p, i) => (
                         <motion.div
                             key={i}
                             className="absolute"
                             style={{
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
+                                top: `${p.top}%`,
+                                left: `${p.left}%`,
                             }}
                             animate={{ y: [0, -20], opacity: [0, 0.5, 0] }}
                             transition={{

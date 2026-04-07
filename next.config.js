@@ -2,11 +2,73 @@ const path = require('path');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
     enabled: process.env.ANALYZE === 'true',
 });
-const withPWA = require('next-pwa')({
+const isMobileBuild = process.env.BUILD_MODE === 'mobile';
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    // Enable static export for Capacitor if BUILD_MODE=mobile
+    ...(isMobileBuild && { output: 'export' }),
+
+    reactStrictMode: true,
+    swcMinify: true,
+
+    // TypeScript: all errors fixed ✅
+    typescript: {
+        ignoreBuildErrors: false,
+    },
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
+
+    // Tree-shake icon imports to reduce bundle size
+    modularizeImports: {
+        'lucide-react': {
+            transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+        },
+    },
+
+    // Compiler optimizations for production
+    compiler: {
+        removeConsole: process.env.NODE_ENV === 'production' ? {
+            exclude: ['error', 'warn'],
+        } : false,
+    },
+
+    // Handle image domains
+    images: {
+        unoptimized: isMobileBuild ? true : false, // Required for static export
+        domains: [
+            'cdn-icons-png.flaticon.com',
+            'lh3.googleusercontent.com',  // Google Profile Photos
+            'firebasestorage.googleapis.com',  // Firebase Storage
+            'images.unsplash.com', // Article Images
+            'qtrypzzcjebvfcihiynt.supabase.co', // Supabase Storage
+            'graph.facebook.com', // Facebook Profile Photos
+        ],
+        formats: ['image/avif', 'image/webp'],
+        minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+        deviceSizes: [640, 750, 828, 1080, 1200],
+        imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    },
+
+    // Webpack configuration for path aliases
+    webpack: (config) => {
+        config.resolve.alias['@'] = path.resolve(__dirname);
+        return config;
+    },
+
+    // Experimental features
+    experimental: {
+        // Enable if needed
+    },
+};
+
+// PWA: Disable for mobile builds (Capacitor handles it natively)
+const pwaOptions = {
     dest: 'public',
     register: true,
     skipWaiting: true,
-    disable: process.env.NODE_ENV === 'development',
+    disable: process.env.NODE_ENV === 'development' || isMobileBuild,
     buildExcludes: [/middleware-manifest.json$/],
     runtimeCaching: [
         {
@@ -50,64 +112,8 @@ const withPWA = require('next-pwa')({
             },
         },
     ],
-});
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-    // NOTE: 'output: export' removed — it breaks API routes + middleware.
-    // For Capacitor mobile builds, use: npm run build:mobile (see package.json)
-    reactStrictMode: true,
-    swcMinify: true,
-
-    // TypeScript: all errors fixed ✅
-    typescript: {
-        ignoreBuildErrors: false,
-    },
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
-
-    // Tree-shake icon imports to reduce bundle size
-    modularizeImports: {
-        'lucide-react': {
-            transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
-        },
-    },
-
-    // Compiler optimizations for production
-    compiler: {
-        removeConsole: process.env.NODE_ENV === 'production' ? {
-            exclude: ['error', 'warn'],
-        } : false,
-    },
-
-    // Handle image domains
-    images: {
-        unoptimized: true,
-        domains: [
-            'qtrypzzcjebvfcihiynt.supabase.co',
-            'cdn-icons-png.flaticon.com',
-            'lh3.googleusercontent.com',  // Google Profile Photos
-            'firebasestorage.googleapis.com',  // Firebase Storage
-            'images.unsplash.com', // Article Images
-        ],
-        formats: ['image/avif', 'image/webp'],
-        minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-        deviceSizes: [640, 750, 828, 1080, 1200],
-        imageSizes: [16, 32, 48, 64, 96, 128, 256],
-    },
-
-    // Webpack configuration for path aliases
-    webpack: (config) => {
-        config.resolve.alias['@'] = path.resolve(__dirname);
-        return config;
-    },
-
-    // Experimental features
-    experimental: {
-        // Enable if needed
-    },
 };
 
+const withPWA = require('next-pwa')(pwaOptions);
 
 module.exports = withBundleAnalyzer(withPWA(nextConfig));

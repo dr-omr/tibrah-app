@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Camera as LucideCamera, Upload, ArrowRight, ScanFace, Sparkles, AlertCircle, RefreshCw, ChevronRight, Waves, Zap, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { aiClient } from '@/components/ai/aiClient';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 

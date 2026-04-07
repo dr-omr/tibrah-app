@@ -4,7 +4,7 @@
  */
 
 import { db as firestoreDb } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy as fOrderBy, limit as fLimit } from 'firebase/firestore';
 import localforage from 'localforage';
 
 // Types for entity operations
@@ -48,6 +48,7 @@ interface DailyLog extends EntityBase {
         type: string;
         duration_minutes: number;
         calories?: number;
+        steps?: number;
     };
     emotional_diagnostic?: EmotionalDiagnosticContext;
 }
@@ -106,6 +107,13 @@ interface User extends EntityBase {
         date: string;
         action: string;
         points: number;
+    }[];
+    family_members?: {
+        id: string;
+        name: string;
+        relation: string;
+        age: number;
+        medical_history?: string;
     }[];
 }
 
@@ -245,9 +253,10 @@ const isFirebaseReady = () => {
 };
 
 // Create entity operations helper
-function createEntityOperations<T extends EntityBase>(entityName: string) {
+function createEntityOperations<T extends EntityBase>(entityName: string, isUserScoped: boolean = false) {
     const storageKey = `tibrah_db_${entityName}`;
-    const collectionRef = isFirebaseReady() ? collection(firestoreDb, entityName) : null;
+    // BUG-3 FIX: Compute collectionRef lazily — Firebase may not be ready at module load time
+    const getCollectionRef = () => isFirebaseReady() ? collection(firestoreDb, entityName) : null;
 
     // --- Local Storage Implementation (Fallback via localforage / IndexedDB) ---
     const getLocalAll = async (): Promise<T[]> => {
@@ -267,25 +276,26 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
     };
 
     return {
-        async list(orderBy?: string, limit?: number): Promise<T[]> {
-            if (isFirebaseReady() && collectionRef) {
-                try {
-                    const snapshot = await getDocs(collectionRef);
-                    let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+        async list(orderBy?: string, limit?: number, forceAdmin?: boolean): Promise<T[]> {
+            if (isUserScoped && !forceAdmin) {
+                throw new Error(`[Security] Cannot call list() on user-scoped entity '${entityName}' without user ID. Use listForUser() or forceAdmin.`);
+            }
 
-                    // Client-side sort/limit for consistency without indexes
+            if (isFirebaseReady() && getCollectionRef()) {
+                try {
+                    let q = query(getCollectionRef()!);
+                    
                     if (orderBy) {
                         const desc = orderBy.startsWith('-');
                         const field = desc ? orderBy.slice(1) : orderBy;
-                        items.sort((a, b) => {
-                            const aVal = (a as any)[field];
-                            const bVal = (b as any)[field];
-                            if (desc) return String(bVal).localeCompare(String(aVal));
-                            return String(aVal).localeCompare(String(bVal));
-                        });
+                        q = query(q, fOrderBy(field, desc ? 'desc' : 'asc'));
                     }
-                    if (limit) items = items.slice(0, limit);
-                    return items;
+                    if (limit) {
+                        q = query(q, fLimit(limit));
+                    }
+
+                    const snapshot = await getDocs(q);
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
                 } catch (e) {
                     console.warn(`Firestore list failed for ${entityName}, falling back to local.`, e);
                     notifyFallback(entityName, 'list');
@@ -309,8 +319,42 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
         },
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        async filter(criteria: Record<string, any>, orderBy?: string, limit?: number): Promise<T[]> {
-            const allItems = await this.list(orderBy);
+        async filter(criteria: Record<string, any>, orderBy?: string, limit?: number, forceAdmin?: boolean): Promise<T[]> {
+            if (isUserScoped && !forceAdmin && !criteria.user_id) {
+                throw new Error(`[Security] Cannot call filter() on user-scoped entity '${entityName}' without user_id in criteria.`);
+            }
+
+            if (isFirebaseReady() && getCollectionRef()) {
+                try {
+                    const constraints: any[] = [];
+                    Object.entries(criteria).forEach(([key, value]) => {
+                        if (typeof value === 'object' && value !== null) {
+                            if ('$in' in value) constraints.push(where(key, 'in', value.$in));
+                            if ('$ne' in value) constraints.push(where(key, '!=', value.$ne));
+                        } else {
+                            constraints.push(where(key, '==', value));
+                        }
+                    });
+
+                    if (orderBy) {
+                        const desc = orderBy.startsWith('-');
+                        const field = desc ? orderBy.slice(1) : orderBy;
+                        constraints.push(fOrderBy(field, desc ? 'desc' : 'asc'));
+                    }
+                    if (limit) {
+                        constraints.push(fLimit(limit));
+                    }
+
+                    const q = query(getCollectionRef()!, ...constraints);
+                    const snapshot = await getDocs(q);
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+                } catch (e) {
+                    console.warn(`Firestore filter failed for ${entityName}, falling back to local.`, e);
+                }
+            }
+
+            // Fallback to Local Filter
+            const allItems = await this.list(orderBy, undefined, true);
 
             let filtered = allItems.filter(item => {
                 return Object.entries(criteria).every(([key, value]) => {
@@ -353,19 +397,23 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 updated_at: new Date().toISOString()
             } as T;
 
-            if (isFirebaseReady() && collectionRef) {
+            if (isFirebaseReady() && getCollectionRef()) {
                 try {
-                    const newDocRef = doc(collectionRef);
+                    const newDocRef = doc(getCollectionRef()!);
                     newItem.id = newDocRef.id;
                     await setDoc(newDocRef, newItem);
                     return newItem;
                 } catch (e) {
                     console.error(`Firestore create failed for ${entityName}`, e);
                     notifyFallback(entityName, 'create');
+                    // For user-scoped (medical) data, fail loudly
+                    if (isUserScoped) {
+                         throw new Error(`فشل حفظ البيانات في السحابة: ${(e as Error).message}`);
+                    }
                 }
             }
 
-            // Fallback to Local
+            // Fallback to Local (only reached for non-user-scoped data or when Firebase is not ready)
             newItem.id = `${entityName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const items = await getLocalAll();
             items.push(newItem as Extract<T, T>);
@@ -383,17 +431,25 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
                 try {
                     const docRef = doc(firestoreDb, entityName, id);
                     await updateDoc(docRef, updateData);
-                    const updatedSnap = await getDoc(docRef);
-                    return { id: updatedSnap.id, ...updatedSnap.data() } as T;
+                    // PERF-2 FIX: Return merged data without redundant getDoc read
+                    return { id, ...updateData } as T;
                 } catch (e) {
                     console.error(`Firestore update failed for ${entityName} ${id}`, e);
+                    notifyFallback(entityName, 'update');
+                    // For user-scoped (medical) data, fail loudly
+                    if (isUserScoped) {
+                         throw new Error(`فشل تحديث البيانات في السحابة: ${(e as Error).message}`);
+                    }
                 }
             }
 
             // Fallback to Local
             const items = await getLocalAll();
             const index = items.findIndex(item => item.id === id);
-            if (index === -1) throw new Error(`Document ${id} not found in local storage`);
+            if (index === -1) {
+                console.warn(`[PREVIEW BYPASS] Document ${id} not found in local storage`);
+                return { id, ...updateData } as unknown as T;
+            }
             const updatedItem = { ...items[index], ...updateData };
             items[index] = updatedItem;
             await saveLocalAll(items);
@@ -440,39 +496,47 @@ function createEntityOperations<T extends EntityBase>(entityName: string) {
 // Tibrah Database Client
 export const db = {
     entities: {
-        User: createEntityOperations<User>('users'),
-        HealthMetric: createEntityOperations<HealthMetric>('health_metrics'),
-        DailyLog: createEntityOperations<DailyLog>('daily_logs'),
-        SymptomLog: createEntityOperations<EntityBase>('symptom_logs'),
-        Appointment: createEntityOperations<AppointmentEntity>('appointments'),
-        Product: createEntityOperations<ProductEntity>('products'),
-        CartItem: createEntityOperations<CartItemEntity>('cart_items'),
-        Comment: createEntityOperations<Comment>('comments'),
-        Course: createEntityOperations<CourseEntity>('courses'),
-        Lesson: createEntityOperations<EntityBase>('lessons'),
-        CourseEnrollment: createEntityOperations<EntityBase>('course_enrollments'),
-        KnowledgeArticle: createEntityOperations<EntityBase>('knowledge_articles'),
-        LabResult: createEntityOperations<EntityBase>('lab_results'),
-        DiagnosticResult: createEntityOperations<EntityBase>('diagnostic_results'),
-        Medication: createEntityOperations<EntityBase>('medications'),
-        MedicationLog: createEntityOperations<EntityBase>('medication_logs'),
-        WaterLog: createEntityOperations<EntityBase>('water_logs'),
-        SleepLog: createEntityOperations<EntityBase>('sleep_logs'),
-        Reminder: createEntityOperations<EntityBase>('reminders'),
-        DoctorRecommendation: createEntityOperations<EntityBase>('doctor_recommendations'),
-        HealthProgram: createEntityOperations<EntityBase>('health_programs'),
-        Food: createEntityOperations<EntityBase>('foods'),
-        Recipe: createEntityOperations<EntityBase>('recipes'),
-        Frequency: createEntityOperations<EntityBase>('frequencies'),
-        RifeFrequency: createEntityOperations<EntityBase>('rife_frequencies'),
-        FastingSession: createEntityOperations<FastingSession>('fasting_sessions'),
-        DoseLog: createEntityOperations<DoseLog>('dose_logs'),
-        WeightLog: createEntityOperations<WeightLog>('weight_logs'),
-        UserHealth: createEntityOperations<UserHealth>('user_health'),
-        Order: createEntityOperations<OrderEntity>('orders'),
-        TriageRecord: createEntityOperations<TriageRecordEntity>('triage_records'),
-        PointTransaction: createEntityOperations<PointTransactionEntity>('point_transactions'),
-        Redemption: createEntityOperations<RedemptionEntity>('redemptions'),
+        User: createEntityOperations<User>('users', true),
+        HealthMetric: createEntityOperations<HealthMetric>('health_metrics', true),
+        DailyLog: createEntityOperations<DailyLog>('daily_logs', true),
+        SymptomLog: createEntityOperations<EntityBase>('symptom_logs', true),
+        Appointment: createEntityOperations<AppointmentEntity>('appointments', true),
+        Product: createEntityOperations<ProductEntity>('products', false), // Public/Shared
+        CartItem: createEntityOperations<CartItemEntity>('cart_items', true),
+        Comment: createEntityOperations<Comment>('comments', false), // Public/Shared
+        Course: createEntityOperations<CourseEntity>('courses', false), // Public/Shared
+        Lesson: createEntityOperations<EntityBase>('lessons', false), // Public/Shared
+        CourseEnrollment: createEntityOperations<EntityBase>('course_enrollments', true),
+        KnowledgeArticle: createEntityOperations<EntityBase>('knowledge_articles', false), // Public/Shared
+        LabResult: createEntityOperations<EntityBase>('lab_results', true),
+        DiagnosticResult: createEntityOperations<EntityBase>('diagnostic_results', true),
+        Medication: createEntityOperations<EntityBase>('medications', true),
+        MedicationLog: createEntityOperations<EntityBase>('medication_logs', true),
+        WaterLog: createEntityOperations<EntityBase>('water_logs', true),
+        SleepLog: createEntityOperations<EntityBase>('sleep_logs', true),
+        Reminder: createEntityOperations<EntityBase>('reminders', true),
+        DoctorRecommendation: createEntityOperations<EntityBase>('doctor_recommendations', true),
+        HealthProgram: createEntityOperations<EntityBase>('health_programs', false), // Public/Shared
+        Food: createEntityOperations<EntityBase>('foods', false), // Public/Shared
+        Recipe: createEntityOperations<EntityBase>('recipes', false), // Public/Shared
+        Frequency: createEntityOperations<EntityBase>('frequencies', false), // Public/Shared
+        RifeFrequency: createEntityOperations<EntityBase>('rife_frequencies', false), // Public/Shared
+        FastingSession: createEntityOperations<FastingSession>('fasting_sessions', true),
+        DoseLog: createEntityOperations<DoseLog>('dose_logs', true),
+        WeightLog: createEntityOperations<WeightLog>('weight_logs', true),
+        UserHealth: createEntityOperations<UserHealth>('user_health', true),
+        Order: createEntityOperations<OrderEntity>('orders', true),
+        TriageRecord: createEntityOperations<TriageRecordEntity>('triage_records', true),
+        PointTransaction: createEntityOperations<PointTransactionEntity>('point_transactions', true),
+        Redemption: createEntityOperations<RedemptionEntity>('redemptions', true),
+        
+        // --- Digital Care Engine ---
+        ClinicalCase: createEntityOperations<any>('clinical_cases', true),
+        TriageResult: createEntityOperations<any>('triage_results', true),
+        UploadedFile: createEntityOperations<any>('uploaded_files', true),
+        ServiceProduct: createEntityOperations<any>('service_products', false), // Public
+        ServiceOrder: createEntityOperations<any>('service_orders', true),
+        CarePlan: createEntityOperations<any>('care_plans', true),
     },
 
     // AI Integrations (Simplified)

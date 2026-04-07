@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Groq from 'groq-sdk';
 import { checkRateLimit, getClientIp } from '@/lib/apiMiddleware';
+import { verifyApiSession } from '@/lib/verifySession';
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || 'MISSING_KEY',
-});
+// SEC-5 FIX: Use server-only key, never NEXT_PUBLIC_ for API secrets
+// CQ-4 FIX: No 'MISSING_KEY' fallback — fail fast if not configured
+const GROQ_KEY = process.env.GROQ_API_KEY;
+const groq = GROQ_KEY ? new Groq({ apiKey: GROQ_KEY }) : null;
 
 const SYSTEM_PROMPT = `أنت المساعد الذكي "طِبرَا" (Tibrah AI)، رفيق صحي استباقي ومتعاطف داخل تطبيق طِبرَا الطبي.
 مهمتك:
@@ -28,9 +30,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Rate limiting — 20 requests per minute
     const clientIp = getClientIp(req);
-    const { limited } = checkRateLimit(clientIp, 20, 60 * 1000);
+    const { limited } = await checkRateLimit(clientIp, 20, 60 * 1000);
     if (limited) {
         return res.status(429).json({ error: 'Too many requests', message: '⚠️ طلبات كثيرة، يرجى المحاولة بعد دقيقة' });
+    }
+
+    // 🔒 Authentication required
+    const session = await verifyApiSession(req);
+    if (!session) {
+        return res.status(401).json({ error: 'Unauthorized', message: 'يرجى تسجيل الدخول أولاً' });
+    }
+
+    // CQ-4 FIX: Fail fast if AI service is not configured
+    if (!groq) {
+        return res.status(503).json({ error: 'AI service not configured', message: '⚠️ خدمة الذكاء الاصطناعي غير مُعدّة' });
     }
 
     try {
@@ -61,10 +74,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (error: any) {
         console.error('Triage AI Error:', error);
         
-        // Mock fallback for development if keys are not configured or limit reached
-        if (error.message?.includes('401') || process.env.GROQ_API_KEY === undefined) {
-            return res.status(200).json({ 
-                reply: 'مرحباً، يبدو أن هناك مشكلة في إعدادات الاتصال بالذكاء الاصطناعي (API Key). جرب [حجز موعد](/book-appointment) أو استخدام [الصيدلية الذكية](/smart-pharmacy) من القائمة بدلاً من ذلك.' 
+        if (error.message?.includes('401')) {
+            return res.status(503).json({ 
+                error: 'AI service authentication failed',
+                reply: '⚠️ خدمة الذكاء الاصطناعي غير متاحة حالياً. جرب [حجز موعد](/book-appointment) أو استخدام [الصيدلية الذكية](/smart-pharmacy) من القائمة بدلاً من ذلك.' 
             });
         }
 

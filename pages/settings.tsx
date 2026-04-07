@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { createPageUrl } from '../utils';
 import { Button } from '@/components/ui/button';
@@ -9,11 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
     User, Bell, Scale, Palette, Database, ArrowRight, Moon, Sun, Check,
-    Loader2, Download, Trash2, Shield, Globe
+    Loader2, Download, Trash2, Shield, Globe, LogOut, Smartphone
 } from 'lucide-react';
 import PushNotificationButton from '@/components/dashboard/PushNotificationButton';
 import LanguageToggle from '@/components/common/LanguageToggle';
@@ -22,10 +23,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Settings() {
     const queryClient = useQueryClient();
-    const { user: authUser, updateProfile: updateAuthProfile } = useAuth();
+    const router = useRouter();
+    const { user: authUser, updateProfile: updateAuthProfile, signOut } = useAuth();
     const [user, setUser] = useState(null);
     const [fullName, setFullName] = useState('');
     const [medicalPreferences, setMedicalPreferences] = useState('');
+    const [signingOutAll, setSigningOutAll] = useState(false);
     const [settings, setSettings] = useState({
         notifications: {
             appointments: true,
@@ -176,6 +179,39 @@ export default function Settings() {
             toast.error('حدث خطأ في الحذف');
         } finally {
             setDeleting(false);
+        }
+    };
+
+    const signOutAllDevices = async () => {
+        setSigningOutAll(true);
+        try {
+            // Need the ID token for the API call
+            const authModule = await import('../lib/firebase');
+            const firebaseAuth = await import('firebase/auth');
+            
+            if (authModule.auth?.currentUser) {
+                const idToken = await authModule.auth.currentUser.getIdToken(true);
+                
+                // Call API to revoke all Firebase refresh tokens server-side
+                const res = await fetch('/api/auth/revoke-all-sessions', { 
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`
+                    }
+                });
+                
+                if (!res.ok) throw new Error('Failed to revoke sessions');
+            }
+            
+            // Sign out locally as well
+            await signOut();
+            toast.success('تم تسجيل الخروج من جميع الأجهزة بنجاح ✅');
+            router.replace('/login');
+        } catch (error) {
+            console.error('Sign out all devices error:', error);
+            toast.error('حدث خطأ. يرجى المحاولة مجدداً');
+        } finally {
+            setSigningOutAll(false);
         }
     };
 
@@ -473,6 +509,55 @@ export default function Settings() {
                                         disabled={deleting}
                                     >
                                         {deleting ? 'جاري الحذف...' : 'حذف نهائياً'}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </section>
+
+                {/* Security Section */}
+                <section>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Shield className="w-5 h-5 text-primary" />
+                        <h2 className="font-bold text-slate-800 dark:text-white">الأمان</h2>
+                    </div>
+
+                    <div className="glass rounded-2xl overflow-hidden">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <button className="w-full flex items-center gap-4 p-4 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                                    <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                                        <Smartphone className="w-5 h-5 text-red-600" />
+                                    </div>
+                                    <div className="flex-1 text-right">
+                                        <span className="font-medium text-red-600 block">تسجيل الخروج من جميع الأجهزة</span>
+                                        <span className="text-sm text-slate-400">ينهي جميع جلسات الدخول النشطة على كل الأجهزة</span>
+                                    </div>
+                                    <LogOut className="w-4 h-4 text-red-400 flex-shrink-0" />
+                                </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-right">تسجيل الخروج من جميع الأجهزة</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-right">
+                                        سيتم إنهاء جميع جلسات تسجيل الدخول على كل الأجهزة وستحتاج إلى تسجيل الدخول مجدداً.
+                                        استخدم هذا إذا نسيت جهازك أو أبلغتك بوجود نشاط مشبوه.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="flex-row-reverse gap-2">
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={signOutAllDevices}
+                                        className="bg-red-600 hover:bg-red-700"
+                                        disabled={signingOutAll}
+                                    >
+                                        {signingOutAll ? (
+                                            <span className="flex items-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                جاري تسجيل الخروج...
+                                            </span>
+                                        ) : 'تسجيل الخروج من كل الأجهزة'}
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>

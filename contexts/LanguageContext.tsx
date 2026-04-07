@@ -47,12 +47,18 @@ const LanguageContext = createContext<LanguageContextType>({
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguageState] = useState<Language>('ar');
 
-    // Load saved language
+    // Load saved language + UX-3 FIX: Set dir immediately on first load
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('tibrah_language') as Language;
             if (saved && (saved === 'ar' || saved === 'en')) {
                 setLanguageState(saved);
+                document.documentElement.dir = saved === 'ar' ? 'rtl' : 'ltr';
+                document.documentElement.lang = saved;
+            } else {
+                // Default: Arabic RTL — set immediately to prevent flash
+                document.documentElement.dir = 'rtl';
+                document.documentElement.lang = 'ar';
             }
         }
     }, []);

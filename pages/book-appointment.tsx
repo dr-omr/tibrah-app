@@ -7,9 +7,9 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { db } from '@/lib/db';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
-import { useNotifications } from '@/contexts/NotificationContext';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { createPageUrl } from '@/utils';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
@@ -54,7 +54,6 @@ const timeSlots = [
 
 export default function BookAppointment() {
     const router = useRouter();
-    const { notify } = useNotifications();
     const { user } = useAuth();
     
     const [step, setStep] = useState(1);
@@ -104,7 +103,7 @@ export default function BookAppointment() {
 
     // Mutation
     const createAppointmentMutation = useMutation({
-        mutationFn: (data: any) => {
+        mutationFn: async (data: any) => {
             const emotionalDiagnosticObj = {
                 body_region: router.query.symptom ? String(router.query.symptom) : "general",
                 physical_complaint: data.health_concern || "غير محدد",
@@ -117,19 +116,33 @@ export default function BookAppointment() {
                 patient_summary: ""
             };
 
-            return db.entities.Appointment.createForUser(user?.id || '', {
+            const payload = {
                 ...data,
                 date: format(data.date, 'yyyy-MM-dd'),
                 status: 'pending',
                 emotional_diagnostic: (data.emotional_context || router.query.emotion) ? emotionalDiagnosticObj : null
-            });
+            };
+
+            // 1. Save to Firestore Local DB
+            const appointmentDbResult = await db.entities.Appointment.createForUser(user?.id || '', payload);
+
+            // 2. Fire the Webhook silently to Zapier/Make or Clinic automation
+            try {
+                await fetch('/api/webhooks/booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...payload, transactionId: appointmentDbResult })
+                });
+            } catch (e) {
+                console.error('Webhook trigger failed:', e);
+            }
+
+            return appointmentDbResult;
         },
         onSuccess: () => {
-            toast.success('تم حجز الموعد بنجاح');
-            notify('تم حجز موعدك بنجاح! 🎉', {
+            toast.success('تم حجز الموعد بنجاح 👏');
+            toast.booking('تم حجز موعدك بنجاح! 🎉', {
                 body: `موعدك يوم ${formData.date ? format(formData.date, 'dd MMMM', { locale: ar }) : ''} الساعة ${formData.time_slot}`,
-                type: 'success',
-                action: { label: 'عرض مواعيدي', href: '/my-appointments' }
             });
             setStep(4);
         },
@@ -145,20 +158,23 @@ export default function BookAppointment() {
 
     return (
         <ProtectedRoute requireAuth={true}>
-            <div className="min-h-screen pb-10" style={{ background: 'linear-gradient(180deg, #f0fdfa 0%, #f8fafc 30%, #ffffff 100%)' }}>
+            <div className="min-h-screen pb-10 bg-[#FAFAFA] dark:bg-[#020617] relative">
                 <SEO title="حجز موعد — طِبرَا" description="حجز جلسة استشارة تشخيصية أو جلسة ترددات مع دكتور عمر العماد" />
                 
+                {/* Visual Premium Header Blob */}
+                <div className="absolute top-0 left-0 w-full h-[200px] bg-gradient-to-b from-teal-500/10 dark:from-indigo-600/20 to-transparent pointer-events-none" />
+
                 {/* Header */}
-                <div className="sticky top-0 z-20 px-5 py-4" style={{ background: 'rgba(240,253,250,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(13,148,136,0.08)' }}>
+                <div className="sticky top-0 z-20 px-5 py-4 liquid-nav">
                     <div className="flex items-center gap-3">
                         <Link href={createPageUrl('Home')}>
-                            <button className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-transform" style={{ background: 'rgba(13,148,136,0.08)' }}>
-                                <ArrowRight className="w-5 h-5 text-slate-600" />
+                            <button className="w-10 h-10 rounded-2xl flex items-center justify-center bg-teal-50 dark:bg-white/5 active:scale-95 transition-transform">
+                                <ArrowRight className="w-5 h-5 text-teal-700 dark:text-teal-400" />
                             </button>
                         </Link>
                         <div>
-                            <h1 className="text-[17px] font-black text-slate-800">حجز موعد</h1>
-                            <p className="text-[11px] text-slate-400 font-semibold">مع د. عمر العماد</p>
+                            <h1 className="text-[18px] font-black text-slate-800 dark:text-white">حجز موعد</h1>
+                            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide">مع د. عمر العماد</p>
                         </div>
                     </div>
 

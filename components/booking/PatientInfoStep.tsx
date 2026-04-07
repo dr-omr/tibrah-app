@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import SmartIntakeForm from '@/components/checkout/SmartIntakeForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PatientInfoStepProps {
     formData: any;
@@ -27,7 +28,9 @@ export default function PatientInfoStep({
     onSubmit, 
     isSubmitting 
 }: PatientInfoStepProps) {
+    const { user } = useAuth();
     const selectedSession = sessionTypes.find(s => s.id === formData.session_type);
+    const familyMembers = (user as any)?.family_members || [];
 
     return (
         <motion.div 
@@ -42,8 +45,32 @@ export default function PatientInfoStep({
             </div>
 
             <div className="space-y-4">
+                {familyMembers.length > 0 && (
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5 mb-4">
+                        <Label className="text-slate-700 dark:text-slate-300 mb-2 block font-bold">لمن هذا الحجز؟</Label>
+                        <select 
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm text-slate-800 dark:text-white focus:outline-none focus:border-teal-500 transition-colors appearance-none"
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'self') {
+                                    setFormData({ ...formData, patient_name: user?.name, booked_for_id: null });
+                                } else {
+                                    const member = familyMembers.find(m => m.id === val);
+                                    if (member) setFormData({ ...formData, patient_name: member.name, booked_for_id: member.id });
+                                }
+                            }}
+                            defaultValue={formData.booked_for_id || 'self'}
+                        >
+                            <option value="self">لنفسي ({user?.name})</option>
+                            {familyMembers.map(m => (
+                                <option key={m.id} value={m.id}>لفرد العائلة: {m.name} ({m.relation})</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
                 <div>
-                    <Label className="text-slate-700 mb-2 block">الاسم الكامل *</Label>
+                    <Label className="text-slate-700 mb-2 block">الاسم الكامل للمريض *</Label>
                     <div className="relative">
                         <User className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         <Input

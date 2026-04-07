@@ -8,21 +8,22 @@ export interface UserStats {
     dosesTaken: number;
 }
 
-export const fetchUserStats = async (): Promise<UserStats> => {
+export const fetchUserStats = async (userId: string): Promise<UserStats> => {
     try {
         const today = format(new Date(), 'yyyy-MM-dd');
 
         // 1. Get Water Log for Today
-        const waterLogs = await db.entities.WaterLog.filter({ date: today }).catch(() => []);
+        const allUserLogs = await db.entities.WaterLog.listForUser(userId, '-date', 50).catch(() => []);
+        const waterLogs = allUserLogs.filter(log => log.date === today);
         const waterCups = waterLogs?.[0]?.glasses || 0;
 
         // 2. Get Sleep Log (Latest)
-        const sleepLogs = await db.entities.SleepLog.list('-date', 1).catch(() => []);
+        const sleepLogs = await db.entities.SleepLog.listForUser(userId, '-date', 1).catch(() => []);
         const sleepHours = sleepLogs?.[0]?.duration_hours || 0;
 
         // 3. Active Days (Mock logic: Count DailyLogs in last 30 days)
         // Since we can't do complex aggregation on this client easily, I'll count records
-        const recentLogs = await db.entities.DailyLog.list('-date', 30).catch(() => []);
+        const recentLogs = await db.entities.DailyLog.listForUser(userId, '-date', 30).catch(() => []);
         const activeDays = recentLogs.length;
 
         // 4. Doses Taken (Assuming 'MedicineLog' exists or similar, if not, mock 0 or use DailyLog habits)

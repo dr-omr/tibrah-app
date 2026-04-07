@@ -206,7 +206,22 @@ export default function Premium() {
                                     </ul>
 
                                     <button
-                                        onClick={() => { haptic.success(); uiSounds.success(); }}
+                                        onClick={async () => { 
+                                            haptic.success(); 
+                                            uiSounds.success(); 
+                                            try {
+                                                const res = await fetch('/api/subscriptions/create-checkout', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ planId: plan.id, cycle, paymentMethod: 'stcpay' })
+                                                });
+                                                if (!res.ok) throw new Error('فشلت العملية');
+                                                const data = await res.json();
+                                                if (data.redirectUrl) router.push(data.redirectUrl);
+                                            } catch(e) {
+                                                alert("يرجى تسجيل الدخول أولاً لإتمام الاشتراك.");
+                                            }
+                                        }}
                                         className={`w-full py-5 rounded-[20px] text-lg font-black transition-all active:scale-[0.98] shadow-xl relative z-10 ${
                                             isVip 
                                             ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-amber-500/30 hover:shadow-amber-500/40 hover:scale-[1.02]' 

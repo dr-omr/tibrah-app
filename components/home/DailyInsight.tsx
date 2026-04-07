@@ -111,9 +111,9 @@ export default function DailyInsight() {
         e.preventDefault(); // Prevent link navigation
         e.stopPropagation();
         haptic.selection();
-        
+
         const text = `نصيحة طِبرَا اليوم:\n"${current.text}"\n\nحمل تطبيق طِبرَا لرحلة تعافي متكاملة 🌱`;
-        
+
         if (navigator.share) {
             navigator.share({
                 title: 'نصيحة طِبرَا الطبية',
@@ -153,8 +153,8 @@ export default function DailyInsight() {
                                     هل تعلم؟
                                 </span>
                             </div>
-                            
-                            <button 
+
+                            <button
                                 onClick={handleShare}
                                 className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                                 aria-label="مشاركة النصيحة"
@@ -179,7 +179,7 @@ export default function DailyInsight() {
                                         <div className="absolute inset-0 bg-white/20 dark:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         <Icon className="w-6 h-6 text-white drop-shadow-sm" />
                                     </div>
-                                    
+
                                     <div className="flex-1 mt-0.5">
                                         <p className="text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-bold">
                                             {current.text}
@@ -192,18 +192,18 @@ export default function DailyInsight() {
                                 </motion.div>
                             </AnimatePresence>
                         </div>
-                        
+
                         {/* Progress Bar & Dots */}
                         <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50">
                             {/* Animated Progress Bar */}
                             <div className="flex-1 h-1 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <motion.div 
+                                <motion.div
                                     key={`${activeIndex}-${isPaused ? 'paused' : 'playing'}`}
                                     initial={{ width: isPaused ? '100%' : '0%' }}
                                     animate={{ width: isPaused ? '100%' : '100%' }}
-                                    transition={{ 
-                                        duration: isPaused ? 0 : ROTATION_INTERVAL / 1000, 
-                                        ease: "linear" 
+                                    transition={{
+                                        duration: isPaused ? 0 : ROTATION_INTERVAL / 1000,
+                                        ease: "linear"
                                     }}
                                     className="h-full bg-slate-300 dark:bg-slate-500 rounded-full"
                                     style={{
@@ -211,18 +211,17 @@ export default function DailyInsight() {
                                     }}
                                 />
                             </div>
-                            
+
                             {/* Pagination dots */}
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                                 {visibleInsights.map((_, i) => (
                                     <button
                                         key={i}
                                         onClick={(e) => { e.preventDefault(); handleDotClick(i); }}
-                                        className={`rounded-full transition-all ${
-                                            i === activeIndex
+                                        className={`rounded-full transition-all ${i === activeIndex
                                                 ? 'w-4 h-1.5'
                                                 : 'w-1.5 h-1.5 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300'
-                                        }`}
+                                            }`}
                                         style={{ backgroundColor: i === activeIndex ? current.color : undefined }}
                                     />
                                 ))}

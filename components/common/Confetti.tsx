@@ -7,6 +7,8 @@ interface ConfettiPiece {
     delay: number;
     duration: number;
     size: number;
+    isCircle: boolean;
+    rotation: number;
 }
 
 interface ConfettiProps {
@@ -42,6 +44,8 @@ export default function Confetti({ active, duration = 3000 }: ConfettiProps) {
                     delay: Math.random() * 0.5,
                     duration: 2 + Math.random() * 2,
                     size: 6 + Math.random() * 8,
+                    isCircle: Math.random() > 0.5,
+                    rotation: Math.random() * 360,
                 });
             }
 
@@ -70,10 +74,10 @@ export default function Confetti({ active, duration = 3000 }: ConfettiProps) {
                         width: `${piece.size}px`,
                         height: `${piece.size}px`,
                         backgroundColor: piece.color,
-                        borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                        borderRadius: piece.isCircle ? '50%' : '2px',
                         animationDelay: `${piece.delay}s`,
                         animationDuration: `${piece.duration}s`,
-                        transform: `rotate(${Math.random() * 360}deg)`,
+                        transform: `rotate(${piece.rotation}deg)`,
                     }}
                 />
             ))}

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, ArrowRight, ShoppingBag, Music, BookOpen, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { getSmartRecommendations, Recommendation } from '@/lib/recommendations';
+import { generateRecommendations, Recommendation } from '@/lib/recommendations';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SmartRecommendations() {
+    const { user } = useAuth();
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -12,15 +14,18 @@ export default function SmartRecommendations() {
         setLoading(true);
         // Simulate network delay for "AI thinking" effect
         setTimeout(async () => {
-            const data = await getSmartRecommendations();
+            if (!user?.id) return;
+            const data = await generateRecommendations(user.id);
             setRecommendations(data);
             setLoading(false);
         }, 800);
     };
 
     useEffect(() => {
-        fetchRecs();
-    }, []);
+        if (user?.id) {
+            fetchRecs();
+        }
+    }, [user?.id]);
 
     if (loading) {
         return (

@@ -1,9 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { checkRateLimit, getClientIp } from '@/lib/apiMiddleware';
-
-// IMPORTANT: Requires process.env.NEXT_PUBLIC_GEMINI_API_KEY or similar
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '');
+import { verifyApiSession } from '@/lib/verifySession';
+import { genAI } from '@/lib/ai';
 
 export const config = {
     api: {
@@ -20,11 +18,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Rate limiting — 10 requests per minute
     const clientIp = getClientIp(req);
-    const { limited } = checkRateLimit(clientIp, 10, 60 * 1000);
+    const { limited } = await checkRateLimit(clientIp, 10, 60 * 1000);
     if (limited) {
         return res.status(429).json({ error: 'Too many requests', message: '⚠️ طلبات كثيرة لتفسير الوصفات، يرجى المحاولة بعد دقيقة' });
     }
 
+    // 🔒 Authentication required
+    const session = await verifyApiSession(req);
+    if (!session) {
+        return res.status(401).json({ error: 'Unauthorized', message: 'يرجى تسجيل الدخول أولاً' });
+    }
+
+    // Fail fast if AI service is not configured
+    if (!genAI) {
+        return res.status(503).json({ error: 'AI service not configured' });
+    }
     try {
         const { imageBase64, mimeType } = req.body;
 
@@ -32,12 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(400).json({ error: 'Missing image or mimeType' });
         }
 
-        if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY && !process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ error: 'API key not configured for AI' });
-        }
-
-        // Using gemini-1.5-flash as it's the recommended model for multimodal tasks
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        // Using gemini-2.5-flash (unified across all API routes)
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         const prompt = `
         You are an expert pharmacist and medical assistant built for the "Tibrah" health app.

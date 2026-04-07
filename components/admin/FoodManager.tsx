@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import {
     Plus, Search, Edit3, Trash2, Save, X, Filter,
     Utensils, Apple, Beef, Wheat, Droplets, Heart,

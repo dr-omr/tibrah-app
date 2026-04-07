@@ -12,7 +12,7 @@ import {
     Info, ChevronLeft, LogIn, User,
     Heart, Radio, Crown, Shield,
     Utensils, Wind, Sparkles, LogOut, Activity, GraduationCap,
-    HeartPulse, Calendar, Brain, TrendingUp, Star
+    HeartPulse, Calendar, Brain, TrendingUp, Star, FileText
 } from 'lucide-react';
 import { useHealthDashboard } from '@/hooks/useHealthDashboard';
 
@@ -151,16 +151,22 @@ export default function HeaderMenu({ isOpen, onClose }: HeaderMenuProps) {
                         onClick={onClose}
                     />
 
-                    {/* Slide-over Panel */}
+                    {/* Slide-over Panel — Liquid Glass */}
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', stiffness: 400, damping: 34 }}
-                        className="fixed top-0 right-0 bottom-0 w-[82vw] max-w-[340px] bg-white dark:bg-slate-900 z-[70] shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-y-auto"
+                        className="fixed top-0 right-0 bottom-0 w-[82vw] max-w-[340px] z-[70] overflow-y-auto"
+                        style={{
+                            background: 'linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(245,247,250,0.78) 100%)',
+                            backdropFilter: 'blur(40px) saturate(200%)',
+                            WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+                            boxShadow: '-20px 0 60px rgba(0,0,0,0.08), inset 1px 0 0 rgba(255,255,255,0.7)',
+                        }}
                     >
                         {/* Header */}
-                        <div className="sticky top-0 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-100/80 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+                        <div className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', boxShadow: 'inset 0 -0.5px 0 rgba(0,0,0,0.06)' }}>
                             <h2 className="text-[14px] font-bold text-slate-800 dark:text-white">القائمة</h2>
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
@@ -177,7 +183,7 @@ export default function HeaderMenu({ isOpen, onClose }: HeaderMenuProps) {
                                 {user ? (
                                     <Link href={createPageUrl('Profile')} onClick={() => { haptic.tap(); onClose(); }}>
                                         <motion.div
-                                            className="relative overflow-hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 shadow-sm"
+                                            className="relative overflow-hidden rounded-2xl liquid-card"
                                             whileTap={{ scale: 0.985 }}
                                         >
                                             {/* Gradient accent */}
@@ -239,7 +245,7 @@ export default function HeaderMenu({ isOpen, onClose }: HeaderMenuProps) {
                                     </Link>
                                 ) : (
                                     <motion.div
-                                        className="relative overflow-hidden bg-white dark:bg-slate-800 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 shadow-sm"
+                                        className="relative overflow-hidden rounded-2xl liquid-card"
                                         whileTap={{ scale: 0.985 }}
                                     >
                                         {/* Premium gradient accent */}
@@ -343,7 +349,7 @@ export default function HeaderMenu({ isOpen, onClose }: HeaderMenuProps) {
 
                             {/* ─── Wellness & Alternative Care ─── */}
                             <SectionLabel>العلاجات الداعمة والتأمل</SectionLabel>
-                            <div className="mt-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 divide-y divide-slate-50 dark:divide-slate-700/50 overflow-hidden">
+                            <div className="mt-1 liquid-card rounded-2xl divide-y divide-slate-50/50 dark:divide-slate-700/30 overflow-hidden">
                                 <MenuItem
                                     href={createPageUrl('Breathe')}
                                     icon={Wind}
@@ -364,9 +370,33 @@ export default function HeaderMenu({ isOpen, onClose }: HeaderMenuProps) {
                                 />
                             </div>
 
+                            {/* ─── Clinical Tools (NEW) ─── */}
+                            <SectionLabel>أدوات التشخيص والتحليل</SectionLabel>
+                            <div className="liquid-card rounded-2xl divide-y divide-slate-50/50 dark:divide-slate-700/30 overflow-hidden">
+                                <MenuItem
+                                    href="/symptom-checker"
+                                    icon={Brain}
+                                    iconColor="text-violet-600"
+                                    iconBg="bg-violet-50 dark:bg-violet-900/30"
+                                    label="مدقق الأعراض الذكي"
+                                    description="استبيان إكلينيكي بمعيار SOCRATES"
+                                    badge="جديد"
+                                    onClose={onClose}
+                                />
+                                <MenuItem
+                                    href="/health-report"
+                                    icon={FileText}
+                                    iconColor="text-teal-600"
+                                    iconBg="bg-teal-50 dark:bg-teal-900/30"
+                                    label="التقرير الصحي الشامل"
+                                    description="تحليل دوري + توصيات مخصصة PDF"
+                                    onClose={onClose}
+                                />
+                            </div>
+
                             {/* ─── Commerce & Services ─── */}
                             <SectionLabel>الخدمات والاشتراكات</SectionLabel>
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 divide-y divide-slate-50 dark:divide-slate-700/50 overflow-hidden">
+                            <div className="liquid-card rounded-2xl divide-y divide-slate-50/50 dark:divide-slate-700/30 overflow-hidden">
                                 <MenuItem
                                     href={createPageUrl('Shop')}
                                     icon={ShoppingBag}
@@ -407,7 +437,7 @@ export default function HeaderMenu({ isOpen, onClose }: HeaderMenuProps) {
 
                             {/* ─── Settings & Support ─── */}
                             <SectionLabel>الإعدادات والدعم</SectionLabel>
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 divide-y divide-slate-50 dark:divide-slate-700/50 overflow-hidden">
+                            <div className="liquid-card rounded-2xl divide-y divide-slate-50/50 dark:divide-slate-700/30 overflow-hidden">
                                 <MenuItem
                                     href={createPageUrl('Settings')}
                                     icon={Settings}

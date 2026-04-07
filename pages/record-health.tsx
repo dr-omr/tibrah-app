@@ -14,7 +14,7 @@ import {
     Frown, Meh, Smile, SmilePlus, PartyPopper
 } from 'lucide-react';
 import { haptic } from '@/lib/HapticFeedback';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import SEO from '@/components/common/SEO';
 import Link from 'next/link';
 import { aiClient } from '@/components/ai/aiClient';

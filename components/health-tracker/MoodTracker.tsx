@@ -11,7 +11,7 @@ import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { aiClient } from '@/components/ai/aiClient';
 import { motion } from 'framer-motion';
 
@@ -135,7 +135,7 @@ export default function MoodTracker() {
             // Mood Analysis & Suggestion
             if (selectedMood <= 2 || selectedEmotions.includes('anxious') || selectedEmotions.includes('sad') || selectedEmotions.includes('stress')) {
                 toast.success('تم حفظ مزاجك', {
-                    description: 'تشعر بضيق؟ جرب الاستماع لترددات السولفيجيو لرفع ذبذباتك.',
+                    body: 'تشعر بضيق؟ جرب الاستماع لترددات السولفيجيو لرفع ذبذباتك.',
                     action: {
                         label: '🎶 استمع للشفاء',
                         onClick: () => window.location.href = '/frequencies?id=4' // 528Hz Miracle

@@ -1,7 +1,7 @@
 // components/health-tracker/MentalHealthHub.tsx
 // PREMIUM Interactive Mental Health & Wellbeing with Animated UI
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +11,7 @@ import {
     TrendingUp, Sun, Cloud, Zap, Star, Send, ChevronDown
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -68,10 +68,26 @@ export default function MentalHealthHub() {
     const [showParticles, setShowParticles] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
 
-    // Random gratitude prompt
+    // Random gratitude prompt — stable per mount
     const [gratitudePrompt] = useState(() =>
         GRATITUDE_PROMPTS[Math.floor(Math.random() * GRATITUDE_PROMPTS.length)]
     );
+
+    // PERF-1 FIX: Pre-compute random particle positions once
+    const particlePositions = useMemo(() =>
+        Array.from({ length: 12 }, () => ({
+            top: Math.random() * 100,
+            left: Math.random() * 100,
+            xDrift: Math.random() * 30 - 15,
+            duration: 4 + Math.random() * 3,
+            delay: Math.random() * 4,
+        })), []);
+
+    const burstPositions = useMemo(() =>
+        Array.from({ length: 10 }, () => ({
+            x: (Math.random() - 0.5) * 200,
+            y: (Math.random() - 0.5) * 200,
+        })), []);
 
     // Fetch today's entry
     const { data: todayEntry } = useQuery<MentalEntry | null>({
@@ -194,24 +210,24 @@ export default function MentalHealthHub() {
             >
                 {/* Floating particles based on mood */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(12)].map((_, i) => (
+                    {particlePositions.map((p, i) => (
                         <motion.div
                             key={i}
                             className="absolute text-2xl"
                             style={{
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
+                                top: `${p.top}%`,
+                                left: `${p.left}%`,
                             }}
                             animate={{
                                 y: [0, -50, 0],
-                                x: [0, Math.random() * 30 - 15, 0],
+                                x: [0, p.xDrift, 0],
                                 opacity: [0, 0.6, 0],
                                 scale: [0.5, 1, 0.5],
                             }}
                             transition={{
-                                duration: 4 + Math.random() * 3,
+                                duration: p.duration,
                                 repeat: Infinity,
-                                delay: Math.random() * 4,
+                                delay: p.delay,
                             }}
                         >
                             {currentMoodData?.particle || '✨'}
@@ -222,7 +238,7 @@ export default function MentalHealthHub() {
                 {/* Selection particles burst */}
                 <AnimatePresence>
                     {showParticles && currentMoodData && (
-                        [...Array(10)].map((_, i) => (
+                        burstPositions.map((p, i) => (
                             <motion.div
                                 key={i}
                                 className="absolute text-3xl z-30"
@@ -232,8 +248,8 @@ export default function MentalHealthHub() {
                                 }}
                                 initial={{ x: 0, y: 0, opacity: 1 }}
                                 animate={{
-                                    x: (Math.random() - 0.5) * 200,
-                                    y: (Math.random() - 0.5) * 200,
+                                    x: p.x,
+                                    y: p.y,
                                     opacity: 0,
                                     scale: [1, 1.5, 0],
                                 }}

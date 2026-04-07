@@ -15,16 +15,25 @@ interface RateLimitEntry {
 }
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
+const MAX_RATE_LIMIT_ENTRIES = 1000;
 
-// Clean up expired entries periodically
-setInterval(() => {
+/**
+ * Lazy cleanup — removes expired entries when called.
+ * No setInterval needed — runs inline during each rate limit check.
+ */
+function cleanExpiredEntries(): void {
     const now = Date.now();
     for (const [key, entry] of rateLimitStore) {
         if (now > entry.resetTime) {
             rateLimitStore.delete(key);
         }
     }
-}, 60 * 1000);
+    // Hard cap to prevent unbounded memory growth in serverless
+    if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+        const keysToDelete = Array.from(rateLimitStore.keys()).slice(0, rateLimitStore.size - MAX_RATE_LIMIT_ENTRIES);
+        keysToDelete.forEach(k => rateLimitStore.delete(k));
+    }
+}
 
 export function getClientIp(req: NextApiRequest): string {
     return (
@@ -40,11 +49,19 @@ export function getClientIp(req: NextApiRequest): string {
  * @param maxRequests - Max requests per window (default: 30)
  * @param windowMs - Time window in ms (default: 60s)
  */
-export function checkRateLimit(
+export async function checkRateLimit(
     ip: string,
     maxRequests: number = 30,
     windowMs: number = 60 * 1000
-): { limited: boolean; remaining: number; resetIn: number } {
+): Promise<{ limited: boolean; remaining: number; resetIn: number }> {
+    // Lazy cleanup — no setInterval needed
+    cleanExpiredEntries();
+
+    // TODO: Replace with Upstash Redis or Vercel KV for Edge support
+    // const kv = createClient({ url: process.env.UPSTASH_REDIS_REST_URL, ... })
+    // const count = await kv.incr(key); 
+    // ...
+
     const now = Date.now();
     const key = `rl_${ip}`;
     const entry = rateLimitStore.get(key);
@@ -160,7 +177,7 @@ export function withMiddleware(
         // Rate limiting
         if (options.rateLimit) {
             const ip = getClientIp(req);
-            const { limited } = checkRateLimit(ip, options.rateLimit.max, options.rateLimit.windowMs);
+            const { limited } = await checkRateLimit(ip, options.rateLimit.max, options.rateLimit.windowMs);
             if (limited) {
                 return rateLimited(res);
             }

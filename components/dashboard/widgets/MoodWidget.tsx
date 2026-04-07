@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Brain, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { format } from 'date-fns';
 
 interface MoodWidgetProps {

@@ -17,9 +17,9 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
     const [isOpen, setIsOpen] = useState(false);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [recommendation, setRecommendation] = useState(null);
+    const [recommendation, setRecommendation] = useState<any>(null);
 
-    const [answers, setAnswers] = useState({
+    const [answers, setAnswers] = useState<Record<string, string | string[]>>({
         goal: '',
         energy_level: '',
         digestive_health: '',
@@ -63,16 +63,16 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
         }
     ];
 
-    const handleOptionSelect = (value) => {
+    const handleOptionSelect = (value: string) => {
         const currentQ = questions[step - 1];
         if (currentQ.multi) {
-            const currentValues = answers[currentQ.id] || [];
+            const currentValues = (answers[currentQ.id] as string[]) || [];
             const newValues = currentValues.includes(value)
-                ? currentValues.filter(v => v !== value)
+                ? currentValues.filter((v: string) => v !== value)
                 : [...currentValues, value];
             setAnswers({ ...answers, [currentQ.id]: newValues });
         } else {
-            setAnswers({ ...answers, [questions[step - 1].id]: value });
+            setAnswers({ ...answers, [currentQ.id]: value });
         }
     };
 
@@ -151,7 +151,7 @@ export default function ProgramRecommendation({ userMetrics = {}, userSymptoms =
         }
     };
 
-    const getProgramDetails = (id) => {
+    const getProgramDetails = (id: string) => {
         const programs = [
             { id: 'weekly', name: 'البرنامج الأسبوعي', color: 'bg-blue-500' },
             { id: '21_days', name: 'برنامج ٢١ يوم', color: 'bg-primary' },

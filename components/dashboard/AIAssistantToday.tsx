@@ -5,18 +5,20 @@ import { Sparkles, Lightbulb, RefreshCw, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AIAssistantToday() {
     const { generateSuggestions, loading, error, isEnabled } = useAI();
+    const { user } = useAuth();
     const [insights, setInsights] = useState(null);
 
     const fetchInsights = async () => {
-        if (!isEnabled()) return;
+        if (!isEnabled() || !user?.id) return;
 
         // Gather some context (mocked or real)
         try {
             // Try to get recent logs or use a default context
-            const recentLogs = await db.entities.DailyLog.list('-date', 3).catch(() => []);
+            const recentLogs = await db.entities.DailyLog.listForUser(user.id, '-date', 3).catch(() => []);
             const context = {
                 recentLogs: recentLogs,
                 timeOfDay: new Date().getHours() < 12 ? 'morning' : 'evening',
@@ -32,7 +34,7 @@ export default function AIAssistantToday() {
 
     useEffect(() => {
         fetchInsights();
-    }, []); // Run once on mount
+    }, [user?.id]); // Run when user is available
 
     if (!isEnabled()) return null;
 

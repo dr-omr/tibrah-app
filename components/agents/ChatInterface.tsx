@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/db';
+import { useAuth } from '@/contexts/AuthContext';
 import { aiClient } from '@/components/ai/aiClient';
 import { ImageUpload } from '@/components/ai/ImageUpload';
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Send, Bot, User, Sparkles, Loader2, Mic, MicOff, Trash2, StopCircle, He
 import ReactMarkdown from 'react-markdown';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================
@@ -67,6 +68,7 @@ export default function ChatInterface() {
     const [voiceMode, setVoiceMode] = useState(false);
     const [selectedImage, setSelectedImage] = useState<{ base64: string; mimeType: string } | null>(null);
     const [showQuickReplies, setShowQuickReplies] = useState(true);
+    const { user } = useAuth();
 
     const {
         isListening,
@@ -103,14 +105,15 @@ export default function ChatInterface() {
     }, [messages, isLoading, isStreaming]);
 
     const getRealHealthContext = async () => {
+        if (!user?.id) return null;
         try {
             const { format } = require('date-fns');
             const today = format(new Date(), 'yyyy-MM-dd');
 
             const [waterLogs, sleepLogs, dailyLogs] = await Promise.all([
-                db.entities.WaterLog.filter({ date: today }).catch(() => []),
-                db.entities.SleepLog.list('-date', 1).catch(() => []),
-                db.entities.DailyLog.filter({ date: today }).catch(() => [])
+                db.entities.WaterLog.filter({ date: today, user_id: user.id }).catch(() => []),
+                db.entities.SleepLog.listForUser(user.id, '-date', 1).catch(() => []),
+                db.entities.DailyLog.filter({ date: today, user_id: user.id }).catch(() => [])
             ]);
 
             const water = waterLogs?.[0]?.glasses || 0;

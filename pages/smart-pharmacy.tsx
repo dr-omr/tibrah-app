@@ -267,7 +267,19 @@ export default function SmartPharmacy() {
                             </div>
 
                             {/* Store Promo */}
-                            <div className="mt-8 p-6 rounded-[28px] bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/40 dark:to-emerald-900/40 border border-teal-200/60 dark:border-teal-500/30 flex items-center justify-between shadow-[0_10px_30px_rgba(20,184,166,0.1)]">
+                            <button 
+                                onClick={async () => {
+                                    haptic.success();
+                                    try {
+                                        const res = await fetch('/api/pharmacy/refill-request', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            if (data.whatsappUrl) window.open(data.whatsappUrl, '_blank');
+                                        }
+                                    } catch(e) {}
+                                }}
+                                className="w-full mt-8 p-6 rounded-[28px] bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/40 dark:to-emerald-900/40 border border-teal-200/60 dark:border-teal-500/30 flex items-center justify-between shadow-[0_10px_30px_rgba(20,184,166,0.1)] hover:shadow-[0_15px_40px_rgba(20,184,166,0.15)] active:scale-[0.98] transition-all text-right"
+                            >
                                 <div>
                                     <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2 mb-2">
                                         <Truck className="w-5 h-5 text-teal-600 dark:text-teal-400" />
@@ -278,7 +290,7 @@ export default function SmartPharmacy() {
                                 <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm">
                                     <ChevronRight className="w-5 h-5 text-teal-600 dark:text-teal-400 rtl:-scale-x-100" />
                                 </div>
-                            </div>
+                            </button>
                         </motion.div>
                     )}
 

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Camera, X, ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 interface ImageUploadProps {
     onImageSelected: (base64: string, mimeType: string) => void;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Article } from '@/lib/articles';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 /**
  * Custom hook for explicitly caching articles for offline reading.

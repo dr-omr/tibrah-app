@@ -17,6 +17,7 @@ export const PROTECTED_ROUTES = [
     '/my-appointments',
     '/health-tracker',
     '/rewards',
+    '/doctor',
 ] as const;
 
 /** Routes that require admin role */
@@ -89,11 +90,11 @@ export const PAGE_TO_TAB: Record<string, string> = {
 export const HIDE_NAV_PAGES = [
     'Checkout', 'ProductDetails', 'BookAppointment', 'ProgramDetails',
     'ArticleDetails', 'CourseDetails', 'RifeFrequencies', 'AdminDashboard',
-    'Settings', 'Login', 'Frequencies', 'Breathe', 'MealPlanner',
+    'Admin', 'Settings', 'Login', 'Frequencies', 'Breathe', 'MealPlanner',
 ] as const;
 
 /** Pages where footer should be hidden */
 export const HIDE_FOOTER_PAGES = [
     'Checkout', 'BookAppointment', 'Login', 'AdminDashboard',
-    'Settings', 'Frequencies', 'Breathe', 'MealPlanner',
+    'Admin', 'Settings', 'Frequencies', 'Breathe', 'MealPlanner',
 ] as const;

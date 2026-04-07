@@ -5,14 +5,15 @@
 
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { useSearch } from '@/components/search-engine';
 
 interface ShortcutHandlers {
-    onSearch?: () => void;
     onAI?: () => void;
 }
 
-export function useKeyboardShortcuts({ onSearch, onAI }: ShortcutHandlers = {}) {
+export function useKeyboardShortcuts({ onAI }: ShortcutHandlers = {}) {
     const router = useRouter();
+    const { openSearch } = useSearch();
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         // Don't trigger if typing in an input
@@ -22,7 +23,7 @@ export function useKeyboardShortcuts({ onSearch, onAI }: ShortcutHandlers = {}) 
         // Ctrl+K / Cmd+K = Open Search
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
-            onSearch?.();
+            openSearch();
         }
 
         // Ctrl+/ or Cmd+/ = AI Assistant
@@ -52,7 +53,7 @@ export function useKeyboardShortcuts({ onSearch, onAI }: ShortcutHandlers = {}) 
             e.preventDefault();
             router.push('/book-appointment');
         }
-    }, [onSearch, onAI, router]);
+    }, [openSearch, onAI, router]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);

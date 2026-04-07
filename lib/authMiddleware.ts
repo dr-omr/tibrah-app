@@ -5,6 +5,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
 
 // Admin emails — same source of truth as AuthContext
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'dr.omar@tibrah.com')
@@ -132,7 +133,7 @@ export function requireAdmin(
 
 /**
  * Verify admin passcode (for admin dashboard login)
- * Uses environment variable — NO fallback in any environment
+ * Uses constant-time comparison to prevent timing attacks
  */
 export function verifyAdminPasscode(passcode: string): boolean {
     const validPasscode = process.env.ADMIN_PASSCODE;
@@ -140,7 +141,16 @@ export function verifyAdminPasscode(passcode: string): boolean {
         console.error('❌ ADMIN_PASSCODE not set — admin login disabled');
         return false;
     }
-    return passcode === validPasscode;
+    // Constant-time comparison to prevent timing attacks
+    if (passcode.length !== validPasscode.length) return false;
+    try {
+        return crypto.timingSafeEqual(
+            Buffer.from(passcode, 'utf8'),
+            Buffer.from(validPasscode, 'utf8')
+        );
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -151,11 +161,17 @@ export function generateAdminToken(): string {
     const secret = process.env.ADMIN_API_SECRET;
     if (secret) return secret;
 
-    // Generate a random token if no secret is configured
+    // Server-side: use Node.js crypto
+    if (typeof crypto !== 'undefined' && crypto.randomBytes) {
+        return crypto.randomBytes(32).toString('hex');
+    }
+
+    // Client-side: use Web Crypto API
     if (typeof window !== 'undefined' && window.crypto) {
         const array = new Uint8Array(32);
         window.crypto.getRandomValues(array);
         return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
     }
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+    throw new Error('No secure random source available for token generation');
 }

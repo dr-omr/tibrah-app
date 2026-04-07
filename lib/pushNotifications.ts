@@ -1,6 +1,7 @@
 /**
  * Push Notifications Service for Tibrah Health App
  * Handles medication reminders, water tracking, and health notifications
+ * Upgraded with Native FCM/APNs dynamic syncing capabilities.
  */
 
 import { Capacitor } from '@capacitor/core';
@@ -14,27 +15,27 @@ export const isNotificationSupported = (): boolean => {
     return 'Notification' in window && 'serviceWorker' in navigator;
 };
 
-// Request notification permission & Register for FCM/APNs
+// Request notification permission & Register for FCM/APNs       
 export const requestNotificationPermission = async (): Promise<boolean> => {
     if (Capacitor.isNativePlatform()) {
         try {
             // 1. Request local notification permissions
             const { display } = await LocalNotifications.requestPermissions();
-            
+
             // 2. Request push notification permissions
             let pushGranted = false;
             try {
                 const pushStatus = await PushNotifications.requestPermissions();
-                pushGranted = pushStatus.receive === 'granted';
-                
+                pushGranted = pushStatus.receive === 'granted';  
+
                 if (pushGranted) {
                     // Register with Apple / Google to receive push via APNS/FCM
                     await PushNotifications.register();
                 }
             } catch (e) {
-                console.warn('Push Notifications registration skipped:', e); // Use warn as it might be expected if not configured
+                console.warn('Push Notifications registration skipped:', e);
             }
-            
+
             return display === 'granted' || pushGranted;
         } catch (error) {
             console.error('Error requesting native notification permission:', error);
@@ -76,8 +77,8 @@ export const showNotification = async (
                     {
                         title: title,
                         body: options?.body || '',
-                        id: Math.floor(Math.random() * 1000000), // Generate random ID for immediate notification
-                        schedule: { at: new Date(Date.now() + 1000) }, // Schedule 1 second from now
+                        id: Math.floor(Math.random() * 1000000), 
+                        schedule: { at: new Date(Date.now() + 1000) }, 
                         sound: undefined,
                         attachments: undefined,
                         actionTypeId: '',
@@ -87,7 +88,7 @@ export const showNotification = async (
             });
             return null;
         } catch (error) {
-            console.error("Native notification failed:", error);
+            console.error("Native notification failed:", error); 
             return null;
         }
     }
@@ -105,13 +106,12 @@ export const showNotification = async (
         renotify: true,
         ...options
     } as any;
-    // Note: vibrate is a valid Web API property but not always in TS types
     (defaultOptions as any).vibrate = [200, 100, 200];
 
     return new Notification(title, defaultOptions);
 };
 
-// Schedule a reminder (uses localStorage for persistence)
+// Schedule a reminder (uses localStorage for persistence)       
 interface Reminder {
     id: string;
     title: string;
@@ -128,7 +128,7 @@ const REMINDER_CHECK_INTERVAL = 60000; // Check every minute
 // Get all reminders
 export const getReminders = (): Reminder[] => {
     try {
-        const stored = localStorage.getItem(REMINDERS_KEY);
+        const stored = localStorage.getItem(REMINDERS_KEY);      
         return stored ? JSON.parse(stored) : [];
     } catch {
         return [];
@@ -136,7 +136,7 @@ export const getReminders = (): Reminder[] => {
 };
 
 // Save reminder
-export const saveReminder = (reminder: Reminder): void => {
+export const saveReminder = (reminder: Reminder): void => {      
     const reminders = getReminders();
     const existingIndex = reminders.findIndex(r => r.id === reminder.id);
 
@@ -154,7 +154,7 @@ export const saveReminder = (reminder: Reminder): void => {
 
 // Delete reminder
 export const deleteReminder = (id: string): void => {
-    const reminders = getReminders().filter(r => r.id !== id);
+    const reminders = getReminders().filter(r => r.id !== id);   
     localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
     if (Capacitor.isNativePlatform()) {
         syncNativeNotifications();
@@ -174,16 +174,16 @@ export const createMedicationReminder = (
         scheduledTime: time,
         type: 'medication',
         enabled: true,
-        daysOfWeek: [0, 1, 2, 3, 4, 5, 6] // Every day
+        daysOfWeek: [0, 1, 2, 3, 4, 5, 6] 
     };
 };
 
 // Create water reminder
-export const createWaterReminder = (time: string): Reminder => {
+export const createWaterReminder = (time: string): Reminder => { 
     return {
         id: `water_${time.replace(':', '')}`,
         title: `💧 تذكير بشرب الماء`,
-        body: 'حان وقت شرب كوب ماء للحفاظ على ترطيب جسمك',
+        body: 'حان وقت شرب كوب ماء للحفاظ على ترطيب جسمك',       
         scheduledTime: time,
         type: 'water',
         enabled: true,
@@ -192,7 +192,7 @@ export const createWaterReminder = (time: string): Reminder => {
 };
 
 // Create sleep reminder
-export const createSleepReminder = (time: string): Reminder => {
+export const createSleepReminder = (time: string): Reminder => { 
     return {
         id: `sleep_${time.replace(':', '')}`,
         title: `😴 وقت النوم`,
@@ -204,8 +204,8 @@ export const createSleepReminder = (time: string): Reminder => {
     };
 };
 
-// Default water reminders (every 2 hours from 8am to 8pm)
-export const getDefaultWaterReminders = (): Reminder[] => {
+// Default water reminders      
+export const getDefaultWaterReminders = (): Reminder[] => {      
     const times = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
     return times.map(time => createWaterReminder(time));
 };
@@ -216,7 +216,7 @@ let reminderCheckInterval: NodeJS.Timeout | null = null;
 export const startReminderChecker = (): void => {
     if (Capacitor.isNativePlatform()) {
         syncNativeNotifications();
-        return; // Native handles scheduling directly
+        return; 
     }
 
     if (reminderCheckInterval) {
@@ -225,7 +225,7 @@ export const startReminderChecker = (): void => {
 
     const checkReminders = async () => {
         const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;      
         const currentDay = now.getDay();
 
         const reminders = getReminders();
@@ -233,16 +233,15 @@ export const startReminderChecker = (): void => {
         for (const reminder of reminders) {
             if (
                 reminder.enabled &&
-                reminder.scheduledTime === currentTime &&
+                reminder.scheduledTime === currentTime &&        
                 reminder.daysOfWeek.includes(currentDay)
             ) {
-                // Check if we haven't shown this reminder in the last minute
                 const lastShownKey = `reminder_shown_${reminder.id}`;
                 const lastShown = localStorage.getItem(lastShownKey);
                 const oneMinuteAgo = Date.now() - 60000;
 
                 if (!lastShown || parseInt(lastShown) < oneMinuteAgo) {
-                    await showNotification(reminder.title, {
+                    await showNotification(reminder.title, {     
                         body: reminder.body,
                         tag: reminder.id
                     });
@@ -252,10 +251,7 @@ export const startReminderChecker = (): void => {
         }
     };
 
-    // Check immediately
     checkReminders();
-
-    // Then check every minute
     reminderCheckInterval = setInterval(checkReminders, REMINDER_CHECK_INTERVAL);
 };
 
@@ -267,17 +263,20 @@ export const stopReminderChecker = (): void => {
 };
 
 // Listen for FCM push notifications
-export const initializePushListeners = () => {
+export const initializePushListeners = (userId?: string) => {
     if (!Capacitor.isNativePlatform()) return;
 
     PushNotifications.addListener('registration', async (token: Token) => {
-        console.log('Push registration success, token: ' + token.value);
+        console.log('[PushNotifications] Push registration success, token: ' + token.value);
         try {
-            // Save token to localStorage for later sync with User doc
             localStorage.setItem('fcm_token', token.value);
-            // Optionally, we could save it to the DB if we have the user ID here
+            if (userId) {
+                await db.entities.User.update(userId, { 
+                    fcmToken: token.value 
+                });
+            }
         } catch (e) {
-            console.error('Error handling FCM token', e);
+            console.error('[PushNotifications] Error handling FCM token', e);        
         }
     });
 
@@ -289,27 +288,29 @@ export const initializePushListeners = () => {
         'pushNotificationReceived',
         (notification: PushNotificationSchema) => {
             console.log('Push received: ' + JSON.stringify(notification));
-            // You can trigger local state updates here if needed
         },
     );
 
     PushNotifications.addListener(
         'pushNotificationActionPerformed',
-        (notification: ActionPerformed) => {
-            console.log('Push action performed: ' + JSON.stringify(notification));
-            // Handle deep linking or routing based on the notification data
+        (action: ActionPerformed) => {
+            console.log('Push action performed: ' + JSON.stringify(action.notification));
+            const data = action.notification.data;
+            if (data && data.deepLink) {
+                window.dispatchEvent(new CustomEvent('tibrah_deeplink', { detail: data.deepLink }));
+            }
         },
     );
 };
 
 // Initialize notifications and reminders
-export const initializeNotifications = async (): Promise<boolean> => {
-    const granted = await requestNotificationPermission();
+export const initializeNotifications = async (userId?: string): Promise<boolean> => {
+    const granted = await requestNotificationPermission();       
 
     if (granted) {
         if (Capacitor.isNativePlatform()) {
             await syncNativeNotifications();
-            initializePushListeners();
+            initializePushListeners(userId);
         } else {
             startReminderChecker();
         }
@@ -343,23 +344,22 @@ export const syncNativeNotifications = async (): Promise<void> => {
     if (!Capacitor.isNativePlatform()) return;
 
     try {
-        const pending = await LocalNotifications.getPending();
+        const pending = await LocalNotifications.getPending();   
         if (pending.notifications.length > 0) {
             await LocalNotifications.cancel(pending);
         }
 
-        const reminders = getReminders().filter(r => r.enabled);
+        const reminders = getReminders().filter(r => r.enabled); 
         if (reminders.length === 0) return;
 
         const notificationsList: any[] = [];
-        
+
         reminders.forEach((r) => {
             const [hourStr, minStr] = r.scheduledTime.split(':');
             const hour = parseInt(hourStr, 10);
             const minute = parseInt(minStr, 10);
-            
+
             if (r.daysOfWeek.length === 7) {
-                // Daily
                 notificationsList.push({
                     title: r.title,
                     body: r.body,
@@ -389,6 +389,10 @@ export const syncNativeNotifications = async (): Promise<void> => {
     }
 };
 
+export const registerForPushNotifications = async (userId: string) => {
+    return await initializeNotifications(userId);
+}
+
 export default {
     isNotificationSupported,
     requestNotificationPermission,
@@ -400,8 +404,11 @@ export default {
     createMedicationReminder,
     createWaterReminder,
     createSleepReminder,
+    getDefaultWaterReminders,
     initializeNotifications,
     startReminderChecker,
     stopReminderChecker,
-    syncNativeNotifications
+    syncNativeNotifications,
+    registerForPushNotifications,
+    NOTIFICATION_ICONS
 };

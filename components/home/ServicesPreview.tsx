@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import {
     Stethoscope, Clock, ArrowLeft, ArrowRight, Sparkles, Calendar,
-    Star, TrendingUp, Users, Zap, Heart, Shield, CheckCircle2
+    Star, TrendingUp, Users, Zap, Heart, Shield, CheckCircle2, PlayCircle, StopCircle
 } from 'lucide-react';
 import { createPageUrl } from '../../utils';
 import { haptic } from '@/lib/HapticFeedback';
@@ -58,6 +58,7 @@ const services = [
         icon: Shield,
         features: ['10 جلسات متابعة', 'دعم مستمر طول الفترة', 'خطة صيانة بعد البرنامج'],
         stat: { value: 'VIP', label: 'أولوية كاملة', icon: Star },
+        limitedSpots: 'متبقي مقعدين',
     },
 ];
 
@@ -208,7 +209,7 @@ export default function ServicesPreview() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => uiSounds.tap()}
-                    className="flex items-center justify-center gap-2.5 p-3.5 rounded-3xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200/60 dark:border-green-800/40 text-green-700 dark:text-green-400 text-sm font-semibold active:scale-[0.98] transition-transform shadow-sm"
+                    className="flex items-center justify-center gap-2.5 p-3.5 rounded-3xl liquid-card text-green-700 dark:text-green-400 text-sm font-semibold active:scale-[0.98] transition-transform"
                 >
                     <div className="w-7 h-7 rounded-lg bg-green-500 flex items-center justify-center shadow-sm">
                         <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor">
@@ -267,6 +268,8 @@ function ServiceCard({ service, index, isVisible, isActive }: ServiceCardProps) 
         x.set(0);
         y.set(0);
     };
+
+    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
     useEffect(() => {
         if (isVisible) {
@@ -356,13 +359,43 @@ function ServiceCard({ service, index, isVisible, isActive }: ServiceCardProps) 
                                     <Icon className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-white font-black text-base leading-tight mb-0.5">{service.title}</h3>
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-white font-black text-base leading-tight mb-0.5">{service.title}</h3>
+                                        {(service as any).limitedSpots && (
+                                            <span className="flex items-center gap-1 bg-rose-500/80 text-white px-2 py-0.5 rounded-full text-[9px] font-bold shadow-sm">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                                {(service as any).limitedSpots}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-white/60 text-xs font-medium">{service.subtitle}</p>
                                 </div>
                             </div>
 
-                            {/* Description */}
-                            <p className="text-white/75 text-sm leading-relaxed mb-4">{service.description}</p>
+                            {/* Description & Voice Note Preview */}
+                            <div className="mb-4">
+                                <p className="text-white/75 text-sm leading-relaxed mb-3">{service.description}</p>
+                                <button
+                                    onClick={(e) => { e.preventDefault(); haptic.selection(); setIsPlayingAudio(!isPlayingAudio); uiSounds.tap(); }}
+                                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/10 rounded-full px-3 py-1.5 transition-colors"
+                                >
+                                    {isPlayingAudio ? (
+                                        <StopCircle className="w-4 h-4 text-emerald-400" />
+                                    ) : (
+                                        <PlayCircle className="w-4 h-4 text-white" />
+                                    )}
+                                    <span className="text-[11px] font-bold text-white/90">
+                                        {isPlayingAudio ? 'جاري العرض...' : 'اسمع د. عمر يشرح البرنامج'}
+                                    </span>
+                                    {isPlayingAudio && (
+                                        <div className="flex items-center gap-0.5 ml-1">
+                                            {[1, 2, 3].map(i => (
+                                                <motion.div key={i} animate={{ height: [3, 8, 3] }} transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }} className="w-0.5 bg-emerald-400 rounded-full" />
+                                            ))}
+                                        </div>
+                                    )}
+                                </button>
+                            </div>
 
                             {/* Features checklist */}
                             <div className="space-y-2 mb-4">

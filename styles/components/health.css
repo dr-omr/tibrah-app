@@ -1,0 +1,649 @@
+/**
+ * TIBRAH HEALTH COMPONENTS CSS — v1.0
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * Premium health UI components — Activity Rings, 
+ * Metric Cards, Progress Arcs, Heart Rate Graph,
+ * Medication Timeline, Lab Biomarker Bars.
+ *
+ * Design Language: Apple Health + Liquid Glass fusion
+ */
+
+
+/* ═══════════════════════════════════════════════
+   1. ACTIVITY RINGS — 3 Concentric Circular Rings
+   Inspired by Apple Watch Activity Rings
+   ═══════════════════════════════════════════════ */
+
+.activity-rings {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ring SVG wrapper — sizes */
+.activity-rings-sm  { width: 64px;  height: 64px;  }
+.activity-rings-md  { width: 96px;  height: 96px;  }
+.activity-rings-lg  { width: 128px; height: 128px; }
+.activity-rings-xl  { width: 160px; height: 160px; }
+
+/* Individual ring tracks (background) */
+.ring-track {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.15;
+}
+
+/* Individual ring foregrounds (progress) */
+.ring-fill {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Ring color themes */
+.ring-move    { color: #FF2D55; }  /* Red — Move */
+.ring-exercise { color: #30D158; } /* Green — Exercise */
+.ring-stand   { color: #34AADC; }  /* Blue — Stand */
+
+/* Default Tibrah brand rings */
+.ring-primary   { color: #2D9B83; }
+.ring-secondary { color: #8B5CF6; }
+.ring-tertiary  { color: #F59E0B; }
+
+/* Ring center stat */
+.ring-center-stat {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.ring-center-stat .ring-value {
+    font-size: clamp(0.875rem, 2.5vw, 1.25rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary, #0f172a);
+}
+html.dark .ring-center-stat .ring-value {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.ring-center-stat .ring-label {
+    font-size: 0.625rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary, #94a3b8);
+    margin-top: 1px;
+}
+
+/* Ring mount animation */
+@keyframes ring-mount {
+    from { stroke-dashoffset: var(--ring-circumference); }
+    to   { stroke-dashoffset: var(--ring-offset); }
+}
+
+.ring-animated .ring-fill {
+    animation: ring-mount 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Staggered starts for 3 rings */
+.ring-animated .ring-fill:nth-child(1) { animation-delay: 0ms; }
+.ring-animated .ring-fill:nth-child(2) { animation-delay: 120ms; }
+.ring-animated .ring-fill:nth-child(3) { animation-delay: 240ms; }
+
+
+/* ═══════════════════════════════════════════════
+   2. METRIC CARD — Big Number Display
+   Blood Pressure, Heart Rate, Steps, etc.
+   ═══════════════════════════════════════════════ */
+
+.metric-card {
+    position: relative;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-xl, 1.25rem);
+    overflow: hidden;
+    min-width: 140px;
+}
+
+/* Colored tint based on metric type */
+.metric-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0.08;
+    background: currentColor;
+    pointer-events: none;
+}
+
+/* Icon container */
+.metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.625rem;
+    background: rgba(currentColor, 0.12);
+    color: inherit;
+}
+
+/* Big metric number */
+.metric-value {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--text-primary, #0f172a);
+}
+html.dark .metric-value {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Unit next to number */
+.metric-unit {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-tertiary, #94a3b8);
+    margin-right: 2px;
+    vertical-align: baseline;
+    line-height: 1;
+}
+
+/* Metric label below number */
+.metric-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary, #64748b);
+    margin-top: 0.25rem;
+}
+html.dark .metric-label {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Trend indicator */
+.metric-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.375rem;
+    padding: 2px 6px;
+    border-radius: 100px;
+}
+
+.metric-trend.up   { color: #22c55e; background: rgba(34, 197, 94, 0.12);  }
+.metric-trend.down { color: #ef4444; background: rgba(239, 68, 68, 0.12);  }
+.metric-trend.flat { color: #94a3b8; background: rgba(148, 163, 184, 0.12); }
+
+.metric-trend svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Metric color themes */
+.metric-heart    { color: #FF2D55; }
+.metric-steps    { color: #30D158; }
+.metric-sleep    { color: #5E5CE6; }
+.metric-water    { color: #32ADE6; }
+.metric-weight   { color: #FF9F0A; }
+.metric-glucose  { color: #FF6B35; }
+.metric-pressure { color: #BF5AF2; }
+.metric-calories { color: #FF3B30; }
+.metric-health   { color: #2D9B83; }
+
+
+/* ═══════════════════════════════════════════════
+   3. PROGRESS ARC — SVG Semicircle Gauge
+   Health scores, goal completion, body fat %
+   ═══════════════════════════════════════════════ */
+
+.progress-arc {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.progress-arc svg {
+    overflow: visible;
+}
+
+.arc-track {
+    fill: none;
+    stroke: var(--fill-tertiary, rgba(0,0,0,0.06));
+    stroke-linecap: round;
+}
+html.dark .arc-track {
+    stroke: rgba(255,255,255,0.08);
+}
+
+.arc-fill {
+    fill: none;
+    stroke-linecap: round;
+    transform-origin: center;
+    transition: stroke-dashoffset 1.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Score display inside arc */
+.arc-score {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.arc-score-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--text-primary, #0f172a);
+}
+html.dark .arc-score-value {
+    color: rgba(255,255,255,0.95);
+}
+
+.arc-score-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-tertiary, #94a3b8);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Arc animations on mount */
+@keyframes arc-mount {
+    from { stroke-dashoffset: var(--arc-circumference); }
+    to   { stroke-dashoffset: var(--arc-offset); }
+}
+
+.arc-animated .arc-fill {
+    animation: arc-mount 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+
+/* ═══════════════════════════════════════════════
+   4. BIOMARKER BAR — Lab Result Range Display
+   Shows value on a min-max scale with reference
+   ═══════════════════════════════════════════════ */
+
+.biomarker-bar {
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius-lg, 0.75rem);
+}
+
+.biomarker-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary, #0f172a);
+    margin-bottom: 0.25rem;
+}
+html.dark .biomarker-name {
+    color: rgba(255,255,255,0.92);
+}
+
+.biomarker-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.biomarker-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.biomarker-unit {
+    font-size: 0.75rem;
+    color: var(--text-tertiary, #94a3b8);
+}
+
+/* Track bar */
+.biomarker-track {
+    position: relative;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.06);
+    overflow: visible;
+}
+html.dark .biomarker-track {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Zones: low / normal / high */
+.biomarker-zone-low    { background: #3b82f6; }
+.biomarker-zone-normal { background: #22c55e; }
+.biomarker-zone-high   { background: #ef4444; }
+
+/* Value indicator needle */
+.biomarker-needle {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid currentColor;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 2;
+}
+
+/* Reference range label */
+.biomarker-reference {
+    font-size: 0.6875rem;
+    color: var(--text-tertiary, #94a3b8);
+    margin-top: 0.375rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Status color coding */
+.biomarker-bar.status-normal .biomarker-value { color: #22c55e; }
+.biomarker-bar.status-low    .biomarker-value { color: #3b82f6; }
+.biomarker-bar.status-high   .biomarker-value { color: #ef4444; }
+.biomarker-bar.status-critical .biomarker-value { color: #991b1b; }
+
+
+/* ═══════════════════════════════════════════════
+   5. MEDICATION DOSE ROW — Daily Timeline
+   Morning / Noon / Evening / Night doses
+   ═══════════════════════════════════════════════ */
+
+.dose-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    transition: background 0.15s ease;
+}
+
+.dose-time-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    gap: 1px;
+}
+
+.dose-time-badge .dose-icon { font-size: 1rem; }
+
+/* Time-based colors */
+.dose-morning { background: rgba(255, 159, 10, 0.15); color: #FF9F0A; }
+.dose-noon    { background: rgba(255, 45, 85, 0.12);  color: #FF2D55; }
+.dose-evening { background: rgba(94, 92, 230, 0.15);  color: #5E5CE6; }
+.dose-night   { background: rgba(50, 173, 230, 0.12); color: #32ADE6; }
+
+.dose-info { flex: 1; min-width: 0; }
+
+.dose-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary, #0f172a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html.dark .dose-name { color: rgba(255,255,255,0.92); }
+
+.dose-details {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary, #94a3b8);
+    margin-top: 1px;
+}
+
+/* Checkmark button */
+.dose-check-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+    background: transparent;
+    color: transparent;
+}
+html.dark .dose-check-btn {
+    border-color: rgba(255,255,255,0.12);
+}
+
+.dose-check-btn:active { transform: scale(0.88); }
+
+.dose-row.taken .dose-check-btn {
+    background: #30D158;
+    border-color: #30D158;
+    color: white;
+    box-shadow: 0 0 0 4px rgba(48, 209, 88, 0.20);
+}
+
+.dose-row.missed .dose-check-btn {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+/* Strike-through for taken doses */
+.dose-row.taken .dose-name {
+    text-decoration: line-through;
+    opacity: 0.55;
+}
+
+
+/* ═══════════════════════════════════════════════
+   6. HEALTH SCORE BADGE
+   A compact circular percentage badge
+   ═══════════════════════════════════════════════ */
+
+.health-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.health-badge-excellent {
+    background: rgba(48, 209, 88, 0.15);
+    color: #22c55e;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.2);
+}
+.health-badge-good {
+    background: rgba(45, 155, 131, 0.15);
+    color: #2D9B83;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.2);
+}
+.health-badge-attention {
+    background: rgba(255, 159, 10, 0.15);
+    color: #FF9F0A;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.2);
+}
+.health-badge-warning {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.2);
+}
+
+/* Dot indicator */
+.health-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+/* Pulse animation on attention/warning */
+.health-badge-attention::before,
+.health-badge-warning::before {
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+
+/* ═══════════════════════════════════════════════
+   7. QUICK LOG BUTTONS — Circular fast-entry
+   Water, mood, energy, steps
+   ═══════════════════════════════════════════════ */
+
+.quick-log-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.quick-log-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: var(--radius-xl, 1.25rem);
+    border: none;
+    cursor: pointer;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.quick-log-btn:active {
+    transform: scale(0.92);
+}
+
+@media (hover: hover) {
+    .quick-log-btn:hover {
+        transform: translateY(-2px);
+    }
+}
+
+.quick-log-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    position: relative;
+}
+
+.quick-log-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.2;
+}
+html.dark .quick-log-label {
+    color: rgba(255,255,255,0.6);
+}
+
+/* Quick log count badge */
+.quick-log-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--primary, #2D9B83);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px var(--bg-base, #fff);
+}
+
+
+/* ═══════════════════════════════════════════════
+   8. EMERGENCY BANNER — Clinical Safety Alert
+   Full-width sticky, never dismissible
+   ═══════════════════════════════════════════════ */
+
+.emergency-banner {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-fixed, 200);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: white;
+    box-shadow: 0 2px 16px rgba(220, 38, 38, 0.40);
+}
+
+.emergency-banner::before {
+    content: '⚠️';
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    animation: emergency-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes emergency-pulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.15); }
+}
+
+.emergency-banner-text {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.emergency-banner-cta {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    background: white;
+    color: #dc2626;
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.15s ease;
+}
+.emergency-banner-cta:active { transform: scale(0.96); }

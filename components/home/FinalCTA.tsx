@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ArrowLeft, Shield, MessageCircle, Clock, Sparkles, Heart, Star, Users, Activity, CheckCircle, TrendingUp, Stethoscope, Award, Brain, Phone } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Calendar, ArrowLeft, Shield, MessageCircle, Clock, Sparkles, Heart, Star, Users, Activity, CheckCircle, TrendingUp, Stethoscope, Award, Brain, Phone, Zap, Timer } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { haptic } from '@/lib/HapticFeedback';
 import { uiSounds } from '@/lib/uiSounds';
@@ -41,9 +41,44 @@ function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: str
 }
 
 /* ═══════════════════════════════════════
+   COUNTDOWN TIMER — till end of day
+   ═══════════════════════════════════════ */
+function CountdownTimer() {
+    const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+    useEffect(() => {
+        const calc = () => {
+            const now = new Date();
+            const end = new Date();
+            end.setHours(23, 59, 59, 999);
+            const diff = end.getTime() - now.getTime();
+            setTimeLeft({
+                h: Math.floor(diff / 3600000),
+                m: Math.floor((diff % 3600000) / 60000),
+                s: Math.floor((diff % 60000) / 1000),
+            });
+        };
+        calc();
+        const t = setInterval(calc, 1000);
+        return () => clearInterval(t);
+    }, []);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return (
+        <div className="flex items-center gap-1 font-black tabular-nums text-emerald-100" dir="ltr">
+            {[pad(timeLeft.h), pad(timeLeft.m), pad(timeLeft.s)].map((v, i) => (
+                <React.Fragment key={i}>
+                    <motion.span key={v} initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} className="text-[13px] bg-white/10 rounded-lg px-1.5 py-0.5 min-w-[26px] text-center">{v}</motion.span>
+                    {i < 2 && <span className="text-emerald-400/50 text-[12px]">:</span>}
+                </React.Fragment>
+            ))}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════
    FLOATING TESTIMONIAL CARD
    ═══════════════════════════════════════ */
 function TestimonialRotator() {
+
     const testimonials = [
         { name: 'أحمد', text: 'بعد ٣ أشهر تغيرت حياتي — الحمد لله', rating: 5 },
         { name: 'سارة', text: 'الدكتور عمر فهم حالتي من أول جلسة', rating: 5 },
@@ -111,7 +146,40 @@ function TestimonialRotator() {
    ═══════════════════════════════════════ */
 export default function FinalCTA() {
     const [urgentText, setUrgentText] = useState('باقي 3 مواعيد بس هالأسبوع');
-    
+
+    // 3D Tilt State for the Massive CTA Card
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
+    const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
+    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["3.5deg", "-3.5deg"]);
+    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-3.5deg", "3.5deg"]);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        let clientX, clientY;
+
+        if ('touches' in e) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = (e as React.MouseEvent).clientX;
+            clientY = (e as React.MouseEvent).clientY;
+        }
+
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
+        x.set(mouseX / width - 0.5);
+        y.set(mouseY / height - 0.5);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
     useEffect(() => {
         const hour = new Date().getHours();
         if (hour > 18) {
@@ -130,10 +198,20 @@ export default function FinalCTA() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
+                className="perspective-[1200px]"
             >
-                <div
-                    className="relative overflow-hidden rounded-3xl text-center"
-                    style={{ background: 'linear-gradient(145deg, #042f2e 0%, #064e3b 30%, #065f46 60%, #047857 100%)' }}
+                <motion.div
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    onTouchMove={handleMouseMove}
+                    onTouchEnd={handleMouseLeave}
+                    className="relative overflow-hidden rounded-3xl text-center shadow-[0_16px_40px_rgba(4,47,46,0.3)] border border-emerald-900/30"
+                    style={{
+                        background: 'linear-gradient(145deg, #042f2e 0%, #064e3b 30%, #065f46 60%, #047857 100%)',
+                        rotateX,
+                        rotateY,
+                        transformStyle: 'preserve-3d'
+                    }}
                 >
                     {/* ═══ Rich Decorative Layer ═══ */}
                     <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl" style={{ background: 'rgba(16,185,129,0.12)' }} />
@@ -176,16 +254,23 @@ export default function FinalCTA() {
                         <p className="text-[13px] text-white/50 font-medium mb-5 max-w-xs mx-auto leading-relaxed">
                             نوصل لأصل المشكلة ونعالج السبب الحقيقي، مش بس نسكّن الأعراض
                         </p>
-                        
-                        {/* Urgency Bar */}
-                        <motion.div 
+
+                        {/* Urgency Bar with Countdown */}
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-emerald-900/40 border border-emerald-400/20 backdrop-blur-md rounded-xl py-2.5 px-4 inline-flex items-center gap-2 mb-5 shadow-inner"
+                            className="bg-emerald-900/40 border border-emerald-400/20 backdrop-blur-md rounded-2xl py-2.5 px-4 mb-5 shadow-inner"
                         >
-                            <Clock className="w-4 h-4 text-emerald-300 animate-pulse" />
-                            <span className="text-[12px] font-bold text-emerald-100">{urgentText}</span>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                    <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
+                                        <Clock className="w-4 h-4 text-emerald-300" />
+                                    </motion.div>
+                                    <span className="text-[11px] font-bold text-emerald-100">{urgentText}</span>
+                                </div>
+                                <CountdownTimer />
+                            </div>
                         </motion.div>
 
                         {/* Testimonial Rotator */}
@@ -203,11 +288,11 @@ export default function FinalCTA() {
                                     style={{ background: 'white', color: '#047857', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-100/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                                    
+
                                     <Calendar className="w-4 h-4 z-10" />
                                     <span className="z-10">احجز جلستك</span>
-                                    <motion.div 
-                                        animate={{ x: [0, -4, 0] }} 
+                                    <motion.div
+                                        animate={{ x: [0, -4, 0] }}
                                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                         className="z-10 bg-emerald-50 rounded-full p-1 border border-emerald-100/50"
                                     >
@@ -269,13 +354,13 @@ export default function FinalCTA() {
                     </div>
 
                     {/* Footer trust line */}
-                    <div className="relative z-10 flex items-center justify-center gap-1.5 pb-5">
+                    <div className="relative z-10 flex items-center justify-center gap-1.5 pb-5 mt-2" style={{ transform: 'translateZ(10px)' }}>
                         <Shield className="w-3 h-3 text-emerald-300 opacity-50" />
                         <p className="text-white/30 text-[9px] max-w-xs mx-auto font-medium">
                             المعلومات هنا للتثقيف بس ولا تغني عن زيارة الطبيب
                         </p>
                     </div>
-                </div>
+                </motion.div>
             </motion.div>
         </section>
     );

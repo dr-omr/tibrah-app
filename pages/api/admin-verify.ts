@@ -6,6 +6,23 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { checkRateLimit, getClientIp } from '@/lib/apiMiddleware';
+import crypto from 'crypto';
+
+// SEC-7 FIX: Timing-safe comparison to prevent timing attacks
+function timingSafeCompare(a: string, b: string): boolean {
+    // Pad to same length to prevent length-based timing leaks
+    const maxLen = Math.max(a.length, b.length);
+    const bufA = Buffer.alloc(maxLen, 0);
+    const bufB = Buffer.alloc(maxLen, 0);
+    Buffer.from(a).copy(bufA);
+    Buffer.from(b).copy(bufB);
+    return crypto.timingSafeEqual(bufA, bufB) && a.length === b.length;
+}
+
+// SEC-3 FIX: Use cryptographically secure random bytes for token generation
+function generateToken(): string {
+    return crypto.randomBytes(48).toString('base64url');
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST
@@ -16,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Strict rate limiting for login — 5 attempts per 15 minutes
     const ip = getClientIp(req);
-    const { limited } = checkRateLimit(ip, 5, 15 * 60 * 1000);
+    const { limited } = await checkRateLimit(ip, 5, 15 * 60 * 1000);
     if (limited) {
         return res.status(429).json({
             error: 'Too many attempts',
@@ -43,7 +60,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
         }
 
-        if (passcode !== validPasscode) {
+        // SEC-7 FIX: Timing-safe comparison
+        if (!timingSafeCompare(passcode, validPasscode)) {
             console.warn(`⚠️ Failed admin login attempt from IP: ${ip}`);
             return res.status(401).json({
                 error: 'Invalid passcode',
@@ -52,14 +70,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
         }
 
-        // Success — return a session token
+        // Success — return a secure session token
         const token = process.env.ADMIN_API_SECRET || generateToken();
 
         console.log(`✅ Admin login successful from IP: ${ip}`);
 
+        // SEC-10 FIX: Set admin token as HttpOnly cookie instead of returning it for localStorage
+        const isProduction = process.env.NODE_ENV === 'production';
+        const securePart = isProduction ? '; Secure' : '';
+        res.setHeader('Set-Cookie', 
+            `tibrah_admin=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 8}; SameSite=Lax${securePart}`
+        );
+
         return res.status(200).json({
             success: true,
             message: 'مرحباً دكتور عمر!',
+            // Token still returned for backward compatibility but should be phased out
             token,
         });
 
@@ -70,13 +96,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             success: false,
         });
     }
-}
-
-function generateToken(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let token = '';
-    for (let i = 0; i < 64; i++) {
-        token += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return token;
 }

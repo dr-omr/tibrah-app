@@ -54,7 +54,7 @@ describe('Database Client (localStorage fallback)', () => {
                 energy_level: 8,
             });
 
-            const items = await db.entities.DailyLog.list();
+            const items = await db.entities.DailyLog.list(undefined, undefined, true);
             expect(items.length).toBe(2);
         });
 
@@ -104,7 +104,7 @@ describe('Database Client (localStorage fallback)', () => {
             });
 
             await db.entities.DailyLog.delete(created.id!);
-            const remaining = await db.entities.DailyLog.list();
+            const remaining = await db.entities.DailyLog.list(undefined, undefined, true);
             expect(remaining.length).toBe(0);
         });
     });
@@ -162,19 +162,19 @@ describe('Database Client (localStorage fallback)', () => {
         });
 
         test('should sort ascending by field', async () => {
-            const items = await db.entities.DailyLog.list('date');
+            const items = await db.entities.DailyLog.list('date', undefined, true);
             expect(items[0].date).toBe('2026-03-15');
             expect(items[2].date).toBe('2026-03-17');
         });
 
         test('should sort descending with - prefix', async () => {
-            const items = await db.entities.DailyLog.list('-date');
+            const items = await db.entities.DailyLog.list('-date', undefined, true);
             expect(items[0].date).toBe('2026-03-17');
             expect(items[2].date).toBe('2026-03-15');
         });
 
         test('should apply limit after sorting', async () => {
-            const items = await db.entities.DailyLog.list('-date', 2);
+            const items = await db.entities.DailyLog.list('-date', 2, true);
             expect(items.length).toBe(2);
             expect(items[0].date).toBe('2026-03-17');
         });
@@ -193,8 +193,8 @@ describe('Database Client (localStorage fallback)', () => {
                 mood: 8,
             });
 
-            const metrics = await db.entities.HealthMetric.list();
-            const logs = await db.entities.DailyLog.list();
+            const metrics = await db.entities.HealthMetric.list(undefined, undefined, true);
+            const logs = await db.entities.DailyLog.list(undefined, undefined, true);
 
             expect(metrics.length).toBe(1);
             expect(logs.length).toBe(1);

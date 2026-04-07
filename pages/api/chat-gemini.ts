@@ -3,16 +3,10 @@
  * Enhanced AI with health context and conversation memory
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
 import { checkRateLimit, getClientIp, sanitizeString } from '@/lib/apiMiddleware';
-
-// Gemini API Key (server-side only — never use NEXT_PUBLIC_ for secrets)
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
-// Singleton Gemini client (avoid recreating per request)
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+import { verifyApiSession } from '@/lib/verifySession';
+import { genAI, getGroqClient, isGroqConfigured } from '@/lib/ai';
 
 // System Prompt for Tibrah AI (Enhanced v2)
 const TIBRAH_SYSTEM_PROMPT = `أنت "مساعد طِبرَا الذكي" 🌿 - طبيب وظيفي افتراضي ودود ومتخصص.
@@ -63,9 +57,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Rate limiting — 30 requests per minute per IP
     const clientIp = getClientIp(req);
-    const { limited } = checkRateLimit(clientIp, 30, 60 * 1000);
+    const { limited } = await checkRateLimit(clientIp, 30, 60 * 1000); // 30 requests / minute
     if (limited) {
         return res.status(429).json({ error: "Too many requests", text: "⚠️ طلبات كثيرة، يرجى المحاولة بعد دقيقة", success: false });
+    }
+
+    // 🔒 Authentication required
+    const session = await verifyApiSession(req);
+    if (!session) {
+        return res.status(401).json({ error: 'Unauthorized', text: 'يرجى تسجيل الدخول أولاً', success: false });
     }
 
     const { message, healthContext, history, aiMemoryContext } = req.body;
@@ -150,12 +150,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 🥈 Fallback to Groq
-    if (GROQ_API_KEY) {
+    if (isGroqConfigured) {
         try {
             console.log("🔄 [Tibrah AI] Trying Groq fallback...");
 
-            const Groq = (await import("groq-sdk")).default;
-            const groq = new Groq({ apiKey: GROQ_API_KEY });
+            const groq = await getGroqClient();
+            if (!groq) throw new Error('Groq client not available');
 
             const groqMessages: { role: "system" | "user" | "assistant", content: string }[] = [
                 { role: "system", content: contextPrompt }
@@ -171,10 +171,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }
             }
 
-            // Always add the latest message if not already the last one in history
-            if (!history || history.length === 0 || history[history.length - 1].content !== message) {
-                groqMessages.push({ role: "user", content: message });
-            }
+            // BUG-5 FIX: Always add current user message — history is past context only
+            groqMessages.push({ role: "user", content: sanitizedMessage });
 
             const completion = await groq.chat.completions.create({
                 messages: groqMessages,

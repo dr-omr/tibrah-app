@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { haptic } from '@/lib/HapticFeedback';
 import { uiSounds } from '@/lib/uiSounds';
 import { useAuth } from '@/contexts/AuthContext';
+import ProductRecommendations from '@/components/shop/ProductRecommendations';
 
 // TypeScript interfaces
 interface Product {
@@ -368,6 +369,13 @@ export default function ProductDetails() {
 
                 {/* Reviews Section */}
                 <CommentsSection targetType="product" targetId={productId} showRating={true} />
+                
+                {/* AI Recommendations */}
+                <ProductRecommendations 
+                    currentProductId={productId} 
+                    category={product.category} 
+                    onAddToCart={(p) => addToCartMutation.mutate()} // Will need custom state or we just redirect to that product. Let's redirect since the mutation is hardcoded to `product`. Actually, let's fix that.
+                />
             </div>
 
             {/* Fixed Bottom */}

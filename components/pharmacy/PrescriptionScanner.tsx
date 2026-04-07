@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Upload, Sparkles, X, CheckCircle2, Clock, Pill } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { haptic } from '@/lib/HapticFeedback';
 import { Capacitor } from '@capacitor/core';

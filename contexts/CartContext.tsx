@@ -8,7 +8,7 @@ import React, { createContext, useContext, useCallback, ReactNode, useMemo } fro
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -99,7 +99,8 @@ export function CartProvider({ children }: CartProviderProps) {
                 throw new Error('هذا المنتج غير متوفر حالياً');
             }
 
-            const currentCart = queryClient.getQueryData<CartItem[]>(['cart']) || [];
+            // BUG-1 FIX: Use same queryKey as the fetch query — ['cart', userId] not ['cart']
+            const currentCart = queryClient.getQueryData<CartItem[]>(['cart', userId]) || [];
             const existingItem = currentCart.find(item => item.product_id === product.id);
 
             if (existingItem) {
@@ -117,7 +118,7 @@ export function CartProvider({ children }: CartProviderProps) {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            queryClient.invalidateQueries({ queryKey: ['cart', userId] });
             toast.success('تمت الإضافة للسلة ✅');
             
             // Reward Points for adding to cart
@@ -139,7 +140,7 @@ export function CartProvider({ children }: CartProviderProps) {
     const removeMutation = useMutation({
         mutationFn: (itemId: string) => db.entities.CartItem.delete(itemId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            queryClient.invalidateQueries({ queryKey: ['cart', userId] });
             toast.success('تم إزالة المنتج من السلة');
         },
     });
@@ -154,19 +155,27 @@ export function CartProvider({ children }: CartProviderProps) {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            queryClient.invalidateQueries({ queryKey: ['cart', userId] });
         },
     });
 
     // Clear cart mutation
     const clearMutation = useMutation({
         mutationFn: async () => {
-            const currentCart = queryClient.getQueryData<CartItem[]>(['cart']) || [];
+            // BUG-1 FIX: Use correct queryKey with userId
+            const currentCart = queryClient.getQueryData<CartItem[]>(['cart', userId]) || [];
             await Promise.all(currentCart.map(item => db.entities.CartItem.delete(item.id)));
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            queryClient.invalidateQueries({ queryKey: ['cart', userId] });
             toast.success('تم تفريغ السلة');
+        },
+        // BUG-6 FIX: Handle clearCart errors instead of failing silently
+        onError: (error: Error) => {
+            console.error('[Cart] clearCart failed:', error);
+            toast.error('فشل تفريغ السلة. يرجى المحاولة مرة أخرى');
+            // Re-fetch to sync UI with actual server state
+            queryClient.invalidateQueries({ queryKey: ['cart', userId] });
         },
     });
 

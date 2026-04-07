@@ -328,8 +328,31 @@ export default function SymptomAnalysis() {
                 </div>
             </div>
 
-            {/* CTA Section */}
+            {/* Intake Flow CTA */}
             <div className="mx-6 mt-10">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 rounded-3xl p-8 text-white text-center shadow-xl shadow-purple-900/20"
+                >
+                    <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center">
+                        <Activity className="w-8 h-8 text-purple-300" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">التقييم السريري الشامل</h3>
+                    <p className="text-sm text-purple-200 mb-6 max-w-sm mx-auto leading-relaxed">
+                        احصل على تقييم دقيق لحالتك وتوجيه طبي متخصص من خلال محرك الرعاية الرقمي. سجل أعراضك بالتفصيل الآن.
+                    </p>
+                    <Link href="/intake" className="block">
+                        <Button className="w-full bg-white text-indigo-900 hover:bg-slate-100 rounded-2xl h-14 font-bold text-lg shadow-lg">
+                            <Sparkles className="w-5 h-5 ml-2 text-indigo-600" />
+                            ابدأ التقييم الآن
+                        </Button>
+                    </Link>
+                </motion.div>
+            </div>
+
+            {/* CTA Section */}
+            <div className="mx-6 mt-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

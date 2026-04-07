@@ -6,12 +6,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // Removed framer-motion for performance
 
-export default function AIContextAssistant({ contextType, contextData, knowledgeBase, title = "مساعد طِبرَا" }) {
+interface AIContextAssistantProps {
+    contextType: string;
+    contextData: any;
+    knowledgeBase?: any;
+    title?: string;
+}
+
+interface ChatMessage {
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+}
+
+export default function AIContextAssistant({ contextType, contextData, knowledgeBase, title = "مساعد طِبرَا" }: AIContextAssistantProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const { chat, loading, isEnabled } = useAI();
-    const messagesEndRef = useRef(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -21,11 +33,11 @@ export default function AIContextAssistant({ contextType, contextData, knowledge
         scrollToBottom();
     }, [messages, isOpen]);
 
-    const handleSend = async (e) => {
+    const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || loading) return;
 
-        const userMsg = { role: 'user', content: input };
+        const userMsg: ChatMessage = { role: 'user', content: input };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
 

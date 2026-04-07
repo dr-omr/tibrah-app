@@ -6,13 +6,15 @@ import { useRouter } from 'next/router';
 import { createPageUrl } from '../utils';
 import {
     ArrowRight, Play, Clock, Users, Star, BookOpen, CheckCircle, Lock,
-    Download, Share2, Heart, Award, ChevronDown, ChevronUp, FileText
+    Download, Share2, Heart, Award, ChevronDown, ChevronUp, FileText, Target
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
+import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 // TypeScript interfaces
 interface Course {
@@ -129,10 +131,11 @@ export default function CourseDetails() {
         queryKey: ['enrollment', courseId, user?.email],
         enabled: !!user?.email,
         queryFn: async (): Promise<Enrollment | undefined> => {
-            if (!user?.email) return undefined;
+            if (!user?.email || !user?.id) return undefined;
             const enrollments = await db.entities.CourseEnrollment.filter({
                 course_id: courseId,
-                created_by: user.email
+                created_by: user.email,
+                user_id: user.id
             }) as unknown as Enrollment[];
             return enrollments[0];
         },
@@ -286,13 +289,60 @@ export default function CourseDetails() {
 
                 {/* Progress (if enrolled) */}
                 {enrollment && (
-                    <div className="glass rounded-2xl p-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-slate-700">تقدمك في الدورة</span>
-                            <span className="text-primary font-bold">{enrollment.progress_percentage}%</span>
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`rounded-2xl p-5 border relative overflow-hidden transition-all ${
+                            enrollment.progress_percentage === 100 
+                            ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-xl shadow-amber-500/10' 
+                            : 'glass border-slate-200'
+                        }`}
+                    >
+                        {enrollment.progress_percentage === 100 && (
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-400/20 blur-3xl rounded-full" />
+                        )}
+
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="flex items-center gap-2">
+                                {enrollment.progress_percentage === 100 ? (
+                                    <Award className="w-6 h-6 text-amber-500" />
+                                ) : (
+                                    <Target className="w-5 h-5 text-teal-500" />
+                                )}
+                                <span className={`font-bold ${enrollment.progress_percentage === 100 ? 'text-amber-700' : 'text-slate-700'}`}>
+                                    {enrollment.progress_percentage === 100 ? 'أكملت الدورة بامتياز!' : 'تقدمك في الدورة'}
+                                </span>
+                            </div>
+                            <span className={`font-black text-lg ${enrollment.progress_percentage === 100 ? 'text-amber-600' : 'text-teal-600'}`}>
+                                {enrollment.progress_percentage}%
+                            </span>
                         </div>
-                        <Progress value={enrollment.progress_percentage} className="h-2" />
-                    </div>
+                        
+                        <div className="relative z-10 w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${enrollment.progress_percentage}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className={`h-full rounded-full ${
+                                    enrollment.progress_percentage === 100 
+                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500' 
+                                    : 'bg-gradient-to-r from-teal-400 to-teal-500'
+                                }`} 
+                            />
+                        </div>
+
+                        {enrollment.progress_percentage === 100 && (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })}
+                                className="mt-4 w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-colors"
+                            >
+                                <Award className="w-5 h-5" />
+                                تحميل شهادة الإتمام
+                            </motion.button>
+                        )}
+                    </motion.div>
                 )}
 
                 {/* Lessons */}

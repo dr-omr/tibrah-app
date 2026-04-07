@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTheme, themePresets, ThemePreset } from '@/contexts/ThemeContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 export default function ThemeSettings() {
     const { theme, currentColors, setPreset, setCustomColor, presets } = useTheme();

@@ -11,7 +11,7 @@ import { createPageUrl } from '../utils';
 import { haptic } from '@/lib/HapticFeedback';
 import { uiSounds } from '@/lib/uiSounds';
 import { aiClient } from '@/components/ai/aiClient';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
 // Configuration for Framer Motion
 const SPRING_CONFIG: any = { type: 'spring', stiffness: 300, damping: 25, mass: 0.8 };

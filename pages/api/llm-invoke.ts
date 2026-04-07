@@ -1,9 +1,7 @@
-import Groq from "groq-sdk";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextApiRequest, NextApiResponse } from "next";
 import { checkRateLimit, getClientIp, sanitizeString } from '@/lib/apiMiddleware';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+import { verifyApiSession } from '@/lib/verifySession';
+import { getGeminiModel, getGroqClient, isGeminiConfigured, isGroqConfigured } from '@/lib/ai';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "OPTIONS") {
@@ -17,13 +15,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Rate limiting — 20 requests per minute
     const ip = getClientIp(req);
-    const { limited } = checkRateLimit(ip, 20, 60 * 1000);
+    const { limited, resetIn } = await checkRateLimit(ip, 20, 60 * 1000);
     if (limited) {
         return res.status(429).json({
             error: "Too many requests",
             message: "⚠️ طلبات كثيرة، يرجى المحاولة بعد دقيقة",
             success: false,
         });
+    }
+
+    // 🔒 Authentication required
+    const session = await verifyApiSession(req);
+    if (!session) {
+        return res.status(401).json({ error: 'Unauthorized', success: false });
     }
 
     try {
@@ -36,20 +40,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // 🥇 Try Gemini first
-        if (GEMINI_API_KEY) {
+        if (isGeminiConfigured) {
             try {
-                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                const model = genAI.getGenerativeModel({
-                    model: "gemini-2.5-flash",
-                    generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 1500,
-                        responseMimeType: "application/json",
-                    }
+                const model = getGeminiModel({
+                    temperature: 0.3,
+                    maxOutputTokens: 1500,
+                    responseMimeType: "application/json",
                 });
 
+                if (!model) throw new Error('Gemini model not available');
+
                 const systemMessage = `You must respond with valid JSON only. Follow this schema strictly: ${JSON.stringify(response_json_schema)}`;
-                const result = await model.generateContent(`${systemMessage}\n\n${prompt}`);
+                const result = await model.generateContent(`${systemMessage}\n\n${sanitizedPrompt}`);
                 const content = result.response.text();
                 const jsonResponse = JSON.parse(content);
 
@@ -60,9 +62,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // 🥈 Fallback to Groq
-        if (process.env.GROQ_API_KEY) {
+        if (isGroqConfigured) {
             try {
-                const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+                const groq = await getGroqClient();
+                if (!groq) throw new Error('Groq client not available');
                 const systemMessage = `You are a helpful AI assistant. You must respond with valid JSON only. Follow this schema strictly: ${JSON.stringify(response_json_schema)}`;
 
                 const completion = await groq.chat.completions.create({
@@ -83,13 +86,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
-        // 🥉 Fallback response
-        console.warn("[InvokeLLM] All AI services failed, using fallback.");
-        return res.status(200).json(getFallbackResponse(prompt, response_json_schema));
+        // CQ-3 FIX: Return 503 with fallback flag instead of masking failure as 200
+        console.warn("[InvokeLLM] All AI services failed, returning 503.");
+        return res.status(503).json({ error: 'AI service unavailable', fallback: true, data: getFallbackResponse(prompt, response_json_schema) });
 
     } catch (error) {
         console.error("[InvokeLLM] Error:", error);
-        return res.status(200).json(getFallbackResponse(req.body.prompt, req.body.response_json_schema));
+        return res.status(503).json({ error: 'AI service unavailable', fallback: true, data: getFallbackResponse(req.body.prompt, req.body.response_json_schema) });
     }
 }
 

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 
-// VAPID Public Key - In production, this should come from environment variables
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_KEY || 'BJg9qfI7_y_ZqjJj9qfI7_y_ZqjJj9qfI7_y_ZqjJj9qfI7_y_ZqjJj9qfI7_y_ZqjJ';
+// CFG-2 FIX: No hardcoded dummy VAPID key — must be configured via environment
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_KEY || '';
 
 interface PushNotificationState {
     isSupported: boolean;

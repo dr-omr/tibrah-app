@@ -28,14 +28,14 @@ function getServerData() {
     return _serverData!;
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     // Rate limiting — 60 requests/minute
     const clientIp = getClientIp(req);
-    const { limited } = checkRateLimit(clientIp, 60, 60 * 1000);
+    const { limited } = await checkRateLimit(clientIp, 60, 60 * 1000); // Max 60 req per min
     if (limited) {
         return res.status(429).json({ error: 'Too many requests' });
     }

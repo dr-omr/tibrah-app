@@ -1,4 +1,5 @@
 import { conversationStore } from '@/lib/ConversationStore';
+import { withAiCache } from '@/lib/ai/aiCache';
 
 // AI is now server-side only via /api/chat-gemini
 const isEnabled = (): boolean => {
@@ -242,20 +243,24 @@ export const aiClient = {
 
         try {
             console.log(`[AI Client] 🧠 Running AI analysis: ${type}...`);
-            const response = await fetch('/api/ai-analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, data, context })
+            const cacheKey = `ai_${type}_${JSON.stringify(data).substring(0, 500)}`;
+            
+            return await withAiCache(cacheKey, async () => {
+                const response = await fetch('/api/ai-analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, data, context })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'فشل التحليل');
+                }
+
+                console.log(`[AI Client] ✅ Analysis complete: ${type}`);
+                return result.data;
             });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'فشل التحليل');
-            }
-
-            console.log(`[AI Client] ✅ Analysis complete: ${type}`);
-            return result.data;
         } catch (error: any) {
             console.error(`[AI Client] ❌ Analysis Error (${type}):`, error);
             

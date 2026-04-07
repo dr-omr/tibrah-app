@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import {
     Gift, Share2, Users, Copy, Crown, Star, Sparkles,
     ChevronLeft, Check, Trophy, Zap, Heart, MessageCircle,
@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { getTodaysChallenges, updateChallengeProgress, getChallengeStats, BADGES, type Challenge, type ChallengeProgress } from '@/lib/dailyChallenges';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 
 interface Reward {
     id: string;
@@ -61,6 +62,13 @@ export default function RewardsPage() {
     const [challengeProgress, setChallengeProgress] = useState<ChallengeProgress[]>([]);
     const [streak, setStreak] = useState(0);
     const [userBadges, setUserBadges] = useState<string[]>([]);
+
+    const today = new Date().toISOString().split('T')[0];
+    const { data: logs } = useQuery({
+        queryKey: ['activityPro', user?.id, today],
+        queryFn: () => db.entities.DailyLog.filter({ date: today, user_id: user?.id || 'guest' })
+    });
+    const todayMoveCalories = logs?.[0]?.exercise?.calories || 0;
 
     // Load user data
     useEffect(() => {
@@ -202,6 +210,17 @@ export default function RewardsPage() {
 
     // Daily/Weekly missions
     const missions: Mission[] = [
+        {
+            id: 'daily-move',
+            title: 'وحش النشاط 🏃‍♂️',
+            description: 'أكمل حلقة حرق 500 سعرة حرارية اليوم',
+            points: 50,
+            icon: Flame,
+            color: '#EF4444',
+            progress: todayMoveCalories,
+            target: 500,
+            completed: todayMoveCalories >= 500
+        },
         {
             id: 'share-app',
             title: 'شارك التطبيق',

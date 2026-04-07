@@ -4,7 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Plus, Clock, Flame, Beef, Wheat, Utensils, BookOpen, ChefHat, X, Check, Users } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/notification-engine';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
