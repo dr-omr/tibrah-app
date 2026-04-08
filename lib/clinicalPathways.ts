@@ -23,6 +23,7 @@ export interface ClinicalPathway {
     id: string;
     label: string;
     iconName: string;
+    emoji?: string;
     description: string;
     keywords: string[]; // for NLP mapping
     redFlags: RedFlag[];
@@ -34,6 +35,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'headache',
         label: 'صداع وألم بالرأس',
         iconName: 'Brain',
+        emoji: '🧠',
         description: 'تقييم للصداع وأنواعه',
         keywords: ['صداع', 'رأس', 'راسي', 'دوخة', 'شقيقة', 'نصفي', 'وجع راس', 'دوار', 'راسي يوجعني', 'زغللة', 'ثقل بالراس', 'تنميل', 'عوار راس', 'مصدع', 'مصندح', 'راسي بينفجر', 'دائخ', 'يدور بي', 'طنين'],
         redFlags: [
@@ -52,6 +54,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'chest_pain',
         label: 'ألم في الصدر أو خفقان',
         iconName: 'HeartPulse',
+        emoji: '🫀',
         description: 'تقييم لألم الصدر أو الخفقان',
         keywords: ['صدر', 'صدري', 'خفقان', 'قلب', 'تنفس', 'نفس', 'نغزة', 'كتف', 'كتمة', 'ضيق', 'وخز', 'ثقل', 'ضربات', 'نبض', 'دقات', 'دق', 'رفرفة', 'صدري مقبوض', 'مكتوم', 'اختناق', 'نغزات'],
         redFlags: [
@@ -69,6 +72,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'respiratory',
         label: 'أعراض تنفسية وكحة',
         iconName: 'Wind',
+        emoji: '🫁',
         description: 'زكام، كحة، ضيق تنفس، بلغم',
         keywords: ['كحة', 'سعال', 'تنفس', 'كتمة', 'بلغم', 'زكام', 'رشح', 'صدر', 'ربو', 'فيروس', 'انفلونزا', 'حلق', 'لوز', 'ضيق نفس', 'خنقة', 'شخير', 'مزكم', 'عطاس', 'عطس', 'جيوب', 'زلاغ', 'بلاعيم', 'شرقة'],
         redFlags: [
@@ -86,6 +90,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'fever',
         label: 'حرارة وعدوى',
         iconName: 'Thermometer',
+        emoji: '🌡️',
         description: 'ارتفاع حرارة، قشعريرة، تعب عام',
         keywords: ['حرارة', 'سخونة', 'حمى', 'مرتفع', 'بردان', 'قشعريرة', 'عرق', 'عدوى', 'التهاب', 'نوافض', 'تكسير', 'ارتجاف', 'مصخن', 'محموم', 'دافئ', 'جسمي حار', 'انتفاضة', 'تعرق'],
         redFlags: [
@@ -103,6 +108,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'digestion',
         label: 'ألم بالبطن وهضمية',
         iconName: 'ActivitySquare',
+        emoji: '🤢',
         description: 'مغص، قيء، إسهال، حموضة، إمساك',
         keywords: [
             'بطن', 'معدة', 'مغص', 'اسهال', 'إسهال', 'قيء', 'استفراغ', 'غثيان', 'قولون', 'امساك', 
@@ -173,6 +179,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'urinary',
         label: 'أعراض بولية ومسالك',
         iconName: 'Activity', 
+        emoji: '💧',
         description: 'حرقة تبول، ألم خواصر، أو تغير البول',
         keywords: ['بول', 'تبول', 'حرقة', 'كلى', 'الكلى', 'حصر', 'مسالك', 'مثانة', 'خاصرة', 'خواصر', 'تقطيع', 'حصوة', 'صديد', 'حرقان البول', 'حشرة', 'دم في البول', 'ألم الجنب'],
         redFlags: [
@@ -189,6 +196,7 @@ export const clinicalPathways: Record<string, ClinicalPathway> = {
         id: 'fatigue',
         label: 'إرهاق وتعب عام',
         iconName: 'Zap',
+        emoji: '🥱',
         description: 'نقص طاقة، تعب مزمن، ألم مفاصل',
         keywords: ['تعب', 'ارهاق', 'إرهاق', 'ضعف', 'طاقة', 'خمول', 'نحف', 'وزن', 'شحوب', 'مفصل', 'مفاصل', 'عضلات', 'خملان', 'كسل', 'همدان', 'منهد حيلي', 'مكسر', 'مجهد', 'مدروخ', 'عظامي'],
         redFlags: [
