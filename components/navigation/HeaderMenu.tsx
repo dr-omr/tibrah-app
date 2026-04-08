@@ -137,7 +137,7 @@ const ALL: AppItem[] = [
     { href:'/record-health',       label:'تسجيل القراءات',              sub:'وزن، ضغط، سكر، ترطيب',           icon:Activity,     color:'#0891B2', bg:'rgba(8,145,178,0.09)',   section:'المتابعة اليومية' },
     { href:'/meal-planner',        label:'مخطط الوجبات',                sub:'خطتك الغذائية الأسبوعية',         icon:Utensils,     color:'#EA580C', bg:'rgba(234,88,12,0.09)',   section:'المتابعة اليومية',    badge:'مهم' },
     /* ── العافية */
-    { href:'/emotional-medicine',  label:'الطب العاطفي',                sub:'صحتك النفسية والعاطفية',          icon:Heart,        color:'#E11D48', bg:'rgba(225,29,72,0.08)',   section:'العافية والطب الداعم' },
+    { href:'/emotional-medicine',  label:'الطب الشعوري',                sub:'صحتك النفسية والعاطفية',          icon:Heart,        color:'#E11D48', bg:'rgba(225,29,72,0.08)',   section:'العافية والطب الداعم' },
     { href:'/meditation',          label:'التأمل والذهن',               sub:'اليقظة والحضور الكامل',           icon:Smile,        color:'#7C3AED', bg:'rgba(124,58,237,0.09)',  section:'العافية والطب الداعم' },
     { href:'/breathe',             label:'تمارين التنفس',               sub:'جلسات تأمل واسترخاء عميق',        icon:Wind,         color:'#0891B2', bg:'rgba(8,145,178,0.09)',   section:'العافية والطب الداعم' },
     { href:'/frequencies',         label:'الترددات العلاجية',           sub:'علاج تكميلي بالموجات الصوتية',    icon:Radio,        color:'#4F46E5', bg:'rgba(79,70,229,0.09)',   section:'العافية والطب الداعم' },
