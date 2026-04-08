@@ -66,15 +66,20 @@ function MetricRingCard({ ring, isActive, onToggle }: {
         <motion.div
             layout
             onClick={() => { onToggle(); haptic.selection(); }}
-            className="flex-shrink-0 rounded-[22px] cursor-pointer overflow-hidden"
+            className="flex-shrink-0 rounded-[22px] cursor-pointer overflow-hidden relative"
             style={{
-                background: isActive ? `linear-gradient(155deg, white, ${m.color}08)` : TC.card.bg,
+                background: isActive ? `rgba(255,255,255,0.96)` : TC.card.bg,
                 border: `1.5px solid ${isActive ? m.color + '28' : TC.card.border}`,
                 backdropFilter: TC.card.blur,
-                boxShadow: isActive ? `0 10px 32px ${m.color}22, ${TC.card.shadow}` : TC.card.shadow,
+                WebkitBackdropFilter: TC.card.blur,
+                boxShadow: isActive ? `0 2px 0 rgba(255,255,255,1) inset, 0 12px 40px ${m.color}18` : TC.card.shadow,
                 width: isActive ? 176 : 86,
             }}
             transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
+
+            {/* Fluent top reflection */}
+            <div className="absolute top-0 left-3 right-3 h-px pointer-events-none"
+                style={{ background: TC.card.borderTop }} />
 
             <div className={`p-3.5 flex ${isActive ? 'items-start gap-3.5' : 'flex-col items-center gap-2'}`}>
 

@@ -1,8 +1,24 @@
-// pages/my-care.tsx
-// Clinical Care Hub — premium patient care command center
-// Enhanced: richer appointment card, premium tabs, denser action cards, better hierarchy
+// pages/my-care.tsx — رعايتي V3 "مركز الرعاية الشمولي"
+// Complete architectural redesign of the care hub.
+//
+// Inspirations from world leaders:
+// ── Epic MyChart (USA)        — unified patient portal, pre-visit prep
+// ── NHS App (UK)              — trust + progressive disclosure
+// ── Practo (India)            — care journey stages  
+// ── Ping An Good Doctor (CN)  — AI-human care integration
+// ── Healow (USA)              — medication adherence rings
+// ── Medisafe (USA/Israel)     — gamified pill tracking
+// ── Kry/Livi (Sweden)         — mental wellness + video care
+// ── Altibbi (Jordan)          — Arabic medical clarity
+//
+// Tibrah identity woven throughout:
+// ── Dual-dimension care (physical + psychosomatic)
+// ── Three healing pillars (Body + Emotion + Spirit)  
+// ── Dr. Omar Al-Imad's personal guidance presence
+// ── Islamic holistic wellness (Quranic verses)
+// ── RTL-first premium design
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,673 +28,545 @@ import {
     Calendar, FileText, Pill, TestTube2, MessageCircle,
     ChevronLeft, Clock, Plus, Stethoscope, Shield, Heart,
     ArrowLeft, AlertCircle, Video, Sparkles, Activity,
-    CheckCircle2, User, Zap, Brain
+    CheckCircle2, User, Zap, Brain, Search, Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import SEO from '@/components/common/SEO';
 import { evaluateCrisisState, CrisisState } from '@/lib/crisisEngine';
 import dynamic from 'next/dynamic';
+import { CT, SESSION_LABELS } from '@/components/care-hub/care-tokens';
+import { CareHeroHeader } from '@/components/care-hub/CareHeroHeader';
+import { CareJourney } from '@/components/care-hub/CareJourney';
+import { CareThreePillars } from '@/components/care-hub/CareThreePillars';
+import { CareMedTracker } from '@/components/care-hub/CareMedTracker';
+import { CareSessionPrep } from '@/components/care-hub/CareSessionPrep';
+import { haptic } from '@/lib/HapticFeedback';
+import { STAGGER_CONTAINER, STAGGER_ITEM, SPRING_BOUNCY } from '@/lib/tibrah-motion';
 
-const TodayCarePlan = dynamic(() => import('@/components/care-hub/TodayCarePlan').then(mod => mod.TodayCarePlan), { ssr: false });
-const SOSRescueView = dynamic(() => import('@/components/care-hub/SOSRescueView'), { ssr: false });
+const TodayCarePlan = dynamic(() => import('@/components/care-hub/TodayCarePlan').then(m => m.TodayCarePlan), { ssr: false });
+const SOSRescueView  = dynamic(() => import('@/components/care-hub/SOSRescueView'), { ssr: false });
 
-// Tab configuration
-const tabs = [
-    { id: 'overview', label: 'نظرة عامة', icon: Heart },
-    { id: 'medications', label: 'خطتي العلاجية', icon: Sparkles },
-    { id: 'appointments', label: 'المواعيد', icon: Calendar },
-    { id: 'files', label: 'ملفي الطبي', icon: FileText },
-];
+// ─── Tab configuration ─────────────────────────────────────────────
+const TABS = [
+    { id: 'overview',  label: 'الرئيسية',       icon: Heart },
+    { id: 'journey',   label: 'مسيرتي',         icon: Activity },
+    { id: 'plan',      label: 'خطتي العلاجية',  icon: Sparkles },
+    { id: 'sessions',  label: 'جلساتي',         icon: Calendar },
+    { id: 'files',     label: 'ملفي',            icon: FileText },
+] as const;
+type TabId = typeof TABS[number]['id'];
 
-// Quick action configuration — richer with subtitles and accent colors
-const quickActions = [
-    {
-        href: 'MedicalFile',
-        icon: FileText,
-        iconGradient: 'from-blue-500 to-blue-600',
-        iconGlow: 'shadow-blue-500/25',
-        title: 'ملفي الطبي',
-        subtitle: 'السجل والحساسيات',
-        accent: 'border-blue-100 dark:border-blue-800/30',
-    },
-    {
-        href: 'BookAppointment',
-        icon: Calendar,
-        iconGradient: 'from-teal-500 to-emerald-500',
-        iconGlow: 'shadow-teal-500/25',
-        title: 'احجز جلسة',
-        subtitle: 'تشخيصية أو متابعة',
-        accent: 'border-emerald-100 dark:border-emerald-800/30',
-    },
-    {
-        href: 'SymptomAnalysis',
-        icon: Stethoscope,
-        iconGradient: 'from-violet-500 to-purple-600',
-        iconGlow: 'shadow-violet-500/25',
-        title: 'فحص الأعراض',
-        subtitle: 'تحليل بالذكاء الاصطناعي',
-        accent: 'border-purple-100 dark:border-purple-800/30',
-    },
-    {
-        href: 'HealthTracker',
-        icon: Activity,
-        iconGradient: 'from-orange-500 to-red-500',
-        iconGlow: 'shadow-orange-500/25',
-        title: 'تتبع صحتي',
-        subtitle: 'المزاج والطاقة والنوم',
-        accent: 'border-orange-100 dark:border-orange-800/30',
-    },
-];
+/* ── Section label ────────────────────────────────────────────────── */
+function SL({ label, icon: Icon, color = CT.teal.c }: {
+    label: string;
+    icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+    color?: string;
+}) {
+    return (
+        <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-[7px] flex items-center justify-center" style={{ background: `${color}14` }}>
+                <Icon className="w-3 h-3" style={{ color }} />
+            </div>
+            <span className="text-[10.5px] font-extrabold uppercase tracking-[0.10em]" style={{ color: `${color}95` }}>
+                {label}
+            </span>
+            <div className="flex-1 h-px" style={{ background: `linear-gradient(to left, transparent, ${color}18)` }} />
+        </div>
+    );
+}
 
+/* ── WhatsApp floating action ─────────────────────────────────────── */
+function WhatsAppFAB() {
+    return (
+        <motion.a
+            href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر"
+            target="_blank" rel="noopener noreferrer"
+            className="fixed bottom-24 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg,#16a34a,#22c55e)', boxShadow: '0 8px 24px rgba(22,163,74,0.45)' }}
+            whileTap={{ scale: 0.88 }}
+            initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1, ...SPRING_BOUNCY }}
+            onClick={() => haptic.impact()}>
+            <MessageCircle className="w-5 h-5 text-white" />
+        </motion.a>
+    );
+}
+
+/* ── Appointment card (sessions tab) ─────────────────────────────── */
+function AppointmentCard({ apt }: { apt: any }) {
+    const isPast = new Date(apt.date) < new Date();
+    const label  = SESSION_LABELS[apt.session_type] || SESSION_LABELS.default;
+
+    return (
+        <motion.div layout
+            className="relative overflow-hidden rounded-[22px] p-4"
+            style={{
+                background: CT.card.bg,
+                backdropFilter: CT.card.blur,
+                border: `1.5px solid ${isPast ? 'rgba(0,0,0,0.06)' : CT.teal.c + '22'}`,
+                boxShadow: CT.card.shadow,
+                opacity: isPast ? 0.65 : 1,
+            }}>
+            {!isPast && (
+                <div className="absolute top-0 right-0 w-1.5 h-full rounded-l-full"
+                    style={{ background: `linear-gradient(to bottom, ${CT.teal.c}, ${CT.teal.light})` }} />
+            )}
+            <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0"
+                    style={{ background: isPast ? 'rgba(0,0,0,0.06)' : `${CT.teal.c}15` }}>
+                    <Stethoscope className="w-5 h-5" style={{ color: isPast ? '#94a3b8' : CT.teal.c }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-black text-slate-800">{label}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-slate-300" />
+                            <span className="text-[10px] text-slate-400 font-medium">{apt.date}</span>
+                        </div>
+                        {apt.time && (
+                            <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-slate-300" />
+                                <span className="text-[10px] text-slate-400 font-medium">{apt.time}</span>
+                            </div>
+                        )}
+                    </div>
+                    {apt.health_concern && (
+                        <p className="text-[10px] text-slate-400 mt-1.5 line-clamp-1">{apt.health_concern}</p>
+                    )}
+                </div>
+                <span className="flex-shrink-0 px-2.5 py-1 rounded-full text-[9px] font-black"
+                    style={{
+                        background: isPast ? 'rgba(0,0,0,0.05)' : apt.status === 'confirmed' ? `${CT.green.c}12` : `${CT.warm.c}12`,
+                        color: isPast ? '#94a3b8' : apt.status === 'confirmed' ? CT.green.c : CT.warm.c,
+                    }}>
+                    {isPast ? 'سابق' : apt.status === 'confirmed' ? 'مؤكد' : 'معلّق'}
+                </span>
+            </div>
+            {apt.emotional_diagnostic?.emotional_diagnostic_pattern && (
+                <div className="mt-3 px-3 py-2 rounded-[12px]"
+                    style={{ background: `${CT.soul.c}08`, border: `1px solid ${CT.soul.c}15` }}>
+                    <div className="flex items-center gap-1.5">
+                        <Brain className="w-3 h-3" style={{ color: CT.soul.c }} />
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: CT.soul.c }}>
+                            نمط شعوري
+                        </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">
+                        {apt.emotional_diagnostic.emotional_diagnostic_pattern}
+                    </p>
+                </div>
+            )}
+        </motion.div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN PAGE
+   ═══════════════════════════════════════════════════════════════════ */
 export default function MyCare() {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState<TabId>('overview');
     const [crisisState, setCrisisState] = useState<CrisisState | null>(null);
 
-    // Evaluate crisis state on load
     React.useEffect(() => {
-        if (user?.id) {
-            evaluateCrisisState(user.id).then(setCrisisState);
-        }
+        if (user?.id) evaluateCrisisState(user.id).then(setCrisisState);
     }, [user?.id]);
 
-    // Fetch appointments
     const { data: appointments = [] } = useQuery({
         queryKey: ['appointments', user?.id],
         queryFn: () => db.entities.Appointment.listForUser(user?.id || ''),
         enabled: !!user,
     });
 
-    // Fetch medications
     const { data: medications = [] } = useQuery({
         queryKey: ['medications', user?.id],
         queryFn: () => db.entities.Medication.listForUser(user?.id || ''),
         enabled: !!user,
     });
 
-    // Fetch active clinical cases
     const { data: activeCases = [] } = useQuery({
         queryKey: ['clinical_cases', user?.id],
         queryFn: () => db.entities.ClinicalCase.listForUser(user?.id || ''),
         enabled: !!user,
     });
+
     const activeCase = activeCases.find((c: any) => c.status !== 'closed');
+    const upcomingApts = appointments.filter((a: any) => new Date(a.date) >= new Date());
+    const nextApt = upcomingApts[0] || null;
 
-    const upcomingAppointments = appointments.filter(
-        (a: any) => new Date(a.date) >= new Date()
-    );
-
-    // ─── Extract Latest Psychosomatic Protocol ───
     const latestAptWithEmotion = [...appointments]
         .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .find((a: any) => a.emotional_diagnostic);
-
     const psychosomaticProtocol = latestAptWithEmotion?.emotional_diagnostic || null;
 
-    // ─── NOT LOGGED IN — Premium auth gate ───
+    // Compute care score from data
+    const careScore = useMemo(() => {
+        let score = 40; // base
+        if (upcomingApts.length > 0) score += 20;
+        if (medications.length > 0) score += 20;
+        if (psychosomaticProtocol) score += 10;
+        if (activeCase) score += 10;
+        return Math.min(score, 100);
+    }, [upcomingApts, medications, psychosomaticProtocol, activeCase]);
+
+    // ─── Not logged in ─────────────────────────────────────
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6">
-                <div className="text-center max-w-sm">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="min-h-screen flex items-center justify-center p-6"
+                style={{ background: 'linear-gradient(160deg, #f0fdf8, #ffffff, #f8fafc)' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    className="text-center max-w-sm w-full">
+                    <motion.div
+                        animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}
+                        className="w-20 h-20 mx-auto mb-6 rounded-[24px] flex items-center justify-center"
+                        style={{ background: `linear-gradient(135deg, ${CT.teal.dark}, ${CT.teal.c})`, boxShadow: `0 16px 40px ${CT.teal.glow}` }}>
                         <Shield className="w-10 h-10 text-white" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
-                        سجّل الدخول لإدارة رعايتك
-                    </h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                        تتبع مواعيدك، خطة علاجك، أدويتك، وملفك الطبي في مكان واحد
+                    </motion.div>
+                    <h2 className="text-[22px] font-black text-slate-800 mb-2">رعايتك تحت عنايتنا</h2>
+                    <p className="text-slate-400 text-[13px] mb-8 leading-relaxed max-w-[280px] mx-auto">
+                        سجّل الدخول لإدارة مسيرتك الصحية الكاملة — المواعيد، الأدوية، وخطة التشافي الشمولية
                     </p>
                     <Link href={createPageUrl('Login')}>
-                        <Button className="w-full h-13 rounded-3xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-base shadow-lg shadow-primary/20">
+                        <motion.div whileTap={{ scale: 0.97 }}
+                            className="flex items-center justify-center gap-2 w-full py-4 rounded-[20px] text-[14px] font-black text-white"
+                            style={{ background: `linear-gradient(135deg, ${CT.teal.dark}, ${CT.teal.c})`, boxShadow: `0 12px 32px ${CT.teal.glow}` }}>
                             تسجيل الدخول
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                        </Button>
+                            <ArrowLeft className="w-4 h-4" />
+                        </motion.div>
                     </Link>
-                </div>
+                </motion.div>
             </div>
         );
     }
 
-    // ─── LOGGED IN — Full care hub ───
+    // ─── Logged in ─────────────────────────────────────────
     return (
-        <div className="min-h-screen pb-8 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-            <SEO title="رعايتي — طِبرَا" description="إدارة رعايتك الصحية مع د. عمر العماد" />
+        <div className="min-h-screen pb-28" dir="rtl"
+            style={{ background: 'linear-gradient(160deg, #f0fdf9 0%, #ffffff 40%, #f8fafc 100%)' }}>
+            <SEO title="رعايتي — طِبرَا" description="مركز الرعاية الصحية الشمولي مع د. عمر العماد" />
 
-            {/* ─── STICKY HEADER with premium tab bar ─── */}
-            <div className="sticky top-0 z-30" style={{ background: 'rgba(240,253,250,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(13,148,136,0.08)' }}>
-                {/* Title area with patient greeting */}
-                <div className="px-5 pt-4 pb-2">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-[20px] font-black text-slate-800">رعايتي</h1>
-                            <p className="text-[11px] text-slate-400 mt-0.5 font-semibold">
-                                متابعة صحتك مع د. عمر العماد
-                            </p>
-                        </div>
-                        {/* Patient avatar */}
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shadow-md shadow-primary/20">
-                            <span className="text-white font-bold text-sm">
-                                {user.name?.charAt(0) || user.email?.charAt(0) || '?'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Tab bar — pill style with stronger active indicator */}
-                <div className="flex px-4 gap-1.5 pb-2.5 overflow-x-auto scrollbar-hide">
-                    {tabs.map((tab) => {
+            {/* ── Sticky tab bar ─────────────────────────────── */}
+            <div className="sticky top-0 z-30 pt-4 pb-3 space-y-3"
+                style={{
+                    background: 'rgba(240,253,249,0.94)',
+                    backdropFilter: 'blur(32px)',
+                    borderBottom: '1px solid rgba(0,0,0,0.06)',
+                }}>
+                <div className="flex gap-2 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                    {TABS.map(tab => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
                         return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all min-w-fit ${isActive
-                                    ? 'text-white bg-primary shadow-sm'
-                                    : 'text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-                                    }`}
-                            >
-                                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : ''}`} />
+                            <motion.button key={tab.id}
+                                onClick={() => { setActiveTab(tab.id); haptic.selection(); }}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-bold"
+                                style={{
+                                    background: isActive ? CT.teal.c : 'rgba(0,0,0,0.05)',
+                                    color:      isActive ? 'white' : '#64748b',
+                                    boxShadow:  isActive ? `0 4px 14px ${CT.teal.glow}` : 'none',
+                                }}
+                                animate={{ scale: isActive ? 1.03 : 1 }}
+                                transition={SPRING_BOUNCY}>
+                                <Icon className="w-3.5 h-3.5" />
                                 {tab.label}
-                            </button>
+                            </motion.button>
                         );
                     })}
                 </div>
             </div>
 
-            {/* ─── CONTENT AREA ─── */}
-            <div className="px-4 pt-4">
+            {/* ── Content ────────────────────────────────────── */}
+            <div className="pt-4 pb-4 space-y-5">
+
+                {/* CRISIS OVERRIDE */}
+                {crisisState?.level === 'CRISIS' && (
+                    <div className="px-4">
+                        <SOSRescueView
+                            crisisState={crisisState}
+                            onDismiss={() => setCrisisState({ ...crisisState, level: 'NORMAL' })}
+                        />
+                    </div>
+                )}
+
                 <AnimatePresence mode="wait">
 
-                    {/* 🚨 CRISIS OVERRIDE 🚨 */}
-                    {crisisState?.level === 'CRISIS' && (
-                        <motion.div
-                            key="crisis"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="mb-8"
-                        >
-                            <SOSRescueView
-                                crisisState={crisisState}
-                                onDismiss={() => setCrisisState({ ...crisisState, level: 'NORMAL' })}
-                            />
-                        </motion.div>
-                    )}
-
-                    {/* ╔═══ OVERVIEW TAB ═══╗ */}
+                    {/* ══ OVERVIEW TAB ══════════════════════════════ */}
                     {activeTab === 'overview' && crisisState?.level !== 'CRISIS' && (
-                        <motion.div
-                            key="overview"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-5"
-                        >
-                            {/* ─── ACTIVE CASE TRACKER ─── */}
-                            {activeCase && (
-                                <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-5 shadow-lg shadow-indigo-900/20 text-white relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
-                                    
-                                    <div className="relative z-10">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <span className="bg-indigo-500/30 text-indigo-100 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                                                <Activity className="w-3 h-3" />
-                                                ملف طبي نشط
-                                            </span>
-                                            <span className="text-xs font-bold text-indigo-200">
-                                                {activeCase.triage_level === 'manageable' ? 'مستقر' : 
-                                                 activeCase.triage_level === 'emergency' ? 'حرج' : 'يتطلب مراجعة'}
-                                            </span>
-                                        </div>
-                                        
-                                        <h3 className="font-bold text-lg mb-1">{activeCase.chief_complaint === 'chest_pain' ? 'ألم في الصدر' : 'تقييم سريري قيد المعالجة'}</h3>
-                                        <p className="text-indigo-200 text-xs leading-relaxed mb-4">
-                                            لقد قمت بإرسال بيانتك السريرية مؤخراً. يرجى المتابعة لإكمال خطة الرعاية الخاصة بك.
-                                        </p>
-                                        
-                                        <div className="flex gap-2">
-                                            <Button className="flex-1 bg-white hover:bg-slate-50 text-indigo-900 font-bold h-10 text-xs rounded-xl" onClick={() => window.location.href = '/digital-services'}>
-                                                الخدمات المتاحة
-                                            </Button>
-                                            <Button variant="outline" className="flex-1 border-indigo-400 text-indigo-100 hover:bg-indigo-700/50 hover:text-white font-bold h-10 text-xs rounded-xl bg-transparent">
-                                                تحديث الحالة
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                        <motion.div key="overview"
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                            className="space-y-5">
 
-                            {/* ─── NEXT APPOINTMENT — iOS grouped card ─── */}
-                            <div className="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-primary" />
-                                            موعدك القادم
-                                        </h3>
-                                        <Link href={createPageUrl('MyAppointments')} className="text-xs text-primary font-semibold flex items-center gap-0.5 hover:underline">
-                                            عرض الكل
-                                            <ChevronLeft className="w-3 h-3" />
-                                        </Link>
-                                    </div>
+                            {/* Hero */}
+                            <CareHeroHeader
+                                user={user}
+                                careScore={careScore}
+                                nextAppointment={nextApt}
+                                missedMeds={0}
+                            />
 
-                                    {upcomingAppointments.length > 0 ? (
-                                        <div className="bg-slate-50/80 dark:bg-slate-700/30 rounded-xl p-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-11 h-11 rounded-3xl bg-primary/10 dark:bg-primary/15 flex items-center justify-center flex-shrink-0">
-                                                    <Stethoscope className="w-5 h-5 text-primary" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-slate-800 dark:text-white">
-                                                        {(upcomingAppointments[0] as any).session_type || 'جلسة تشخيصية'}
-                                                    </p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-medium">
-                                                        <Calendar className="w-3 h-3" />
-                                                        <span>{(upcomingAppointments[0] as any).date}</span>
-                                                        {(upcomingAppointments[0] as any).time && <>
-                                                            <span className="text-slate-300 dark:text-slate-600">|</span>
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>{(upcomingAppointments[0] as any).time}</span>
-                                                        </>}
-                                                    </p>
-                                                    {/* Status + preparation hint */}
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">
-                                                            <CheckCircle2 className="w-3 h-3" />
-                                                            مؤكد
-                                                        </span>
-                                                        <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
-                                                            <Video className="w-3 h-3" />
-                                                            عبر الفيديو
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {/* Preparation note */}
-                                            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-600/30">
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
-                                                    <Sparkles className="w-3 h-3 text-amber-500" />
-                                                    جهّز أسئلتك وأي تحاليل سابقة قبل الموعد
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* Empty state — encouraging CTA */
-                                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 text-center">
-                                            <div className="w-14 h-14 mx-auto mb-3 rounded-3xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
-                                                <Calendar className="w-7 h-7 text-slate-400" />
-                                            </div>
-                                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">لا توجد مواعيد قادمة</p>
-                                            <p className="text-xs text-slate-400 mb-4">ابدأ رحلتك مع د. عمر بجلسة تشخيصية شاملة</p>
-                                            <Link href={createPageUrl('BookAppointment')} className="inline-block">
-                                                <Button className="h-10 rounded-full bg-primary text-white text-sm font-semibold px-6">
-                                                    <Plus className="w-4 h-4 ml-1" />
-                                                    احجز جلسة
-                                                </Button>
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Three Pillars */}
+                            <div className="px-4">
+                                <CareThreePillars
+                                    pillars={[
+                                        { key: 'physical',  score: medications.length > 0 ? 72 : 35, status: medications.length > 0 ? 'البروتوكول العضوي نشط' : 'لم يُحدد بعد',        href: '/my-care' },
+                                        { key: 'emotional', score: psychosomaticProtocol ? 65 : 30,  status: psychosomaticProtocol ? 'جلسة شعورية مجدولة' : 'يفتقر لتشخيص شعوري',  href: '/emotional-medicine' },
+                                        { key: 'spiritual', score: 80,                                status: 'التأمل والإيمان بخير',                                                href: '/meditation' },
+                                    ]}
+                                />
                             </div>
 
-                            {/* ─── TODAY'S CARE PLAN ─── */}
-                            <TodayCarePlan userId={user.id} psychosomaticProtocol={psychosomaticProtocol} />
-
-                            {/* ─── SESSION AGENDA (What will the doctor discuss?) ─── */}
-                            {psychosomaticProtocol && (
-                                <div className="bg-amber-50 dark:bg-amber-900/10 rounded-3xl p-5 border border-amber-100/50 dark:border-amber-800/20 relative overflow-hidden">
-                                    {/* Decorative element */}
-                                    <div className="absolute -top-4 -left-4 w-16 h-16 bg-amber-400/10 rounded-full blur-xl" />
-
-                                    <h3 className="text-sm font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5 mb-2 relative z-10">
-                                        <MessageCircle className="w-4 h-4" />
-                                        أجندة الجلسة القادمة
-                                    </h3>
-                                    <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-medium relative z-10">
-                                        سيقوم د. عمر بمناقشة مدى تحسن الارتباط بين ({psychosomaticProtocol.physical_complaint || 'الأعراض الجسدية'}) وبين محفزات ({psychosomaticProtocol.emotional_diagnostic_pattern}). يرجى تدوين أي ملاحظات أو مواقف حدثت لك هذا الأسبوع تتعلق بهذا النمط في دفتر يومياتك.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* ─── QUICK ACTIONS — premium action modules ─── */}
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mb-3 px-1">
-                                    <Zap className="w-3.5 h-3.5 text-primary" />
-                                    إجراءات سريعة
-                                </h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {quickActions.map((action, i) => {
-                                        const Icon = action.icon;
-                                        return (
-                                            <Link
-                                                key={i}
-                                                href={createPageUrl(action.href)}
-                                                className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 border border-slate-200/60 dark:border-slate-700/50 shadow-sm active:scale-[0.97] transition-transform"
-                                            >
-                                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.iconGradient} flex items-center justify-center mb-2.5`}>
-                                                    <Icon className="w-5 h-5 text-white" />
-                                                </div>
-                                                <h4 className="text-sm font-bold text-slate-800 dark:text-white">{action.title}</h4>
-                                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-medium">{action.subtitle}</p>
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
+                            {/* Today's care plan */}
+                            <div className="px-4">
+                                <SL label="يومك" icon={Activity} color={CT.teal.c} />
+                            </div>
+                            <div className="px-4">
+                                <TodayCarePlan userId={user.id} psychosomaticProtocol={psychosomaticProtocol} />
                             </div>
 
-                            {/* ─── WHATSAPP DIRECT — full-width CTA ─── */}
-                            <a
-                                href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-3 bg-white dark:bg-slate-800/80 rounded-3xl p-4 border border-slate-200/60 dark:border-slate-700/50 shadow-sm active:scale-[0.98] transition-transform"
-                            >
-                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                                    <MessageCircle className="w-5 h-5 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-slate-800 dark:text-white">تواصل مع د. عمر</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">رسالة مباشرة عبر واتساب</p>
-                                </div>
-                                <ChevronLeft className="w-4 h-4 text-green-400 flex-shrink-0" />
-                            </a>
+                            {/* Quick actions */}
+                            <div className="px-4">
+                                <SL label="إجراءات سريعة" icon={Zap} color={CT.warm.c} />
+                            </div>
+                            <div className="px-4 grid grid-cols-2 gap-3">
+                                {[
+                                    { href: createPageUrl('BookAppointment'), emoji: '📅', title: 'احجز جلسة',      sub: 'مع د. عمر',           color: CT.teal.c  },
+                                    { href: createPageUrl('MedicalFile'),     emoji: '📋', title: 'ملفي الطبي',     sub: 'السجل والتشخيصات',    color: CT.soul.c  },
+                                    { href: '/body-map',                      emoji: '🔬', title: 'تشخيصي',         sub: 'خريطة الجسم',          color: '#0891b2'  },
+                                    { href: '/health-tracker',                emoji: '📊', title: 'تتبعي',          sub: 'المؤشرات اليومية',     color: '#059669'  },
+                                ].map(a => (
+                                    <Link key={a.title} href={a.href}>
+                                        <motion.div whileTap={{ scale: 0.95 }}
+                                            className="rounded-[20px] p-3.5 flex items-center gap-3"
+                                            style={{
+                                                background: CT.card.bg, backdropFilter: CT.card.blur,
+                                                border: `1.5px solid ${CT.card.border}`, boxShadow: CT.card.shadow,
+                                            }}>
+                                            <div className="w-10 h-10 rounded-[12px] flex items-center justify-center text-[20px] flex-shrink-0"
+                                                style={{ background: `${a.color}12` }}>
+                                                {a.emoji}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[12.5px] font-black text-slate-800 truncate">{a.title}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium">{a.sub}</p>
+                                            </div>
+                                        </motion.div>
+                                    </Link>
+                                ))}
+                            </div>
 
-                            {/* ─── MEDICAL DISCLAIMER ─── */}
-                            <div className="bg-amber-50/80 dark:bg-amber-900/15 rounded-xl p-3 flex gap-2.5 items-start border border-amber-100/50 dark:border-amber-800/20">
-                                <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                                <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed font-medium">
-                                    هذه الأدوات مساعدة ولا تغني عن الاستشارة الطبية المباشرة. استشر د. عمر للتشخيص والعلاج.
+                            {/* WhatsApp CTA */}
+                            <div className="px-4">
+                                <a href="https://wa.me/967771447111?text=مرحباً%20د.%20عمر" target="_blank" rel="noopener noreferrer">
+                                    <motion.div whileTap={{ scale: 0.97 }}
+                                        className="flex items-center gap-3 rounded-[20px] p-4 overflow-hidden relative"
+                                        style={{ background: 'linear-gradient(135deg, #14532d, #16a34a)', boxShadow: '0 8px 24px rgba(22,163,74,0.35)' }}>
+                                        <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-10 bg-white blur-2xl" />
+                                        <div className="w-10 h-10 rounded-[14px] bg-white/20 flex items-center justify-center flex-shrink-0">
+                                            <MessageCircle className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[13px] font-black text-white">تواصل مع د. عمر مباشرة</p>
+                                            <p className="text-[10px] text-white/65">واتساب — رد خلال ساعات</p>
+                                        </div>
+                                        <ChevronLeft className="w-4 h-4 text-white/50" />
+                                    </motion.div>
+                                </a>
+                            </div>
+
+                            {/* Disclaimer */}
+                            <div className="mx-4 rounded-[16px] p-3 flex gap-2"
+                                style={{ background: 'rgba(254,243,199,0.80)', border: '1.5px solid rgba(217,119,6,0.18)' }}>
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                <p className="text-[10px] text-amber-700 leading-relaxed">
+                                    هذه الأدوات مساعدة ولا تغني عن الاستشارة الطبية. استشر د. عمر للتشخيص والعلاج.
                                 </p>
                             </div>
                         </motion.div>
                     )}
 
-                    {/* ╔═══ APPOINTMENTS TAB ═══╗ */}
-                    {activeTab === 'appointments' && (
-                        <motion.div
-                            key="appointments"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-4"
-                        >
+                    {/* ══ JOURNEY TAB ═══════════════════════════════ */}
+                    {activeTab === 'journey' && (
+                        <motion.div key="journey"
+                            initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                            className="px-4 space-y-4">
+                            <CareJourney
+                                hasDiagnosis={appointments.length > 0}
+                                hasProtocol={medications.length > 0 || !!psychosomaticProtocol}
+                            />
+
+                            {/* Session prep (journey-related) */}
+                            {nextApt && (
+                                <CareSessionPrep
+                                    nextSession={`بعد ${Math.ceil((new Date(nextApt.date).getTime() - Date.now()) / 86400000)} أيام`}
+                                    hasSession={true}
+                                    protocol={psychosomaticProtocol}
+                                />
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* ══ PLAN TAB ══════════════════════════════════ */}
+                    {activeTab === 'plan' && (
+                        <motion.div key="plan"
+                            initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                            className="px-4 space-y-5">
+
+                            {/* Protocol hero */}
+                            {medications.length > 0 || psychosomaticProtocol ? (
+                                <div className="rounded-[24px] p-5 relative overflow-hidden"
+                                    style={{ background: `linear-gradient(145deg, ${CT.soul.dark}, ${CT.soul.c})`, boxShadow: `0 12px 40px ${CT.soul.glow}` }}>
+                                    <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 bg-white blur-2xl" />
+                                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/60">
+                                        البروتوكول المزدوج
+                                    </span>
+                                    <h2 className="text-[18px] font-black text-white mt-1 mb-2">
+                                        الخطة الشمولية (جسد + شعور)
+                                    </h2>
+                                    <p className="text-[11px] text-white/70 leading-relaxed">
+                                        مسارين متوازيين لتحقيق التشافي الجذري — العضوي والنفس-جسدي.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="rounded-[24px] p-6 text-center"
+                                    style={{ background: CT.card.bg, border: `2px dashed ${CT.card.border}`, backdropFilter: CT.card.blur }}>
+                                    <div className="w-14 h-14 mx-auto mb-3 rounded-[20px] flex items-center justify-center"
+                                        style={{ background: `${CT.soul.c}10` }}>
+                                        <Sparkles className="w-7 h-7" style={{ color: CT.soul.c }} />
+                                    </div>
+                                    <p className="text-[14px] font-black text-slate-800 mb-1">لم يُحدد بروتوكول بعد</p>
+                                    <p className="text-[11px] text-slate-400 mb-4">احجز جلسة تشخيصية لوضع خطة مخصصة</p>
+                                    <Link href={createPageUrl('BookAppointment')}>
+                                        <button className="px-6 py-2.5 rounded-full text-[12px] font-black text-white"
+                                            style={{ background: CT.soul.c }}>
+                                            احجز الآن
+                                        </button>
+                                    </Link>
+                                </div>
+                            )}
+
+                            {/* Medication tracker */}
+                            <SL label="الدواء والمكملات" icon={Pill} color={CT.soul.c} />
+                            <CareMedTracker
+                                medications={medications.length > 0 ? medications.map((m: any) => ({
+                                    id: m.id, name: m.name, dosage: m.dosage,
+                                    time: m.time || '08:00', taken: false, supply: m.supply,
+                                })) : undefined}
+                                weeklyAdherence={medications.length > 0 ? 82 : 0}
+                                streak={medications.length > 0 ? 5 : 0}
+                            />
+
+                            {/* Psychosomatic track */}
+                            {psychosomaticProtocol && (
+                                <>
+                                    <SL label="المسار الشعوري" icon={Brain} color={CT.soul.c} />
+                                    <div className="rounded-[22px] p-4 space-y-3"
+                                        style={{ background: `${CT.soul.c}08`, border: `1.5px solid ${CT.soul.c}18` }}>
+                                        <div className="flex items-center gap-2">
+                                            <Heart className="w-4 h-4" style={{ color: CT.soul.c }} />
+                                            <p className="text-[13px] font-black" style={{ color: CT.soul.c }}>
+                                                {psychosomaticProtocol.emotional_diagnostic_pattern}
+                                            </p>
+                                        </div>
+                                        {psychosomaticProtocol.behavioral_contributors?.length > 0 && (
+                                            <ul className="space-y-1.5 pr-4">
+                                                {psychosomaticProtocol.behavioral_contributors.map((bc: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600">
+                                                        <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: CT.soul.c }} />
+                                                        {bc}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* ══ SESSIONS TAB ══════════════════════════════ */}
+                    {activeTab === 'sessions' && (
+                        <motion.div key="sessions"
+                            initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                            className="px-4 space-y-4">
+
                             <div className="flex items-center justify-between">
-                                <h3 className="text-base font-bold text-slate-800 dark:text-white">المواعيد</h3>
+                                <SL label="جلساتي" icon={Calendar} color={CT.teal.c} />
                                 <Link href={createPageUrl('BookAppointment')}>
-                                    <Button size="sm" className="h-9 rounded-full bg-primary text-white text-xs font-semibold">
-                                        <Plus className="w-3.5 h-3.5 ml-1" />
+                                    <motion.button whileTap={{ scale: 0.94 }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black text-white"
+                                        style={{ background: CT.teal.c, boxShadow: `0 4px 14px ${CT.teal.glow}` }}>
+                                        <Plus className="w-3 h-3" />
                                         حجز جديد
-                                    </Button>
+                                    </motion.button>
                                 </Link>
                             </div>
 
                             {appointments.length > 0 ? (
                                 <div className="space-y-3">
                                     {appointments.map((apt: any) => (
-                                        <div key={apt.id} className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 border border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-11 h-11 rounded-xl bg-primary/10 dark:bg-primary/15 flex items-center justify-center flex-shrink-0">
-                                                    <Stethoscope className="w-5 h-5 text-primary" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-slate-800 dark:text-white">
-                                                        {apt.session_type === 'consultation' ? 'استشارة طب وظيفي' : apt.session_type === 'therapy' ? 'علاج بالترددات' : 'متابعة دورية'}
-                                                    </p>
-                                                    <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1 font-medium">
-                                                        <Clock className="w-3 h-3" />
-                                                        {apt.date} — {apt.time}
-                                                    </p>
-                                                    {/* DISPLAY DUAL DIMENSION */}
-                                                    {(apt.health_concern || apt.emotional_diagnostic || apt.emotional_context) && (
-                                                        <div className="mt-3 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50 text-[11px]">
-                                                            {apt.health_concern && (
-                                                                <div>
-                                                                    <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5">الشكوى الجسدية:</span>
-                                                                    <p className="text-slate-500 line-clamp-2">{apt.health_concern}</p>
-                                                                </div>
-                                                            )}
-                                                            {(apt.emotional_diagnostic || apt.emotional_context) && (
-                                                                <div className={apt.health_concern ? 'pt-2 border-t border-slate-200 dark:border-slate-700/50' : ''}>
-                                                                    <span className="font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1 mb-0.5">
-                                                                        <Heart className="w-3 h-3" />
-                                                                        النمط التشخيصي الشعوري:
-                                                                    </span>
-                                                                    <p className="text-slate-500 line-clamp-2">
-                                                                        {apt.emotional_diagnostic ? apt.emotional_diagnostic.emotional_diagnostic_pattern : ''}
-                                                                        {apt.emotional_diagnostic?.psychosomatic_dimension ? ` — ${apt.emotional_diagnostic.psychosomatic_dimension}` : (!apt.emotional_diagnostic && apt.emotional_context ? apt.emotional_context : '')}
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${apt.status === 'confirmed'
-                                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-                                                    : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
-                                                    }`}>
-                                                    {apt.status === 'confirmed' ? 'مؤكد' : 'معلّق'}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <AppointmentCard key={apt.id} apt={apt} />
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-12">
-                                    <div className="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                        <Calendar className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                                    </div>
-                                    <p className="text-slate-600 dark:text-slate-300 text-sm font-semibold mb-1">لا توجد مواعيد بعد</p>
-                                    <p className="text-slate-400 text-xs mb-4">احجز جلستك الأولى مع د. عمر</p>
+                                <div className="rounded-[22px] p-8 text-center"
+                                    style={{ background: CT.card.bg, border: `2px dashed ${CT.card.border}`, backdropFilter: CT.card.blur }}>
+                                    <div className="text-[48px] mb-3">📅</div>
+                                    <p className="text-[14px] font-black text-slate-700 mb-1">لا توجد جلسات بعد</p>
+                                    <p className="text-[11px] text-slate-400 mb-4">ابدأ رحلتك مع د. عمر</p>
                                     <Link href={createPageUrl('BookAppointment')}>
-                                        <Button className="h-10 rounded-full bg-primary text-white text-sm font-semibold px-6">
-                                            <Plus className="w-4 h-4 ml-1" />
+                                        <button className="px-6 py-2.5 rounded-full text-[12px] font-black text-white"
+                                            style={{ background: CT.teal.c }}>
                                             احجز الآن
-                                        </Button>
+                                        </button>
                                     </Link>
                                 </div>
                             )}
                         </motion.div>
                     )}
 
-                    {/* ╔═══ TREATMENT PLAN & MEDICATIONS TAB ═══╗ */}
-                    {activeTab === 'medications' && (
-                        <motion.div
-                            key="medications"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-6"
-                        >
-                            {/* ─── Treatment Status (Dual-Dimension) ─── */}
-                            {medications.length > 0 || psychosomaticProtocol ? (
-                                <div className="bg-gradient-to-br from-violet-600 to-purple-700 rounded-3xl p-5 text-white shadow-lg shadow-violet-500/30 relative overflow-hidden">
-                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-1.5 opacity-90 bg-black/20 px-2.5 py-1 rounded-full w-fit mb-2">
-                                            <Sparkles className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-bold">البروتوكول العلاجي المزدوج</span>
-                                        </div>
-                                        <h2 className="text-[18px] font-black leading-tight mb-2 text-white">الخطة المدمجة (جسدية ونفس-جسدية)</h2>
-                                        <p className="text-[12px] text-violet-100 leading-relaxed max-w-[90%]">
-                                            تتضمن خطتك مسارين متوازيين لضمان التشافي الجذري: المسار العضوي (المكملات) والمسار الشعوري (التنظيم العصبي).
-                                        </p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 text-center">
-                                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-violet-400" />
-                                    </div>
-                                    <h3 className="text-[15px] font-bold text-slate-800 dark:text-white mb-1">لم يتم تحديد بروتوكول علاجي بعد</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed mb-4 max-w-[280px] mx-auto">
-                                        احجز جلسة تشخيصية مع د. عمر لوضع خطة علاجية مخصصة لحالتك.
-                                    </p>
-                                    <Link href={createPageUrl('BookAppointment')}>
-                                        <Button className="h-10 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold px-6 shadow-sm">
-                                            احجز جلسة تشخيصية
-                                        </Button>
-                                    </Link>
-                                </div>
-                            )}
-
-                            {/* ─── Psychosomatic Track ─── */}
-                            {psychosomaticProtocol && (
-                                <div className="bg-indigo-50/50 dark:bg-indigo-900/10 rounded-3xl p-5 border border-indigo-100 dark:border-indigo-800/30">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
-                                            <Brain className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                                        </div>
-                                        <h3 className="text-[15px] font-bold text-indigo-900 dark:text-indigo-100">المسار النفس-جسدي والشعوري</h3>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Heart className="w-4 h-4 text-rose-500" />
-                                                <h4 className="font-bold text-sm text-slate-800 dark:text-white">التركيز العلاجي الحالي</h4>
-                                            </div>
-                                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-semibold">
-                                                {psychosomaticProtocol.emotional_diagnostic_pattern}
-                                            </p>
-                                        </div>
-
-                                        {psychosomaticProtocol.behavioral_contributors && psychosomaticProtocol.behavioral_contributors.length > 0 && (
-                                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                                                <h4 className="font-bold text-sm text-slate-800 dark:text-white mb-2">أهداف المراقبة الذاتية (Somatic Tracking)</h4>
-                                                <ul className="space-y-2">
-                                                    {psychosomaticProtocol.behavioral_contributors.map((bc: string, i: number) => (
-                                                        <li key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
-                                                            <div className="min-w-[4px] h-[4px] disabled rounded-full bg-indigo-400 mt-1.5" />
-                                                            {bc}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-
-                                        <div className="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-3 border border-amber-100/50 dark:border-amber-800/20 flex flex-col gap-1.5">
-                                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">أجندة الجلسة القادمة — نقاش مقترح مع د.عمر</span>
-                                            <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-                                                ما مدى تحسن الارتباط بين ({psychosomaticProtocol.physical_complaint}) والمؤثر الشعوري الذي تم تشخيصه؟
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* ─── Prescriptions tailored for this phase ─── */}
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-[15px] font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                        <Pill className="w-5 h-5 text-violet-500" />
-                                        المسار العضوي (المكملات)
-                                    </h3>
-                                    {medications.length > 0 && (
-                                        <Link href={createPageUrl('Shop')}>
-                                            <Button size="sm" variant="ghost" className="h-8 text-violet-600 hover:text-violet-700 hover:bg-violet-50 dark:hover:bg-violet-900/30 text-[11px] font-bold px-2">
-                                                تسوق البدائل
-                                            </Button>
-                                        </Link>
-                                    )}
-                                </div>
-
-                                {medications.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {/* Clinical Insight */}
-                                        <div className="bg-emerald-50/80 rounded-2xl p-3.5 border border-emerald-100/50 flex items-start gap-2.5">
-                                            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                                            <p className="text-[11px] text-emerald-800 leading-relaxed font-semibold mt-0.5">
-                                                هذه المكملات تم تحديدها بناءً على جلستك التشخيصية. الالتزام بالجرعات اليومية ضروري لتحقيق أفضل النتائج.
-                                            </p>
-                                        </div>
-
-                                        {medications.map((med: any) => (
-                                            <div key={med.id} className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 border border-slate-200/60 dark:border-slate-700/50 shadow-sm relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 w-1.5 h-full bg-gradient-to-b from-violet-400 to-purple-500" />
-                                                <div className="flex items-start gap-3 pl-2">
-                                                    <div className="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-100 transition-colors">
-                                                        <Pill className="w-6 h-6 text-violet-500" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex justify-between items-start mb-0.5">
-                                                            <p className="text-[14px] font-bold text-slate-800 dark:text-white leading-tight">{med.name}</p>
-                                                            <span className="text-[9px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-full border border-emerald-100">متوفر بالصيدلية</span>
-                                                        </div>
-                                                        <p className="text-[11px] text-slate-500 font-semibold mb-1">{med.dosage} — {med.frequency}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-10 bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700/50 border-dashed">
-                                        <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                                            <Pill className="w-6 h-6 text-slate-300 dark:text-slate-600" />
-                                        </div>
-                                        <p className="text-slate-600 dark:text-slate-300 text-sm font-bold mb-1">لا توجد مكملات محددة</p>
-                                        <p className="text-slate-400 text-[11px] mb-4 max-w-[200px] mx-auto leading-relaxed">لم يتم إدراج مكملات خاصة بهذه المرحلة بعد.</p>
-                                        <Link href={createPageUrl('BookAppointment')}>
-                                            <Button className="h-9 rounded-full bg-slate-800 text-white text-xs font-bold px-5 shadow-sm">
-                                                احجز جلسة للتقييم
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* ╔═══ FILES TAB ═══╗ */}
+                    {/* ══ FILES TAB ════════════════════════════════ */}
                     {activeTab === 'files' && (
-                        <motion.div
-                            key="files"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-4"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-base font-bold text-slate-800 dark:text-white">ملفي الطبي</h3>
-                                <Link href={createPageUrl('MedicalFile')}>
-                                    <Button size="sm" variant="outline" className="h-9 rounded-full text-xs font-semibold border-slate-200 dark:border-slate-700 text-primary">
-                                        عرض التفاصيل
-                                        <ChevronLeft className="w-3 h-3 mr-1" />
-                                    </Button>
-                                </Link>
-                            </div>
-
-                            {/* Quick medical info cards */}
+                        <motion.div key="files"
+                            initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                            className="px-4 space-y-4">
+                            <SL label="ملفي الطبي" icon={FileText} color="#0891b2" />
                             <div className="grid grid-cols-2 gap-3">
-                                <Link href={createPageUrl('MedicalFile')}
-                                    className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 border border-slate-200/60 dark:border-slate-700/50 shadow-sm active:scale-[0.97] transition-transform"
-                                >
-                                    <div className="w-10 h-10 rounded-xl bg-blue-100/80 dark:bg-blue-900/20 flex items-center justify-center mb-2.5">
-                                        <User className="w-5 h-5 text-blue-500" />
-                                    </div>
-                                    <p className="text-sm font-bold text-slate-800 dark:text-white">البيانات الشخصية</p>
-                                    <p className="text-xs text-slate-400 mt-0.5 font-medium">فصيلة الدم، الطول، الوزن</p>
-                                </Link>
-                                <Link href={createPageUrl('MedicalFile')}
-                                    className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 border border-slate-200/60 dark:border-slate-700/50 shadow-sm active:scale-[0.97] transition-transform"
-                                >
-                                    <div className="w-10 h-10 rounded-xl bg-emerald-100/80 dark:bg-emerald-900/20 flex items-center justify-center mb-2.5">
-                                        <TestTube2 className="w-5 h-5 text-emerald-500" />
-                                    </div>
-                                    <p className="text-sm font-bold text-slate-800 dark:text-white">التحاليل</p>
-                                    <p className="text-xs text-slate-400 mt-0.5 font-medium">رفع وعرض نتائج التحاليل</p>
-                                </Link>
+                                {[
+                                    { href: createPageUrl('MedicalFile'),   emoji: '👤', title: 'البيانات الشخصية', sub: 'فصيلة الدم، الوزن، الطول',  color: '#0891b2' },
+                                    { href: createPageUrl('MedicalFile'),   emoji: '🧪', title: 'التحاليل',          sub: 'نتائج ورفع جديدة',           color: '#16a34a' },
+                                    { href: '/medical-history',             emoji: '📜', title: 'السجل الطبي',       sub: 'الأمراض والعمليات',           color: CT.soul.c },
+                                    { href: '/record-health',               emoji: '📝', title: 'سجّل عرَضاً',       sub: 'توثيق مستمر للحالة',          color: CT.warm.c },
+                                ].map(file => (
+                                    <Link key={file.title} href={file.href}>
+                                        <motion.div whileTap={{ scale: 0.95 }}
+                                            className="rounded-[20px] p-4 flex flex-col gap-2.5"
+                                            style={{ background: CT.card.bg, backdropFilter: CT.card.blur, border: `1.5px solid ${CT.card.border}`, boxShadow: CT.card.shadow }}>
+                                            <div className="w-10 h-10 rounded-[12px] flex items-center justify-center text-[20px]"
+                                                style={{ background: `${file.color}10` }}>
+                                                {file.emoji}
+                                            </div>
+                                            <div>
+                                                <p className="text-[12.5px] font-black text-slate-800">{file.title}</p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">{file.sub}</p>
+                                            </div>
+                                        </motion.div>
+                                    </Link>
+                                ))}
                             </div>
                         </motion.div>
                     )}
+
                 </AnimatePresence>
             </div>
+
+            {/* WhatsApp FAB */}
+            <WhatsAppFAB />
         </div>
     );
 }

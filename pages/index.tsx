@@ -19,7 +19,7 @@ export default function HomePage() {
     const dashboard = useHealthDashboard();
 
     return (
-        <div className="relative min-h-screen bg-[#F7FAFA] dark:bg-[#080D13] overflow-hidden font-sans">
+        <div className="relative min-h-screen bg-[#F0FAF8] dark:bg-[#080D13] overflow-hidden font-sans">
 
             {/* ── Health Aura Generative System ── */}
             <HealthAura 

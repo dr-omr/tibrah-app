@@ -370,24 +370,63 @@ export default function Header({ currentPageName }: HeaderProps) {
                         {/* Notifications */}
                         <NotificationCenter />
 
-                        {/* User / login */}
+                        {/* User avatar + More button */}
                         {!loading && (
                             user ? (
-                                <motion.button
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={() => { setShowMobileMenu(true); haptic.tap(); }}
-                                    aria-label="فتح قائمة المستخدم"
-                                    className="w-8 h-8 rounded-[10px] overflow-hidden flex-shrink-0 ring-2 ring-teal-500/25 shadow-sm"
-                                    style={{ border: '2px solid rgba(13,148,136,0.3)' }}
-                                >
-                                    {user.photoURL ? (
-                                        <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-black text-xs">
-                                            {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                                        </div>
-                                    )}
-                                </motion.button>
+                                <div className="flex items-center gap-1.5">
+                                    {/* Avatar — opens HeaderMenu */}
+                                    <motion.button
+                                        whileTap={{ scale: 0.88 }}
+                                        onClick={() => { setShowMobileMenu(true); haptic.tap(); }}
+                                        aria-label="الملف الشخصي"
+                                        className="relative w-[34px] h-[34px] rounded-[11px] overflow-hidden flex-shrink-0"
+                                        style={{
+                                            boxShadow: '0 0 0 2px rgba(13,148,136,0.35), 0 2px 8px rgba(13,148,136,0.18)',
+                                        }}
+                                    >
+                                        {user.photoURL ? (
+                                            <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-black text-xs">
+                                                {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                                            </div>
+                                        )}
+                                        {/* Live pulse dot */}
+                                        <motion.div
+                                            className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-400 border-[1.5px] border-white"
+                                            animate={{ scale: [1, 1.3, 1] }}
+                                            transition={{ duration: 3, repeat: Infinity }}
+                                        />
+                                    </motion.button>
+
+                                    {/* More button — premium pill */}
+                                    <motion.button
+                                        whileTap={{ scale: 0.90 }}
+                                        onClick={() => { setShowMobileMenu(true); haptic.selection(); }}
+                                        aria-label="المزيد"
+                                        className="flex items-center gap-1 px-2.5 h-[34px] rounded-[11px] relative overflow-hidden"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.82)',
+                                            backdropFilter: 'blur(16px)',
+                                            border: '1px solid rgba(255,255,255,0.90)',
+                                            boxShadow: '0 2px 0 rgba(255,255,255,1) inset, 0 2px 10px rgba(15,23,42,0.07)',
+                                        }}
+                                    >
+                                        {/* Top glint */}
+                                        <div className="absolute top-0 left-2 right-2 h-px" style={{ background: 'rgba(255,255,255,1)' }} />
+                                        {/* 3 dots */}
+                                        {[0, 1, 2].map(i => (
+                                            <motion.div
+                                                key={i}
+                                                className="w-[4px] h-[4px] rounded-full"
+                                                style={{ background: '#64748b' }}
+                                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                                transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.2 }}
+                                            />
+                                        ))}
+                                        <span className="text-[10px] font-black text-slate-500 ms-0.5">المزيد</span>
+                                    </motion.button>
+                                </div>
                             ) : (
                                 <>
                                     <Link
@@ -397,12 +436,30 @@ export default function Header({ currentPageName }: HeaderProps) {
                                         <LogIn className="w-3 h-3" />
                                         دخول
                                     </Link>
+                                    {/* More button for visitors too */}
                                     <motion.button
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => { setShowMobileMenu(true); haptic.tap(); }}
-                                        className="w-8 h-8 rounded-[10px] bg-white/60 dark:bg-slate-800/80 flex items-center justify-center border border-slate-100/80 dark:border-white/[0.06]"
+                                        whileTap={{ scale: 0.90 }}
+                                        onClick={() => { setShowMobileMenu(true); haptic.selection(); }}
+                                        aria-label="المزيد"
+                                        className="flex items-center gap-1 px-2.5 h-[34px] rounded-[11px] relative overflow-hidden"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.82)',
+                                            backdropFilter: 'blur(16px)',
+                                            border: '1px solid rgba(255,255,255,0.90)',
+                                            boxShadow: '0 2px 0 rgba(255,255,255,1) inset, 0 2px 10px rgba(15,23,42,0.07)',
+                                        }}
                                     >
-                                        <Menu className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                        <div className="absolute top-0 left-2 right-2 h-px" style={{ background: 'rgba(255,255,255,1)' }} />
+                                        {[0, 1, 2].map(i => (
+                                            <motion.div
+                                                key={i}
+                                                className="w-[4px] h-[4px] rounded-full"
+                                                style={{ background: '#64748b' }}
+                                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                                transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.2 }}
+                                            />
+                                        ))}
+                                        <span className="text-[10px] font-black text-slate-500 ms-0.5">المزيد</span>
                                     </motion.button>
                                 </>
                             )

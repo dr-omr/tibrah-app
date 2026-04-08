@@ -20,10 +20,10 @@ import { STAGGER_ITEM, ARROW_BOUNCE } from '@/lib/tibrah-motion';
 /* ── Greeting by time ── */
 function useGreeting() {
     const h = new Date().getHours();
-    if (h >= 5  && h < 12) return { text: 'صباح الخير',    emoji: '☀️',  sub: 'وقت مثالي للتسجيل' };
-    if (h >= 12 && h < 17) return { text: 'مرحباً',         emoji: '🌤️', sub: 'كيف تشعر الآن؟' };
-    if (h >= 17 && h < 21) return { text: 'مساء الخير',    emoji: '🌅',  sub: 'راجع يومك' };
-    return                          { text: 'وقت الراحة',   emoji: '🌙',  sub: 'سجّل قبل النوم' };
+    if (h >= 5 && h < 12) return { text: 'صباح الخير', emoji: '☀️', sub: 'وقت مثالي للتسجيل' };
+    if (h >= 12 && h < 17) return { text: 'مرحباً', emoji: '🌤️', sub: 'كيف تشعر الآن؟' };
+    if (h >= 17 && h < 21) return { text: 'مساء الخير', emoji: '🌅', sub: 'راجع يومك' };
+    return { text: 'وقت الراحة', emoji: '🌙', sub: 'سجّل قبل النوم' };
 }
 
 /* ── Countdown ── */
@@ -92,10 +92,10 @@ export function HeroCard({
     const [expanded, setExpanded] = useState(false);
     const [scoreTapped, setScoreTapped] = useState(false);
 
-    const greeting  = useGreeting();
+    const greeting = useGreeting();
     const countdown = useCountdown();
-    const color     = scoreColor(dashboard.healthScore);
-    const urgent    = !dashboard.hasLoggedToday;
+    const color = scoreColor(dashboard.healthScore);
+    const urgent = !dashboard.hasLoggedToday;
 
     // SVG ring
     const sz = 188; const rr = 80; const circ = 2 * Math.PI * rr;
@@ -111,18 +111,18 @@ export function HeroCard({
     // Health label
     const healthLabel =
         dashboard.healthScore >= 90 ? 'استثنائي 🌟' :
-        dashboard.healthScore >= 80 ? 'ممتاز ✓' :
-        dashboard.healthScore >= 65 ? 'جيد جداً' :
-        dashboard.healthScore >= 50 ? 'يمكن تحسينه' : 'يحتاج اهتماماً';
+            dashboard.healthScore >= 80 ? 'ممتاز ✓' :
+                dashboard.healthScore >= 65 ? 'جيد جداً' :
+                    dashboard.healthScore >= 50 ? 'يمكن تحسينه' : 'يحتاج اهتماماً';
 
     return (
         <motion.div variants={STAGGER_ITEM} className="px-4">
             <div className="relative overflow-hidden rounded-[32px]"
                 style={{
-                    background: T.card.bg,
-                    backdropFilter: T.card.blur,
-                    border: `1px solid ${T.card.border}`,
-                    boxShadow: `${T.sh.xl}, 0 0 0 0.5px rgba(255,255,255,0.6) inset`,
+                    background: 'rgba(255,255,255,0.97)',
+                    backdropFilter: 'blur(32px) saturate(180%)',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)',
                 }}>
 
                 <MeshBg color={color} />
@@ -131,13 +131,13 @@ export function HeroCard({
                 <div className="relative z-10">
 
                     {/* ── Top bar ── */}
-                    <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                    <div className="flex items-center justify-between px-6 pt-6 pb-3">
                         <div>
                             <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="text-[15px]">{greeting.emoji}</span>
                                 <span className="text-[11px] font-semibold text-slate-400 tracking-wide">{greeting.text}</span>
                             </div>
-                            <p className="text-[16.5px] font-black text-slate-900 dark:text-slate-100 leading-tight">
+                            <p className="text-[17px] font-black text-slate-900 leading-tight">
                                 {urgent ? greeting.sub : 'صحتك محدّثة ✓'}
                             </p>
                         </div>
@@ -169,13 +169,13 @@ export function HeroCard({
                             {/* SVG rings */}
                             <svg width={sz} height={sz} style={{ transform: 'rotate(-90deg)' }}>
                                 {/* Background track */}
-                                <circle cx={sz/2} cy={sz/2} r={rr} fill="none"
+                                <circle cx={sz / 2} cy={sz / 2} r={rr} fill="none"
                                     stroke="rgba(0,0,0,0.05)" strokeWidth="9" strokeLinecap="round" />
                                 {/* Thin inner detail */}
-                                <circle cx={sz/2} cy={sz/2} r={rr - 14} fill="none"
+                                <circle cx={sz / 2} cy={sz / 2} r={rr - 14} fill="none"
                                     stroke={`${color}10`} strokeWidth="1.5" />
                                 {/* Score arc */}
-                                <motion.circle cx={sz/2} cy={sz/2} r={rr} fill="none"
+                                <motion.circle cx={sz / 2} cy={sz / 2} r={rr} fill="none"
                                     stroke={color} strokeWidth="9" strokeLinecap="round"
                                     style={{ filter: `drop-shadow(0 0 6px ${color}60)` }}
                                     strokeDasharray={circ}
@@ -191,7 +191,7 @@ export function HeroCard({
                                     transition={{ duration: 0.5 }}
                                     onClick={handleScoreTap}
                                     className="flex flex-col items-center select-none active:scale-95">
-                                    <motion.span className="text-[56px] font-black tabular-nums leading-none"
+                                    <motion.span className="text-[60px] font-black tabular-nums leading-none"
                                         style={{ color }}
                                         initial={{ opacity: 0, scale: 0.4 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -217,7 +217,7 @@ export function HeroCard({
                         </div>
 
                         {/* ── Stats strip ── */}
-                        <div className="flex items-stretch w-full mt-3 border-t border-slate-100/80 dark:border-white/[0.05]">
+                        <div className="flex items-stretch w-full mt-3 border-t border-slate-100">
                             {([
                                 {
                                     icon: Droplets, label: 'الماء',
@@ -241,7 +241,7 @@ export function HeroCard({
                                 const Icon = s.icon;
                                 return (
                                     <React.Fragment key={i}>
-                                        {i > 0 && <div className="w-px bg-slate-100 dark:bg-white/[0.05] flex-shrink-0" />}
+                                        {i > 0 && <div className="w-px bg-slate-100 flex-shrink-0" />}
                                         <Link href={s.href} onClick={() => haptic.selection()} className="flex-1">
                                             <motion.div
                                                 whileTap={{ scale: 0.92 }}
@@ -255,7 +255,7 @@ export function HeroCard({
                                                             transition={{ duration: 1.4, repeat: Infinity }} />
                                                     )}
                                                 </div>
-                                                <span className="text-[15px] font-black tabular-nums text-slate-900 dark:text-white">{s.value}</span>
+                                                <span className="text-[15px] font-black tabular-nums text-slate-900">{s.value}</span>
                                                 <span className="text-[9.5px] font-medium text-slate-400">{s.label}</span>
                                             </motion.div>
                                         </Link>
@@ -267,7 +267,7 @@ export function HeroCard({
 
                     {/* ── Expand toggle ── */}
                     <button
-                        className="w-full flex items-center justify-center gap-1.5 py-3 border-t border-slate-100/70 dark:border-white/[0.04]"
+                        className="w-full flex items-center justify-center gap-1.5 py-3 border-t border-slate-100"
                         onClick={() => { setExpanded(e => !e); haptic.selection(); }}>
                         <span className="text-[11px] font-semibold text-slate-400">
                             {expanded ? 'إخفاء التفاصيل' : 'تفاصيل أكثر'}
@@ -297,7 +297,7 @@ export function HeroCard({
                                             <Timer className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                                             <span className="text-[12px] font-bold text-indigo-700 flex-1">وقت متبقٍ لتسجيل يومك</span>
                                             <span dir="ltr" className="text-[14px] font-black text-indigo-800 tabular-nums">
-                                                {String(countdown.h).padStart(2,'0')}:{String(countdown.m).padStart(2,'0')}:{String(countdown.s).padStart(2,'0')}
+                                                {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:{String(countdown.s).padStart(2, '0')}
                                             </span>
                                         </motion.div>
                                     )}
@@ -307,13 +307,13 @@ export function HeroCard({
                                         style={{ background: `${color}08`, border: `1px solid ${color}16` }}>
                                         <p className="text-[11.5px] font-bold mb-3" style={{ color }}>مكونات الدرجة</p>
                                         {[
-                                            { label: 'الانتظام',   pct: Math.min(dashboard.streak * 10, 100) },
-                                            { label: 'الترطيب',    pct: Math.round(Math.min(dashboard.waterToday / Math.max(dashboard.waterGoal,1), 1) * 100) },
-                                            { label: 'إكمال الأهداف', pct: Math.round((dashboard.goalsCompleted / Math.max(dashboard.goalsTotal,1)) * 100) },
+                                            { label: 'الانتظام', pct: Math.min(dashboard.streak * 10, 100) },
+                                            { label: 'الترطيب', pct: Math.round(Math.min(dashboard.waterToday / Math.max(dashboard.waterGoal, 1), 1) * 100) },
+                                            { label: 'إكمال الأهداف', pct: Math.round((dashboard.goalsCompleted / Math.max(dashboard.goalsTotal, 1)) * 100) },
                                         ].map((item, i) => (
                                             <div key={i} className="mb-2 last:mb-0">
                                                 <div className="flex justify-between mb-1">
-                                                    <span className="text-[10px] font-bold text-slate-500">{item.label}</span>
+                                                    <span className="text-[10px] font-bold text-slate-600">{item.label}</span>
                                                     <span className="text-[10px] font-black tabular-nums" style={{ color }}>{item.pct}%</span>
                                                 </div>
                                                 <div className="h-1 rounded-full bg-white/60 overflow-hidden">
@@ -364,14 +364,14 @@ export function HeroCard({
                                                 background: urgent
                                                     ? 'linear-gradient(135deg,#6366f1,#8b5cf6)'
                                                     : `linear-gradient(135deg,${color},${color}cc)`,
-                                                boxShadow: `0 8px 28px ${urgent ? 'rgba(99,102,241,0.32)' : color.replace('#','rgba(') + ',0.28)'}`,
+                                                boxShadow: `0 8px 28px ${urgent ? 'rgba(99,102,241,0.32)' : color.replace('#', 'rgba(') + ',0.28)'}`,
                                             }}>
                                             {/* shine overlay */}
                                             <div className="absolute inset-y-0 left-0 right-1/2 bg-white/10 rounded-r-full pointer-events-none" />
                                             <div className="w-10 h-10 rounded-[13px] bg-white/15 flex items-center justify-center flex-shrink-0 z-10">
                                                 {urgent
                                                     ? <Stethoscope className="w-5 h-5 text-white" />
-                                                    : <HeartPulse  className="w-5 h-5 text-white" />}
+                                                    : <HeartPulse className="w-5 h-5 text-white" />}
                                             </div>
                                             <div className="flex-1 z-10">
                                                 <p className="text-[15px] font-black text-white leading-tight">

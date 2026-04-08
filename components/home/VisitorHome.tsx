@@ -1,64 +1,94 @@
+// components/home/VisitorHome.tsx — V8 "Complete & Smart"
+// User keeps V6 sections + V7 smart intelligence
+// Full rich journey: 9 sections, every one earns its place
+// Smart user journey: Hero → Guide → Stats → Health Preview → Services → Pillars → Why → Testimonials → CTA
+// + Floating persistent pill
+
 import React from 'react';
-import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { Stethoscope, Heart, TrendingUp, Award } from 'lucide-react';
-import DailyGreeting from './DailyGreeting';
-import { ZoneDivider, ScrollReveal, SectionHeader, DailyMotivation } from './HomeShared';
+import VisitorHeroSection from './visitor/VisitorHeroSection';
+import VisitorFloatingCTA from './visitor/VisitorFloatingCTA';
 
-const ServicesPreview = dynamic(() => import('./ServicesPreview'), {
-    loading: () => <div className="h-[200px] bg-slate-100 dark:bg-slate-800 animate-pulse m-5 rounded-3xl" />,
-});
-const ShopPreview = dynamic(() => import('./ShopPreview'), {
-    loading: () => <div className="h-[200px] bg-slate-100 dark:bg-slate-800 animate-pulse m-5 rounded-3xl" />,
-});
-const TrustAndTestimonials = dynamic(() => import('./TrustAndTestimonials'), {
-    loading: () => <section className="h-[250px] mx-4 rounded-3xl bg-slate-100 dark:bg-slate-800 animate-pulse" />,
-});
-const FinalCTA = dynamic(() => import('./FinalCTA'), {
-    loading: () => <div className="h-[200px] mx-4 rounded-3xl bg-slate-100 dark:bg-slate-800 animate-pulse" />,
-});
+// Intelligence layer
+const VisitorSmartGuide   = dynamic(() => import('./visitor/VisitorSmartGuide'));
 
-/* ═══════════════════════════════════════════════
-   VISITOR FLOW — التجربة الأصلية
-   ═══════════════════════════════════════════════ */
+// Trust & Numbers
+const VisitorStatsBar     = dynamic(() => import('./visitor/VisitorStatsBar'));
+
+// Desire-creation (locked preview)
+const VisitorHealthPreview= dynamic(() => import('./visitor/VisitorHealthPreview'));
+
+// Services discovery
+const VisitorServicesScroll = dynamic(() => import('./visitor/VisitorServicesScroll'));
+
+// Doctor schedule picker (NEW)
+const VisitorDoctorSchedule = dynamic(() => import('./visitor/VisitorDoctorSchedule'));
+
+// Philosophy & differentiation
+const VisitorPillars      = dynamic(() => import('./visitor/VisitorPillars'));
+const VisitorWhyTibrah    = dynamic(() => import('./visitor/VisitorWhyTibrah'));
+
+// Journey & social proof
+const VisitorJourney      = dynamic(() => import('./visitor/VisitorJourney'));
+const VisitorSocialProof  = dynamic(() => import('./visitor/VisitorSocialProof'));
+
+// FAQ & Success Stories (NEW)
+const VisitorFAQ            = dynamic(() => import('./visitor/VisitorFAQ'));
+const VisitorSuccessStories = dynamic(() => import('./visitor/VisitorSuccessStories'));
+
+// Close
+const VisitorFinalCTA     = dynamic(() => import('./visitor/VisitorFinalCTA'));
+
 export default function VisitorHome() {
     return (
-        <div className="flex flex-col gap-7 pb-8">
-            <DailyGreeting />
+        <div dir="rtl" style={{
+            background: '#F0FAF8',
+            display: 'flex',
+            flexDirection: 'column',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+        }}>
 
-            <ZoneDivider icon={Stethoscope} label="خدماتنا" />
+            {/* ① Hero — First impression · Doctor trust · Entry CTA */}
+            <VisitorHeroSection />
 
-            <div className="content-visibility-auto" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}>
-                <ScrollReveal>
-                    <ServicesPreview />
-                </ScrollReveal>
+            {/* ② Smart Guide — "أين تبدأ؟" · Intelligent 3-path routing */}
+            <VisitorSmartGuide />
 
-                <ZoneDivider label="ثقة ونتائج" icon={Heart} />
+            {/* ③ Doctor Schedule — interactive booking calendar (NEW) */}
+            <VisitorDoctorSchedule />
 
-                <div className="space-y-4">
-                    <SectionHeader
-                        title="قصص نجاح ومجتمعنا"
-                        subtitle="ناس تعافت بفضل الله"
-                        Icon={Heart}
-                        accentColor="var(--section-community)"
-                    />
-                    <ScrollReveal>
-                        <TrustAndTestimonials />
-                    </ScrollReveal>
-                </div>
+            {/* ④ Stats — Trust numbers (animated counters) */}
+            <VisitorStatsBar />
 
-                <div className="my-7">
-                    <DailyMotivation />
-                </div>
+            {/* ④ Health Preview — Locked dashboard (creates desire to register) */}
+            <VisitorHealthPreview />
 
-                <ScrollReveal>
-                    <ShopPreview />
-                </ScrollReveal>
+            {/* ⑤ Services — App Store style horizontal scroll */}
+            <VisitorServicesScroll />
 
-                <ScrollReveal>
-                    <FinalCTA />
-                </ScrollReveal>
-            </div>
+            {/* ⑥ Pillars — Three dimensions of healing */}
+            <VisitorPillars />
+
+            {/* ⑦ Why Tibrah — Comparison vs traditional medicine */}
+            <VisitorWhyTibrah />
+
+            {/* ⑧ Journey — Patient 5-step journey */}
+            <VisitorJourney />
+
+            {/* ⑨ Success Stories — Animated metrics + patient cards (NEW) */}
+            <VisitorSuccessStories />
+
+            {/* ⑩ Social Proof — Testimonial carousel */}
+            <VisitorSocialProof />
+
+            {/* ⑪ FAQ — Spring accordion, 6 questions (NEW) */}
+            <VisitorFAQ />
+
+            {/* ⑫ Final CTA — Book or WhatsApp */}
+            <VisitorFinalCTA />
+
+            {/* ⑬ Floating pill — Persistent after scroll */}
+            <VisitorFloatingCTA />
         </div>
     );
 }

@@ -16,14 +16,16 @@ export const METRIC = {
 
 export type MetricKey = keyof typeof METRIC;
 
-// Card surface
+// Card surface — Liquid Glass Light (matches F0FAF8 canvas)
 export const TC = {
+    canvas: '#F0FAF8',
     card: {
-        bg:     'rgba(255,255,255,0.92)',
-        border: 'rgba(0,0,0,0.07)',
-        blur:   'blur(40px) saturate(180%)',
-        shadow: '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
-        shadowLg: '0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)',
+        bg:       'rgba(255,255,255,0.88)',
+        border:   'rgba(255,255,255,0.82)',
+        borderTop:'rgba(255,255,255,0.98)',
+        blur:     'blur(32px) saturate(180%)',
+        shadow:   '0 2px 0 rgba(255,255,255,1) inset, 0 6px 24px rgba(15,23,42,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+        shadowLg: '0 2px 0 rgba(255,255,255,1) inset, 0 12px 40px rgba(15,23,42,0.09), 0 4px 12px rgba(0,0,0,0.05)',
     },
     r: { sm: 14, md: 18, lg: 22, xl: 28 },
 } as const;
