@@ -19,20 +19,20 @@ const DOCTOR_PHOTO = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object
 
 // ── Design constants ────────────────────────────────────────
 const G = {
-    canvas:    '#F0FAF8',
-    glass:     'rgba(255,255,255,0.72)',
-    glassHvy:  'rgba(255,255,255,0.88)',
-    blur:      'blur(28px) saturate(180%)',
-    blurHvy:   'blur(36px) saturate(200%)',
+    canvas: '#F0FAF8',
+    glass: 'rgba(255,255,255,0.72)',
+    glassHvy: 'rgba(255,255,255,0.88)',
+    blur: 'blur(28px) saturate(180%)',
+    blurHvy: 'blur(36px) saturate(200%)',
     borderTop: 'rgba(255,255,255,0.95)',
-    border:    'rgba(255,255,255,0.80)',
-    shadow:    '0 2px 0 rgba(255,255,255,1) inset, 0 8px 32px rgba(15,23,42,0.08)',
-    shadowLg:  '0 2px 0 rgba(255,255,255,1) inset, 0 16px 48px rgba(15,23,42,0.11), 0 4px 12px rgba(0,0,0,0.06)',
-    accent:    '#0D9488',
-    accentSoft:'rgba(13,148,136,0.10)',
-    ink:       '#0F172A',
-    sub:       '#475569',
-    muted:     '#94A3B8',
+    border: 'rgba(255,255,255,0.80)',
+    shadow: '0 2px 0 rgba(255,255,255,1) inset, 0 8px 32px rgba(15,23,42,0.08)',
+    shadowLg: '0 2px 0 rgba(255,255,255,1) inset, 0 16px 48px rgba(15,23,42,0.11), 0 4px 12px rgba(0,0,0,0.06)',
+    accent: '#0D9488',
+    accentSoft: 'rgba(13,148,136,0.10)',
+    ink: '#0F172A',
+    sub: '#475569',
+    muted: '#94A3B8',
 };
 const SP = { type: 'spring' as const, stiffness: 500, damping: 34 };
 
@@ -162,8 +162,10 @@ export default function VisitorHeroSection() {
 
                     {/* Live pill */}
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                        style={{ background: G.glassHvy, backdropFilter: G.blur, WebkitBackdropFilter: G.blur,
-                            border: `1px solid ${G.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                        style={{
+                            background: G.glassHvy, backdropFilter: G.blur, WebkitBackdropFilter: G.blur,
+                            border: `1px solid ${G.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                        }}>
                         <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22C55E' }}
                             animate={{ scale: [1, 1.7, 1], opacity: [1, 0.4, 1] }}
                             transition={{ duration: 2, repeat: Infinity }} />
@@ -191,9 +193,11 @@ export default function VisitorHeroSection() {
                 <motion.div initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: 0.16, ...SP }}>
                     <div className="relative rounded-[22px] overflow-hidden"
-                        style={{ background: G.glassHvy, backdropFilter: G.blurHvy,
+                        style={{
+                            background: G.glassHvy, backdropFilter: G.blurHvy,
                             WebkitBackdropFilter: G.blurHvy, border: `1px solid ${G.border}`,
-                            boxShadow: G.shadowLg }}>
+                            boxShadow: G.shadowLg
+                        }}>
 
                         {/* Top Fluent reflection */}
                         <div className="absolute top-0 left-5 right-5 h-px"
@@ -233,7 +237,7 @@ export default function VisitorHeroSection() {
                                     </div>
                                     {/* 5 stars */}
                                     <div className="flex gap-0.5 mt-1 flex-shrink-0">
-                                        {[1,2,3,4,5].map(s => (
+                                        {[1, 2, 3, 4, 5].map(s => (
                                             <Star key={s} className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
                                         ))}
                                     </div>
@@ -244,9 +248,11 @@ export default function VisitorHeroSection() {
                                     {['MBBS', 'طب وظيفي', 'نفس-جسدي', '+٨ سنوات'].map(c => (
                                         <span key={c}
                                             className="text-[8px] font-bold px-2 py-0.5 rounded-md"
-                                            style={{ background: 'rgba(255,255,255,0.75)',
+                                            style={{
+                                                background: 'rgba(255,255,255,0.75)',
                                                 color: G.sub, border: '1px solid rgba(255,255,255,0.90)',
-                                                backdropFilter: 'blur(8px)' }}>
+                                                backdropFilter: 'blur(8px)'
+                                            }}>
                                             {c}
                                         </span>
                                     ))}
@@ -258,8 +264,10 @@ export default function VisitorHeroSection() {
                         <a href="https://wa.me/967771447111" target="_blank" rel="noopener noreferrer"
                             onClick={() => haptic.impact()}
                             className="flex items-center justify-center gap-2 py-3 no-underline"
-                            style={{ borderTop: '1px solid rgba(255,255,255,0.60)',
-                                background: 'rgba(34,197,94,0.07)', textDecoration: 'none' }}>
+                            style={{
+                                borderTop: '1px solid rgba(255,255,255,0.60)',
+                                background: 'rgba(34,197,94,0.07)', textDecoration: 'none'
+                            }}>
                             <MessageCircle className="w-3.5 h-3.5 text-green-600" />
                             <span className="text-[11px] font-black text-green-700">
                                 تواصل مباشرة عبر واتساب
@@ -280,10 +288,12 @@ export default function VisitorHeroSection() {
                     ].map(f => (
                         <div key={f.label}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                            style={{ background: G.glassHvy, backdropFilter: 'blur(16px)',
+                            style={{
+                                background: G.glassHvy, backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: `1px solid ${G.border}`,
-                                boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                                boxShadow: '0 1px 4px rgba(0,0,0,0.05)'
+                            }}>
                             <span className="text-[11px]">{f.icon}</span>
                             <span className="text-[9.5px] font-semibold" style={{ color: G.sub }}>
                                 {f.label}
@@ -301,22 +311,28 @@ export default function VisitorHeroSection() {
                     <Link href={createPageUrl('BookAppointment')} onClick={() => haptic.impact()}>
                         <motion.div whileTap={{ scale: 0.967, transition: SP }}
                             className="relative overflow-hidden flex items-center gap-4 px-5 py-4 rounded-[20px]"
-                            style={{ background: G.ink,
-                                boxShadow: '0 4px 24px rgba(15,23,42,0.30), 0 1px 4px rgba(0,0,0,0.12)' }}>
+                            style={{
+                                background: G.ink,
+                                boxShadow: '0 4px 24px rgba(15,23,42,0.30), 0 1px 4px rgba(0,0,0,0.12)'
+                            }}>
 
                             {/* Teal glow */}
                             <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
                                 style={{ background: 'rgba(13,148,136,0.20)', filter: 'blur(20px)' }} />
                             {/* Shimmer */}
                             <motion.div className="absolute inset-y-0 w-16 pointer-events-none"
-                                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
-                                    skewX: -20 }}
+                                style={{
+                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
+                                    skewX: -20
+                                }}
                                 animate={{ left: ['-64px', '120%'] }}
                                 transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3 }} />
 
                             <div className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 relative"
-                                style={{ background: 'rgba(255,255,255,0.11)',
-                                    border: '1px solid rgba(255,255,255,0.15)' }}>
+                                style={{
+                                    background: 'rgba(255,255,255,0.11)',
+                                    border: '1px solid rgba(255,255,255,0.15)'
+                                }}>
                                 <Calendar className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1 relative">
@@ -333,14 +349,18 @@ export default function VisitorHeroSection() {
                     <Link href="/symptom-checker" onClick={() => haptic.selection()}>
                         <motion.div whileTap={{ scale: 0.967, transition: SP }}
                             className="relative overflow-hidden flex items-center gap-4 px-5 py-3.5 rounded-[20px]"
-                            style={{ background: G.glassHvy, backdropFilter: G.blurHvy,
+                            style={{
+                                background: G.glassHvy, backdropFilter: G.blurHvy,
                                 WebkitBackdropFilter: G.blurHvy,
-                                border: `1px solid ${G.border}`, boxShadow: G.shadow }}>
+                                border: `1px solid ${G.border}`, boxShadow: G.shadow
+                            }}>
                             <div className="absolute top-0 left-4 right-4 h-px"
                                 style={{ background: G.borderTop }} />
                             <div className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0"
-                                style={{ background: G.accentSoft,
-                                    border: '1px solid rgba(13,148,136,0.14)' }}>
+                                style={{
+                                    background: G.accentSoft,
+                                    border: '1px solid rgba(13,148,136,0.14)'
+                                }}>
                                 <HeartPulse className="w-5 h-5" style={{ color: G.accent }} />
                             </div>
                             <div className="flex-1">
@@ -358,10 +378,12 @@ export default function VisitorHeroSection() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     transition={{ delay: 0.90 }}
                     className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-full mx-auto"
-                    style={{ background: G.glassHvy, backdropFilter: 'blur(16px)',
+                    style={{
+                        background: G.glassHvy, backdropFilter: 'blur(16px)',
                         WebkitBackdropFilter: 'blur(16px)',
                         border: `1px solid ${G.border}`,
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+                    }}>
                     <Shield className="w-3 h-3" style={{ color: G.muted }} />
                     <span className="text-[7.5px] font-bold uppercase tracking-[0.22em]"
                         style={{ color: G.muted }}>
