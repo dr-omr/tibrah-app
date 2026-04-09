@@ -10,13 +10,13 @@ import VisitorHeroSection from './visitor/VisitorHeroSection';
 import VisitorFloatingCTA from './visitor/VisitorFloatingCTA';
 
 // Intelligence layer
-const VisitorSmartGuide   = dynamic(() => import('./visitor/VisitorSmartGuide'));
+const VisitorSmartGuide = dynamic(() => import('./visitor/VisitorSmartGuide'));
 
 // Trust & Numbers
-const VisitorStatsBar     = dynamic(() => import('./visitor/VisitorStatsBar'));
+const VisitorStatsBar = dynamic(() => import('./visitor/VisitorStatsBar'));
 
 // Desire-creation (locked preview)
-const VisitorHealthPreview= dynamic(() => import('./visitor/VisitorHealthPreview'));
+const VisitorHealthPreview = dynamic(() => import('./visitor/VisitorHealthPreview'));
 
 // Services discovery
 const VisitorServicesScroll = dynamic(() => import('./visitor/VisitorServicesScroll'));
@@ -25,19 +25,19 @@ const VisitorServicesScroll = dynamic(() => import('./visitor/VisitorServicesScr
 const VisitorDoctorSchedule = dynamic(() => import('./visitor/VisitorDoctorSchedule'));
 
 // Philosophy & differentiation
-const VisitorPillars      = dynamic(() => import('./visitor/VisitorPillars'));
-const VisitorWhyTibrah    = dynamic(() => import('./visitor/VisitorWhyTibrah'));
+const VisitorPillars = dynamic(() => import('./visitor/VisitorPillars'));
+const VisitorWhyTibrah = dynamic(() => import('./visitor/VisitorWhyTibrah'));
 
 // Journey & social proof
-const VisitorJourney      = dynamic(() => import('./visitor/VisitorJourney'));
-const VisitorSocialProof  = dynamic(() => import('./visitor/VisitorSocialProof'));
+const VisitorJourney = dynamic(() => import('./visitor/VisitorJourney'));
+const VisitorSocialProof = dynamic(() => import('./visitor/VisitorSocialProof'));
 
 // FAQ & Success Stories (NEW)
-const VisitorFAQ            = dynamic(() => import('./visitor/VisitorFAQ'));
+const VisitorFAQ = dynamic(() => import('./visitor/VisitorFAQ'));
 const VisitorSuccessStories = dynamic(() => import('./visitor/VisitorSuccessStories'));
 
 // Close
-const VisitorFinalCTA     = dynamic(() => import('./visitor/VisitorFinalCTA'));
+const VisitorFinalCTA = dynamic(() => import('./visitor/VisitorFinalCTA'));
 
 export default function VisitorHome() {
     return (

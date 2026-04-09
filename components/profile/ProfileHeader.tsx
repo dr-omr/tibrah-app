@@ -6,7 +6,10 @@ interface UserData {
     id: string;
     email?: string;
     full_name?: string;
+    name?: string;
+    displayName?: string;
     avatar_url?: string;
+    photoURL?: string;      // ← Firebase Auth photo
     settings?: any;
     created_at?: string;
 }
@@ -78,10 +81,14 @@ export const ProfileHeader = ({ user, onShare, onQRCode }: ProfileHeaderProps) =
                         whileTap={{ scale: 0.95, rotate: 5 }}
                     >
                         <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center backdrop-blur-sm border-2 border-white/40 shadow-2xl overflow-hidden">
-                            {user?.avatar_url ? (
-                                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                            {(user?.photoURL || user?.avatar_url) ? (
+                                <img src={user.photoURL || user.avatar_url} alt="صورة الملف الشخصي" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                                <User className="w-12 h-12 text-white" />
+                                <div className="w-full h-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center">
+                                    <span className="text-2xl font-black text-white">
+                                        {(user?.displayName || user?.full_name || user?.name || user?.email || 'م').charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
                             )}
                         </div>
                         {/* Crown Badge */}
@@ -106,7 +113,7 @@ export const ProfileHeader = ({ user, onShare, onQRCode }: ProfileHeaderProps) =
 
                     {/* User Name */}
                     <h1 className="text-2xl font-bold text-white mb-1">
-                        {user?.settings?.displayName || user?.full_name || 'مستخدم جديد'}
+                        {user?.settings?.displayName || user?.displayName || user?.full_name || user?.name || 'مستخدم جديد'}
                     </h1>
                     <p className="text-white/60 text-sm mb-3">{user?.email || ''}</p>
 

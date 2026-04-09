@@ -22,33 +22,33 @@ import {
     Plus, WifiOff, Activity, Zap, HeartPulse, Sparkles,
     ShoppingBag, Lightbulb,
 } from 'lucide-react';
-import { useHealthDashboard }       from '@/hooks/useHealthDashboard';
-import { haptic }                   from '@/lib/HapticFeedback';
-import AIAnalysisSheet              from '@/components/ai/AIAnalysisSheet';
-import { useCloudSync }             from '@/lib/useCloudSync';
+import { useHealthDashboard } from '@/hooks/useHealthDashboard';
+import { haptic } from '@/lib/HapticFeedback';
+import AIAnalysisSheet from '@/components/ai/AIAnalysisSheet';
+import { useCloudSync } from '@/lib/useCloudSync';
 import { STAGGER_CONTAINER, STAGGER_ITEM, SPRING_BOUNCY } from '@/lib/tibrah-motion';
-import { T }                        from './home-tokens';
+import { T } from './home-tokens';
 
 // Core sub-components
-import { HeroCard }      from './HeroCard';
-import { SmartInsight }  from './SmartInsight';
-import { VitalsStrip }   from './VitalsStrip';
-import { QuickActions }  from './QuickActions';
+import { HeroCard } from './HeroCard';
+import { SmartInsight } from './SmartInsight';
+import { VitalsStrip } from './VitalsStrip';
+import { QuickActions } from './QuickActions';
 import { CareAccordion } from './CareAccordion';
-import { ShopStrip }     from './ShopStrip';
+import { ShopStrip } from './ShopStrip';
 
 // Previously unintegrated components — NOW ADDED
-import DailyInsight  from './DailyInsight';
-import ShopPreview   from './ShopPreview';
+import DailyInsight from './DailyInsight';
+import ShopPreview from './ShopPreview';
 
 /* ── Section label — Glass Native ── */
 function SL({
     label, icon: Icon, color = T.primary, href, action,
 }: {
-    label:  string;
-    icon:   React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+    label: string;
+    icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
     color?: string;
-    href?:  string;
+    href?: string;
     action?: string;
 }) {
     return (
@@ -178,7 +178,7 @@ function FAB({ show }: { show: boolean }) {
 export default function PatientHome() {
     const dashboard = useHealthDashboard();
     const { isOnline } = useCloudSync();
-    const [aiOpen, setAiOpen]   = useState(false);
+    const [aiOpen, setAiOpen] = useState(false);
     const [showFAB, setShowFAB] = useState(false);
 
     useEffect(() => {
