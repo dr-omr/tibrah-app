@@ -44,6 +44,7 @@ const SearchPalette = dynamic(() => import('../components/search-engine').then(m
 
 import '../styles/globals.css';
 import '../components/body-map/bodyMapStyles.css';
+import '../components/health-engine/thie.css';
 
 // Premium unified FAB (AI + Booking + Search + WhatsApp)
 const FloatingActionButton = dynamic(() => import('../components/common/FloatingActionButton'), { ssr: false });
@@ -56,6 +57,11 @@ const CompanionBot = dynamic(() => import('../components/ai/CompanionBot'), { ss
 // Convert route path to page name
 function getPageName(pathname: string): string {
     if (pathname === '/') return 'Home';
+    // Handle /sections/[slug] routes — return slug as PascalCase for tab mapping
+    if (pathname.startsWith('/sections/')) {
+        const slug = pathname.split('/sections/')[1]?.split('/')[0] || '';
+        if (slug) return slug.charAt(0).toUpperCase() + slug.slice(1);
+    }
     const path = pathname.slice(1).split('/')[0];
     return path
         .split('-')

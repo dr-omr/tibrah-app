@@ -16,8 +16,9 @@ import React, { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createPageUrl } from '../../utils';
 import {
-    Home, HeartPulse, Activity, ShoppingBag,
-    Stethoscope, Calendar, FileText, Settings,
+    Home, HeartPulse, Stethoscope,
+    Calendar, FileText, Settings,
+    Sparkles, LayoutGrid, Brain, Music2, Wind,
 } from 'lucide-react';
 import { haptic } from '@/lib/HapticFeedback';
 import { uiSounds } from '@/lib/uiSounds';
@@ -32,6 +33,8 @@ interface NavItem {
     name: string;
     icon: React.ElementType;
     page: string;
+    href?: string;           // override createPageUrl default
+    color?: string;
     badge?: number;
     quickActions?: QuickAction[];
 }
@@ -47,23 +50,29 @@ interface BottomNavProps {
 }
 
 // ─── Nav Items Config ─────────────────────────────────────────────
+// Structure: الرئيسية | جسدي | رعايتي (center bubble) | روحي | المزيد
 
 const navItems: NavItem[] = [
     {
         name: 'الرئيسية',
         icon: Home,
         page: 'Home',
+        href: '/',
         quickActions: [
             { label: 'السجل اليومي', icon: FileText, href: '/daily-log' },
             { label: 'الإعدادات', icon: Settings, href: '/settings' },
         ],
     },
     {
-        name: 'التشخيص',
+        name: 'جسدي',
         icon: Stethoscope,
-        page: 'BodyMap',
+        page: 'Jasadi',
+        href: '/sections/jasadi',
+        color: '#0D9488',
         quickActions: [
-            { label: 'تحليل الأعراض', icon: Activity, href: '/symptom-analysis' },
+            { label: 'مدقق الأعراض', icon: Brain, href: '/symptom-checker' },
+            { label: 'متابعة صحتي', icon: Sparkles, href: '/health-tracker' },
+            { label: 'مخطط الوجبات', icon: Sparkles, href: '/meal-planner' },
         ],
     },
     {
@@ -71,25 +80,38 @@ const navItems: NavItem[] = [
         name: 'رعايتي',
         icon: HeartPulse,
         page: 'MyCare',
+        href: '/my-care',
         quickActions: [
             { label: 'مواعيدي', icon: Calendar, href: '/my-appointments' },
             { label: 'ملفي الطبي', icon: FileText, href: '/medical-file' },
+            { label: 'احجز موعد', icon: Calendar, href: '/book-appointment' },
         ],
     },
     {
-        name: 'تتبعي',
-        icon: Activity,
-        page: 'HealthTracker',
+        name: 'روحي',
+        icon: Music2,
+        page: 'Ruhi',
+        href: '/sections/ruhi',
+        color: '#2563EB',
         quickActions: [
-            { label: 'تسجيل صحتي', icon: Activity, href: '/record-health' },
+            { label: 'الترددات العلاجية', icon: Sparkles, href: '/frequencies' },
+            { label: 'التأمل', icon: Wind, href: '/meditation' },
+            { label: 'تمارين التنفس', icon: Wind, href: '/breathe' },
         ],
     },
     {
-        name: 'الصيدلية',
-        icon: ShoppingBag,
-        page: 'Shop',
+        name: 'المزيد',
+        icon: LayoutGrid,
+        page: 'More',
+        href: '/more',
+        quickActions: [
+            { label: 'نفسي', icon: Brain, href: '/sections/nafsi' },
+            { label: 'فكري', icon: Brain, href: '/sections/fikri' },
+            { label: 'أخرى', icon: Settings, href: '/sections/other' },
+        ],
     },
 ];
+
 
 // ─── Regular Tab Item ─────────────────────────────────────────────
 
@@ -104,6 +126,13 @@ function TabItem({
     const Icon = item.icon;
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const wasLong = useRef(false);
+    const activeColor = item.color || '#0d9488';
+    const activeColorRgba = item.color
+        ? `${item.color}1E`
+        : 'rgba(13,148,136,0.12)';
+    const activeGlowRgba = item.color
+        ? `${item.color}2E`
+        : 'rgba(13,148,136,0.18)';
 
     const onTouchStart = useCallback(() => {
         wasLong.current = false;
@@ -142,7 +171,7 @@ function TabItem({
                     <motion.div
                         layoutId="activeTabGlow"
                         className="absolute inset-0 rounded-xl"
-                        style={{ backgroundColor: 'rgba(13,148,136,0.12)', boxShadow: '0 0 14px rgba(13,148,136,0.18)' }}
+                        style={{ backgroundColor: activeColorRgba, boxShadow: `0 0 14px ${activeGlowRgba}` }}
                         initial={{ opacity: 0, scale: 0.7 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
@@ -150,8 +179,8 @@ function TabItem({
                     />
                 )}
                 <Icon
-                    style={{ width: 21, height: 21 }}
-                    className={`relative z-10 transition-colors duration-150 ${isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'}`}
+                    style={{ width: 21, height: 21, color: isActive ? activeColor : undefined }}
+                    className={`relative z-10 transition-colors duration-150 ${isActive ? '' : 'text-slate-400 dark:text-slate-500'}`}
                     strokeWidth={isActive ? 2.5 : 1.8}
                 />
                 {/* Badge */}
@@ -171,7 +200,7 @@ function TabItem({
             {/* Label */}
             <motion.span
                 animate={{
-                    color: isActive ? '#0d9488' : '#94a3b8',
+                    color: isActive ? activeColor : '#94a3b8',
                     fontWeight: isActive ? 700 : 500,
                     scale: isActive ? 1.02 : 1,
                 }}
@@ -189,8 +218,8 @@ function TabItem({
                         animate={{ scaleX: 1, opacity: 1 }}
                         exit={{ scaleX: 0, opacity: 0 }}
                         transition={{ type: 'spring', stiffness: 600, damping: 30 }}
-                        className="absolute bottom-0 w-4 h-[3px] rounded-full bg-teal-500"
-                        style={{ boxShadow: '0 0 6px rgba(13,148,136,0.5)' }}
+                        className="absolute bottom-0 w-4 h-[3px] rounded-full"
+                        style={{ background: activeColor, boxShadow: `0 0 6px ${activeGlowRgba}` }}
                     />
                 )}
             </AnimatePresence>
@@ -234,45 +263,89 @@ function CenterTab({ item, isActive, onPress, onLongPress }: {
             onTouchCancel={() => { if (timer.current) clearTimeout(timer.current); }}
             onClick={wasLong.current ? undefined : onPress}
         >
-            {/* Elevated circle */}
+            {/* ── Triple pulse rings (only when active) ── */}
+            <AnimatePresence>
+                {isActive && (
+                    <>
+                        {[0, 1, 2].map((i) => (
+                            <motion.div
+                                key={i}
+                                className="absolute rounded-full border border-teal-400/30"
+                                style={{ width: 56, height: 56, top: -20 }}
+                                initial={{ scale: 1, opacity: 0.5 }}
+                                animate={{ scale: [1, 1.5 + i * 0.35, 1.8 + i * 0.35], opacity: [0.4, 0.1, 0] }}
+                                transition={{ duration: 2.4, delay: i * 0.6, repeat: Infinity, ease: 'easeOut' }}
+                            />
+                        ))}
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* ── Main bubble ── */}
             <motion.div
-                className="absolute flex items-center justify-center rounded-full"
+                className="absolute flex items-center justify-center rounded-full overflow-hidden"
                 animate={{
-                    scale: isActive ? 1.06 : 1,
-                    y: isActive ? -1 : 0,
+                    scale: isActive ? 1.08 : 1,
+                    y: isActive ? -3 : 0,
                 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                whileTap={{ scale: 0.93 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                 style={{
-                    width: 56,
-                    height: 56,
-                    top: -20,
+                    width: 58,
+                    height: 58,
+                    top: -22,
                     background: isActive
-                        ? 'linear-gradient(135deg, #0d9488 0%, #059669 100%)'
-                        : 'linear-gradient(135deg, rgba(13,148,136,0.12) 0%, rgba(5,150,105,0.08) 100%)',
-                    border: isActive ? 'none' : '1.5px solid rgba(13,148,136,0.28)',
+                        ? 'linear-gradient(145deg, #0ecfbe 0%, #0D9488 45%, #059669 100%)'
+                        : 'linear-gradient(145deg, rgba(13,148,136,0.14) 0%, rgba(5,150,105,0.08) 100%)',
+                    border: isActive
+                        ? '2px solid rgba(255,255,255,0.30)'
+                        : '1.5px solid rgba(13,148,136,0.30)',
                     boxShadow: isActive
-                        ? '0 8px 24px rgba(13,148,136,0.40), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)'
-                        : '0 4px 14px rgba(0,0,0,0.08)',
+                        ? `
+                            0 0 0 1px rgba(255,255,255,0.12) inset,
+                            0 1px 0 rgba(255,255,255,0.25) inset,
+                            0 12px 36px rgba(13,148,136,0.48),
+                            0 4px 12px rgba(0,0,0,0.12)
+                          `
+                        : '0 4px 16px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.9) inset',
                 }}
             >
+                {/* ── Shimmer sweep ── */}
+                {isActive && (
+                    <motion.div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.22) 50%, transparent 60%)',
+                        }}
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.8, ease: 'easeInOut' }}
+                    />
+                )}
+
+                {/* ── Top specular highlight ── */}
+                <div
+                    className="absolute top-1 left-3 right-3 h-[5px] rounded-full"
+                    style={{
+                        background: 'rgba(255,255,255,0.35)',
+                        filter: 'blur(1px)',
+                    }}
+                />
+
                 <HeartPulse
                     style={{ width: 24, height: 24 }}
                     className={isActive ? 'text-white' : 'text-teal-500'}
-                    strokeWidth={isActive ? 2.4 : 1.9}
+                    strokeWidth={isActive ? 2.3 : 1.9}
                 />
-                {/* Pulse ring when active */}
-                {isActive && (
-                    <motion.div
-                        className="absolute inset-0 rounded-full border-2 border-teal-400/50"
-                        animate={{ scale: [1, 1.4, 1.6], opacity: [0.6, 0.2, 0] }}
-                        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
-                    />
-                )}
             </motion.div>
 
-            {/* Label */}
+            {/* ── Label ── */}
             <motion.span
-                animate={{ color: isActive ? '#0d9488' : '#94a3b8', fontWeight: isActive ? 700 : 500 }}
+                animate={{
+                    color: isActive ? '#0d9488' : '#94a3b8',
+                    fontWeight: isActive ? 800 : 500,
+                    scale: isActive ? 1.05 : 1,
+                }}
+                transition={{ duration: 0.15 }}
                 style={{ fontSize: 10, letterSpacing: '-0.1px', lineHeight: 1, marginTop: 2 }}
             >
                 {item.name}
@@ -402,7 +475,7 @@ export default function BottomNav({ currentPageName }: BottomNavProps) {
                         return (
                             <Link
                                 key={item.page}
-                                href={createPageUrl(item.page)}
+                                href={item.href ?? createPageUrl(item.page)}
                                 className="flex flex-1 h-full"
                                 style={{ textDecoration: 'none' }}
                                 tabIndex={-1}

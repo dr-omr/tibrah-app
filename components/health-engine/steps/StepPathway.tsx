@@ -1,200 +1,187 @@
 // components/health-engine/steps/StepPathway.tsx
-// THIE v2 — "Symptom Oracle" — Holographic 3D category selection
-// Inspired by: Apple Vision Pro apps + medical holography
+// THIE v4 — M3 Navigation list / Selection list
+// Reference: Google One, Google Health Studies, Microsoft To Do
 
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft } from 'lucide-react';
 import { PATHWAYS } from '../constants';
 import { BottomCTA } from '../ui/BottomCTA';
 import { haptic } from '@/lib/HapticFeedback';
 
-// Holographic card shimmer
-function HoloShimmer({ color }: { color: string }) {
-    return (
-        <motion.div
-            className="absolute inset-0 rounded-[22px] pointer-events-none overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}>
-            {/* Diagonal shimmer sweep */}
-            <motion.div
-                className="absolute inset-0"
-                style={{
-                    background: `linear-gradient(125deg, transparent 30%, ${color}18 50%, transparent 70%)`,
-                }}
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5 }}
-            />
-            {/* Edge glow */}
-            <div className="absolute inset-px rounded-[21px]"
-                style={{ background: `linear-gradient(145deg, ${color}20 0%, transparent 50%)` }} />
-        </motion.div>
-    );
-}
-
-// Active pathway expanded detail
-function PathwayDetail({ pathway }: { pathway: typeof PATHWAYS[0] }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden">
-            <div className="pt-3 border-t mt-3"
-                style={{ borderColor: `${pathway.color}20` }}>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">
-                    ما يشمله هذا القسم
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                    {pathway.clinicalQuestions.map(q => (
-                        <span key={q.id}
-                            className="text-[9.5px] font-bold px-2 py-0.5 rounded-lg"
-                            style={{ background: `${pathway.color}12`, color: pathway.color }}>
-                            {q.text.length > 20 ? q.text.slice(0, 20) + '…' : q.text}
-                        </span>
-                    ))}
-                </div>
-            </div>
-        </motion.div>
-    );
-}
-
-export function StepPathway({
-    selectedId, onSelect, onNext,
-}: { selectedId: string; onSelect: (id: string) => void; onNext: () => void }) {
+export function StepPathway({ selectedId, onSelect, onNext }: {
+    selectedId: string; onSelect: (id: string) => void; onNext: () => void;
+}) {
     const [expanded, setExpanded] = useState<string | null>(null);
     const chosen = PATHWAYS.find(p => p.id === selectedId);
 
-    const handleSelect = (id: string) => {
-        haptic.impact();
-        onSelect(id);
-        setExpanded(null);
-    };
-
     return (
-        <div className="px-4 pb-36 pt-20" dir="rtl">
-            {/* Header */}
+        <div className="px-4" dir="rtl">
+            {/* M3 Section header */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 26 }}
-                className="pt-3 mb-6">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3"
-                    style={{ background: 'rgba(13,148,136,0.12)', border: '1px solid rgba(13,148,136,0.2)' }}>
-                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                    <span className="text-[9px] font-black text-teal-400 tracking-widest uppercase">
-                        الخطوة ١ من ٤
-                    </span>
+                transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                className="mb-6">
+                {/* M3 Assist chip for step indicator */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4"
+                    style={{ background: '#f0fdfa', border: '1px solid rgba(13,148,136,0.18)' }}>
+                    <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                    <span className="m3-label-sm text-teal-700" style={{ textTransform: 'none', fontSize: 10 }}>الخطوة ١ من ٤</span>
                 </div>
-                <h2 className="text-[28px] font-black text-white leading-tight tracking-tight">
+
+                <h2 className="m3-headline-md text-slate-900 mb-2">
                     ما أكثر شيء
                     <br />
                     <span className="text-transparent bg-clip-text"
-                        style={{ backgroundImage: 'linear-gradient(135deg, #0d9488, #a78bfa)' }}>
+                        style={{ backgroundImage: 'linear-gradient(135deg, #0d9488, #6366f1)' }}>
                         يزعجك الآن؟
                     </span>
                 </h2>
-                <p className="text-[12px] text-slate-500 mt-2 font-medium">
-                    اختر الأقرب — يمكنك التوسع بالتفاصيل لاحقاً
-                </p>
+                <p className="m3-body-md text-slate-400">اختر الأقرب — يمكن التوسع لاحقاً</p>
             </motion.div>
 
-            {/* Pathways list — premium cards */}
-            <div className="space-y-3">
+            {/*
+             * M3 Selection list
+             * Each item = M3 List Item with:
+             *   - Leading icon container (tonal)
+             *   - Headline + Supporting text
+             *   - Trailing: check icon + expand
+             *   - State layer on tap
+             */}
+            <div className="space-y-[10px]">
                 {PATHWAYS.map((p, i) => {
-                    const isSelected = p.id === selectedId;
-                    const isExpanded = expanded === p.id;
+                    const isSel = p.id === selectedId;
+                    const isExp = expanded === p.id;
 
                     return (
                         <motion.div key={p.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.045, type: 'spring', stiffness: 320, damping: 30 }}>
-                            <motion.div
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleSelect(p.id)}
-                                className="relative rounded-[22px] overflow-hidden cursor-pointer"
-                                style={{
-                                    background: isSelected
-                                        ? `linear-gradient(135deg, ${p.gradient[0]}CC, ${p.gradient[1]}99)`
-                                        : 'rgba(15,23,42,0.7)',
-                                    border: `1.5px solid ${isSelected ? p.color : 'rgba(255,255,255,0.06)'}`,
-                                    boxShadow: isSelected
-                                        ? `0 8px 40px ${p.color}35, inset 0 1px 0 rgba(255,255,255,0.1)`
-                                        : 'inset 0 1px 0 rgba(255,255,255,0.03)',
-                                    backdropFilter: 'blur(12px)',
-                                }}>
-                                {/* Shimmer on selected */}
-                                {isSelected && <HoloShimmer color={p.color} />}
+                            initial={{ opacity: 0, y: 18, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: i * 0.04, type: 'spring', stiffness: 320, damping: 30 }}>
 
-                                {/* Content row */}
-                                <div className="flex items-center gap-4 p-4 relative z-10">
-                                    {/* Emoji container */}
+                            <div
+                                className="rounded-[20px] overflow-hidden m3-state"
+                                style={{
+                                    /*
+                                     * M3 Surface container with elevation:
+                                     * Selected = Surface Container High (tinted with primary)
+                                     * Default  = Surface Container (white + subtle elevation)
+                                     */
+                                    background: isSel
+                                        ? `linear-gradient(135deg, ${p.color}0f, ${p.color}07)`
+                                        : '#ffffff',
+                                    border: `1.5px solid ${isSel ? p.color + '45' : 'rgba(0,0,0,0.07)'}`,
+                                    boxShadow: isSel
+                                        ? `0 2px 12px ${p.color}18, 0 1px 4px rgba(0,0,0,0.06)`
+                                        : '0 1px 3px rgba(0,0,0,0.05), 0 1px 1px rgba(0,0,0,0.04)',
+                                    transition: 'all 200ms cubic-bezier(0.05,0.7,0.1,1)',
+                                }}>
+
+                                {/* Main tap zone */}
+                                <button
+                                    className="w-full flex items-center gap-3.5 px-4 py-3.5 text-right cursor-pointer"
+                                    onClick={() => { haptic.impact(); onSelect(p.id); setExpanded(null); }}>
+                                    {/*
+                                     * M3 Leading container — "tonal" icon
+                                     * Size: 48x48 (M3 medium icon button)
+                                     */}
                                     <motion.div
-                                        animate={isSelected ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                                        transition={{ duration: 0.4 }}
-                                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                        animate={isSel ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="w-12 h-12 rounded-[16px] flex items-center justify-center flex-shrink-0"
                                         style={{
-                                            background: isSelected
-                                                ? 'rgba(255,255,255,0.15)'
-                                                : `${p.color}12`,
-                                            border: `1px solid ${isSelected ? 'rgba(255,255,255,0.2)' : p.color + '25'}`,
-                                            boxShadow: isSelected ? `0 4px 16px ${p.color}40` : 'none',
+                                            background: isSel ? p.color + '1a' : '#f8fafc',
+                                            border: `1px solid ${isSel ? p.color + '28' : 'rgba(0,0,0,0.06)'}`,
                                         }}>
                                         <span className="text-[24px] leading-none">{p.emoji}</span>
                                     </motion.div>
 
-                                    {/* Text */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[14px] font-black text-white">{p.label}</p>
-                                        <p className="text-[11px] mt-0.5 truncate"
-                                            style={{ color: isSelected ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.3)' }}>
-                                            {p.description}
-                                        </p>
+                                    {/* M3 List item text */}
+                                    <div className="flex-1 min-w-0 text-right">
+                                        <p className="m3-title-md text-slate-900">{p.label}</p>
+                                        <p className="m3-body-md text-slate-400 mt-0.5 truncate">{p.description}</p>
                                     </div>
 
-                                    {/* Right side */}
+                                    {/* M3 Trailing icons */}
                                     <div className="flex items-center gap-2 flex-shrink-0">
-                                        {isSelected && (
-                                            <motion.div
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                                                className="w-6 h-6 rounded-full flex items-center justify-center"
-                                                style={{ background: p.color, boxShadow: `0 0 12px ${p.color}60` }}>
-                                                <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                                            </motion.div>
-                                        )}
+                                        {/* M3 Check icon — animated in/out */}
+                                        <AnimatePresence>
+                                            {isSel && (
+                                                <motion.div
+                                                    initial={{ scale: 0, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    exit={{ scale: 0, opacity: 0 }}
+                                                    transition={{ type: 'spring', stiffness: 500, damping: 26 }}
+                                                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                                                    style={{ background: p.color }}>
+                                                    <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* Expand button — M3 Icon button */}
                                         <motion.button
-                                            whileTap={{ scale: 0.85 }}
-                                            onClick={e => { e.stopPropagation(); haptic.selection(); setExpanded(isExpanded ? null : p.id); }}
-                                            className="w-6 h-6 rounded-full flex items-center justify-center"
-                                            style={{ background: 'rgba(255,255,255,0.06)' }}>
-                                            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                                                <ChevronDown className="w-3 h-3 text-slate-500" />
+                                            whileTap={{ scale: 0.8 }}
+                                            className="w-8 h-8 rounded-full flex items-center justify-center m3-state"
+                                            style={{ background: 'rgba(0,0,0,0.04)', color: '#94a3b8' }}
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                haptic.selection();
+                                                setExpanded(isExp ? null : p.id);
+                                            }}>
+                                            <motion.div
+                                                animate={{ rotate: isExp ? 180 : 0 }}
+                                                transition={{ duration: 0.2, ease: [0.05, 0.7, 0.1, 1] }}>
+                                                <ChevronDown className="w-4 h-4" />
                                             </motion.div>
                                         </motion.button>
                                     </div>
-                                </div>
+                                </button>
 
-                                {/* Expanded detail */}
+                                {/* M3 Expandable detail — "revealed" content */}
                                 <AnimatePresence>
-                                    {isExpanded && (
-                                        <div className="px-4 pb-4 relative z-10">
-                                            <PathwayDetail pathway={p} />
-                                        </div>
+                                    {isExp && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.22, ease: [0.05, 0.7, 0.1, 1] }}
+                                            className="overflow-hidden">
+                                            <div className="px-4 pb-4"
+                                                style={{ borderTop: `1px solid ${p.color}15` }}>
+                                                <p className="m3-label-sm text-slate-400 mt-3 mb-2"
+                                                    style={{ textTransform: 'none', fontSize: 10 }}>
+                                                    يشمل هذا المسار:
+                                                </p>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {p.clinicalQuestions.map(q => (
+                                                        <span key={q.id}
+                                                            className="text-[10px] font-semibold px-2.5 py-1 rounded-xl"
+                                                            style={{ background: p.color + '0f', color: p.color }}>
+                                                            {q.text.length > 24 ? q.text.slice(0, 24) + '…' : q.text}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </motion.div>
                                     )}
                                 </AnimatePresence>
-                            </motion.div>
+
+                                {/* M3 State layer bottom indicator when selected */}
+                                {isSel && (
+                                    <div className="h-[3px]"
+                                        style={{ background: `linear-gradient(90deg, ${p.color}, ${p.color}44)` }} />
+                                )}
+                            </div>
                         </motion.div>
                     );
                 })}
             </div>
 
             <BottomCTA
-                label={selectedId ? `متابعة — ${chosen?.label}` : 'اختر شكواك أولاً'}
+                label={selectedId ? `متابعة — ${chosen?.label}` : 'اختر أولاً'}
                 onPress={onNext}
                 disabled={!selectedId}
                 variant="teal"

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { haptic } from '@/lib/HapticFeedback';
+import DomainHealthSummary from '@/components/sections/DomainHealthSummary';
 
 /* ─── Premium Animation Variants ─── */
 const staggerContainer = {
@@ -43,17 +44,17 @@ interface BentoTileProps {
 function BentoTile({ href, icon: Icon, title, subtitle, gradient, iconColor, size = 'small', badge, pattern = 'none' }: BentoTileProps) {
     const colSpan = size === 'large' ? 'col-span-2' : 'col-span-1';
     const rowSpan = size === 'large' ? 'row-span-2' : size === 'medium' ? 'row-span-2' : 'row-span-1';
-    
+
     return (
         <Link href={href} onClick={() => haptic.selection()} className={`${colSpan} ${rowSpan} block group`}>
-            <motion.div 
+            <motion.div
                 variants={popIn}
                 whileTap={{ scale: 0.96 }}
                 className={`relative h-full w-full rounded-[32px] overflow-hidden p-5 ${gradient} border border-slate-200/60 shadow-lg shadow-slate-200/50 flex flex-col justify-between group-hover:border-teal-200 transition-all duration-500`}
             >
                 {/* Visual Textures */}
                 <div className="absolute inset-0 bg-white/40 mix-blend-overlay z-0" />
-                
+
                 {pattern === 'dots' && (
                     <div className="absolute -right-4 -top-4 w-24 h-24 opacity-10 z-0 radial-grid-light" />
                 )}
@@ -103,7 +104,7 @@ interface ElegantRowProps {
 function ElegantRow({ href, icon: Icon, title, subtitle }: ElegantRowProps) {
     return (
         <Link href={href} onClick={() => haptic.selection()} className="group block mb-3 last:mb-0">
-            <motion.div 
+            <motion.div
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-4 p-4 rounded-[28px] bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all duration-300"
             >
@@ -150,6 +151,47 @@ export default function More() {
 
             <main className="relative z-20 px-5 space-y-10">
                 <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-10">
+
+                    {/* ─── 00: الأقسام الخمسة — Domain Gateway ─── */}
+                    <motion.section variants={popIn}>
+                        <div className="flex items-center gap-2 mb-3 px-1">
+                            <div className="w-1 h-4 rounded-full flex-shrink-0"
+                                style={{ background: 'linear-gradient(to bottom, #0D9488, #4F46E5)' }} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.13em] text-slate-500">
+                                أقسامك الخمسة
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                            {[
+                                { emoji: '🫀', label: 'جسدي', color: '#0D9488', href: '/sections/jasadi' },
+                                { emoji: '🧠', label: 'نفسي', color: '#7C3AED', href: '/sections/nafsi' },
+                                { emoji: '📚', label: 'فكري', color: '#D97706', href: '/sections/fikri' },
+                                { emoji: '✨', label: 'روحي', color: '#2563EB', href: '/sections/ruhi' },
+                                { emoji: '⚙️', label: 'أخرى', color: '#475569', href: '/sections/other' },
+                            ].map((d, i) => (
+                                <Link key={d.href} href={d.href} onClick={() => haptic.tap()}>
+                                    <motion.div
+                                        whileTap={{ scale: 0.92 }}
+                                        initial={{ opacity: 0, y: 14 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.06 }}
+                                        className="flex flex-col items-center gap-1.5 py-3 rounded-[18px]"
+                                        style={{
+                                            background: `${d.color}10`,
+                                            border: `1.5px solid ${d.color}18`,
+                                        }}>
+                                        <span className="text-xl leading-none">{d.emoji}</span>
+                                        <span className="text-[10px] font-black" style={{ color: d.color }}>{d.label}</span>
+                                    </motion.div>
+                                </Link>
+                            ))}
+                        </div>
+                    </motion.section>
+
+                    {/* ─── 00b: صحتك الشاملة — Health Rings ─── */}
+                    <motion.section variants={popIn} className="-mx-1">
+                        <DomainHealthSummary />
+                    </motion.section>
 
                     {/* ─── 01: Profile Identity Vault ─── */}
                     <motion.section variants={popIn}>
@@ -207,10 +249,10 @@ export default function More() {
                             <Activity className="w-5 h-5 text-teal-600" />
                             <h3 className="text-[11px] font-black tracking-[0.15em] text-slate-500 uppercase">المسح والتحليل المتقدم</h3>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-3 auto-rows-[120px]">
                             {/* Medical Dossier - Large Tile */}
-                            <BentoTile 
+                            <BentoTile
                                 href={createPageUrl('MedicalFile')}
                                 icon={Stethoscope}
                                 title="الخزنة الطبية"
@@ -221,9 +263,9 @@ export default function More() {
                                 badge="أداة رئيسية"
                                 pattern="grid"
                             />
-                            
+
                             {/* Body Map - Medium Tile */}
-                            <BentoTile 
+                            <BentoTile
                                 href={createPageUrl('BodyMap')}
                                 icon={User}
                                 title="الخريطة الحيوية"
@@ -234,7 +276,7 @@ export default function More() {
                             />
 
                             {/* Symptom Checker - NEW */}
-                            <BentoTile 
+                            <BentoTile
                                 href="/symptom-checker"
                                 icon={Brain}
                                 title="مدقق الأعراض"
@@ -244,9 +286,9 @@ export default function More() {
                                 size="medium"
                                 badge="جديد"
                             />
-                            
+
                             {/* Health Tracker - Small Tile */}
-                            <BentoTile 
+                            <BentoTile
                                 href={createPageUrl('HealthTracker')}
                                 icon={Target}
                                 title="الرادار الحيوي"
@@ -262,9 +304,9 @@ export default function More() {
                             <Zap className="w-5 h-5 text-amber-500" />
                             <h3 className="text-[11px] font-black tracking-[0.15em] text-slate-500 uppercase">مصفوفة التشافي الطاقي</h3>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-3 h-[240px]">
-                            <BentoTile 
+                            <BentoTile
                                 href={createPageUrl('Frequencies')}
                                 icon={Radio}
                                 title="الترددات الذكية"
@@ -274,8 +316,8 @@ export default function More() {
                                 size="large"
                                 pattern="waves"
                             />
-                            
-                            <BentoTile 
+
+                            <BentoTile
                                 href={createPageUrl('Breathe')}
                                 icon={Wind}
                                 title="التنفس الجذري"
@@ -283,8 +325,8 @@ export default function More() {
                                 iconColor="text-cyan-600"
                                 size="small"
                             />
-                            
-                            <BentoTile 
+
+                            <BentoTile
                                 href={createPageUrl('MealPlanner')}
                                 icon={Utensils}
                                 title="المحرك الأيضي"
@@ -301,34 +343,34 @@ export default function More() {
                             <Brain className="w-5 h-5 text-indigo-500" />
                             <h3 className="text-[11px] font-black tracking-[0.15em] text-slate-500 uppercase">ترسانة الوعي والإمداد</h3>
                         </div>
-                        
+
                         <div className="space-y-0">
                             {/* Health Report — NEW */}
-                            <ElegantRow 
+                            <ElegantRow
                                 href="/health-report"
                                 icon={FileText}
                                 title="التقرير الصحي الشامل 📊"
                                 subtitle="تحليل أسبوعي/شهري مع توصيات ذكية مخصصة لك."
                             />
-                            <ElegantRow 
+                            <ElegantRow
                                 href={createPageUrl('Shop')}
                                 icon={ShoppingBag}
                                 title="مدير الإمداد الميكروبي (الصيدلية الذكية)"
                                 subtitle="بروتوكولات علاجية ومكملات مسعرة ذكياً لحالتك."
                             />
-                            <ElegantRow 
+                            <ElegantRow
                                 href={createPageUrl('Courses')}
                                 icon={GraduationCap}
                                 title="أكاديمية طِبرَا المتقدمة"
                                 subtitle="دورات تشافي ذاتي بمستوى الأطباء."
                             />
-                            <ElegantRow 
+                            <ElegantRow
                                 href={createPageUrl('Library')}
                                 icon={BookOpen}
                                 title="مكتبة الوعي الجذري"
                                 subtitle="أبحاث، مقالات حصرية، وتثقيف طبي لا يُنشر."
                             />
-                            <ElegantRow 
+                            <ElegantRow
                                 href={createPageUrl('Rewards')}
                                 icon={Gift}
                                 title="خزنة المكتسبات البيولوجية"
@@ -343,7 +385,7 @@ export default function More() {
                             <Settings className="w-5 h-5 text-slate-400" />
                             <h3 className="text-[11px] font-black tracking-[0.15em] text-slate-500 uppercase">إدارة النظام</h3>
                         </div>
-                        
+
                         <div className="bg-white border border-slate-200 shadow-sm rounded-[32px] overflow-hidden">
                             <Link href={createPageUrl('Settings')} onClick={() => haptic.selection()} className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-colors border-b border-slate-100">
                                 <Settings className="w-5 h-5 text-slate-400" />

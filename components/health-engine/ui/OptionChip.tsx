@@ -1,8 +1,9 @@
 // components/health-engine/ui/OptionChip.tsx
-// THIE — Premium dark-mode selectable chip
+// THIE v4 — M3 Filter Chip
+// Reference: Material Design 3 Chips
 
 'use client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { haptic } from '@/lib/HapticFeedback';
 
@@ -16,30 +17,50 @@ interface Props {
 }
 
 export function OptionChip({ label, selected, onToggle, color = '#0d9488', emoji, size = 'md' }: Props) {
+    /*
+     * M3 Filter Chip spec:
+     * - Height: 32dp
+     * - Shape: 8dp rounded (Stadium = full radius for text-only)
+     * - Selected: primary tonal background + check icon
+     * - State layer: 8% on hover, 12% on press
+     */
     return (
         <motion.button
-            whileTap={{ scale: 0.92 }}
+            whileTap={{ scale: 0.93 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
             onClick={() => { haptic.selection(); onToggle(); }}
-            className="flex items-center gap-1.5 rounded-2xl font-bold transition-all duration-150"
+            className="flex items-center gap-1.5 rounded-full m3-state"
             style={{
-                padding: size === 'sm' ? '6px 12px' : '8px 14px',
-                fontSize: size === 'sm' ? 11 : 12.5,
-                backgroundColor: selected ? `${color}22` : 'rgba(255,255,255,0.04)',
-                border: `1.5px solid ${selected ? color : 'rgba(255,255,255,0.08)'}`,
-                color: selected ? color : 'rgba(255,255,255,0.55)',
-                boxShadow: selected ? `0 0 16px ${color}25` : 'none',
+                height: size === 'sm' ? 28 : 32,
+                paddingLeft: size === 'sm' ? 10 : 12,
+                paddingRight: size === 'sm' ? 10 : 12,
+                fontSize: size === 'sm' ? 11 : 12,
+                fontWeight: 600,
+                letterSpacing: '0.01em',
+                backgroundColor: selected ? color + '18' : '#ffffff',
+                border: `1.5px solid ${selected ? color : 'rgba(0,0,0,0.12)'}`,
+                color: selected ? color : '#475569',
+                boxShadow: selected
+                    ? `0 0 0 3px ${color}0e`
+                    : '0 1px 2px rgba(0,0,0,0.07)',
+                transition: 'all 180ms cubic-bezier(0.05,0.7,0.1,1)',
             }}>
-            {emoji && <span className="text-[14px] leading-none">{emoji}</span>}
+            {/* Leading check icon — M3 spec: appears when selected */}
+            <AnimatePresence>
+                {selected && (
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 16, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="overflow-hidden flex-shrink-0">
+                        <Check className="w-3.5 h-3.5" style={{ color }} strokeWidth={2.5} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {emoji && <span className="text-sm leading-none">{emoji}</span>}
             <span>{label}</span>
-            {selected && (
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: color }}>
-                    <Check className="w-2 h-2 text-white" />
-                </motion.div>
-            )}
         </motion.button>
     );
 }

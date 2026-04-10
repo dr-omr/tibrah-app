@@ -1,5 +1,6 @@
 // components/health-engine/ui/BottomCTA.tsx
-// THIE — Fixed bottom call-to-action with spring animation
+// THIE v4 — Material Design 3 / Google large FAB-style CTA
+// CRITICAL FIX: proper safe-area + Android navigation bar clearance
 
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,59 +16,88 @@ interface Props {
     sublabel?: string;
 }
 
-const GRADIENTS = {
-    teal: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-    gradient: 'linear-gradient(135deg, #0d9488 0%, #6366f1 100%)',
-    red: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
-};
-const SHADOWS = {
-    teal: '0 16px 40px rgba(13,148,136,0.35)',
-    gradient: '0 16px 40px rgba(99,102,241,0.30)',
-    red: '0 16px 40px rgba(220,38,38,0.40)',
+const VARIANTS = {
+    teal: { bg: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', shadow: 'rgba(13,148,136,0.32)' },
+    gradient: { bg: 'linear-gradient(135deg, #0d9488 0%, #6366f1 100%)', shadow: 'rgba(99,102,241,0.28)' },
+    red: { bg: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', shadow: 'rgba(220,38,38,0.32)' },
 };
 
 export function BottomCTA({ label, onPress, disabled, loading, variant = 'teal', sublabel }: Props) {
+    const cfg = VARIANTS[variant];
+
     return (
-        <div className="fixed bottom-0 inset-x-0 z-30 px-5"
+        /* 
+         * SAFE AREA SOLUTION:
+         * padding-bottom = max(env(safe-area-inset-bottom), 20px) handles:
+         *   - iPhone notch/Dynamic Island devices
+         *   - Android gesture navigation (inset reported by OS)
+         *   - Capacitor native wrapping
+         * The gradient fade ensures content is readable above this panel.
+         */
+        <div
+            className="fixed bottom-0 inset-x-0 z-50 px-4"
             style={{
-                paddingBottom: 'max(env(safe-area-inset-bottom), 24px)',
-                background: 'linear-gradient(to top, rgba(2,6,23,1) 50%, rgba(2,6,23,0) 100%)',
+                paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+                /* Tall fade so last card is never fully hidden */
+                background: 'linear-gradient(to top, #F7FAFA 68%, rgba(247,250,250,0.96) 85%, transparent 100%)',
+                /* Extra top padding means gradient starts higher & content isn't hidden */
+                paddingTop: 16,
             }}>
-            {sublabel && (
-                <motion.p
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-[10.5px] text-slate-500 font-medium mb-2">
-                    {sublabel}
-                </motion.p>
-            )}
+            <AnimatePresence>
+                {sublabel && (
+                    <motion.p
+                        key="sub"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="m3-label-lg text-center text-slate-400 mb-2">
+                        {sublabel}
+                    </motion.p>
+                )}
+            </AnimatePresence>
+
+            {/* M3 Large Button — 56px height, 28px radius */}
             <motion.button
-                whileTap={disabled || loading ? {} : { scale: 0.97 }}
+                whileTap={disabled || loading ? {} : { scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 onClick={() => {
                     if (disabled || loading) return;
                     haptic.impact();
                     onPress();
                 }}
-                className="w-full h-[54px] rounded-[18px] flex items-center justify-between px-6 relative overflow-hidden"
+                className="m3-state w-full rounded-[28px] flex items-center relative overflow-hidden"
                 style={{
-                    background: GRADIENTS[variant],
-                    boxShadow: disabled ? 'none' : SHADOWS[variant],
-                    opacity: disabled ? 0.35 : 1,
+                    height: 56,
+                    background: disabled ? '#E2E8F0' : cfg.bg,
+                    boxShadow: disabled ? 'none' : `0 4px 24px ${cfg.shadow}, 0 1px 4px rgba(0,0,0,0.1)`,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    paddingLeft: 24,
+                    paddingRight: 24,
                 }}>
-                {/* Shimmer */}
+                {/* Shimmer only when active */}
                 {!disabled && !loading && (
                     <motion.div
-                        className="absolute inset-0"
-                        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)' }}
-                        animate={{ x: ['-100%', '100%'] }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.14) 50%, transparent 65%)',
+                        }}
+                        animate={{ x: ['-120%', '150%'] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                     />
                 )}
-                <span className="text-white font-black text-[15px] relative z-10">{label}</span>
-                {loading
-                    ? <Loader2 className="w-5 h-5 text-white/80 animate-spin relative z-10" />
-                    : <ArrowLeft className="w-5 h-5 text-white/80 relative z-10" />
-                }
+
+                <span
+                    className="m3-title-lg relative z-10 flex-1 text-right"
+                    style={{ color: disabled ? '#94A3B8' : '#ffffff' }}>
+                    {label}
+                </span>
+
+                <div className="relative z-10 mr-3">
+                    {loading
+                        ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: disabled ? '#94A3B8' : '#ffffffb3' }} />
+                        : <ArrowLeft className="w-5 h-5" style={{ color: disabled ? '#94A3B8' : '#ffffffb3' }} />
+                    }
+                </div>
             </motion.button>
         </div>
     );

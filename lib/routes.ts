@@ -52,34 +52,69 @@ export const PROTECTED_PAGE_NAMES = [
 
 /**
  * Maps every page name to its parent bottom-nav tab.
- * Empty string = no bottom nav highlight (accessed via header menu).
+ * Tabs: Home | Jasadi | MyCare(center) | Ruhi | More
+ * Empty string = no bottom nav highlight.
  */
 export const PAGE_TO_TAB: Record<string, string> = {
-    // Bottom nav tabs
+    // ── Home tab ──
     'Home': 'Home',
+
+    // ── جسدي tab ──
+    'Jasadi': 'Jasadi',
+    'BodyMap': 'Jasadi',
+    'SymptomChecker': 'Jasadi',
+    'SymptomAnalysis': 'Jasadi',
+    'QuickCheckIn': 'Jasadi',
+    'Intake': 'Jasadi',
+    'FaceScan': 'Jasadi',
+    'HealthReport': 'Jasadi',
+    'MedicalHistory': 'Jasadi',
+    'MealPlanner': 'Jasadi',
+    'SmartPharmacy': 'Jasadi',
+    'HealthTracker': 'Jasadi',
+    'RecordHealth': 'Jasadi',
+    'DailyLog': 'Jasadi',
+
+    // ── رعايتي center tab ──
     'MyCare': 'MyCare',
     'MyAppointments': 'MyCare',
     'BookAppointment': 'MyCare',
     'MedicalFile': 'MyCare',
-    'HealthTracker': 'HealthTracker',
-    'SymptomAnalysis': 'HealthTracker',
-    'BodyMap': 'HealthTracker',
-    'Shop': 'Shop',
-    'Checkout': 'Shop',
-    'ProductDetails': 'Shop',
-    'Premium': 'Premium',
-    // Header menu pages — no bottom nav highlight
-    'Profile': '',
-    'Settings': '',
-    'Rewards': '',
-    'Help': '',
-    'About': '',
-    'Courses': '',
+
+    // ── روحي tab ──
+    'Ruhi': 'Ruhi',
+    'Frequencies': 'Ruhi',
+    'RifeFrequencies': 'Ruhi',
+    'Radio': 'Ruhi',
+    'Meditation': 'Ruhi',
+    'Breathe': 'Ruhi',
+
+    // ── المزيد tab (covers نفسي, فكري, أخرى) ──
+    'More': 'More',
+    'Nafsi': 'More',
+    'Fikri': 'More',
+    'Other': 'More',
+    'EmotionalMedicine': 'More',
+    'Family': 'More',
+    'Library': 'More',
+    'GlassLibrary': 'More',
+    'Courses': 'More',
+    'Rewards': 'More',
+    'Shop': 'More',
+    'Premium': 'More',
+    'Services': 'More',
+    'DigitalServices': 'More',
+    'Profile': 'More',
+    'Settings': 'More',
+    'Help': 'More',
+
+    // ── No highlight ──
+    'Checkout': '',
+    'ProductDetails': '',
     'CourseDetails': '',
-    'Library': '',
-    'Frequencies': '',
-    'Breathe': '',
-    'MealPlanner': '',
+    'ProgramDetails': '',
+    'ArticleDetails': '',
+    'About': '',
     'Privacy': '',
     'Terms': '',
 };

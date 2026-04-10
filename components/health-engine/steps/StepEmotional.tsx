@@ -1,172 +1,148 @@
 // components/health-engine/steps/StepEmotional.tsx
-// THIE v2 — "The Soul Mirror" — Tibrah's signature emotional dimension
-// Aura visualization + emotion-body philosophy cards
+// THIE v4 — M3 Emotional context — warm, human, expressive
+// Reference: Microsoft Viva Insights, Google Wellbeing
 
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Sparkles, Heart } from 'lucide-react';
+import { Brain, Sparkles } from 'lucide-react';
 import { EMOTIONAL_CONTEXTS } from '../constants';
 import { BottomCTA } from '../ui/BottomCTA';
 import { haptic } from '@/lib/HapticFeedback';
 
-// ── Emotion aura that reacts to selections ──
-function EmotionAura({ selected }: { selected: string[] }) {
-    const AURA_COLORS: Record<string, string> = {
-        work_stress: '#f59e0b',
-        family:      '#8b5cf6',
-        loneliness:  '#6366f1',
-        grief:       '#94a3b8',
-        financial:   '#ef4444',
-        identity:    '#f97316',
-        anger:       '#dc2626',
-        fear:        '#7c3aed',
-        burnout:     '#64748b',
-        none:        '#10b981',
-    };
+const AURA: Record<string, string> = {
+    work_stress: '#f59e0b', family: '#8b5cf6', loneliness: '#6366f1',
+    grief: '#94a3b8', financial: '#ef4444', identity: '#f97316',
+    anger: '#dc2626', fear: '#7c3aed', burnout: '#64748b', none: '#0d9488',
+};
 
-    const activeColors = selected
-        .filter(s => s !== 'none')
-        .map(s => AURA_COLORS[s] ?? '#6366f1');
-
-    if (activeColors.length === 0) return null;
-
-    return (
-        <div className="flex justify-center mb-6 pointer-events-none" aria-hidden>
-            <div className="relative w-32 h-32">
-                {activeColors.slice(0, 4).map((color, i) => (
-                    <motion.div key={`${color}-${i}`}
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                            background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-                            transform: `rotate(${i * 90}deg) translateX(${i % 2 === 0 ? 12 : -12}px)`,
-                            filter: 'blur(20px)',
-                        }}
-                        animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
-                        transition={{ duration: 2.5 + i * 0.5, repeat: Infinity }}
-                    />
-                ))}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <Heart className="w-8 h-8 text-white/40" />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ── Tibrah philosophy pill ──
-const PHILOSOPHY_QUOTES = [
-    { text: '"كثير من الآلام الجسدية هي رسائل لم تُستمع بعد."', author: 'الطب الوظيفي' },
-    { text: '"الجسد يحتفظ بالحساب — مهما حاولنا الإغفال."', author: 'van der Kolk' },
-    { text: '"الأمراض المزمنة كثيراً ما تبدأ بصراع عاطفي مكبوت."', author: 'فلسفة طِبرَا' },
+const QUOTES = [
+    { text: '"كثير من الآلام الجسدية هي رسائل لم تُستمع بعد."', src: 'الطب الوظيفي' },
+    { text: '"الجسد يحتفظ بالحساب — مهما حاولنا الإغفال."', src: 'van der Kolk' },
+    { text: '"الأمراض المزمنة كثيراً ما تبدأ بصراع عاطفي مكبوت."', src: 'فلسفة طِبرَا' },
 ];
 
-export function StepEmotional({
-    selected, note, onToggle, onNote, onSubmit,
-}: {
-    selected: string[];
-    note: string;
+export function StepEmotional({ selected, note, onToggle, onNote, onSubmit }: {
+    selected: string[]; note: string;
     onToggle: (id: string) => void;
     onNote: (v: string) => void;
     onSubmit: () => void;
 }) {
     const hasNone = selected.includes('none');
-    const quoteIdx = Math.floor((new Date().getMinutes()) % PHILOSOPHY_QUOTES.length);
-    const quote = PHILOSOPHY_QUOTES[quoteIdx];
+    const quote   = QUOTES[new Date().getMinutes() % QUOTES.length];
+    const activeColors = selected.filter(s => s !== 'none').map(s => AURA[s] ?? '#6366f1');
 
     return (
-        <div className="px-4 pb-40 pt-20" dir="rtl">
-            {/* Step badge */}
+        <div className="px-4" dir="rtl">
+            {/* M3 Section header */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="pt-3 mb-5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3"
-                    style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                    <Brain className="w-3 h-3 text-indigo-400" />
-                    <span className="text-[9px] font-black text-indigo-400 tracking-widest uppercase">
-                        الخطوة ٤ من ٤ · البعد العاطفي
-                    </span>
+                transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                className="mb-5">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4"
+                    style={{ background: '#eef2ff', border: '1px solid rgba(99,102,241,0.18)' }}>
+                    <Brain className="w-3 h-3 text-indigo-500" />
+                    <span className="m3-label-sm text-indigo-600"
+                        style={{ textTransform: 'none', fontSize: 10 }}>الخطوة ٤ من ٤ · البعد العاطفي</span>
                 </div>
-                <h2 className="text-[26px] font-black text-white leading-tight tracking-tight">
-                    ماذا يحمل
+                <h2 className="m3-headline-md text-slate-900">
+                    ماذا يحمل قلبك
                     <br />
                     <span className="text-transparent bg-clip-text"
-                        style={{ backgroundImage: 'linear-gradient(135deg, #a78bfa, #6366f1)' }}>
-                        قلبك الآن؟
+                        style={{ backgroundImage: 'linear-gradient(135deg, #6366f1, #0d9488)' }}>
+                        الآن؟
                     </span>
                 </h2>
             </motion.div>
 
-            {/* Philosophy card */}
+            {/* M3 Tertiary container — Philosophy quote */}
             <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="rounded-[22px] p-4 mb-6 relative overflow-hidden"
+                transition={{ delay: 0.08, type: 'spring', stiffness: 260, damping: 28 }}
+                className="rounded-[20px] p-4 mb-5 relative overflow-hidden"
                 style={{
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(13,148,136,0.06) 100%)',
-                    border: '1px solid rgba(99,102,241,0.18)',
+                    background: '#f5f3ff',
+                    border: '1px solid #ddd6fe',
+                    boxShadow: '0 1px 4px rgba(99,102,241,0.08)',
                 }}>
-                {/* Quote icon */}
-                <div className="absolute top-3 left-4 text-[40px] leading-none text-indigo-900 font-serif"
-                    aria-hidden>"</div>
+                {/* Decorative quote mark */}
+                <div className="absolute top-2 left-4 text-[52px] leading-none font-serif select-none"
+                    style={{ color: '#ddd6fe' }} aria-hidden>"</div>
                 <div className="flex gap-3 items-start relative z-10">
-                    <div className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{ background: 'rgba(99,102,241,0.2)' }}>
-                        <Brain className="w-5 h-5 text-indigo-400" />
+                    <div className="w-9 h-9 rounded-[12px] flex items-center justify-center flex-shrink-0 mt-0.5"
+                        style={{ background: 'rgba(99,102,241,0.15)' }}>
+                        <Brain className="w-4 h-4 text-indigo-500" />
                     </div>
                     <div>
-                        <p className="text-[12.5px] font-bold text-white/80 leading-relaxed italic">{quote.text}</p>
-                        <p className="text-[9px] text-slate-600 font-bold mt-1.5 uppercase tracking-widest">
-                            — {quote.author}
-                        </p>
+                        <p className="m3-body-lg text-indigo-900/70 italic leading-relaxed">{quote.text}</p>
+                        <p className="m3-label-sm text-indigo-400 mt-2"
+                            style={{ textTransform: 'none' }}>— {quote.src}</p>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Emotion aura (animated reaction) */}
+            {/* Emotion Aura visualization */}
             <AnimatePresence>
-                {selected.length > 0 && !hasNone && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}>
-                        <EmotionAura selected={selected} />
+                {activeColors.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 72 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center justify-center overflow-hidden mb-1">
+                        <div className="relative w-20 h-14 flex items-center justify-center">
+                            {activeColors.slice(0, 4).map((color, i) => (
+                                <motion.div key={`${color}-${i}`}
+                                    className="absolute rounded-full"
+                                    style={{
+                                        width: 36, height: 36,
+                                        background: color, opacity: 0.15,
+                                        filter: 'blur(12px)',
+                                        transform: `translate(${(i % 2 === 0 ? 1 : -1) * i * 9}px, ${i > 1 ? 7 : -7}px)`,
+                                    }}
+                                    animate={{ scale: [1, 1.22, 1] }}
+                                    transition={{ duration: 2 + i * 0.3, repeat: Infinity }}
+                                />
+                            ))}
+                            <span className="text-[22px] relative z-10">💜</span>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Prompt */}
-            <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.15 }}
-                className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">
-                ما يشغل بالك الآن؟ (اختر كل ما ينطبق)
-            </motion.p>
+            {/* M3 Filter chips group */}
+            <p className="m3-label-sm text-slate-400 mb-3" style={{ textTransform: 'none', fontSize: 10 }}>
+                ما يشغل بالك الآن؟ اختر كل ما ينطبق
+            </p>
 
-            {/* Emotion chips — in 2 rows by emotion type */}
             <div className="flex flex-wrap gap-2 mb-5">
                 {EMOTIONAL_CONTEXTS.map((ctx, i) => {
-                    const isSelected = selected.includes(ctx.id);
-                    const isNoneCtx = ctx.id === 'none';
-                    const color = isNoneCtx ? '#10b981' : '#6366f1';
+                    const isSel   = selected.includes(ctx.id);
+                    const isNone  = ctx.id === 'none';
+                    const color   = isNone ? '#0d9488' : '#6366f1';
+                    const bgSel   = isNone ? '#f0fdfa' : '#eef2ff';
+                    const brdrSel = isNone ? '#99f6e4' : '#c7d2fe';
 
                     return (
-                        <motion.button
-                            key={ctx.id}
+                        <motion.button key={ctx.id}
                             initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.18 + i * 0.04, type: 'spring', stiffness: 350, damping: 28 }}
-                            whileTap={{ scale: 0.9 }}
+                            transition={{ delay: 0.1 + i * 0.035, type: 'spring', stiffness: 380, damping: 26 }}
+                            whileTap={{ scale: 0.91 }}
                             onClick={() => { haptic.selection(); onToggle(ctx.id); }}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-2xl font-bold transition-all"
+                            className="flex items-center gap-1.5 rounded-full m3-state"
                             style={{
-                                background: isSelected ? `${color}18` : 'rgba(255,255,255,0.04)',
-                                border: `1.5px solid ${isSelected ? color : 'rgba(255,255,255,0.07)'}`,
-                                boxShadow: isSelected ? `0 0 20px ${color}22` : 'none',
+                                height: 36,
+                                paddingLeft: 14, paddingRight: 14,
+                                background: isSel ? bgSel : '#ffffff',
+                                border: `1.5px solid ${isSel ? brdrSel : 'rgba(0,0,0,0.12)'}`,
+                                boxShadow: isSel
+                                    ? `0 0 0 3px ${color}0c, 0 1px 4px rgba(0,0,0,0.06)`
+                                    : '0 1px 2px rgba(0,0,0,0.06)',
+                                transition: 'all 180ms cubic-bezier(0.05,0.7,0.1,1)',
                             }}>
-                            <span className="text-[16px] leading-none">{ctx.emoji}</span>
-                            <span className="text-[12px]"
-                                style={{ color: isSelected ? color : 'rgba(255,255,255,0.45)' }}>
+                            <span className="text-base leading-none">{ctx.emoji}</span>
+                            <span className="m3-body-md font-semibold" style={{ color: isSel ? color : '#475569' }}>
                                 {ctx.label}
                             </span>
                         </motion.button>
@@ -174,33 +150,40 @@ export function StepEmotional({
                 })}
             </div>
 
-            {/* Optional note */}
+            {/* Optional note — M3 Outlined text field */}
             <AnimatePresence>
                 {!hasNone && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.24 }}>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
-                            <Sparkles className="inline w-3 h-3 text-teal-500 ml-1" />
-                            شيء للطبيب (اختياري)
-                        </p>
-                        <div className="rounded-[20px] overflow-hidden"
+                        transition={{ duration: 0.22, ease: [0.05, 0.7, 0.1, 1] }}>
+                        <div className="mb-1 flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 text-teal-500" />
+                            <p className="m3-label-sm text-slate-400"
+                                style={{ textTransform: 'none', fontSize: 10.5 }}>
+                                ملاحظة للطبيب (اختياري)
+                            </p>
+                        </div>
+                        {/* M3 Outlined TextField */}
+                        <div className="rounded-[16px] overflow-hidden"
                             style={{
-                                background: 'rgba(15,23,42,0.6)',
-                                border: '1px solid rgba(255,255,255,0.06)',
+                                background: '#ffffff',
+                                border: '1.5px solid rgba(0,0,0,0.12)',
+                                boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
                             }}>
-                            {/* Aurora top line */}
-                            <div className="h-px w-full"
-                                style={{ background: 'linear-gradient(90deg, #0d9488, #6366f1, #ec4899, transparent)' }} />
+                            <div className="h-[3px]"
+                                style={{ background: 'linear-gradient(90deg, #0d9488, #6366f1, #ec4899)' }} />
                             <textarea
                                 value={note}
                                 onChange={e => onNote(e.target.value)}
                                 placeholder="ما تشعر أنه يؤثر على صحتك..."
                                 rows={3}
-                                className="w-full px-4 py-3 text-[13px] font-medium resize-none focus:outline-none bg-transparent placeholder-slate-700"
-                                style={{ color: 'rgba(255,255,255,0.75)', caretColor: '#0d9488' }}
+                                className="w-full px-4 py-3 resize-none focus:outline-none bg-transparent"
+                                style={{
+                                    fontSize: 13, fontWeight: 500, lineHeight: 1.55,
+                                    color: '#1e293b', caretColor: '#0d9488',
+                                }}
                             />
                         </div>
                     </motion.div>
@@ -211,7 +194,7 @@ export function StepEmotional({
                 label="تحليل حالتي الآن ✦"
                 onPress={onSubmit}
                 variant="gradient"
-                sublabel="التحليل يشمل الأبعاد الجسدية والعاطفية معاً"
+                sublabel="يشمل الأبعاد الجسدية والعاطفية معاً"
             />
         </div>
     );

@@ -103,12 +103,21 @@ function SectionCard({ children, title, icon: Icon, color }: {
   children: React.ReactNode; title: string; icon: any; color: string;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-800/60 rounded-[22px] p-4 border border-slate-100 dark:border-slate-700/60 shadow-sm mb-4">
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-50 dark:border-slate-700/40">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}18` }}>
-          <Icon className="w-3.5 h-3.5" style={{ color }} />
+    <div style={{
+      background: 'rgba(255,255,255,0.78)',
+      backdropFilter: 'blur(20px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      border: '1px solid rgba(255,255,255,0.62)',
+      boxShadow: '0 0 0 0.5px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
+      borderRadius: 22,
+      padding: 16,
+      marginBottom: 12,
+    }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16, paddingBottom:12, borderBottom:'1px solid rgba(0,0,0,0.05)' }}>
+        <div style={{ width:30, height:30, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background:`${color}14`, border:`1px solid ${color}20`, flexShrink:0 }}>
+          <Icon style={{ width:15, height:15, color }} />
         </div>
-        <span className="text-[13px] font-black text-slate-700 dark:text-slate-200">{title}</span>
+        <span style={{ fontSize:13, fontWeight:800, color:'#1e293b' }}>{title}</span>
       </div>
       {children}
     </div>
@@ -122,10 +131,16 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 function TextInput({ value, onChange, placeholder, multiline }: {
   value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean;
 }) {
-  const cls = "w-full text-[13px] font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-700/60 focus:outline-none focus:border-teal-300 dark:focus:border-teal-600 placeholder-slate-300 dark:placeholder-slate-600 resize-none transition-colors";
+  const style: React.CSSProperties = {
+    width:'100%', fontSize:13, fontWeight:500, color:'#1e293b',
+    background:'rgba(248,250,252,0.9)', borderRadius:14, padding:'10px 14px',
+    border:'1px solid rgba(0,0,0,0.08)', outline:'none', resize:'none' as any,
+    boxShadow:'inset 0 1px 3px rgba(0,0,0,0.04)',
+    transition:'border-color 200ms',
+  };
   return multiline
-    ? <textarea rows={3} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className={cls} />
-    : <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className={cls} />;
+    ? <textarea rows={3} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={style} />
+    : <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={style} />;
 }
 
 function SelectRow({ value, onChange, options, label }: {
@@ -150,7 +165,7 @@ function ProgressHeader({ current, total, sectionLabel, color, onSectionClick }:
   { current: number; total: number; sectionLabel: string; color: string; onSectionClick: () => void }) {
   const pct = Math.round((current / total) * 100);
   return (
-    <div className="px-4 py-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/60">
+    <div style={{ padding:'10px 16px 12px', background:'rgba(255,255,255,0.82)', backdropFilter:'blur(20px) saturate(160%)', WebkitBackdropFilter:'blur(20px) saturate(160%)', borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
       <div className="flex items-center justify-between mb-2">
         <button onClick={onSectionClick}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
@@ -180,7 +195,7 @@ function SectionOverlay({ current, completed, onSelect, onClose }:
       onClick={onClose}>
       <motion.div initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }} transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="w-full bg-white dark:bg-slate-900 rounded-t-[28px] p-5 pb-10 max-h-[75vh] overflow-y-auto">
+        style={{ width:'100%', background:'rgba(255,255,255,0.92)', backdropFilter:'blur(32px) saturate(180%)', WebkitBackdropFilter:'blur(32px) saturate(180%)', borderRadius:'28px 28px 0 0', padding:20, paddingBottom:40, maxHeight:'75vh', overflowY:'auto' as any, boxShadow:'0 -4px 32px rgba(0,0,0,0.10)' }}>
         <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-5" />
         <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">التنقل بين الأقسام</p>
         <div className="space-y-2">
@@ -1074,7 +1089,7 @@ export default function MedicalHistoryPage() {
   // Show completion screen
   if (showCompletion) {
     return (
-      <div className="min-h-screen bg-[#F7FAFA] dark:bg-[#080D13] font-sans">
+    <div dir="rtl" style={{ minHeight:'100svh', background:'linear-gradient(160deg,#EEF2F5 0%,#F2F5F7 40%,#EBF4F3 100%)', fontFamily:'inherit' }}>
         <SEO title="تاريخك المرضي مكتمل | طِبرَا" />
         {/* Header */}
         <div className="sticky top-0 z-40">
@@ -1093,7 +1108,7 @@ export default function MedicalHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7FAFA] dark:bg-[#080D13] font-sans">
+    <div dir="rtl" style={{ minHeight:'100svh', background:'linear-gradient(160deg,#EEF2F5 0%,#F2F5F7 40%,#EBF4F3 100%)', fontFamily:'inherit' }}>
       <SEO title="التاريخ المرضي | طِبرَا" />
 
       {/* Background */}
@@ -1104,11 +1119,11 @@ export default function MedicalHistoryPage() {
 
       {/* Header */}
       <div className="sticky top-0 z-40">
-        <div className="flex items-center justify-between h-14 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl px-4 shadow-sm border-b border-slate-100 dark:border-slate-800/60">
+        <div className="flex items-center justify-between h-14 px-4" style={{ background:'rgba(242,245,247,0.88)', backdropFilter:'blur(20px) saturate(160%)', WebkitBackdropFilter:'blur(20px) saturate(160%)', borderBottom:'0.5px solid rgba(0,0,0,0.08)' }}>
           <motion.button whileTap={{ scale: 0.9 }}
             onClick={() => currentSection > 0 ? setCurrentSection(c => c - 1) : router.back()}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-            <ArrowRight className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+            style={{ width:36, height:36, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.72)', backdropFilter:'blur(12px)', border:'1px solid rgba(0,0,0,0.07)', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
+            <ArrowRight className="w-4 h-4 text-slate-600" />
           </motion.button>
 
           <div className="flex items-center gap-2">
@@ -1126,7 +1141,7 @@ export default function MedicalHistoryPage() {
               </motion.div>
             )}
             <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowOverlay(true)}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+              style={{ width:36, height:36, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.72)', backdropFilter:'blur(12px)', border:'1px solid rgba(0,0,0,0.07)', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
               <span className="text-[11px] font-black text-slate-500">{currentSection + 1}/{SECTIONS.length}</span>
             </motion.button>
           </div>
@@ -1165,11 +1180,11 @@ export default function MedicalHistoryPage() {
       </div>
 
       {/* Bottom actions */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800/60 p-4 pb-8 max-w-md mx-auto">
+      <div style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:30, padding:'12px 16px', paddingBottom:'max(env(safe-area-inset-bottom),24px)', background:'linear-gradient(to top, rgba(242,245,247,1) 60%, rgba(242,245,247,0) 100%)' }}>
         <div className="flex gap-2.5">
           {/* Save draft */}
           <motion.button whileTap={{ scale: 0.95 }} onClick={handleQuickSave} disabled={saving}
-            className="w-12 h-12 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0">
+          style={{ width:48, height:48, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.82)', backdropFilter:'blur(12px)', border:'1px solid rgba(0,0,0,0.08)', boxShadow:'0 2px 8px rgba(0,0,0,0.06)', flexShrink:0 }}>
             {saving ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-teal-500" />
               : saved ? <Check className="w-4 h-4 text-teal-500" /> : <Save className="w-4 h-4 text-slate-500" />}
