@@ -40,25 +40,26 @@ const SP = { type: 'spring' as const, stiffness: 500, damping: 34 };
 const SPECS = ['الطب الوظيفي', 'الطب النفس-جسدي', 'الطب الشمولي', 'العلاج الجذري'];
 function RotatingSpec() {
     const [i, setI] = useState(0);
-    const [v, setV] = useState(true);
     useEffect(() => {
         const id = setInterval(() => {
-            setV(false);
-            setTimeout(() => { setI(x => (x + 1) % SPECS.length); setV(true); }, 320);
+            setI(x => (x + 1) % SPECS.length);
         }, 2800);
         return () => clearInterval(id);
     }, []);
     return (
-        <AnimatePresence mode="wait">
-            <motion.span key={i}
-                initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-                animate={{ opacity: v ? 1 : 0, y: v ? 0 : -8, filter: v ? 'blur(0px)' : 'blur(4px)' }}
-                transition={{ duration: 0.32 }}
-                style={{ color: G.accent }}
-                className="block">
-                {SPECS[i]}
-            </motion.span>
-        </AnimatePresence>
+        // Fixed height container prevents layout shift on text swap
+        <span style={{ display: 'block', height: '1.12em', overflow: 'hidden', position: 'relative' }}>
+            <AnimatePresence mode="wait" initial={false}>
+                <motion.span key={i}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -14 }}
+                    transition={{ duration: 0.28, ease: 'easeOut' }}
+                    style={{ color: G.accent, display: 'block' }}>
+                    {SPECS[i]}
+                </motion.span>
+            </AnimatePresence>
+        </span>
     );
 }
 
@@ -121,18 +122,21 @@ export default function VisitorHeroSection() {
                 LAYER 2 — Animated watercolor blobs (on top of photo)
                 ══════════════════════════════════════════════════ */}
             <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden" aria-hidden>
+                {/* Blobs: translate only, no scale change — prevents compositing jitter */}
                 <motion.div style={{
                     position: 'absolute', width: 380, height: 300, top: -60, right: -60,
                     background: 'radial-gradient(ellipse, rgba(13,148,136,0.16) 0%, transparent 68%)',
                     filter: 'blur(56px)', borderRadius: '50%',
+                    willChange: 'transform',
                 }}
-                    animate={{ x: [0, 14, -8, 0], y: [0, -10, 5, 0], scale: [1, 1.06, 0.97, 1] }}
+                    animate={{ x: [0, 14, -8, 0], y: [0, -10, 5, 0] }}
                     transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} />
 
                 <motion.div style={{
                     position: 'absolute', width: 260, height: 240, top: 220, left: -30,
                     background: 'radial-gradient(ellipse, rgba(20,184,166,0.12) 0%, transparent 68%)',
                     filter: 'blur(44px)', borderRadius: '50%',
+                    willChange: 'transform',
                 }}
                     animate={{ x: [0, -10, 6, 0], y: [0, 12, -5, 0] }}
                     transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2 }} />
@@ -144,7 +148,7 @@ export default function VisitorHeroSection() {
             <div className="relative z-10 flex flex-col gap-5 px-5 pt-14 pb-8">
 
                 {/* ── Top bar: wordmark + live badge ─── */}
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                <motion.div initial={false} animate={{ opacity: 1, y: 0 }}
                     className="flex items-center justify-between">
 
                     <div className="flex items-center gap-2.5">
@@ -166,16 +170,16 @@ export default function VisitorHeroSection() {
                             background: G.glassHvy, backdropFilter: G.blur, WebkitBackdropFilter: G.blur,
                             border: `1px solid ${G.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                         }}>
-                        <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22C55E' }}
-                            animate={{ scale: [1, 1.7, 1], opacity: [1, 0.4, 1] }}
+                        <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22C55E', willChange: 'transform' }}
+                            animate={{ scale: [1, 1.25, 1], opacity: [1, 0.5, 1] }}
                             transition={{ duration: 2, repeat: Infinity }} />
                         <span className="text-[9.5px] font-bold" style={{ color: G.sub }}>الطبيب متاح</span>
                     </div>
                 </motion.div>
 
                 {/* ── Headline — reads over the watercolor photo ── */}
-                <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 }}>
+                <motion.div initial={false} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0 }}>
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] mb-2.5"
                         style={{ color: G.accent }}>رعاية طبية متكاملة</p>
                     <h1 className="text-[40px] font-black leading-[1.08] tracking-[-0.02em]"
@@ -190,8 +194,8 @@ export default function VisitorHeroSection() {
                 </motion.div>
 
                 {/* ── Doctor identity card — glass over photo ── */}
-                <motion.div initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: 0.16, ...SP }}>
+                <motion.div initial={false} animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 0, ...SP }}>
                     <div className="relative rounded-[22px] overflow-hidden"
                         style={{
                             background: G.glassHvy, backdropFilter: G.blurHvy,
@@ -219,8 +223,8 @@ export default function VisitorHeroSection() {
                                 </div>
                                 {/* Online pulse */}
                                 <motion.div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center"
-                                    style={{ background: '#22C55E', boxShadow: '0 0 0 2.5px rgba(255,255,255,0.95), 0 2px 8px rgba(34,197,94,0.50)' }}
-                                    animate={{ scale: [1, 1.22, 1] }} transition={{ duration: 2.6, repeat: Infinity }}>
+                                    style={{ background: '#22C55E', boxShadow: '0 0 0 2.5px rgba(255,255,255,0.95), 0 2px 8px rgba(34,197,94,0.50)', willChange: 'transform' }}
+                                    animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2.6, repeat: Infinity }}>
                                     <div className="w-1.5 h-1.5 rounded-full bg-white" />
                                 </motion.div>
                             </div>
@@ -277,8 +281,8 @@ export default function VisitorHeroSection() {
                 </motion.div>
 
                 {/* ── Feature chips ───────────────────────────── */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    transition={{ delay: 0.26 }}
+                <motion.div initial={false} animate={{ opacity: 1 }}
+                    transition={{ delay: 0 }}
                     className="flex gap-2 flex-wrap">
                     {[
                         { label: 'تقييم دقيق', icon: '🔬' },
@@ -303,8 +307,8 @@ export default function VisitorHeroSection() {
                 </motion.div>
 
                 {/* ── CTA pair ───────────────────────────────── */}
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.32 }}
+                <motion.div initial={false} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0 }}
                     className="flex flex-col gap-2.5">
 
                     {/* Primary — ink dark with teal glow */}
@@ -323,10 +327,11 @@ export default function VisitorHeroSection() {
                             <motion.div className="absolute inset-y-0 w-16 pointer-events-none"
                                 style={{
                                     background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
-                                    skewX: -20
+                                    skewX: -20,
+                                    willChange: 'transform',
                                 }}
                                 animate={{ left: ['-64px', '120%'] }}
-                                transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3 }} />
+                                transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 4 }} />
 
                             <div className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 relative"
                                 style={{
@@ -375,8 +380,8 @@ export default function VisitorHeroSection() {
                 </motion.div>
 
                 {/* ── HIPAA badge ──────────────────────────── */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    transition={{ delay: 0.90 }}
+                <motion.div initial={false} animate={{ opacity: 1 }}
+                    transition={{ delay: 0 }}
                     className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-full mx-auto"
                     style={{
                         background: G.glassHvy, backdropFilter: 'blur(16px)',
