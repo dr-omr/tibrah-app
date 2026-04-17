@@ -180,12 +180,12 @@ export default function VisitorHeroSection() {
                         style={{ color: G.accent }}>رعاية طبية متكاملة</p>
                     <h1 className="text-[40px] font-black leading-[1.08] tracking-[-0.02em]"
                         style={{ color: G.ink }}>
-                        طب يعالج<br />
+                        ابدأ رحلتك<br />
                         <RotatingSpec />
                     </h1>
                     <p className="text-[13px] leading-[1.68] mt-3"
                         style={{ color: G.sub, maxWidth: 290 }}>
-                        بروتوكول علاجي شمولي يجمع الجسد والعقل والروح في رحلة تشافٍ واحدة
+                        تقييم حالتك · خطة واضحة · متابعة حقيقية — من الأعراض إلى التعافي
                     </p>
                 </motion.div>
 
@@ -281,9 +281,9 @@ export default function VisitorHeroSection() {
                     transition={{ delay: 0.26 }}
                     className="flex gap-2 flex-wrap">
                     {[
-                        { label: 'تشخيص جذري', icon: '🔬' },
-                        { label: 'بروتوكول مخصص', icon: '📋' },
-                        { label: 'متابعة مستمرة', icon: '📡' },
+                        { label: 'تقييم دقيق', icon: '🔬' },
+                        { label: 'خطة 7 أيام', icon: '📋' },
+                        { label: 'متابعة يومية', icon: '📡' },
                         { label: 'طب شمولي', icon: '✦' },
                     ].map(f => (
                         <div key={f.label}
@@ -336,9 +336,9 @@ export default function VisitorHeroSection() {
                                 <Calendar className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1 relative">
-                                <p className="text-[15.5px] font-black text-white leading-tight">احجز جلستك الآن</p>
+                                <p className="text-[15.5px] font-black text-white leading-tight">احجز استشارتك</p>
                                 <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)' }}>
-                                    استشارة تشخيصية شاملة
+                                    معنا تفهم ما تحتاجه فعلاً
                                 </p>
                             </div>
                             <ArrowLeft className="w-4 h-4 text-white/40 flex-shrink-0 relative" />
@@ -364,9 +364,9 @@ export default function VisitorHeroSection() {
                                 <HeartPulse className="w-5 h-5" style={{ color: G.accent }} />
                             </div>
                             <div className="flex-1">
-                                <p className="text-[14.5px] font-black" style={{ color: G.ink }}>افحص أعراضك</p>
+                                <p className="text-[14.5px] font-black" style={{ color: G.ink }}>افحص أعراضك أولاً</p>
                                 <p className="text-[10px] mt-0.5" style={{ color: G.muted }}>
-                                    مدقق ذكي · مجاني
+                                    تقييم ذكي · مجاني · 5 دقائق
                                 </p>
                             </div>
                             <ArrowLeft className="w-4 h-4 flex-shrink-0" style={{ color: G.muted }} />

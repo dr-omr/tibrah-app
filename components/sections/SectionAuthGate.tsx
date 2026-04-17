@@ -29,7 +29,7 @@ export function SectionAuthGate({ section }: { section: SectionDefinition }) {
                 <h2 className="text-[20px] font-black text-slate-800 mb-1">محتوى مقيّد</h2>
                 <p className="text-[13px] text-slate-500">قسم {section.arabicName} للمشتركين فقط</p>
             </div>
-            <Link href="/auth/login">
+            <Link href="/login">
                 <motion.div whileTap={{ scale: 0.96 }}
                     className="flex items-center gap-2 px-6 py-3 rounded-full"
                     style={{

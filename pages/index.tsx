@@ -9,6 +9,8 @@ import PatientHome from '@/components/home/PatientHome';
 import VisitorHome from '@/components/home/VisitorHome';
 import { SPRING_SMOOTH } from '@/lib/tibrah-motion';
 
+import { usePrefetchDomains } from '@/hooks/usePrefetchDomains';
+
 /* ═══════════════════════════════════════════════
    HOME PAGE (TIBRAH 2.0)
    Entry point wrapper for Patient vs Visitor flows.
@@ -17,6 +19,9 @@ import { SPRING_SMOOTH } from '@/lib/tibrah-motion';
 export default function HomePage() {
     const { user } = useAuth();
     const dashboard = useHealthDashboard();
+
+    // ── Instant Navigation Prefetch Engine ──
+    usePrefetchDomains();
 
     return (
         <div className="relative min-h-screen bg-[#F0FAF8] dark:bg-[#080D13] overflow-hidden font-sans">

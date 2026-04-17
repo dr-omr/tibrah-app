@@ -786,3 +786,11 @@ export const DEFAULT_ANSWERS: EngineAnswers = {
     clinicalAnswers: {}, emotionalContext: [],
     emotionalNote: '', freeText: '',
 };
+
+/* ══════════════════════════════════════════════════════════
+   4-DOMAIN ROUTING ENGINE
+   Re-export so consumers can import from one place.
+   ══════════════════════════════════════════════════════════ */
+export { computeRouting } from '@/lib/domain-scoring-engine';
+export type { RoutingResult } from './types';
+

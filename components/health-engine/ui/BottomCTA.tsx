@@ -1,7 +1,8 @@
 // components/health-engine/ui/BottomCTA.tsx
-// THIE v4 — Material Design 3 / Google large FAB-style CTA
-// CRITICAL FIX: proper safe-area + Android navigation bar clearance
-
+// ════════════════════════════════════════════════════════════════
+// TIBRAH — Light Water Glass Bottom CTA
+// زجاج مائي فاتح · ملمس ناتف
+// ════════════════════════════════════════════════════════════════
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -17,85 +18,92 @@ interface Props {
 }
 
 const VARIANTS = {
-    teal: { bg: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', shadow: 'rgba(13,148,136,0.32)' },
-    gradient: { bg: 'linear-gradient(135deg, #0d9488 0%, #6366f1 100%)', shadow: 'rgba(99,102,241,0.28)' },
-    red: { bg: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', shadow: 'rgba(220,38,38,0.32)' },
+    teal: {
+        bg:     'linear-gradient(150deg, rgba(255,255,255,0.92) 0%, rgba(186,230,253,0.80) 35%, rgba(8,145,178,0.75) 100%)',
+        shadow: 'rgba(8,145,178,0.28)',
+        text:   '#0C4A6E',
+        icon:   '#0E7490',
+    },
+    gradient: {
+        bg:     'linear-gradient(150deg, rgba(255,255,255,0.90) 0%, rgba(186,230,253,0.75) 30%, rgba(8,145,178,0.65) 65%, rgba(129,140,248,0.70) 100%)',
+        shadow: 'rgba(8,145,178,0.24)',
+        text:   '#0C4A6E',
+        icon:   '#0E7490',
+    },
+    red: {
+        bg:     'linear-gradient(150deg, rgba(255,255,255,0.90) 0%, rgba(254,202,202,0.80) 40%, rgba(220,38,38,0.65) 100%)',
+        shadow: 'rgba(220,38,38,0.22)',
+        text:   '#7F1D1D',
+        icon:   '#991B1B',
+    },
 };
 
 export function BottomCTA({ label, onPress, disabled, loading, variant = 'teal', sublabel }: Props) {
     const cfg = VARIANTS[variant];
 
     return (
-        /* 
-         * SAFE AREA SOLUTION:
-         * padding-bottom = max(env(safe-area-inset-bottom), 20px) handles:
-         *   - iPhone notch/Dynamic Island devices
-         *   - Android gesture navigation (inset reported by OS)
-         *   - Capacitor native wrapping
-         * The gradient fade ensures content is readable above this panel.
-         */
-        <div
-            className="fixed bottom-0 inset-x-0 z-50 px-4"
+        <div className="fixed bottom-0 inset-x-0 z-50 px-4"
             style={{
                 paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
-                /* Tall fade so last card is never fully hidden */
-                background: 'linear-gradient(to top, #F7FAFA 68%, rgba(247,250,250,0.96) 85%, transparent 100%)',
-                /* Extra top padding means gradient starts higher & content isn't hidden */
-                paddingTop: 16,
+                background: 'linear-gradient(0deg, rgba(232,248,251,0.97) 0%, rgba(224,241,254,0.90) 60%, transparent 100%)',
+                backdropFilter: 'blur(8px)',
+                paddingTop: 18,
             }}>
+
             <AnimatePresence>
                 {sublabel && (
-                    <motion.p
-                        key="sub"
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="m3-label-lg text-center text-slate-400 mb-2">
+                    <motion.p key="sub" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        style={{ fontSize: 11, textAlign: 'center', color: '#7DD3FC', fontWeight: 600, marginBottom: 8 }}>
                         {sublabel}
                     </motion.p>
                 )}
             </AnimatePresence>
 
-            {/* M3 Large Button — 56px height, 28px radius */}
             <motion.button
-                whileTap={disabled || loading ? {} : { scale: 0.96 }}
+                whileTap={disabled || loading ? {} : { scale: 0.97, y: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                onClick={() => {
-                    if (disabled || loading) return;
-                    haptic.impact();
-                    onPress();
-                }}
-                className="m3-state w-full rounded-[28px] flex items-center relative overflow-hidden"
+                onClick={() => { if (disabled || loading) return; haptic.impact(); onPress(); }}
+                className="w-full relative overflow-hidden flex items-center"
                 style={{
-                    height: 56,
-                    background: disabled ? '#E2E8F0' : cfg.bg,
-                    boxShadow: disabled ? 'none' : `0 4px 24px ${cfg.shadow}, 0 1px 4px rgba(0,0,0,0.1)`,
+                    height: 58, borderRadius: 28,
+                    background: disabled ? 'rgba(255,255,255,0.50)' : cfg.bg,
+                    border: `1.5px solid ${disabled ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.92)'}`,
+                    backdropFilter: 'blur(24px)',
+                    boxShadow: disabled ? 'none' : `0 8px 32px ${cfg.shadow}, inset 0 1.5px 0 rgba(255,255,255,0.95)`,
                     cursor: disabled ? 'not-allowed' : 'pointer',
-                    paddingLeft: 24,
-                    paddingRight: 24,
+                    paddingLeft: 24, paddingRight: 24,
                 }}>
-                {/* Shimmer only when active */}
+
+                {/* Glass sheen */}
+                <div className="absolute inset-x-0 top-0 pointer-events-none"
+                    style={{ height: '50%', background: disabled ? 'none' : 'linear-gradient(180deg, rgba(255,255,255,0.60) 0%, rgba(255,255,255,0.10) 50%, transparent 100%)', borderRadius: '28px 28px 0 0' }} />
+                {/* Specular point */}
+                {!disabled && <div className="absolute top-2.5 right-16 w-7 h-3.5 rounded-full pointer-events-none" style={{ background: 'rgba(255,255,255,0.50)', filter: 'blur(3px)' }} />}
+                {/* Shimmer */}
                 {!disabled && !loading && (
-                    <motion.div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                            background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.14) 50%, transparent 65%)',
-                        }}
-                        animate={{ x: ['-120%', '150%'] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                    />
+                    <motion.div className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)' }}
+                        animate={{ x: ['-130%', '180%'] }}
+                        transition={{ duration: 3.5, repeat: Infinity, ease: 'linear', delay: 1.5 }} />
                 )}
 
-                <span
-                    className="m3-title-lg relative z-10 flex-1 text-right"
-                    style={{ color: disabled ? '#94A3B8' : '#ffffff' }}>
+                <span className="flex-1 text-right relative"
+                    style={{ fontSize: 16, fontWeight: 900, zIndex: 1, color: disabled ? '#7DD3FC' : cfg.text, letterSpacing: '-0.01em' }}>
                     {label}
                 </span>
 
-                <div className="relative z-10 mr-3">
+                <div className="relative mr-3" style={{ zIndex: 1 }}>
                     {loading
-                        ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: disabled ? '#94A3B8' : '#ffffffb3' }} />
-                        : <ArrowLeft className="w-5 h-5" style={{ color: disabled ? '#94A3B8' : '#ffffffb3' }} />
+                        ? <Loader2 style={{ width: 20, height: 20, color: disabled ? '#7DD3FC' : cfg.icon }} className="animate-spin" />
+                        : <div style={{
+                            width: 32, height: 32, borderRadius: 99,
+                            background: 'rgba(255,255,255,0.45)',
+                            border: '1px solid rgba(255,255,255,0.70)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.80)',
+                        }}>
+                            <ArrowLeft style={{ width: 14, height: 14, color: disabled ? '#7DD3FC' : cfg.icon }} />
+                        </div>
                     }
                 </div>
             </motion.button>

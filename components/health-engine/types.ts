@@ -105,3 +105,64 @@ export interface EngineAnswers {
 }
 
 export type AnswerValue = string | string[] | number;
+
+/* ══════════════════════════════════════════════════════════
+   4-DOMAIN ROUTING ENGINE TYPES
+   محرك التوجيه الرباعي — Tibrah Routing System
+   ══════════════════════════════════════════════════════════ */
+
+/** The four healing domains */
+export type DomainId = 'jasadi' | 'nafsi' | 'fikri' | 'ruhi';
+
+/** All 26 subdomains across 4 domains */
+export type SubdomainId =
+    // جسدي (8)
+    | 'digestive' | 'hormonal' | 'inflammatory' | 'energy_fatigue'
+    | 'sleep' | 'nutrition_deficiency' | 'musculoskeletal' | 'skin_hair'
+    // نفسي (6)
+    | 'anxiety_arousal' | 'suppression_chronic_stress' | 'grief_depletion'
+    | 'psychosomatic' | 'panic' | 'emotion_symptom_link'
+    // فكري (6)
+    | 'overthinking' | 'limiting_beliefs' | 'body_hypermonitor'
+    | 'self_criticism' | 'perfectionism' | 'confusion_directionless'
+    // روحي (6)
+    | 'lost_serenity' | 'rhythm_disruption' | 'lost_meaning'
+    | 'inner_depletion' | 'self_disconnection' | 'sleep_light_quiet';
+
+/** Five types of tools available per subdomain */
+export type ToolType = 'test' | 'practice' | 'workshop' | 'protocol' | 'tracker';
+
+/** A recommended tool from the routing engine */
+export interface ToolRecommendation {
+    id: string;
+    type: ToolType;
+    arabicName: string;
+    englishName: string;
+    emoji: string;
+    description: string;
+    href: string;
+    durationMinutes: number;
+    isFree: boolean;
+}
+
+/** Complete routing result after assessment */
+export interface RoutingResult {
+    /** Highest-scoring domain */
+    primary_domain: DomainId;
+    /** Second highest domain */
+    secondary_domain: DomainId;
+    /** Top subdomain within primary domain */
+    primary_subdomain: SubdomainId;
+    /** Top subdomain within secondary domain (companion module) */
+    secondary_subdomain: SubdomainId;
+    /** Raw scores for each domain (0–100 scale) */
+    domain_scores: Record<DomainId, number>;
+    /** Arabic description of this week's priority */
+    priority: string;
+    /** Arabic explanation of why this routing was chosen */
+    why: string;
+    /** Up to 5 recommended tools (protocol + practice + test + workshop + tracker) */
+    recommended_tools: ToolRecommendation[];
+    /** Whether escalation to a doctor is needed */
+    escalation_needed: boolean;
+}

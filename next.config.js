@@ -61,6 +61,46 @@ const nextConfig = {
     experimental: {
         // Enable if needed
     },
+
+    // ═══ TOOL LINK REDIRECTS ═══
+    // Route missing /assess/*, /programs/*, /tools/* to real existing pages
+    // Decision: Option B — use real existing pages, not placeholders
+    async redirects() {
+        return [
+            // ── /assess/* → existing assessment pages ──
+            { source: '/assess/anxiety',       destination: '/symptom-checker',    permanent: false },
+            { source: '/assess/beliefs',       destination: '/emotional-medicine', permanent: false },
+            { source: '/assess/cognitive',     destination: '/intake',             permanent: false },
+            { source: '/assess/depression',    destination: '/symptom-checker',    permanent: false },
+            { source: '/assess/disconnection', destination: '/emotional-medicine', permanent: false },
+            { source: '/assess/identity',      destination: '/emotional-medicine', permanent: false },
+            { source: '/assess/inner-balance', destination: '/quick-check-in',     permanent: false },
+            { source: '/assess/inner-speech',  destination: '/emotional-medicine', permanent: false },
+            { source: '/assess/meaning',       destination: '/emotional-medicine', permanent: false },
+            { source: '/assess/presence',      destination: '/quick-check-in',     permanent: false },
+
+            // ── /programs/* → courses or specific existing pages ──
+            { source: '/programs/belief-reprogramming', destination: '/courses',    permanent: false },
+            { source: '/programs/discipline',           destination: '/courses',    permanent: false },
+            { source: '/programs/emotions/:path*',      destination: '/courses',    permanent: false },
+            { source: '/programs/meaning-journey',      destination: '/courses',    permanent: false },
+            { source: '/programs/meditation',           destination: '/meditation', permanent: false },
+            { source: '/programs/mind-body',            destination: '/courses',    permanent: false },
+            { source: '/programs/morning-ritual',       destination: '/courses',    permanent: false },
+            { source: '/programs/movement',             destination: '/courses',    permanent: false },
+            { source: '/programs/nutrition',            destination: '/courses',    permanent: false },
+            { source: '/programs/sleep',                destination: '/courses',    permanent: false },
+            { source: '/programs/success-engineering',  destination: '/courses',    permanent: false },
+
+            // ── /tools/* → existing tool pages ──
+            { source: '/tools/gratitude',   destination: '/daily-log',          permanent: false },
+            { source: '/tools/grounding',   destination: '/breathe',            permanent: false },
+            { source: '/tools/journal',     destination: '/daily-log',          permanent: false },
+            { source: '/tools/reframe',     destination: '/emotional-medicine', permanent: false },
+            { source: '/tools/vision',      destination: '/daily-log',          permanent: false },
+            { source: '/tools/weekly-plan', destination: '/daily-log',          permanent: false },
+        ];
+    },
 };
 
 // PWA: Disable for mobile builds (Capacitor handles it natively)

@@ -12,6 +12,9 @@ import VisitorFloatingCTA from './visitor/VisitorFloatingCTA';
 // Intelligence layer
 const VisitorSmartGuide = dynamic(() => import('./visitor/VisitorSmartGuide'));
 
+// Protocol showcase (Sprint 6)
+const VisitorProtocolShowcase = dynamic(() => import('./visitor/VisitorProtocolShowcase'));
+
 // Trust & Numbers
 const VisitorStatsBar = dynamic(() => import('./visitor/VisitorStatsBar'));
 
@@ -51,10 +54,13 @@ export default function VisitorHome() {
             {/* ① Hero — First impression · Doctor trust · Entry CTA */}
             <VisitorHeroSection />
 
-            {/* ② Smart Guide — "أين تبدأ؟" · Intelligent 3-path routing */}
+            {/* ② 4-Step Flow — كيف تعمل طِبرة */}
             <VisitorSmartGuide />
 
-            {/* ③ Doctor Schedule — interactive booking calendar (NEW) */}
+            {/* ③ Protocol Showcase — مكتبة الخطط العلاجية */}
+            <VisitorProtocolShowcase />
+
+            {/* ④ Doctor Schedule — interactive booking calendar */}
             <VisitorDoctorSchedule />
 
             {/* ④ Stats — Trust numbers (animated counters) */}

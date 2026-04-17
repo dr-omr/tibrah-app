@@ -22,6 +22,7 @@ import { STAGGER_CONTAINER, STAGGER_ITEM, SPRING_BOUNCY } from '@/lib/tibrah-mot
 import GreetingHeader    from './GreetingHeader';
 import AppointmentBanner from './AppointmentBanner';
 import DomainGrid        from './DomainGrid';
+import AIInsightWidget   from './AIInsightWidget';
 
 /* ── Loading skeleton ─────────────────────────── */
 function LoadingSkeleton() {
@@ -170,6 +171,9 @@ export default function PatientHome() {
 
                 {/* ① Cinematic greeting */}
                 <GreetingHeader onAIOpen={() => setAiOpen(true)} />
+
+                {/* ── AI Insights ── */}
+                <AIInsightWidget dashboard={dashboard} />
 
                 {/* ② Appointment reminder */}
                 <AppointmentBanner />

@@ -15,6 +15,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
+import { getActiveCarePlan, getToolEngagement, shouldReassess, type SavedCarePlan } from '@/lib/care-plan-store';
+import type { DomainId } from '@/components/health-engine/types';
 
 /* ─── Types ─── */
 export type JourneyStepStatus = 'done' | 'current' | 'pending';
@@ -56,6 +58,16 @@ export interface HealthDashboardData {
     rewardPoints: number;
     /** Is data still loading? */
     loading: boolean;
+    /** Active care plan summary (if any) */
+    carePlan: {
+        exists: boolean;
+        primaryDomain: DomainId | null;
+        toolsOpened: number;
+        toolsTotal: number;
+        engagement: number;
+        daysSince: number;
+        needsReassessment: boolean;
+    } | null;
 }
 
 /* ─── Arabic numeral converter ─── */
@@ -102,6 +114,7 @@ export function useHealthDashboard(): HealthDashboardData {
         hasLoggedToday: false,
         rewardPoints: 0,
         loading: true,
+        carePlan: null,
     });
 
     const fetchData = useCallback(async () => {
@@ -239,6 +252,29 @@ export function useHealthDashboard(): HealthDashboardData {
                 }
             } catch { }
 
+            // ═══ 7. CARE PLAN — from localStorage ═══
+            let carePlanData: HealthDashboardData['carePlan'] = null;
+            try {
+                const activePlan = getActiveCarePlan();
+                if (activePlan) {
+                    const eng = getToolEngagement(activePlan);
+                    const daysSince = Math.floor(
+                        (Date.now() - new Date(activePlan.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                    carePlanData = {
+                        exists: true,
+                        primaryDomain: activePlan.routing.primary_domain,
+                        toolsOpened: activePlan.toolsOpened.length,
+                        toolsTotal: activePlan.recommendedToolIds.length,
+                        engagement: eng,
+                        daysSince,
+                        needsReassessment: shouldReassess(activePlan),
+                    };
+                    // Boost health score by plan engagement (max +5)
+                    healthScore = Math.min(100, healthScore + Math.round(eng * 0.05));
+                }
+            } catch { }
+
             // ═══ Build final data ═══
             const waterGoal = 8;
             setData({
@@ -258,6 +294,7 @@ export function useHealthDashboard(): HealthDashboardData {
                 hasLoggedToday,
                 rewardPoints,
                 loading: false,
+                carePlan: carePlanData,
             });
 
         } catch (error) {

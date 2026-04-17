@@ -49,6 +49,29 @@ export const ANALYTICS_EVENTS = {
     // أحداث الأداء
     ERROR_OCCURRED: 'error_occurred',
     SLOW_LOAD: 'slow_load',
+
+    // أحداث التقييم والتوجيه
+    ASSESSMENT_STARTED: 'assessment_started',
+    ASSESSMENT_PATHWAY_SELECTED: 'assessment_pathway_selected',
+    ASSESSMENT_COMPLETED: 'assessment_completed',
+    ROUTING_RESULT_VIEWED: 'routing_result_viewed',
+    ROUTING_TOOL_OPENED: 'routing_tool_opened',
+    ROUTING_ESCALATION_SHOWN: 'routing_escalation_shown',
+    BOOKING_FROM_ROUTING: 'booking_from_routing',
+    // أحداث البروتوكول والـ Outcome Loop (Sprint 2)
+    PROTOCOL_STARTED:                'protocol_started',
+    PROTOCOL_DAY_COMPLETED:          'protocol_day_completed',
+    PROTOCOL_OUTCOME_LOGGED:         'protocol_outcome_logged',
+    PROTOCOL_REASSESSMENT_SHOWN:     'protocol_reassessment_shown',
+    PROTOCOL_REASSESSMENT_COMPLETED: 'protocol_reassessment_completed',
+    PROTOCOL_BOOKING_CLICKED:        'protocol_booking_clicked',
+    // أحداث الأدوات والـ Completion Trust (Sprint 4)
+    TOOL_PAGE_VIEWED:               'tool_page_viewed',
+    TOOL_COMPLETED:                 'tool_completed',
+    TOOL_ABANDONED:                 'tool_abandoned',
+    COMPLETION_SCREEN_VIEWED:       'completion_screen_viewed',
+    RETURNED_TO_MY_PLAN:            'returned_to_my_plan',
+    CHECKIN_CLICKED_FROM_COMPLETION:'checkin_clicked_from_completion',
 } as const;
 
 // دالة لتسجيل حدث
@@ -75,6 +98,18 @@ export function trackEvent(
 
     // إضافة للقائمة
     eventQueue.push(event);
+
+    // حفظ في localStorage للـ dashboard
+    if (typeof window !== 'undefined') {
+        try {
+            const KEY = 'tibrah_analytics';
+            const existing: AnalyticsEvent[] = JSON.parse(localStorage.getItem(KEY) || '[]');
+            existing.push(event);
+            // أبقِ آخر 500 حدث فقط
+            if (existing.length > 500) existing.splice(0, existing.length - 500);
+            localStorage.setItem(KEY, JSON.stringify(existing));
+        } catch { /* quota exceeded — ignore */ }
+    }
 
     // تسجيل في Console للتطوير
     if (process.env.NODE_ENV === 'development') {

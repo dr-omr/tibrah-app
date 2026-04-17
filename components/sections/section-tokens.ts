@@ -1,9 +1,21 @@
 /**
- * Section Tokens — طِبرَا 5-Domain IA System
- * ─────────────────────────────────────────────
- * Design tokens for the 5 master subscriber sections.
- * All colors, gradients, icons, and metadata live here.
+ * section-tokens.ts — طِبرَا 4-Domain Healing Architecture
+ * ─────────────────────────────────────────────────────────
+ * المعمار العلاجي–التجاري الرباعي:
+ *
+ *   جسدي → نفسي → فكري → روحي
+ *
+ * كل قسم يحتوي على نفس العمود الفقري الخماسي:
+ *   1. تشخيص
+ *   2. برامج
+ *   3. أدوات
+ *   4. مكتبة
+ *   5. كورسات مدفوعة
+ *
+ * نموذج الأرباح: مجاني → عضوية → كورسات → برامج → استشارة
  */
+
+export type ItemType = 'diagnostic' | 'educational' | 'practical' | 'paid';
 
 export interface SectionItem {
     href: string;
@@ -11,36 +23,39 @@ export interface SectionItem {
     sub: string;
     badge?: string;
     isNew?: boolean;
+    type?: ItemType;
 }
 
 export interface SectionSubsection {
+    id: string;
     title: string;
+    icon?: string;
     items: SectionItem[];
 }
 
 export interface SectionDefinition {
     id: string;
-    slug: string;          // URL slug under /sections/
+    slug: string;
     arabicName: string;
     englishName: string;
     tagline: string;
     emoji: string;
-    color: string;         // Primary color
-    colorAlt: string;      // Secondary gradient color
-    bg: string;            // Background tint
-    iconBg: string;        // Icon pill background
+    color: string;
+    colorAlt: string;
+    bg: string;
+    iconBg: string;
     subsections: SectionSubsection[];
 }
 
-/* ══════════════════════════════════════════════════
-   1. جسدي
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   1. جسدي — Physical
+══════════════════════════════════════════════════════════════ */
 export const JASADI: SectionDefinition = {
     id: 'jasadi',
     slug: 'jasadi',
     arabicName: 'جسدي',
     englishName: 'Physical',
-    tagline: 'صحة جسدك من الداخل والخارج',
+    tagline: 'جسمك · تشخيصك · استعادتك',
     emoji: '🫀',
     color: '#0D9488',
     colorAlt: '#059669',
@@ -48,51 +63,77 @@ export const JASADI: SectionDefinition = {
     iconBg: 'rgba(13,148,136,0.12)',
     subsections: [
         {
+            id: 'jasadi-diagnosis',
             title: 'التشخيص الجسدي',
+            icon: '🔬',
             items: [
-                { href: '/symptom-checker',     label: 'مدقق الأعراض الذكي',    sub: 'استبيان SOCRATES إكلينيكي',      badge: 'جديد' },
-                { href: '/body-map',            label: 'خريطة الجسم',            sub: 'حدد موقع الألم بدقة' },
-                { href: '/symptom-analysis',    label: 'تحليل الأعراض بـ AI',    sub: 'تقييم فوري بالذكاء الاصطناعي' },
-                { href: '/quick-check-in',      label: 'الفحص السريع',           sub: 'كيف تشعر الآن؟ (٢ دقيقة)' },
-                { href: '/diagnosis/face-scan', label: 'مسح الوجه الذكي',        sub: 'تشخيص بصري بالكاميرا',          badge: 'جديد' },
-                { href: '/intake',              label: 'الاستبيان الأولي الشامل', sub: 'تقييم متكامل لحالتك الصحية' },
-                { href: '/medical-history',     label: 'التاريخ الطبي',           sub: 'كل حالاتك الصحية السابقة' },
-                { href: '/health-report',       label: 'التقرير الصحي الشامل',   sub: 'تحليل دوري + توصيات PDF' },
+                { href: '/symptom-checker',      label: 'مدقق الأعراض الذكي',     sub: 'محرك فرز سريري — SOCRATES',     badge: 'رئيسي', type: 'diagnostic' },
+                { href: '/intake',               label: 'الاستبيان الأولي الشامل', sub: 'تاريخ مرضي كامل + نظم الجسد',  type: 'diagnostic' },
+                { href: '/body-map',             label: 'خريطة الجسم',             sub: 'حدد موقع الألم بدقة تشريحية',  type: 'diagnostic' },
+                { href: '/medical-history',      label: 'التاريخ الطبي',            sub: 'تاريخ مرضي، دوائي، عائلي',    type: 'diagnostic' },
+                { href: '/diagnosis/face-scan',  label: 'مسح الوجه الذكي',         sub: 'تشخيص بصري بالكاميرا',         badge: 'جديد', isNew: true, type: 'diagnostic' },
+                { href: '/health-report',        label: 'التقرير الصحي الشامل',    sub: 'تحليل دوري + توصيات PDF',      type: 'diagnostic' },
             ],
         },
         {
-            title: 'الأكل والتغذية',
+            id: 'jasadi-programs',
+            title: 'البرامج الجسدية',
+            icon: '💪',
             items: [
-                { href: '/meal-planner',    label: 'مخطط الوجبات',         sub: 'خطتك الغذائية الأسبوعية' },
-                { href: '/smart-pharmacy',  label: 'الصيدلية الذكية',       sub: 'مكملات بتوصية طبية لحالتك' },
+                { href: '/programs/movement',    label: 'الحركة العلاجية',         sub: 'رياضة حسب حالتك الصحية تحديداً', type: 'practical' },
+                { href: '/programs/nutrition',   label: 'الأكل العلاجي',           sub: 'تغذية حسب المرض والهدف',        type: 'practical' },
+                { href: '/programs/hydration',   label: 'السوائل والدعم العشبي',   sub: 'مشروبات وأعشاب حسب مشكلتك',    type: 'practical' },
+                { href: '/programs/sleep',       label: 'النوم العلاجي',           sub: 'بروتوكولات الأرق والإرهاق',      type: 'practical' },
+                { href: '/meal-planner',         label: 'مخطط الوجبات',            sub: 'خطة غذائية أسبوعية مخصصة',     type: 'practical' },
+                { href: '/programs/detox',       label: 'برنامج إعادة الضبط',      sub: 'ديتوكس جسدي ٢١ يوماً',          badge: 'قريباً', type: 'paid' },
             ],
         },
         {
-            title: 'المتابعة الجسدية اليومية',
+            id: 'jasadi-tools',
+            title: 'الأدوات اليومية',
+            icon: '📊',
             items: [
-                { href: '/health-tracker',  label: 'متابعة الصحة',         sub: 'مؤشراتك اليومية كاملة' },
-                { href: '/record-health',   label: 'تسجيل القراءات',        sub: 'وزن، ضغط، سكر، ترطيب' },
-                { href: '/daily-log',       label: 'السجل اليومي',          sub: 'دوّن يومك الصحي بتفصيل' },
+                { href: '/health-tracker',       label: 'متابعة الصحة',            sub: 'مؤشراتك اليومية كاملة',         type: 'practical' },
+                { href: '/record-health',        label: 'تسجيل القراءات',           sub: 'وزن، ضغط، سكر، ترطيب',         type: 'practical' },
+                { href: '/daily-log',            label: 'السجل اليومي',             sub: 'دوّن يومك الصحي بتفصيل',        type: 'practical' },
+                { href: '/quick-check-in',       label: 'الفحص السريع',             sub: 'كيف تشعر الآن؟ (٢ دقيقة)',      type: 'diagnostic' },
+                { href: '/smart-pharmacy',       label: 'الصيدلية الذكية',          sub: 'مكملات بتوصية طبية لحالتك',     isNew: true, type: 'practical' },
             ],
         },
         {
-            title: 'الكورسات الجسدية',
+            id: 'jasadi-library',
+            title: 'مكتبة الصحة الجسدية',
+            icon: '📚',
             items: [
-                { href: '/courses?domain=jasadi', label: 'الكورسات الجسدية', sub: 'برامج استشفاء الجسم والحركة والتغذية', badge: 'قريباً' },
+                { href: '/library?domain=jasadi', label: 'مقالات طبية موثوقة',     sub: 'أبحاث ومراجع علمية مراجعة',    type: 'educational' },
+                { href: '/library/movement',      label: 'مكتبة الحركة',           sub: 'كتب وملاحق الحركة العلاجية',   type: 'educational' },
+                { href: '/library/nutrition',     label: 'مكتبة التغذية',          sub: 'أعمق محتوى غذائي طبي',         type: 'educational' },
+                { href: '/library/symptoms',      label: 'دليل الأعراض',           sub: 'فهم أعراضك بالمنطق السريري',   type: 'educational' },
+            ],
+        },
+        {
+            id: 'jasadi-courses',
+            title: 'كورسات جسدية مدفوعة',
+            icon: '🎓',
+            items: [
+                { href: '/courses/reset-body',       label: 'كورس إعادة ضبط الجسد',    sub: 'تحول جسدي كامل في ٤٠ يوماً',  badge: '👑 VIP', type: 'paid' },
+                { href: '/courses/sleep-energy',     label: 'كورس النوم والطاقة',       sub: 'حل أرق وإرهاق مزمن نهائياً', badge: 'مميز',   type: 'paid' },
+                { href: '/courses/healing-nutrition', label: 'كورس التغذية العلاجية',   sub: 'أكل كدواء — بروتوكول متكامل', badge: 'جديد',   type: 'paid' },
+                { href: '/courses/understand-symptoms', label: 'كورس فهم أعراضك',       sub: 'قبل الطبيب — افهم جسدك',     type: 'paid' },
             ],
         },
     ],
 };
 
-/* ══════════════════════════════════════════════════
-   2. نفسي
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   2. نفسي — Psychological
+══════════════════════════════════════════════════════════════ */
 export const NAFSI: SectionDefinition = {
     id: 'nafsi',
     slug: 'nafsi',
     arabicName: 'نفسي',
     englishName: 'Psychological',
-    tagline: 'عواطفك، علاقاتك، وسلامتك الداخلية',
+    tagline: 'مشاعرك · علاقاتك · حريتك الداخلية',
     emoji: '🧠',
     color: '#7C3AED',
     colorAlt: '#6D28D9',
@@ -100,41 +141,78 @@ export const NAFSI: SectionDefinition = {
     iconBg: 'rgba(124,58,237,0.10)',
     subsections: [
         {
+            id: 'nafsi-diagnosis',
             title: 'التشخيص النفسي',
+            icon: '🔍',
             items: [
-                { href: '/emotional-medicine', label: 'الطب الشعوري', sub: 'تقييم حالتك العاطفية ومساراتها', badge: 'رئيسي' },
+                { href: '/emotional-medicine',        label: 'الطب الشعوري',             sub: 'تقييم حالتك العاطفية ومساراتها', badge: 'رئيسي', type: 'diagnostic' },
+                { href: '/assess/anxiety',            label: 'تقييم القلق',               sub: 'GAD-7 + تحليل سريري عميق',       type: 'diagnostic' },
+                { href: '/assess/depression',         label: 'تقييم الاكتئاب',            sub: 'PHQ-9 + مسارات الدعم',           type: 'diagnostic' },
+                { href: '/assess/burnout',            label: 'تقييم الاحتراق النفسي',     sub: 'اكتشف مستوى استنزافك',           type: 'diagnostic' },
+                { href: '/assess/attachment',         label: 'تقييم نمط التعلّق',         sub: 'علاقاتك + جذورها النفسية',        type: 'diagnostic' },
+                { href: '/assess/personality',        label: 'أنماط الشخصية',             sub: 'فهم نفسك بعمق علمي',             type: 'diagnostic' },
+                { href: '/assess/awareness',          label: 'خرائط الوعي والأنماط',       sub: 'أنماط الطاقة والوعي الداخلي',    type: 'diagnostic' },
             ],
         },
         {
-            title: 'صحة المشاعر',
+            id: 'nafsi-programs',
+            title: 'برامج تنظيم وتحرير المشاعر',
+            icon: '💜',
             items: [
-                { href: '/emotional-medicine', label: 'أدوات الشفاء العاطفي', sub: 'الخوف، الغضب، الحزن، التعلق وأكثر' },
+                { href: '/programs/emotions/fear',    label: 'تحرير الخوف',               sub: 'CBT + Somatic + Breathwork',     type: 'practical' },
+                { href: '/programs/emotions/anger',   label: 'إدارة الغضب',               sub: 'تنظيم عاطفي عميق',              type: 'practical' },
+                { href: '/programs/emotions/grief',   label: 'معالجة الحزن والفقد',        sub: 'بروتوكول شفاء الخسارة',          type: 'practical' },
+                { href: '/programs/emotions/guilt',   label: 'تحرير الذنب والعار',         sub: 'إعادة بناء قيمة الذات',          type: 'practical' },
+                { href: '/programs/mind-body',        label: 'النفس–جسد',                  sub: 'كيف تتحول المشاعر إلى أعراض',   isNew: true, type: 'practical' },
+                { href: '/programs/relationships',    label: 'صحة العلاقات',               sub: 'الحدود · التعلّق · التواصل',     type: 'practical' },
             ],
         },
         {
-            title: 'صحة العلاقات',
+            id: 'nafsi-tools',
+            title: 'أدوات الصحة النفسية اليومية',
+            icon: '🛠️',
             items: [
-                { href: '/family', label: 'صحة العائلة', sub: 'إدارة صحة وعلاقات أفراد عائلتك' },
+                { href: '/tools/journal',             label: 'الكتابة العلاجية',           sub: 'Journal Prompts يومية',          type: 'practical' },
+                { href: '/tools/grounding',           label: 'تمارين التأريض',             sub: '5-4-3-2-1 وأدوات حضور',         type: 'practical' },
+                { href: '/tools/reframe',             label: 'إعادة الصياغة المعرفية',     sub: 'Cognitive Reframing Tools',     type: 'practical' },
+                { href: '/family',                    label: 'صحة العائلة',                sub: 'إدارة صحة وعلاقات أفراد عائلتك', type: 'practical' },
+                { href: '/meditation',                label: 'التأمل والذهن',              sub: 'اليقظة والحضور الكامل',          type: 'practical' },
             ],
         },
         {
-            title: 'الكورسات النفسية',
+            id: 'nafsi-library',
+            title: 'مكتبة الصحة النفسية',
+            icon: '📖',
             items: [
-                { href: '/courses?domain=nafsi', label: 'الكورسات النفسية', sub: 'العلاج العاطفي، العلاقات والتنظيم النفسي', badge: 'قريباً' },
+                { href: '/library?domain=nafsi',       label: 'مقالات نفسية',              sub: 'مكتبة علم النفس والعلاج',        type: 'educational' },
+                { href: '/library/emotions',           label: 'دليل المشاعر',              sub: 'فهم كل شعور من جذره',            type: 'educational' },
+                { href: '/library/relationships',      label: 'مكتبة العلاقات',            sub: 'علاقات صحية وحدود واضحة',        type: 'educational' },
+            ],
+        },
+        {
+            id: 'nafsi-courses',
+            title: 'كورسات نفسية مدفوعة',
+            icon: '🎓',
+            items: [
+                { href: '/courses/emotional-regulation', label: 'كورس تنظيم المشاعر',      sub: 'إتقان المشاعر — منهج متكامل',    badge: '👑 VIP', type: 'paid' },
+                { href: '/courses/detachment',           label: 'كورس فك التعلّق',          sub: 'التحرر من الارتباطات المؤلمة',   badge: 'مميز', type: 'paid' },
+                { href: '/courses/self-reset',           label: 'كورس إعادة ضبط الذات',    sub: 'هوية جديدة من الداخل',           type: 'paid' },
+                { href: '/courses/mind-body-course',     label: 'كورس النفس–جسد',          sub: 'الجسر بين مشاعرك وجسدك',        badge: 'جديد', type: 'paid' },
+                { href: '/courses/mature-relationships',  label: 'كورس العلاقات الناضجة',  sub: 'بناء علاقات مبنية على الوعي',    type: 'paid' },
             ],
         },
     ],
 };
 
-/* ══════════════════════════════════════════════════
-   3. فكري
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   3. فكري — Intellectual
+══════════════════════════════════════════════════════════════ */
 export const FIKRI: SectionDefinition = {
     id: 'fikri',
     slug: 'fikri',
     arabicName: 'فكري',
     englishName: 'Intellectual',
-    tagline: 'أفكارك، معتقداتك، ونموك الذاتي',
+    tagline: 'أفكارك · معتقداتك · هندستك',
     emoji: '📚',
     color: '#D97706',
     colorAlt: '#EA580C',
@@ -142,37 +220,74 @@ export const FIKRI: SectionDefinition = {
     iconBg: 'rgba(217,119,6,0.10)',
     subsections: [
         {
-            title: 'الكتب والمقالات والمكتبة',
+            id: 'fikri-diagnosis',
+            title: 'تشخيص الأنماط الفكرية',
+            icon: '🧩',
             items: [
-                { href: '/library',       label: 'المكتبة الصحية',    sub: 'مقالات ومراجع علمية موثوقة' },
-                { href: '/glass-library', label: 'Glass Library',      sub: 'تجربة قراءة غامرة ومميزة' },
+                { href: '/assess/beliefs',            label: 'المعتقدات المحدِّدة',        sub: 'اكتشف برمجياتك الداخلية',       badge: 'رئيسي', type: 'diagnostic' },
+                { href: '/assess/cognitive',          label: 'التشوهات المعرفية',          sub: 'أنماط تفكير تعيقك بدون أن تعرف', type: 'diagnostic' },
+                { href: '/assess/procrastination',    label: 'تقييم التسويف',              sub: 'فهم جذر تأخيرك',                 type: 'diagnostic' },
+                { href: '/assess/identity',           label: 'تقييم الهوية والانضباط',     sub: 'من أنت؟ وماذا تريد أن تصبح؟',   type: 'diagnostic' },
+                { href: '/assess/inner-speech',       label: 'تقييم الحديث الداخلي',       sub: 'اللغة السرية التي تشكّل حياتك',  type: 'diagnostic' },
             ],
         },
         {
-            title: 'التخطيط والتطوير',
+            id: 'fikri-programs',
+            title: 'برامج هندسة العقل والنجاح',
+            icon: '🏗️',
             items: [
-                { href: '/rewards', label: 'التحديات والأهداف', sub: 'خطط تطويرية ونقاط الإنجاز اليومية' },
+                { href: '/programs/success-engineering', label: 'هندسة النجاح',             sub: 'أهداف · عادات · هوية · إنجاز',  type: 'practical' },
+                { href: '/programs/belief-reprogramming', label: 'إعادة برمجة المعتقدات',   sub: 'تغيير البرمجيات الخفية',         isNew: true, type: 'practical' },
+                { href: '/programs/word-power',          label: 'هندسة الفكر والكلمة',       sub: 'أثر اللغة على نفسك وواقعك',     type: 'practical' },
+                { href: '/programs/discipline',          label: 'الانضباط وبناء العادات',     sub: 'نظام عملي يصمد طويلاً',          type: 'practical' },
             ],
         },
         {
-            title: 'الكورسات الفكرية',
+            id: 'fikri-tools',
+            title: 'أدوات التطوير الذاتي اليومية',
+            icon: '⚙️',
             items: [
-                { href: '/courses', label: 'أكاديمية طِبرَا',     sub: 'دورات التفكير والمعتقدات والنجاح', badge: 'متاح' },
-                { href: '/courses?domain=fikri', label: 'الكورسات الفكرية', sub: 'التخطيط، المعتقدات، الكلمة والتفكير', badge: 'قريباً' },
+                { href: '/tools/weekly-plan',         label: 'التخطيط الأسبوعي',           sub: 'خطة أسبوعك المتكاملة',            type: 'practical' },
+                { href: '/tools/annual-plan',         label: 'التخطيط السنوي',              sub: 'رؤيتك للعام القادم',              type: 'practical' },
+                { href: '/rewards',                   label: 'التحديات والأهداف',           sub: 'نقاط إنجاز ومتابعة يومية',        type: 'practical' },
+                { href: '/tools/vision',              label: 'رؤية الحياة',                 sub: 'وضوح عميق لما تريد',              type: 'practical' },
+            ],
+        },
+        {
+            id: 'fikri-library',
+            title: 'مكتبة البصيرة',
+            icon: '🏛️',
+            items: [
+                { href: '/library',                   label: 'المكتبة الصحية',              sub: 'مقالات وأبحاث موثوقة',            type: 'educational' },
+                { href: '/glass-library',             label: 'Glass Library',               sub: 'تجربة قراءة غامرة ومميزة',        type: 'educational' },
+                { href: '/library?domain=fikri',      label: 'ملخصات الكتب',               sub: 'أهم ما في أفضل الكتب',            type: 'educational' },
+                { href: '/library/mindmaps',          label: 'خرائط المفاهيم',              sub: 'أفكار معقدة بصياغة بصرية',        type: 'educational' },
+            ],
+        },
+        {
+            id: 'fikri-courses',
+            title: 'كورسات فكرية مدفوعة',
+            icon: '🎓',
+            items: [
+                { href: '/courses/mind-rebuild',      label: 'كورس إعادة بناء العقل',       sub: 'ثورة في طريقة تفكيرك',           badge: '👑 VIP', type: 'paid' },
+                { href: '/courses/kill-procrastination', label: 'كورس قتل التسويف',        sub: 'من المعرفة للتنفيذ الفوري',       badge: 'مميز', type: 'paid' },
+                { href: '/courses/limiting-beliefs',  label: 'كورس المعتقدات المحدِّدة',    sub: 'اكسر القيود الخفية',              type: 'paid' },
+                { href: '/courses/word-power-course', label: 'كورس قوة الكلمة',             sub: 'الكلمة التي تشفي وتدمر',          badge: 'جديد', type: 'paid' },
+                { href: '/courses/discipline-success', label: 'كورس الانضباط والنجاح',     sub: 'منظومة نجاح كاملة',               type: 'paid' },
             ],
         },
     ],
 };
 
-/* ══════════════════════════════════════════════════
-   4. روحي
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   4. روحي — Spiritual
+══════════════════════════════════════════════════════════════ */
 export const RUHI: SectionDefinition = {
     id: 'ruhi',
     slug: 'ruhi',
     arabicName: 'روحي',
     englishName: 'Spiritual',
-    tagline: 'السكون، الترددات، والمعنى الأعمق',
+    tagline: 'سكونك · معناك · تناسقك الداخلي',
     emoji: '✨',
     color: '#2563EB',
     colorAlt: '#4F46E5',
@@ -180,90 +295,73 @@ export const RUHI: SectionDefinition = {
     iconBg: 'rgba(37,99,235,0.10)',
     subsections: [
         {
-            title: 'الترددات والصوت العلاجي',
+            id: 'ruhi-diagnosis',
+            title: 'تقييم الاتزان الداخلي',
+            icon: '🌀',
             items: [
-                { href: '/frequencies',      label: 'الترددات العلاجية',  sub: 'علاج تكميلي بالموجات الصوتية' },
-                { href: '/rife-frequencies', label: 'ترددات رايف',         sub: 'بروتوكولات RIFE المتخصصة' },
-                { href: '/radio',            label: 'راديو الاسترخاء',     sub: 'موسيقى علاجية وأصوات طبيعية' },
+                { href: '/assess/inner-balance',      label: 'تقييم اتزانك الداخلي',       sub: 'المعنى · السكون · الاتصال',      badge: 'رئيسي', type: 'diagnostic' },
+                { href: '/assess/meaning',            label: 'تقييم المعنى والرسالة',       sub: 'هل تشعر بهدف حقيقي لحياتك؟',   type: 'diagnostic' },
+                { href: '/assess/presence',           label: 'تقييم الحضور والانتباه',      sub: 'مدى عيشك في اللحظة الراهنة',     type: 'diagnostic' },
+                { href: '/assess/disconnection',      label: 'تقييم الانفصال الداخلي',      sub: 'ضياع · فراغ روحي · تشتت',        type: 'diagnostic' },
             ],
         },
         {
-            title: 'السكون والتأمل',
+            id: 'ruhi-programs',
+            title: 'برامج السكون والحضور',
+            icon: '🕊️',
             items: [
-                { href: '/meditation', label: 'التأمل والذهن',     sub: 'اليقظة والحضور الكامل' },
-                { href: '/breathe',    label: 'تمارين التنفس',     sub: 'جلسات تأمل واسترخاء عميق' },
+                { href: '/programs/frequencies',      label: 'الصوت والترددات',             sub: 'علاج تكميلي بالموجات الصوتية',   isNew: true, type: 'practical' },
+                { href: '/programs/meditation',       label: 'برنامج التأمل التدريجي',       sub: 'من المبتدئ للمتعمق',              type: 'practical' },
+                { href: '/programs/morning-ritual',   label: 'الطقوس اليومية',              sub: 'روتين صباحي ومسائي روحي',         type: 'practical' },
+                { href: '/programs/meaning-journey',  label: 'رحلة المعنى والرسالة',        sub: 'لماذا تعيش؟ ما رسالتك؟',          type: 'practical' },
             ],
         },
         {
-            title: 'الكورسات الروحية',
+            id: 'ruhi-tools',
+            title: 'أدوات الروح اليومية',
+            icon: '🌿',
             items: [
-                { href: '/courses?domain=ruhi', label: 'الكورسات الروحية', sub: 'السكون، الترددات والمعنى', badge: 'قريباً' },
+                { href: '/frequencies',               label: 'الترددات العلاجية',           sub: 'جلسات صوتية مباشرة',              type: 'practical' },
+                { href: '/rife-frequencies',          label: 'ترددات رايف',                 sub: 'بروتوكولات RIFE المتخصصة',       type: 'practical' },
+                { href: '/radio',                     label: 'راديو الاسترخاء',             sub: 'موسيقى علاجية وأصوات طبيعية',    type: 'practical' },
+                { href: '/breathe',                   label: 'تمارين التنفس الواعي',        sub: 'جلسات تأمل واسترخاء عميق',        type: 'practical' },
+                { href: '/tools/gratitude',           label: 'ممارسة الامتنان اليومية',     sub: 'إعادة تشغيل طاقة الشكر',          type: 'practical' },
+            ],
+        },
+        {
+            id: 'ruhi-library',
+            title: 'مكتبة الروح والوعي',
+            icon: '🌟',
+            items: [
+                { href: '/library?domain=ruhi',       label: 'مقالات روحية وفلسفية',        sub: 'فكر · وعي · معنى · تناسق',       type: 'educational' },
+                { href: '/library/meaning',           label: 'مكتبة المعنى',                sub: 'كتب وإلهام حول هدف الوجود',       type: 'educational' },
+                { href: '/library/frequencies',       label: 'علم الترددات',                sub: 'أبحاث وأثر الصوت العلاجي',        type: 'educational' },
+            ],
+        },
+        {
+            id: 'ruhi-courses',
+            title: 'كورسات روحية مدفوعة',
+            icon: '🎓',
+            items: [
+                { href: '/courses/back-to-nature',    label: 'كورس العودة للفطرة',           sub: 'اتصال عميق بجوهرك الحقيقي',      badge: '👑 VIP', type: 'paid' },
+                { href: '/courses/inner-peace',       label: 'كورس السكينة الداخلية',        sub: 'سكون لا يتزعزع — منهج ٣٠ يوماً', badge: 'مميز', type: 'paid' },
+                { href: '/courses/frequencies-course', label: 'كورس الترددات والحضور',      sub: 'أعمق أثر الصوت في الشفاء',        type: 'paid' },
+                { href: '/courses/meaning-balance',   label: 'كورس المعنى والاتزان',         sub: 'وضوح الرسالة وهدوء النفس',        badge: 'جديد', type: 'paid' },
             ],
         },
     ],
 };
 
-/* ══════════════════════════════════════════════════
-   5. أخرى
-══════════════════════════════════════════════════ */
-export const OTHER: SectionDefinition = {
-    id: 'other',
-    slug: 'other',
-    arabicName: 'أخرى',
-    englishName: 'Others',
-    tagline: 'حسابك، خدماتك، ومواعيدك',
-    emoji: '⚙️',
-    color: '#475569',
-    colorAlt: '#334155',
-    bg: 'rgba(71,85,105,0.07)',
-    iconBg: 'rgba(71,85,105,0.10)',
-    subsections: [
-        {
-            title: 'الرعاية الطبية',
-            items: [
-                { href: '/my-care',          label: 'رعايتي',            sub: 'خطة علاجك الكاملة' },
-                { href: '/my-appointments',  label: 'مواعيدي',            sub: 'القادمة والسابقة' },
-                { href: '/book-appointment', label: 'احجز موعد',          sub: 'مع الدكتور مباشرة', badge: '⚡ أولوية' },
-                { href: '/medical-file',     label: 'الملف الطبي',        sub: 'سجلاتك وتقاريرك الطبية' },
-            ],
-        },
-        {
-            title: 'الصيدلية والاشتراكات',
-            items: [
-                { href: '/shop',     label: 'الصيدلية والمكملات',   sub: 'منتجات صحية بضمان الجودة', badge: '🌟 مميز' },
-                { href: '/premium',  label: 'طِبرَا+ المميز',        sub: 'اشتراك VIP وبرامج حصرية',  badge: '👑 حصري' },
-            ],
-        },
-        {
-            title: 'الخدمات',
-            items: [
-                { href: '/services',         label: 'الخدمات الطبية',    sub: 'قائمة كاملة بالخدمات المتاحة' },
-                { href: '/digital-services', label: 'الخدمات الرقمية',   sub: 'الاستشارات والتحاليل الذكية' },
-                { href: '/rewards',          label: 'المكافآت والنقاط',  sub: 'تحدياتك اليومية وجوائزك' },
-                { href: '/family',           label: 'صحة العائلة',        sub: 'إدارة صحة أفراد عائلتك' },
-            ],
-        },
-        {
-            title: 'الحساب والإعدادات',
-            items: [
-                { href: '/profile',  label: 'ملفي الشخصي',        sub: 'بياناتك وتفضيلاتك الطبية' },
-                { href: '/settings', label: 'الإعدادات',            sub: 'الإشعارات، المظهر، الخصوصية' },
-                { href: '/help',     label: 'المساعدة والدعم',      sub: 'أسئلة شائعة، تواصل معنا' },
-                { href: '/privacy',  label: 'سياسة الخصوصية',      sub: 'كيف نحمي بياناتك الطبية' },
-                { href: '/terms',    label: 'الشروط والأحكام',       sub: 'اتفاقية استخدام المنصة' },
-            ],
-        },
-    ],
-};
+/* ══════════════════════════════════════════════════════════════
+   Master exports
+══════════════════════════════════════════════════════════════ */
+/** 4 domains in sequence: Body → Mind → Intellect → Soul */
+export const ALL_SECTIONS: SectionDefinition[] = [JASADI, NAFSI, FIKRI, RUHI];
 
-/* ── Master list (order matters for display) ── */
-export const ALL_SECTIONS: SectionDefinition[] = [JASADI, NAFSI, FIKRI, RUHI, OTHER];
-
-/* ── Section by slug ── */
+/** O(1) lookup by slug */
 export const SECTION_BY_SLUG: Record<string, SectionDefinition> = {
     jasadi: JASADI,
-    nafsi: NAFSI,
-    fikri: FIKRI,
-    ruhi: RUHI,
-    other: OTHER,
+    nafsi:  NAFSI,
+    fikri:  FIKRI,
+    ruhi:   RUHI,
 };

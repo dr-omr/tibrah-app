@@ -129,15 +129,13 @@ function QuickPill({ label, href, color, isNew }: {
    WATER GLASS DOMAIN CARD — البطاقة الأسطورية
 ═══════════════════════════════════════════════════════════════ */
 function DomainCard({
-    domain, index, tall = false, full = false, realScore
+    domain, index, realScore
 }: {
     domain: DomainDefinition;
     index: number;
-    tall?: boolean;
-    full?: boolean;
     realScore: number;
 }) {
-    const H = full ? 132 : tall ? 228 : 196;
+    const H = 210;
     const safeScore = Math.max(0, Math.min(100, realScore));
 
     /* 3D Tilt */
@@ -165,7 +163,7 @@ function DomainCard({
             initial={{ opacity: 0, y: 22, scale: 0.93 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: 'spring', stiffness: 360, damping: 28, delay: 0.05 + index * 0.08 }}
-            className={`min-w-0 ${full ? 'col-span-2' : ''}`}
+            className={`min-w-0`}
             style={{ height: H }}
             onPointerMove={onMove}
             onPointerLeave={onLeave}
@@ -238,10 +236,8 @@ function DomainCard({
                         style={{ background: 'rgba(255,255,255,0.60)', filter: 'blur(1px)' }} />
                     <div className="absolute top-5 left-7 w-1 h-1 rounded-full pointer-events-none"
                         style={{ background: 'rgba(255,255,255,0.40)' }} />
-                    {!full && (
-                        <div className="absolute top-8 left-5 w-1.5 h-1.5 rounded-full pointer-events-none"
-                            style={{ background: 'rgba(255,255,255,0.30)', filter: 'blur(0.5px)' }} />
-                    )}
+                    <div className="absolute top-8 left-5 w-1.5 h-1.5 rounded-full pointer-events-none"
+                        style={{ background: 'rgba(255,255,255,0.30)', filter: 'blur(0.5px)' }} />
 
                     {/* ── SUBTLE LEFT ACCENT (no harsh top line) ── */}
                     <div
@@ -264,10 +260,7 @@ function DomainCard({
                         }} />
 
                     {/* ════ CARD CONTENT ════ */}
-                    {full
-                        ? <FullCardContent domain={domain} safeScore={safeScore} />
-                        : <TallOrNormalContent domain={domain} index={index} tall={tall} safeScore={safeScore} />
-                    }
+                    <TallOrNormalContent domain={domain} index={index} safeScore={safeScore} />
                 </motion.div>
             </Link>
         </motion.div>
@@ -320,10 +313,10 @@ function FullCardContent({ domain, safeScore }: { domain: DomainDefinition; safe
    Tall / Normal card content
 ───────────────────────────────────────────────────────────── */
 function TallOrNormalContent({
-    domain, index, tall, safeScore
-}: { domain: DomainDefinition; index: number; tall: boolean; safeScore: number }) {
-    const emojiSize = tall ? 36 : 30;
-    const ringSize  = tall ? 54 : 48;
+    domain, index, safeScore
+}: { domain: DomainDefinition; index: number; safeScore: number }) {
+    const emojiSize = 32;
+    const ringSize  = 50;
 
     return (
         <div className="relative z-10 flex flex-col h-full p-4 gap-0">
@@ -384,7 +377,7 @@ function TallOrNormalContent({
                             {domain.nameEn}
                         </p>
                         <h2 className="font-black leading-none tracking-tight text-slate-800"
-                            style={{ fontSize: tall ? 20 : 17 }}>
+                            style={{ fontSize: 18 }}>
                             {domain.name}
                         </h2>
                         <p className="font-medium leading-tight mt-[3px]"
@@ -407,7 +400,7 @@ function TallOrNormalContent({
                 <ProgressBar score={safeScore} color={domain.color} />
 
                 {/* Quick pills (tall cards only) */}
-                {tall && domain.quickActions.length > 0 && (
+                {domain.quickActions.length > 0 && (
                     <div className="flex gap-1.5 overflow-hidden">
                         {domain.quickActions.slice(0, 2).map((qa) => (
                             <QuickPill
@@ -421,26 +414,108 @@ function TallOrNormalContent({
                     </div>
                 )}
 
-                {/* Feature count */}
-                <div className="flex items-center gap-1">
-                    <Sparkles className="w-2 h-2" style={{ color: domain.color, opacity: 0.55 }} />
-                    <span className="text-[8.5px] font-bold"
-                        style={{ color: domain.color, opacity: 0.55 }}>
-                        {domain.quickActions.length} خدمات متاحة
-                    </span>
+                {/* Feature count row — now enriched with stats chips */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1">
+                        <Sparkles className="w-2 h-2" style={{ color: domain.color, opacity: 0.55 }} />
+                        <span className="text-[8.5px] font-bold" style={{ color: domain.color, opacity: 0.55 }}>
+                            {domain.quickActions.length} خدمات
+                        </span>
+                    </div>
+                    {'stats' in domain && (
+                        <>
+                            <div className="w-[3px] h-[3px] rounded-full bg-slate-300 flex-shrink-0" />
+                            <span className="text-[7.5px] font-bold text-slate-400">
+                                {(domain as any).stats.programs} برامج
+                            </span>
+                            <div className="w-[3px] h-[3px] rounded-full bg-slate-300 flex-shrink-0" />
+                            <span className="text-[7.5px] font-bold text-slate-400">
+                                {(domain as any).stats.tools} أدوات
+                            </span>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
     );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   DOMAIN GRID — Bento
-═══════════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────────────────────────────
+   Composite Stats Banner — يعرض إجمالي المنصة فوق الشبكة
+───────────────────────────────────────────────────────────── */
+function CompositeBanner({ domains }: { domains: typeof DOMAINS }) {
+    const totalServices = domains.reduce((s, d) => s + d.stats.services, 0);
+    const totalPrograms = domains.reduce((s, d) => s + d.stats.programs, 0);
+    const totalTools    = domains.reduce((s, d) => s + d.stats.tools,    0);
+    const domainColors  = domains.map(d => d.color);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 30, delay: 0.02 }}
+            className="relative overflow-hidden rounded-[20px] mb-3 px-4 py-3"
+            style={{
+                background: [
+                    'linear-gradient(148deg,',
+                    '  rgba(255,255,255,0.92) 0%,',
+                    '  rgba(255,255,255,0.82) 55%,',
+                    '  rgba(255,255,255,0.70) 100%',
+                    ')',
+                ].join(''),
+                border: '1px solid rgba(255,255,255,0.78)',
+                borderTop: '1px solid rgba(255,255,255,0.96)',
+                backdropFilter: 'blur(32px) saturate(2)',
+                WebkitBackdropFilter: 'blur(32px) saturate(2)',
+                boxShadow: [
+                    '0 2px 0 rgba(255,255,255,0.96) inset',
+                    '0 6px 20px rgba(0,0,0,0.05)',
+                ].join(', '),
+            }}
+        >
+            {/* Shimmer */}
+            <motion.div className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.25) 48%, transparent 68%)' }}
+                animate={{ x: ['-140%', '140%'] }}
+                transition={{ duration: 5, repeat: Infinity, repeatDelay: 8, ease: 'easeInOut' }} />
+
+            <div className="relative z-10 flex items-center gap-3">
+                {/* Color blob row */}
+                <div className="flex items-center">
+                    {domainColors.map((c, i) => (
+                        <div key={c}
+                            className="w-6 h-6 rounded-full flex-shrink-0 -mr-1.5"
+                            style={{ background: c, border: '2px solid rgba(255,255,255,0.92)', boxShadow: `0 2px 8px ${c}30` }} />
+                    ))}
+                </div>
+
+                {/* Stats */}
+                <div className="flex-1 flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                    {[
+                        { v: totalServices, label: 'خدمة تشخيصية' },
+                        { v: totalPrograms, label: 'برنامج علاجي'  },
+                        { v: totalTools,    label: 'أداة يومية'     },
+                    ].map(({ v, label }) => (
+                        <div key={label} className="flex items-baseline gap-1 flex-shrink-0">
+                            <motion.span className="text-[15px] font-black text-slate-800 leading-none"
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+                                {v}
+                            </motion.span>
+                            <span className="text-[8.5px] font-bold text-slate-400">{label}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <Sparkles className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
+            </div>
+        </motion.div>
+    );
+}
+
 export default function DomainGrid() {
-    const [jasadi, nafsi, fikri, ruhi, other] = DOMAINS;
+    const [jasadi, nafsi, fikri, ruhi] = DOMAINS;
     const dashboardData = useHealthDashboard();
-    
+
     // Fall back to 0 if loading, ensuring NO 100% fake values exist
     const realScore = dashboardData.loading ? 0 : dashboardData.healthScore;
 
@@ -449,21 +524,23 @@ export default function DomainGrid() {
             {/* Section header */}
             <div className="flex items-center gap-2 mb-3 px-0.5">
                 <div className="w-[3px] h-[14px] rounded-full"
-                    style={{ background: 'linear-gradient(to bottom, #0D9488, #4F46E5, #7C3AED)' }} />
+                    style={{ background: 'linear-gradient(to bottom, #0D9488, #4F46E5)' }} />
                 <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
-                    أقسامك الصحية الخمسة
+                    أقسامك الصحية الأربعة
                 </span>
                 <div className="flex-1 h-px" style={{ background: 'rgba(0,0,0,0.04)' }} />
                 <span className="text-[8px] font-semibold text-slate-300">اضغط للدخول →</span>
             </div>
 
-            {/* Bento grid */}
+            {/* ── Composite Stats Banner ── */}
+            <CompositeBanner domains={DOMAINS} />
+
+            {/* 2×2 equal grid */}
             <div className="grid gap-2.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                <DomainCard domain={jasadi} index={0} tall realScore={realScore} />
-                <DomainCard domain={nafsi}  index={1}      realScore={realScore} />
-                <DomainCard domain={fikri}  index={2}      realScore={realScore} />
-                <DomainCard domain={ruhi}   index={3} tall realScore={realScore} />
-                <DomainCard domain={other}  index={4} full realScore={realScore} />
+                <DomainCard domain={jasadi} index={0} realScore={realScore} />
+                <DomainCard domain={nafsi}  index={1} realScore={realScore} />
+                <DomainCard domain={fikri}  index={2} realScore={realScore} />
+                <DomainCard domain={ruhi}   index={3} realScore={realScore} />
             </div>
         </motion.div>
     );

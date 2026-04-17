@@ -22,12 +22,12 @@ export default function Register() {
 
     useEffect(() => {
         if (!loading && user) {
-            router.push('/dashboard');
+            router.push('/');
         }
     }, [user, loading, router]);
 
     const handleComplete = () => {
-        router.push('/dashboard');
+        router.push('/');
     };
 
     return (

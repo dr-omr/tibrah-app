@@ -464,8 +464,8 @@ export default function GreetingHeader({ onAIOpen }: { onAIOpen: () => void }) {
                     {/* ── Row 4: domain divider ── */}
                     <div className="h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
 
-                    {/* ── Row 5: 5 Domain Tiles ── */}
-                    {/* FIX: Negative margins (-mx-5) and padding (px-5) allows full-width scroll on mobile! */}
+                    {/* ── Row 5: 4 Domain Tiles ── */}
+                    {/* Negative margins (-mx-5) + padding (px-5) = full-width scroll on mobile */}
                     <div className="flex items-stretch gap-2.5 overflow-x-auto pb-2 pt-1 -mx-5 px-5"
                         style={{ scrollbarWidth: 'none' }}>
                         {DOMAINS.map((d, i) => (

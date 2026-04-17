@@ -12,9 +12,9 @@ import { SP, SP_SLOW } from './section-shared';
    عنوان القسم وتوسيع/الطي + شبكة الخدمات
 ════════════════════════════════════════════════════ */
 export function SubsectionCard({
-    title, items, color, colorAlt, index,
+    title, icon, items, color, colorAlt, index,
 }: {
-    title: string; items: SectionItem[];
+    title: string; icon?: string; items: SectionItem[];
     color: string; colorAlt: string; index: number;
 }) {
     const [open, setOpen] = useState(index === 0);
@@ -34,6 +34,9 @@ export function SubsectionCard({
             >
                 <div className="w-[3.5px] h-[18px] rounded-full flex-shrink-0"
                     style={{ background: `linear-gradient(to bottom, ${color}, ${colorAlt})` }} />
+                {icon && (
+                    <span className="text-[14px] leading-none flex-shrink-0">{icon}</span>
+                )}
                 <span className="text-[12.5px] font-black text-slate-700 flex-1 text-right tracking-tight">
                     {title}
                 </span>

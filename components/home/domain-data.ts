@@ -1,9 +1,12 @@
 /**
- * domain-data.ts — طِبرَا Home Domain Definitions
- * ────────────────────────────────────────────────
- * Single source of truth for the 5 domains.
- * Each domain card can independently be expanded
- * with rich data, health scores, and API feeds.
+ * domain-data.ts — طِبرَا 4-Domain Data Source
+ * ─────────────────────────────────────────────
+ * Single source of truth for the 4 healing domains.
+ *
+ *   جسدي → نفسي → فكري → روحي
+ *
+ * Each domain card links to /sections/[slug]
+ * Score & delta are pulled from real health dashboard.
  */
 
 export interface DomainQuickAction {
@@ -17,27 +20,30 @@ export interface DomainDefinition {
     id: string;
     slug: string;
     emoji: string;
-    name: string;           // Arabic
-    nameEn: string;         // English
-    tagline: string;        // Arabic tagline
-    color: string;          // Primary hex
-    colorAlt: string;       // Secondary hex
-    gradient: string;       // CSS gradient string
-    score: number;          // 0–100
-    delta: number;          // +/- change
-    sectionHref: string;    // /sections/[slug]
+    name: string;       // Arabic
+    nameEn: string;     // English
+    tagline: string;    // Arabic tagline
+    color: string;      // Primary hex
+    colorAlt: string;   // Accent hex
+    gradient: string;   // CSS gradient
+    score: number;      // 0–100 (static fallback; real score from healthDashboard)
+    delta: number;      // +/- monthly change
+    sectionHref: string;
     quickActions: DomainQuickAction[];
-    // future: healthMetrics, streaks, latestLog, etc.
+    /* New richness fields */
+    stats: { services: number; programs: number; tools: number };
+    readinessLabel: string;  // e.g. 'ممتاز' | 'يحتاج عناية'
 }
 
 export const DOMAINS: DomainDefinition[] = [
+    /* ──────────────────────────────── جسدي ─── */
     {
         id: 'jasadi',
         slug: 'jasadi',
         emoji: '🫀',
         name: 'جسدي',
         nameEn: 'Physical',
-        tagline: 'جسمك · تغذيتك · متابعتك',
+        tagline: 'التشخيص · الحركة · التغذية · النوم',
         color: '#0D9488',
         colorAlt: '#059669',
         gradient: 'linear-gradient(145deg, #0D9488 0%, #059669 100%)',
@@ -45,19 +51,22 @@ export const DOMAINS: DomainDefinition[] = [
         delta: +5,
         sectionHref: '/sections/jasadi',
         quickActions: [
-            { label: 'مدقق الأعراض',   sub: 'AI إكلينيكي',     href: '/symptom-checker',  isNew: true },
-            { label: 'متابعة الصحة',   sub: 'مؤشراتك اليومية', href: '/health-tracker'               },
-            { label: 'مخطط الوجبات',   sub: 'خطتك الغذائية',   href: '/meal-planner'                 },
-            { label: 'تسجيل القراءات', sub: 'أرقامك الحيوية',  href: '/record-health'                },
+            { label: 'مدقق الأعراض',  sub: 'محرك سريري AI',     href: '/symptom-checker',  isNew: true },
+            { label: 'السجل اليومي',   sub: 'دوّن يومك الصحي',   href: '/daily-log'                     },
+            { label: 'الحركة العلاجية', sub: 'رياضة حسب حالتك',  href: '/programs/movement'             },
+            { label: 'النوم العلاجي',  sub: 'بروتوكولات النوم',  href: '/programs/sleep'                },
         ],
+        stats: { services: 6, programs: 6, tools: 5 },
+        readinessLabel: 'جيد',
     },
+    /* ──────────────────────────────── نفسي ─── */
     {
         id: 'nafsi',
         slug: 'nafsi',
         emoji: '🧠',
         name: 'نفسي',
         nameEn: 'Psychological',
-        tagline: 'مشاعرك · علاقاتك · سلامتك',
+        tagline: 'التشخيص · المشاعر · العلاقات · التحرر',
         color: '#7C3AED',
         colorAlt: '#6D28D9',
         gradient: 'linear-gradient(145deg, #7C3AED 0%, #6D28D9 100%)',
@@ -65,18 +74,22 @@ export const DOMAINS: DomainDefinition[] = [
         delta: -2,
         sectionHref: '/sections/nafsi',
         quickActions: [
-            { label: 'الطب الشعوري', sub: 'تقييم نفسي عميق', href: '/emotional-medicine', isNew: true },
-            { label: 'التأمل والذهن', sub: 'اليقظة والحضور',  href: '/meditation'                      },
-            { label: 'صحة العائلة',  sub: 'إدارة ذويك',      href: '/family'                          },
+            { label: 'الطب الشعوري',  sub: 'تقييم نفسي عميق',    href: '/emotional-medicine', isNew: true },
+            { label: 'تحرير المشاعر', sub: 'الخوف · الغضب · الحزن', href: '/programs/emotions/fear'      },
+            { label: 'النفس–جسد',     sub: 'مشاعرك في جسدك',      href: '/programs/mind-body'           },
+            { label: 'صحة العائلة',   sub: 'إدارة ذويك',           href: '/family'                       },
         ],
+        stats: { services: 7, programs: 6, tools: 4 },
+        readinessLabel: 'يحتاج عناية',
     },
+    /* ──────────────────────────────── فكري ─── */
     {
         id: 'fikri',
         slug: 'fikri',
         emoji: '📚',
         name: 'فكري',
         nameEn: 'Intellectual',
-        tagline: 'أفكارك · معتقداتك · نموك',
+        tagline: 'المعتقدات · هندسة النجاح · مكتبة البصيرة',
         color: '#D97706',
         colorAlt: '#EA580C',
         gradient: 'linear-gradient(145deg, #D97706 0%, #EA580C 100%)',
@@ -84,18 +97,22 @@ export const DOMAINS: DomainDefinition[] = [
         delta: +12,
         sectionHref: '/sections/fikri',
         quickActions: [
-            { label: 'أكاديمية طِبرَا',  sub: 'كورسات حصرية',    href: '/courses' },
-            { label: 'المكتبة الصحية',   sub: 'مقالات وأبحاث',   href: '/library' },
-            { label: 'التحديات والنقاط', sub: 'مستواك اليومي',   href: '/rewards' },
+            { label: 'المعتقدات المحدِّدة', sub: 'اكسر القيود الخفية', href: '/assess/beliefs'           },
+            { label: 'هندسة النجاح',         sub: 'أهداف + عادات + هوية', href: '/programs/success-engineering' },
+            { label: 'مكتبة البصيرة',        sub: 'كتب · مقالات · ملخصات', href: '/library'             },
+            { label: 'التخطيط الأسبوعي',     sub: 'خطة أسبوعك المتكاملة',  href: '/tools/weekly-plan'   },
         ],
+        stats: { services: 5, programs: 4, tools: 5 },
+        readinessLabel: 'ممتاز',
     },
+    /* ──────────────────────────────── روحي ─── */
     {
         id: 'ruhi',
         slug: 'ruhi',
         emoji: '✨',
         name: 'روحي',
         nameEn: 'Spiritual',
-        tagline: 'السكون · الترددات · المعنى',
+        tagline: 'السكون · الترددات · المعنى · الطقوس',
         color: '#2563EB',
         colorAlt: '#4F46E5',
         gradient: 'linear-gradient(145deg, #2563EB 0%, #4F46E5 100%)',
@@ -103,36 +120,16 @@ export const DOMAINS: DomainDefinition[] = [
         delta: +3,
         sectionHref: '/sections/ruhi',
         quickActions: [
-            { label: 'الترددات العلاجية', sub: 'موجات شافية',   href: '/frequencies' },
-            { label: 'تمارين التنفس',     sub: 'استرخاء عميق',  href: '/breathe'     },
-            { label: 'راديو الاسترخاء',   sub: 'موسيقى علاجية', href: '/radio'        },
+            { label: 'الترددات العلاجية', sub: 'جلسات صوت مباشرة',   href: '/frequencies'              },
+            { label: 'تمارين التنفس',     sub: 'سكون 5 دقائق فقط',   href: '/breathe'                  },
+            { label: 'راديو الاسترخاء',   sub: 'موسيقى علاجية',       href: '/radio'                    },
+            { label: 'اتزاني الداخلي',    sub: 'تقييم روحي شامل',     href: '/assess/inner-balance'     },
         ],
-    },
-    {
-        id: 'other',
-        slug: 'other',
-        emoji: '⚙️',
-        name: 'أخرى',
-        nameEn: 'Others',
-        tagline: 'مواعيدك · خدماتك · إعداداتك',
-        color: '#475569',
-        colorAlt: '#334155',
-        gradient: 'linear-gradient(145deg, #475569 0%, #334155 100%)',
-        score: 91,
-        delta: 0,
-        sectionHref: '/sections/other',
-        quickActions: [
-            { label: 'احجز موعداً', sub: 'مع الدكتور',   href: '/book-appointment', isNew: true },
-            { label: 'رعايتي',      sub: 'خطة علاجك',    href: '/my-care'                       },
-            { label: 'الصيدلية',    sub: 'منتجات صحية',  href: '/shop'                           },
-        ],
+        stats: { services: 4, programs: 4, tools: 4 },
+        readinessLabel: 'جيد',
     },
 ];
 
 /** Map from id → DomainDefinition for O(1) lookup */
 export const DOMAIN_BY_ID: Record<string, DomainDefinition> =
     Object.fromEntries(DOMAINS.map(d => [d.id, d]));
-
-/** Overall score across all domains */
-export const overallScore = () =>
-    Math.round(DOMAINS.reduce((acc, d) => acc + d.score, 0) / DOMAINS.length);

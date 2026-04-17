@@ -1,194 +1,293 @@
-// components/home/visitor/VisitorSmartGuide.tsx
-// THE INTELLIGENCE LAYER — replaces 6 cluttered sections with ONE smart question
-// "أين تبدأ رحلتك؟" — 3 contextual entry points that guide to the right feature
+// components/home/visitor/VisitorSmartGuide.tsx — Sprint 6
+// ═══════════════════════════════════════════════════════════════════
+// 4-STEP VISUAL FLOW — بدل البطاقات القديمة
+// المنطق: الـ flow يحكم، الروابط القديمة تبقى كاختصارات ثانوية فقط.
 //
-// Philosophy: Don't show everything. Ask one great question.
-// Inspired by: Headspace onboarding · Calm "How do you feel" · Linear quick actions
-// Each card leads to a DIFFERENT part of Tibrah based on the user's need:
-//   1. "أعاني من أعراض" → Symptom Checker → Diagnosis → Booking
-//   2. "أريد فهم نفسي" → Emotional Medicine → Psychosomatic
-//   3. "أريد بروتوكولاً" → Services → Booking
+// التصميم:
+//   4 خطوات رأسية متصلة بخط — كل خطوة تجيب على 3 أسئلة:
+//   ① ما الذي يحدث؟  ② لماذا هذا مفيد؟  ③ ما النتيجة المتوقعة؟
+//
+// الـ language يجب أن تبقى بشرية:
+//   نفهم حالتك / نحدد المسار / نبدأ خطة / نتابع تقدمك
+//   (لا routing/subdomain/protocol في هذه الصفحة للزائر)
+// ═══════════════════════════════════════════════════════════════════
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { HeartPulse, Brain, Sparkles, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, HeartPulse, Brain, ClipboardList } from 'lucide-react';
 import { haptic } from '@/lib/HapticFeedback';
 import { createPageUrl } from '@/utils';
 
-const INK    = '#0F172A';
-const SUB    = '#64748B';
-const MUTED  = '#94A3B8';
-const ACCENT = '#0D9488';
-const CANVAS = '#F0FAF8';
-const GLASS  = 'rgba(255,255,255,0.78)';
-const BLUR   = 'blur(32px) saturate(180%)';
-const BORDER = 'rgba(255,255,255,0.85)';
-const SHADOW = '0 2px 0 rgba(255,255,255,1) inset, 0 8px 32px rgba(15,23,42,0.09)';
-const SP     = { type: 'spring' as const, stiffness: 500, damping: 36 };
+/* ── Design tokens ───────────────────────────────────────────── */
+const ACCENT  = '#0D9488';
+const INK     = '#0F172A';
+const SUB     = '#475569';
+const MUTED   = '#94A3B8';
+const CANVAS  = '#F0FAF8';
+const GLASS   = 'rgba(255,255,255,0.82)';
+const BLUR    = 'blur(28px) saturate(180%)';
+const BORDER  = 'rgba(255,255,255,0.88)';
+const SHADOW  = '0 2px 0 rgba(255,255,255,1) inset, 0 6px 24px rgba(15,23,42,0.08)';
 
-const PATHS = [
+const SP = { type: 'spring' as const, stiffness: 480, damping: 34 };
+
+/* ── 4-Step data ─────────────────────────────────────────────── */
+interface Step {
+    num: number;
+    emoji: string;
+    title: string;
+    why: string;
+    outcome: string;
+    accent: string;
+    href: string;
+    cta: string;
+}
+
+const STEPS: Step[] = [
     {
-        icon: HeartPulse,
+        num: 1,
         emoji: '🩺',
-        title: 'أعاني من أعراض',
-        desc: 'أفهم ما يحدث في جسدي',
-        detail: [
-            'مدقق الأعراض الذكي',
-            'تحليل أولي سريع',
-            'توجيه للتخصص المناسب',
-        ],
-        cta: 'ابدأ التشخيص',
-        href: '/symptom-checker',
+        title: 'ابدأ تقييمك',
+        why: 'نصغي لأعراضك — جسدية ونفسية — في 5 دقائق فقط',
+        outcome: 'صورة أولية واضحة عما يحدث في جسمك فعلاً',
         accent: ACCENT,
-        glow: 'rgba(13,148,136,0.12)',
+        href: '/symptom-checker',
+        cta: 'ابدأ التقييم',
     },
     {
-        icon: Brain,
-        emoji: '💭',
-        title: 'أريد فهم نفسي',
-        desc: 'ربط مشاعري بصحتي الجسدية',
-        detail: [
-            'الطب النفس-جسدي',
-            'أنماط عاطفية مخصصة',
-            'علاج جذري شامل',
-        ],
-        cta: 'اكتشف المزيد',
-        href: '/emotional-medicine',
+        num: 2,
+        emoji: '🧭',
+        title: 'نفهم حالتك',
+        why: 'نحلل نمطك ونحدد الأولوية: أين الجذر الحقيقي للمشكلة؟',
+        outcome: 'رؤية واضحة للمحاور التي تحتاج اهتماماً — بدون تخمين',
         accent: '#6D4AFF',
-        glow: 'rgba(109,74,255,0.10)',
+        href: '/symptom-checker',
+        cta: 'شاهد مثالاً',
     },
     {
-        icon: Sparkles,
+        num: 3,
         emoji: '📋',
-        title: 'أريد بروتوكولاً',
-        desc: 'خطة علاجية متكاملة ومخصصة',
-        detail: [
-            'استشارة شاملة مع الطبيب',
-            'بروتوكول وظيفي مخصص',
-            'متابعة مستمرة',
-        ],
-        cta: 'احجز جلستك',
-        href: createPageUrl('BookAppointment'),
+        title: 'نبدأ خطة واضحة',
+        why: 'خطة يومية مخصصة لأعراضك — تعرف بالضبط ماذا تفعل كل يوم',
+        outcome: '7 أيام من الخطوات العملية — قابلة للمتابعة والقياس',
         accent: '#D97706',
-        glow: 'rgba(217,119,6,0.10)',
+        href: '/my-plan',
+        cta: 'استعرض خطتي',
+    },
+    {
+        num: 4,
+        emoji: '📈',
+        title: 'نتابع تقدمك',
+        why: 'نقيس التحسّن يومياً — ونوجّهك للخطوة التالية بناءً على نتائجك',
+        outcome: 'إذا تحسّنت: نكمل. إذا احتجت أكثر: نوصلك للطبيب مباشرة',
+        accent: '#0EA5E9',
+        href: createPageUrl('BookAppointment'),
+        cta: 'احجز متابعة',
     },
 ];
 
-function PathCard({ p, i, selected, onSelect }: {
-    p: typeof PATHS[0]; i: number;
-    selected: boolean; onSelect: () => void;
-}) {
-    const Icon = p.icon;
+/* ── Quick links (secondary) ───────────────────────────────── */
+const QUICK_LINKS = [
+    { emoji: '🔍', label: 'أفحص أعراضي',          href: '/symptom-checker',         accent: ACCENT },
+    { emoji: '💭', label: 'أفهم حالتي النفسية',    href: '/emotional-medicine',       accent: '#6D4AFF' },
+    { emoji: '📋', label: 'أريد خطة علاجية',       href: createPageUrl('BookAppointment'), accent: '#D97706' },
+];
+
+/* ── StepCard component ─────────────────────────────────────── */
+function StepCard({ step, index, isLast }: { step: Step; index: number; isLast: boolean }) {
+    const [tapped, setTapped] = useState(false);
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.09, ...SP }}>
-            <Link href={p.href} onClick={() => { haptic.impact(); onSelect(); }}>
+        <div className="relative flex gap-4">
+            {/* ── Connector line on the left ── */}
+            <div className="flex flex-col items-center flex-shrink-0">
+                {/* Circle */}
                 <motion.div
-                    whileTap={{ scale: 0.968, transition: SP }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1, ...SP }}
+                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 relative z-10"
                     style={{
-                        position: 'relative', borderRadius: 22, overflow: 'hidden',
-                        background: selected ? `rgba(255,255,255,0.90)` : GLASS,
-                        backdropFilter: BLUR, WebkitBackdropFilter: BLUR,
-                        border: selected ? `1.5px solid ${p.accent}35` : `1px solid ${BORDER}`,
-                        boxShadow: selected
-                            ? `0 2px 0 rgba(255,255,255,1) inset, 0 12px 40px rgba(15,23,42,0.12), 0 0 0 1px ${p.accent}18`
-                            : SHADOW,
-                        padding: '20px 20px 16px',
-                        transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
-                    }}>
-
-                    {/* Top edge highlight */}
-                    <div style={{ position: 'absolute', top: 0, left: 16, right: 16, height: 1,
-                        background: 'rgba(255,255,255,1)', borderRadius: 99 }} />
-
-                    {/* Ambient glow per path */}
-                    <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100,
-                        background: `radial-gradient(circle, ${p.glow} 0%, transparent 70%)`,
-                        filter: 'blur(20px)', pointerEvents: 'none' }} />
-
-                    {/* Header */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: `${p.accent}12`, border: `1px solid ${p.accent}18` }}>
-                                <Icon style={{ width: 20, height: 20, color: p.accent }} />
-                            </div>
-                            <div>
-                                <p style={{ fontSize: 16, fontWeight: 900, color: INK, lineHeight: 1.2 }}>{p.title}</p>
-                                <p style={{ fontSize: 11, color: SUB, marginTop: 3 }}>{p.desc}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Details */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16,
-                        paddingRight: 4 }}>
-                        {p.detail.map((d, di) => (
-                            <motion.div key={d}
-                                initial={{ opacity: 0, x: -6 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.09 + di * 0.04 + 0.12 }}
-                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <div style={{ width: 5, height: 5, borderRadius: 99, background: p.accent,
-                                    flexShrink: 0, opacity: 0.6 }} />
-                                <p style={{ fontSize: 11.5, color: SUB, fontWeight: 500 }}>{d}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    {/* CTA row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.65)' }}>
-                        <span style={{ fontSize: 12.5, fontWeight: 800, color: p.accent }}>{p.cta}</span>
-                        <div style={{ width: 30, height: 30, borderRadius: 99,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: `${p.accent}12`, border: `1px solid ${p.accent}18` }}>
-                            <ArrowLeft style={{ width: 14, height: 14, color: p.accent }} />
-                        </div>
-                    </div>
+                        background: `${step.accent}15`,
+                        border: `1.5px solid ${step.accent}35`,
+                        boxShadow: `0 0 0 4px ${step.accent}08`,
+                    }}
+                >
+                    <span className="text-[16px]">{step.emoji}</span>
                 </motion.div>
-            </Link>
-        </motion.div>
+
+                {/* Vertical connector line — hidden for last step */}
+                {!isLast && (
+                    <motion.div
+                        initial={{ scaleY: 0 }}
+                        whileInView={{ scaleY: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 + 0.15, duration: 0.4 }}
+                        className="flex-1 w-px mt-1 origin-top"
+                        style={{
+                            background: `linear-gradient(to bottom, ${step.accent}30, ${STEPS[index + 1]?.accent ?? ACCENT}20)`,
+                            minHeight: 32,
+                        }}
+                    />
+                )}
+            </div>
+
+            {/* ── Card content ── */}
+            <motion.div
+                className="flex-1 mb-5"
+                initial={{ opacity: 0, x: 16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 + 0.05, ...SP }}
+            >
+                <Link href={step.href}
+                    onClick={() => { haptic.tap(); setTapped(true); }}>
+                    <motion.div
+                        whileTap={{ scale: 0.97, transition: SP }}
+                        className="relative rounded-[18px] overflow-hidden p-4"
+                        style={{
+                            background: tapped ? `${step.accent}08` : GLASS,
+                            backdropFilter: BLUR,
+                            WebkitBackdropFilter: BLUR,
+                            border: `1px solid ${tapped ? step.accent + '30' : BORDER}`,
+                            boxShadow: SHADOW,
+                            transition: 'background 0.2s, border-color 0.2s',
+                        }}
+                    >
+                        {/* Top reflection */}
+                        <div style={{
+                            position: 'absolute', top: 0, left: 12, right: 12, height: 1,
+                            background: 'rgba(255,255,255,1)', borderRadius: 99,
+                        }} />
+
+                        {/* Step number badge */}
+                        <div className="flex items-start justify-between mb-2.5">
+                            <div
+                                className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                                style={{ color: step.accent, background: `${step.accent}12` }}
+                            >
+                                الخطوة {step.num}
+                            </div>
+                            <div
+                                className="w-6 h-6 rounded-full flex items-center justify-center"
+                                style={{ background: `${step.accent}12` }}
+                            >
+                                <ArrowLeft style={{ width: 12, height: 12, color: step.accent }} />
+                            </div>
+                        </div>
+
+                        {/* Title */}
+                        <p className="text-[15px] font-black leading-tight mb-2"
+                            style={{ color: INK }}>
+                            {step.title}
+                        </p>
+
+                        {/* Why */}
+                        <p className="text-[11.5px] leading-[1.55] mb-2.5"
+                            style={{ color: SUB }}>
+                            {step.why}
+                        </p>
+
+                        {/* Outcome pill */}
+                        <div className="flex items-start gap-1.5 pt-2.5"
+                            style={{ borderTop: `1px solid ${step.accent}15` }}>
+                            <span className="text-[10px] mt-px">✦</span>
+                            <p className="text-[10.5px] font-semibold leading-snug"
+                                style={{ color: step.accent }}>
+                                {step.outcome}
+                            </p>
+                        </div>
+                    </motion.div>
+                </Link>
+            </motion.div>
+        </div>
     );
 }
 
+/* ── Main component ─────────────────────────────────────────── */
 export default function VisitorSmartGuide() {
-    const [selected, setSelected] = useState<number | null>(null);
-
     return (
-        <section dir="rtl" style={{ background: CANVAS, padding: '40px 20px 32px' }}>
-            {/* Header */}
-            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+        <section dir="rtl" style={{ background: CANVAS, padding: '44px 20px 36px' }}>
+
+            {/* ── Header ── */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                style={{ marginBottom: 24 }}>
-                <p style={{ fontSize: 10.5, fontWeight: 700, color: MUTED,
-                    letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 8 }}>
-                    ابدأ رحلتك
+                style={{ marginBottom: 28 }}
+            >
+                <p style={{
+                    fontSize: 10.5, fontWeight: 700, color: MUTED,
+                    letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 8,
+                }}>
+                    كيف تعمل طِبرة
                 </p>
-                <h2 style={{ fontSize: 24, fontWeight: 900, color: INK,
-                    lineHeight: 1.2, letterSpacing: '-0.02em', margin: 0 }}>
-                    أين تبدأ رحلتك<br />
-                    <span style={{ color: ACCENT }}>نحو الشفاء؟</span>
+                <h2 style={{
+                    fontSize: 24, fontWeight: 900, color: INK,
+                    lineHeight: 1.2, letterSpacing: '-0.02em', margin: 0,
+                }}>
+                    أربع خطوات<br />
+                    <span style={{ color: ACCENT }}>نحو صحة أوضح</span>
                 </h2>
                 <p style={{ fontSize: 12.5, color: SUB, marginTop: 10, lineHeight: 1.6 }}>
-                    اختر ما يصف حالك — سنوجهك للمسار الصحيح
+                    من الأعراض الأولى إلى المتابعة الحقيقية — كل خطوة مبنية على ما قبلها
                 </p>
             </motion.div>
 
-            {/* Path cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {PATHS.map((p, i) => (
-                    <PathCard key={p.title} p={p} i={i}
-                        selected={selected === i}
-                        onSelect={() => setSelected(i)} />
+            {/* ── 4 Steps ── */}
+            <div>
+                {STEPS.map((step, i) => (
+                    <StepCard
+                        key={step.num}
+                        step={step}
+                        index={i}
+                        isLast={i === STEPS.length - 1}
+                    />
                 ))}
             </div>
+
+            {/* ── Secondary quick links ── */}
+            <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.35 }}
+                style={{ marginTop: 8 }}
+            >
+                <p style={{
+                    fontSize: 9.5, fontWeight: 700, color: MUTED,
+                    letterSpacing: '0.14em', textTransform: 'uppercase',
+                    marginBottom: 10, textAlign: 'center',
+                }}>
+                    أو ابدأ مباشرة من هنا
+                </p>
+
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {QUICK_LINKS.map(ql => (
+                        <Link key={ql.label} href={ql.href} onClick={() => haptic.selection()}>
+                            <motion.div
+                                whileTap={{ scale: 0.95, transition: SP }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                    padding: '7px 14px', borderRadius: 99,
+                                    background: GLASS,
+                                    backdropFilter: BLUR, WebkitBackdropFilter: BLUR,
+                                    border: `1px solid ${BORDER}`,
+                                    boxShadow: SHADOW,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                <span style={{ fontSize: 12 }}>{ql.emoji}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: SUB }}>
+                                    {ql.label}
+                                </span>
+                            </motion.div>
+                        </Link>
+                    ))}
+                </div>
+            </motion.div>
         </section>
     );
 }

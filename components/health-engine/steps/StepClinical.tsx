@@ -1,7 +1,8 @@
 // components/health-engine/steps/StepClinical.tsx
-// THIE v4 — M3 Filled Cards + state layers
-// Reference: Google Health Studies, Pixel Checkup
-
+// ════════════════════════════════════════════════════════════════════
+// TIBRAH v8 — Liquid Glass Water Clinical Step
+// مائي زجاجي — بدون أي لون أسود
+// ════════════════════════════════════════════════════════════════════
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, ChevronDown } from 'lucide-react';
@@ -13,44 +14,76 @@ import { BottomCTA } from '../ui/BottomCTA';
 import { haptic } from '@/lib/HapticFeedback';
 import type { AnswerValue } from '../types';
 
-/* M3 Filled Card with collapsible body */
-function M3Card({ title, accent = '#0d9488', defaultOpen = true, children, badge }: {
+/* ══════════════════════════════════════════════════════════════════
+   LIGHT WATER GLASS — Premium Medical
+   ══════════════════════════════════════════════════════════════════ */
+const W = {
+    pageBg:      'linear-gradient(168deg, #E8F8FB 0%, #D0F0F8 18%, #E2F1FE 42%, #EDF5FF 65%, #F0FAFB 88%, #F5FDFE 100%)',
+    glass:       'rgba(255,255,255,0.60)',
+    glassBorder: 'rgba(255,255,255,0.88)',
+    glassShadow: '0 6px 24px rgba(8,145,178,0.08), 0 1.5px 6px rgba(0,0,0,0.04), inset 0 1.5px 0 rgba(255,255,255,0.92)',
+    sheen:       'linear-gradient(180deg, rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.15) 45%, transparent 100%)',
+    teal:        '#0891B2',
+    tealDeep:    '#0E7490',
+    tealLight:   '#22D3EE',
+    textPrimary: '#0C4A6E',
+    textSub:     '#0369A1',
+    textMuted:   '#7DD3FC',
+};
+
+/* ══════════════════════════════════════════════════════ */
+/* GLASS CARD — collapsible                               */
+/* ══════════════════════════════════════════════════════ */
+function WaterCard({ title, accent = W.teal, defaultOpen = true, children, badge }: {
     title: string; accent?: string; defaultOpen?: boolean;
     children: React.ReactNode; badge?: string;
 }) {
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-        <div className="rounded-[20px] overflow-hidden mb-3"
+        <div className="relative overflow-hidden rounded-[22px] mb-3"
             style={{
-                background: '#ffffff',
-                border: '1px solid rgba(0,0,0,0.07)',
-                /* M3 Elevation 1 */
-                boxShadow: '0px 1px 2px rgba(0,0,0,0.10), 0px 1px 3px 1px rgba(0,0,0,0.07)',
+                background: W.glass,
+                border: `1.5px solid ${W.glassBorder}`,
+                backdropFilter: 'blur(26px)',
+                boxShadow: W.glassShadow,
             }}>
+            {/* Sheen */}
+            <div className="absolute inset-x-0 top-0 pointer-events-none"
+                style={{ height: '48%', background: W.sheen, borderRadius: '22px 22px 0 0' }} />
+            {/* Specular highlight */}
+            <div className="absolute top-0 left-0 w-[45%] h-[42%] pointer-events-none"
+                style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.50) 0%, transparent 70%)', borderRadius: '20px 0 0 0' }} />
+            {/* Accent top strip */}
+            <div className="absolute top-0 left-[20%] right-[20%] h-[3px] rounded-b-full"
+                style={{ background: `linear-gradient(90deg, ${accent}40, ${accent}, ${accent}40)`, opacity: open ? 1 : 0.3, transition: 'opacity 0.2s' }} />
+
+            {/* Header button */}
             <button
                 onClick={() => { setOpen(o => !o); haptic.selection(); }}
-                className="w-full flex items-center px-4 py-3.5 text-right m3-state">
-                {/* Accent bar — M3 Left indicator for sections */}
-                <div className="w-[3px] rounded-full h-7 ml-3 flex-shrink-0"
-                    style={{ background: open ? accent : 'rgba(0,0,0,0.12)' }} />
+                className="w-full flex items-center px-4 py-3.5 text-right"
+                style={{ position: 'relative', zIndex: 1 }}>
+                {/* Liquid accent bar */}
+                <div className="w-[3px] rounded-full h-7 ml-3 flex-shrink-0 relative overflow-hidden"
+                    style={{ background: open ? `linear-gradient(to bottom, ${accent}, ${accent}55)` : 'rgba(8,145,178,0.12)' }} />
 
                 <div className="flex-1">
-                    <p className="m3-title-md text-slate-900 text-right">{title}</p>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: W.textPrimary, textAlign: 'right' }}>{title}</p>
                 </div>
 
                 {badge && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mx-2 flex-shrink-0"
-                        style={{ background: accent + '18', color: accent }}>
+                        style={{ background: `${accent}14`, color: accent, border: `1px solid ${accent}22` }}>
                         {badge}
                     </span>
                 )}
 
-                <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2, ease: [0.05, 0.7, 0.1, 1] }}>
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown style={{ width: 16, height: 16, color: W.textMuted }} />
                 </motion.div>
             </button>
 
+            {/* Body */}
             <AnimatePresence>
                 {open && (
                     <motion.div
@@ -58,8 +91,9 @@ function M3Card({ title, accent = '#0d9488', defaultOpen = true, children, badge
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.22, ease: [0.05, 0.7, 0.1, 1] }}
-                        className="overflow-hidden">
-                        <div className="px-4 pb-4" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                        className="overflow-hidden"
+                        style={{ position: 'relative', zIndex: 1 }}>
+                        <div className="px-4 pb-4" style={{ borderTop: '1px solid rgba(8,145,178,0.08)' }}>
                             <div className="pt-3">{children}</div>
                         </div>
                     </motion.div>
@@ -69,31 +103,47 @@ function M3Card({ title, accent = '#0d9488', defaultOpen = true, children, badge
     );
 }
 
-/* M3 Duration chip — 2×2 grid */
-function DurationChip({ label, sub, active, color, onClick }: {
+/* ══════════════════════════════════════════════════════ */
+/* DURATION CHIP — liquid glass                           */
+/* ══════════════════════════════════════════════════════ */
+function WaterDurationChip({ label, sub, active, color, onClick }: {
     label: string; sub: string; active: boolean; color: string; onClick: () => void;
 }) {
     return (
         <motion.button
-            whileTap={{ scale: 0.93 }}
+            whileTap={{ scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 500, damping: 28 }}
             onClick={onClick}
-            className="flex-1 rounded-[16px] p-3.5 text-right m3-state"
+            className="flex-1 relative overflow-hidden rounded-[16px] p-3.5 text-right"
             style={{
-                background: active ? color + '12' : '#f8fafc',
-                border: `1.5px solid ${active ? color + '50' : 'rgba(0,0,0,0.07)'}`,
-                boxShadow: active ? `0 2px 10px ${color}18` : '0 1px 2px rgba(0,0,0,0.05)',
+                background: active
+                    ? `linear-gradient(145deg, rgba(255,255,255,0.88) 0%, ${color}14 100%)`
+                    : W.glass,
+                border: `1.5px solid ${active ? 'rgba(255,255,255,0.92)' : W.glassBorder}`,
+                backdropFilter: 'blur(18px)',
+                boxShadow: active ? `0 4px 16px ${color}20, 0 2px 0 rgba(255,255,255,0.95) inset` : W.glassShadow,
                 transition: 'all 180ms cubic-bezier(0.05,0.7,0.1,1)',
             }}>
-            <div className="flex items-center gap-1.5 mb-0.5">
-                <Clock className="w-3 h-3 flex-shrink-0" style={{ color: active ? color : '#94a3b8' }} />
-                <span className="m3-title-md" style={{ color: active ? color : '#475569' }}>{label}</span>
+            {active && (
+                <>
+                    <div className="absolute top-0 left-0 right-0 h-px"
+                        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)' }} />
+                    <div className="absolute top-0 left-0 w-[55%] h-[50%]"
+                        style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.38) 0%, transparent 70%)', borderRadius: 14 }} />
+                </>
+            )}
+            <div className="flex items-center gap-1.5 mb-0.5" style={{ position: 'relative', zIndex: 1 }}>
+                <Clock style={{ width: 11, height: 11, flexShrink: 0, color: active ? color : W.textMuted }} />
+                <span style={{ fontSize: 13, fontWeight: 800, color: active ? W.textPrimary : W.textSub }}>{label}</span>
             </div>
-            <p className="m3-body-md text-slate-400 mt-0.5">{sub}</p>
+            <p style={{ fontSize: 10.5, color: W.textMuted, position: 'relative', zIndex: 1, fontWeight: 500 }}>{sub}</p>
         </motion.button>
     );
 }
 
+/* ══════════════════════════════════════════════════════ */
+/* MAIN                                                   */
+/* ══════════════════════════════════════════════════════ */
 export function StepClinical({ pathwayId, severity, duration, clinicalAnswers, onSeverity, onDuration, onAnswer, onNext }: {
     pathwayId: string; severity: number; duration: string;
     clinicalAnswers: Record<string, AnswerValue>;
@@ -113,10 +163,8 @@ export function StepClinical({ pathwayId, severity, duration, clinicalAnswers, o
         onAnswer(qId, cur.includes(opt) ? cur.filter(o => o !== opt) : [...cur, opt]);
     };
 
-    /* Completion progress */
     const filled = [
-        severity > 0,
-        !!duration,
+        severity > 0, !!duration,
         ...pathway.clinicalQuestions.map(q => {
             const v = clinicalAnswers[q.id];
             return Array.isArray(v) ? v.length > 0 : !!v;
@@ -126,106 +174,142 @@ export function StepClinical({ pathwayId, severity, duration, clinicalAnswers, o
     const pct   = Math.round((filled / total) * 100);
 
     return (
-        <div className="px-4" dir="rtl">
-            {/* M3 Section header */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-                className="mb-5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4"
-                    style={{ background: pathway.color + '12', border: `1px solid ${pathway.color}20` }}>
-                    <span className="text-sm">{pathway.emoji}</span>
-                    <span className="m3-label-sm" style={{ color: pathway.color, textTransform: 'none', fontSize: 10 }}>
-                        الخطوة ٣ من ٤
-                    </span>
-                </div>
-                <h2 className="m3-headline-md text-slate-900">صف حالتك</h2>
-                <p className="m3-body-md text-slate-400 mt-1">
-                    بخصوص <span className="font-bold" style={{ color: pathway.color }}>{pathway.label}</span>
-                </p>
-            </motion.div>
+        <div className="relative min-h-screen" dir="rtl"
+            style={{ background: W.pageBg }}>
 
-            {/* M3 Linear progress card */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.06, type: 'spring', stiffness: 280, damping: 26 }}
-                className="rounded-[16px] px-4 py-3.5 mb-4 flex items-center gap-3"
-                style={{
-                    background: '#ffffff',
-                    border: '1px solid rgba(0,0,0,0.07)',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.07)',
-                }}>
-                {/* M3 circular determinate progress */}
-                <div className="relative w-10 h-10 flex-shrink-0">
-                    <svg viewBox="0 0 40 40" className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="3.5" />
-                        <motion.circle cx="20" cy="20" r="16" fill="none"
-                            stroke={pathway.color} strokeWidth="3.5" strokeLinecap="round"
-                            strokeDasharray={`${2 * Math.PI * 16}`}
-                            animate={{ strokeDashoffset: (1 - pct / 100) * 2 * Math.PI * 16 }}
-                            initial={{ strokeDashoffset: 2 * Math.PI * 16 }}
+            {/* Ambient water glows */}
+            <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+                <div style={{ position: 'absolute', top: -80, right: -40, width: 300, height: 300,
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, ${pathway.color}22 0%, transparent 70%)`,
+                    filter: 'blur(55px)' }} />
+                <div style={{ position: 'absolute', bottom: 100, left: -50, width: 250, height: 250,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(34,211,238,0.14) 0%, transparent 65%)',
+                    filter: 'blur(48px)' }} />
+            </div>
+
+            <div className="relative z-10 px-4 pt-2 pb-32">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 250, damping: 28 }}
+                    className="mb-5">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4"
+                        style={{
+                            background: `${pathway.color}12`,
+                            border: `1px solid ${pathway.color}25`,
+                            backdropFilter: 'blur(12px)',
+                        }}>
+                        <span style={{ fontSize: 13 }}>{pathway.emoji}</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: pathway.color }}>الخطوة ٣ من ٤</span>
+                    </div>
+                    <h2 style={{ fontSize: 26, fontWeight: 900, color: W.textPrimary, letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 4 }}>
+                        صف حالتك
+                    </h2>
+                    <p style={{ fontSize: 12.5, color: W.textSub, fontWeight: 500 }}>
+                        بخصوص <span style={{ fontWeight: 800, color: pathway.color }}>{pathway.label}</span>
+                    </p>
+                </motion.div>
+
+                {/* Progress glass card */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.06, type: 'spring', stiffness: 270, damping: 28 }}
+                    className="relative overflow-hidden rounded-[18px] px-4 py-3.5 mb-4 flex items-center gap-3"
+                    style={{
+                        background: W.glass,
+                        border: `1.5px solid ${W.glassBorder}`,
+                        backdropFilter: 'blur(24px)',
+                        boxShadow: W.glassShadow,
+                    }}>
+                    <div className="absolute top-0 left-0 right-0 h-px"
+                        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)' }} />
+
+                    {/* Liquid progress ring */}
+                    <div className="relative w-11 h-11 flex-shrink-0">
+                        <svg viewBox="0 0 44 44" className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="22" cy="22" r="17" fill="none" stroke={`${pathway.color}18`} strokeWidth="3.5" />
+                            <motion.circle cx="22" cy="22" r="17" fill="none"
+                                stroke={pathway.color} strokeWidth="3.5" strokeLinecap="round"
+                                strokeDasharray={`${2 * Math.PI * 17}`}
+                                animate={{ strokeDashoffset: (1 - pct / 100) * 2 * Math.PI * 17 }}
+                                initial={{ strokeDashoffset: 2 * Math.PI * 17 }}
+                                transition={{ duration: 0.5, ease: [0.05, 0.7, 0.1, 1] }}
+                            />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center"
+                            style={{ fontSize: 8.5, fontWeight: 900, color: pathway.color }}>
+                            {pct}%
+                        </span>
+                    </div>
+                    <div>
+                        <p style={{ fontSize: 13.5, fontWeight: 800, color: W.textPrimary }}>اكتمال البيانات</p>
+                        <p style={{ fontSize: 11, fontWeight: 500, color: W.textMuted }}>أكمل كل الحقول لتحليل أدق</p>
+                    </div>
+
+                    {/* Water fill bar at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[2.5px]"
+                        style={{ background: `${pathway.color}12` }}>
+                        <motion.div className="h-full rounded-full"
+                            style={{ background: `linear-gradient(90deg, ${pathway.color}, ${W.tealLight})` }}
+                            animate={{ width: `${pct}%` }}
                             transition={{ duration: 0.5, ease: [0.05, 0.7, 0.1, 1] }}
                         />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black"
-                        style={{ color: pathway.color }}>{pct}%</span>
-                </div>
-                <div>
-                    <p className="m3-title-md text-slate-900">اكتمال البيانات</p>
-                    <p className="m3-body-md text-slate-400 mt-0.5">أكمل كل الحقول لتحليل أدق</p>
-                </div>
-            </motion.div>
-
-            {/* Severity Card */}
-            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-                <M3Card title="شدة الأعراض" accent="#dc2626"
-                    badge={severity > 0 ? `${severity}/١٠` : undefined}>
-                    <SeveritySlider value={severity} onChange={onSeverity} />
-                </M3Card>
-            </motion.div>
-
-            {/* Duration Card */}
-            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11 }}>
-                <M3Card title="مدة الأعراض" accent="#6366f1"
-                    badge={duration ? DURATION_OPTIONS.find(d => d.id === duration)?.label : undefined}>
-                    <div className="grid grid-cols-2 gap-2">
-                        {DURATION_OPTIONS.map(o => (
-                            <DurationChip key={o.id} label={o.label} sub={o.sub}
-                                active={duration === o.id} color={pathway.color}
-                                onClick={() => { haptic.selection(); onDuration(o.id); }}
-                            />
-                        ))}
                     </div>
-                </M3Card>
-            </motion.div>
+                </motion.div>
 
-            {/* Clinical questions */}
-            {pathway.clinicalQuestions.map((q, qi) => {
-                const val = clinicalAnswers[q.id];
-                const cnt = Array.isArray(val) ? val.length : val ? 1 : 0;
-                return (
-                    <motion.div key={q.id}
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.13 + qi * 0.05 }}>
-                        <M3Card title={q.text} accent={pathway.color}
-                            badge={cnt > 0 ? `${cnt} محدد` : undefined}
-                            defaultOpen={qi === 0}>
-                            <div className="flex flex-wrap gap-2">
-                                {q.options?.map(opt => {
-                                    const isSel = Array.isArray(val) ? val.includes(opt) : val === opt;
-                                    return (
-                                        <OptionChip key={opt} label={opt} selected={isSel} color={pathway.color}
-                                            onToggle={() => q.type === 'multiple' ? togN(q.id, opt) : tog1(q.id, opt)} />
-                                    );
-                                })}
-                            </div>
-                        </M3Card>
-                    </motion.div>
-                );
-            })}
+                {/* Severity Card */}
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+                    <WaterCard title="شدة الأعراض" accent="#DC2626"
+                        badge={severity > 0 ? `${severity}/١٠` : undefined}>
+                        <SeveritySlider value={severity} onChange={onSeverity} />
+                    </WaterCard>
+                </motion.div>
+
+                {/* Duration Card */}
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11 }}>
+                    <WaterCard title="مدة الأعراض" accent="#818CF8"
+                        badge={duration ? DURATION_OPTIONS.find(d => d.id === duration)?.label : undefined}>
+                        <div className="grid grid-cols-2 gap-2">
+                            {DURATION_OPTIONS.map(o => (
+                                <WaterDurationChip key={o.id} label={o.label} sub={o.sub}
+                                    active={duration === o.id} color={pathway.color}
+                                    onClick={() => { haptic.selection(); onDuration(o.id); }}
+                                />
+                            ))}
+                        </div>
+                    </WaterCard>
+                </motion.div>
+
+                {/* Clinical questions */}
+                {pathway.clinicalQuestions.map((q, qi) => {
+                    const val = clinicalAnswers[q.id];
+                    const cnt = Array.isArray(val) ? val.length : val ? 1 : 0;
+                    return (
+                        <motion.div key={q.id}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.12 + qi * 0.05 }}>
+                            <WaterCard title={q.text} accent={pathway.color}
+                                badge={cnt > 0 ? `${cnt} محدد` : undefined}
+                                defaultOpen={qi === 0}>
+                                <div className="flex flex-wrap gap-2">
+                                    {q.options?.map(opt => {
+                                        const isSel = Array.isArray(val) ? val.includes(opt) : val === opt;
+                                        return (
+                                            <OptionChip key={opt} label={opt} selected={isSel} color={pathway.color}
+                                                onToggle={() => q.type === 'multiple' ? togN(q.id, opt) : tog1(q.id, opt)} />
+                                        );
+                                    })}
+                                </div>
+                            </WaterCard>
+                        </motion.div>
+                    );
+                })}
+            </div>
 
             <BottomCTA label="التالي — البعد العاطفي" onPress={onNext} variant="teal" />
         </div>
