@@ -72,6 +72,28 @@ export const ANALYTICS_EVENTS = {
     COMPLETION_SCREEN_VIEWED:       'completion_screen_viewed',
     RETURNED_TO_MY_PLAN:            'returned_to_my_plan',
     CHECKIN_CLICKED_FROM_COMPLETION:'checkin_clicked_from_completion',
+    // أحداث الرجوع لنتيجة التقييم (Phase 1)
+    ASSESSMENT_RESULT_REOPENED:     'assessment_result_reopened',
+    ASSESSMENT_RESTARTED:           'assessment_restarted',
+    SYMPTOMS_EDITED_FROM_RESULT:    'symptoms_edited_from_result',
+    RESULT_RETURN_CLICKED:          'result_return_clicked',
+    RE_ASSESSMENT_STARTED:          're_assessment_started',
+    // أحداث نظام الطيبات (Phase 3)
+    TAYYIBAT_SECTION_VIEWED:        'tayyibat_section_viewed',
+    TAYYIBAT_ADHERENCE_LOGGED:      'tayyibat_adherence_logged',
+    TAYYIBAT_VIOLATION_DETECTED:    'tayyibat_violation_detected',
+    TAYYIBAT_WEEK_COMPLETED:        'tayyibat_week_completed',
+    NUTRITION_PLAN_SAVED:            'nutrition_plan_saved',
+    TAYYIBAT_MEAL_LOGGED:           'tayyibat_meal_logged',
+    // أحداث الذكاء التكيفي (Deepening Phase)
+    ADAPTIVE_PLAN_COMPUTED:          'adaptive_plan_computed',
+    ADAPTIVE_EMPHASIS_SHIFTED:       'adaptive_emphasis_shifted',
+    CLINICAL_PRECISION_COMPUTED:     'clinical_precision_computed',
+    BEHAVIOR_INSIGHT_GENERATED:      'behavior_insight_generated',
+    HIDDEN_NON_ADHERENCE_DETECTED:   'hidden_non_adherence_detected',
+    TIMING_ANALYSIS_GENERATED:       'timing_analysis_generated',
+    DECISION_REPORT_GENERATED:       'decision_report_generated',
+    SYMPTOM_FOOD_CORRELATION_FOUND:  'symptom_food_correlation_found',
 } as const;
 
 // دالة لتسجيل حدث

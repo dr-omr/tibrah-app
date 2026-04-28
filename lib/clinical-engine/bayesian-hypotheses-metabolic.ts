@@ -1,0 +1,77 @@
+// lib/clinical-engine/bayesian-hypotheses-metabolic.ts
+// Hypotheses Bank — Metabolic & Nutritional Deficiencies
+import type { EngineAnswers } from '@/components/health-engine/types';
+
+export interface Hyp {
+    id: string; nameAr: string; nameEn: string; basePrior: number;
+    pos: Array<{ s: string; lr: number }>;
+    neg: Array<{ s: string; lr: number }>;
+    pw: string[]; test: string; pearl: string;
+    redFlags: string[]; prevalenceNote: string; relatedDx: string[];
+}
+
+export const METABOLIC_HYPOTHESES: Hyp[] = [
+    { id: 'iron_deficiency', nameAr: 'نقص الحديد / فيريتين', nameEn: 'Iron Deficiency', basePrior: 0.25,
+      pos: [{s:'تعب',lr:2.1},{s:'شحوب',lr:3.5},{s:'دوخة',lr:2.8},{s:'ضيق تنفس',lr:2.4},{s:'تساقط شعر',lr:2.0},{s:'خفقان',lr:1.8},{s:'هشاشة أظافر',lr:2.5},{s:'صداع',lr:1.5},{s:'رغبة ثلج',lr:4.0},{s:'تركيز ضعيف',lr:1.7},{s:'تنفس سريع',lr:1.9},{s:'جفاف شفاه',lr:1.6},{s:'وجه شاحب',lr:2.2},{s:'ضعف عام',lr:1.8}],
+      neg: [{s:'نشيط',lr:0.3},{s:'لون طبيعي',lr:0.5},{s:'لحم كثير',lr:0.6}],
+      pw: ['fatigue','headache'],
+      test: 'CBC + فيريتين + حديد مصلي + TIBC + Reticulocyte Count + Transferrin Saturation',
+      pearl: 'فيريتين < ٣٠ = نقص وظيفي حتى لو الهيموجلوبين طبيعي. الفيريتين هو أول مؤشر ينخفض قبل الهيموجلوبين بأشهر',
+      redFlags: ['نزيف مستمر','براز أسود','فقدان وزن غير مبرر','دم في البول'],
+      prevalenceNote: 'النساء في سن الإنجاب: ٣× أعلى. نباتيون: ٢× أعلى. حوامل: خطر عالٍ',
+      relatedDx: ['نقص ب١٢','قصور درقية','نزيف خفي','سيلياك'] },
+    { id: 'vitamin_d', nameAr: 'نقص فيتامين د', nameEn: 'Vitamin D Deficiency', basePrior: 0.40,
+      pos: [{s:'تعب',lr:1.6},{s:'ألم عظام',lr:2.8},{s:'ألم عضلات',lr:2.2},{s:'اكتئاب',lr:1.7},{s:'ضعف مناعة',lr:1.9},{s:'تشنج',lr:2.0},{s:'تعرق رأس',lr:3.0},{s:'ألم ظهر',lr:1.8},{s:'كسور متكررة',lr:2.5},{s:'نزلات متكررة',lr:1.7},{s:'تعب عام',lr:1.5},{s:'حزن بلا سبب',lr:1.6}],
+      neg: [{s:'رياضة خارجية يومية',lr:0.4},{s:'شمس',lr:0.3},{s:'مكمل د',lr:0.5}],
+      pw: ['fatigue','pain','immune'],
+      test: '25-OH Vitamin D + Calcium + PTH + Phosphorus',
+      pearl: 'الهدف ٥٠–٨٠ ng/ml وليس > ٣٠ فقط. في المنطقة العربية ٨٠٪ لديهم نقص رغم الشمس — الملابس والبقاء بالداخل السبب',
+      redFlags: ['ألم عظام شديد مع ضعف عضلي','كسر بدون إصابة'],
+      prevalenceNote: 'أعلى معدلات نقص عالمياً في المنطقة العربية — ٩٠٪ في بعض دراسات الخليج',
+      relatedDx: ['نقص كالسيوم','هشاشة عظام','فرط نشاط جاردرقية'] },
+    { id: 'b12_deficiency', nameAr: 'نقص ب١٢', nameEn: 'B12 Deficiency', basePrior: 0.15,
+      pos: [{s:'تنميل',lr:3.5},{s:'ضبابية ذهنية',lr:2.8},{s:'تعب',lr:1.6},{s:'اكتئاب',lr:1.7},{s:'فقدان توازن',lr:3.0},{s:'لسان ملتهب',lr:2.5},{s:'نسيان',lr:2.0},{s:'وخز',lr:3.2},{s:'ضعف ساقين',lr:2.8},{s:'ارتعاش',lr:2.0},{s:'صعوبة مشي',lr:2.5},{s:'تغير مزاج',lr:1.8}],
+      neg: [{s:'لحوم كثيرة',lr:0.4},{s:'بيض يومي',lr:0.5}],
+      pw: ['fatigue','pain'],
+      test: 'Vitamin B12 + Methylmalonic Acid + Homocysteine + CBC (MCV)',
+      pearl: 'B12 < ٤٠٠ مع أعراض عصبية = نقص وظيفي. MCV > ١٠٠ = Megaloblastic Anemia. Methylmalonic Acid أحساسية من B12 المصلي',
+      redFlags: ['فقدان توازن متفاقم','سلس بول أو براز','تغير شخصية مفاجئ'],
+      prevalenceNote: 'نباتيون ١٠٠٪ خطر. مستخدمو Metformin وPPI: خطر مرتفع. كبار السن: امتصاص ضعيف',
+      relatedDx: ['نقص حديد','نقص فوليك','التصلب المتعدد'] },
+    { id: 'magnesium_def', nameAr: 'نقص ماغنيسيوم', nameEn: 'Magnesium Deficiency', basePrior: 0.22,
+      pos: [{s:'تشنج',lr:3.0},{s:'أرق',lr:2.5},{s:'قلق',lr:2.0},{s:'صداع',lr:1.8},{s:'خفقان',lr:2.2},{s:'عضلات',lr:2.4},{s:'رجفة جفن',lr:3.5},{s:'تململ',lr:2.0},{s:'حساسية صوت',lr:1.8},{s:'ضغط عالٍ',lr:1.6},{s:'إمساك',lr:1.5},{s:'غضب',lr:1.6}],
+      neg: [{s:'مكسرات يومية',lr:0.4},{s:'بقوليات منتظمة',lr:0.5}],
+      pw: ['anxiety','sleep','headache','pain'],
+      test: 'RBC Magnesium (أدق) + Ionized Magnesium + Serum Mag (أقل دقة)',
+      pearl: 'Serum Mg طبيعي في ٩٥٪ من حالات النقص — RBC Mag هو الفحص الحقيقي. ٦٠–٨٠٪ من السكان لا يحصلون على الكمية الكافية',
+      redFlags: ['تشنجات قلبية مستمرة','نوبات صرع مرتبطة بنقص Ca/Mg'],
+      prevalenceNote: 'التربة الحديثة مستنزفة — حتى الأطعمة الصحية تحتوي ٢٥٪ أقل مغنيسيوم مقارنة ١٩٥٠',
+      relatedDx: ['نقص كالسيوم','نقص بوتاسيوم','نقص فيتامين د'] },
+    { id: 'zinc_def', nameAr: 'نقص الزنك', nameEn: 'Zinc Deficiency', basePrior: 0.15,
+      pos: [{s:'مناعة ضعيفة',lr:2.5},{s:'نزلات متكررة',lr:2.2},{s:'جروح بطيئة',lr:3.0},{s:'فقدان شم',lr:3.5},{s:'فقدان تذوق',lr:3.2},{s:'تساقط شعر',lr:2.0},{s:'جلد',lr:1.8},{s:'أظافر',lr:2.0},{s:'اكتئاب',lr:1.6},{s:'نمو بطيء',lr:2.5}],
+      neg: [{s:'لحوم حمراء منتظمة',lr:0.5},{s:'مأكولات بحرية',lr:0.4}],
+      pw: ['immune','hormonal'],
+      test: 'Serum Zinc + Alkaline Phosphatase + CBC',
+      pearl: 'فقدان الشم والتذوق = أكثر العلامات تخصصاً لنقص الزنك. الزنك أول علاج لنزلات البرد (Cochrane Grade A)',
+      redFlags: ['اضطراب نمو عند الأطفال','عقم مع نقص زنك مثبت'],
+      prevalenceNote: 'نظام غذائي نباتي أو ضعيف في البروتين الحيواني = خطر مرتفع',
+      relatedDx: ['نقص مناعة','قصور درقية','مشاكل الخصوبة'] },
+    { id: 'insulin_resistance', nameAr: 'مقاومة الأنسولين', nameEn: 'Insulin Resistance', basePrior: 0.20,
+      pos: [{s:'وزن',lr:2.2},{s:'سكر',lr:2.5},{s:'ضبابية',lr:2.0},{s:'نعاس بعد الأكل',lr:3.0},{s:'بطن',lr:2.4},{s:'عطش',lr:1.8},{s:'جوع متكرر',lr:2.6},{s:'جلد داكن رقبة',lr:3.8},{s:'تعب بعد نشويات',lr:2.5},{s:'دهون ثلاثية',lr:2.0},{s:'تعب بعد الأكل',lr:2.3},{s:'بطء تفكير',lr:1.9}],
+      neg: [{s:'نحيف',lr:0.4},{s:'رياضة منتظمة',lr:0.5},{s:'سكر طبيعي دائماً',lr:0.6}],
+      pw: ['fatigue','hormonal'],
+      test: 'سكر صائم + أنسولين صائم + HOMA-IR + HbA1c + Triglycerides/HDL ratio',
+      pearl: 'HOMA-IR > ٢.٥ = مقاومة. TG/HDL > ٣.٥ مؤشر بديل بسيط. Acanthosis Nigricans (تصبغ رقبة) = علامة جلدية كلاسيكية',
+      redFlags: ['عطش شديد + تبول كثير مفاجئ','فقدان وزن سريع'],
+      prevalenceNote: '٣٠–٤٠٪ من بالغي الخليج — وبائية صامتة',
+      relatedDx: ['PCOS','كبد دهني','سكري نوع ٢'] },
+    { id: 'thyroid_hypo', nameAr: 'قصور الغدة الدرقية', nameEn: 'Hypothyroidism', basePrior: 0.12,
+      pos: [{s:'تعب',lr:1.8},{s:'برودة',lr:3.2},{s:'وزن',lr:2.5},{s:'إمساك',lr:2.0},{s:'جفاف جلد',lr:2.3},{s:'اكتئاب',lr:1.6},{s:'تساقط شعر',lr:2.1},{s:'بطء',lr:1.9},{s:'انتفاخ وجه',lr:2.7},{s:'دورة غزيرة',lr:2.0},{s:'بحة صوت',lr:2.4},{s:'ضبابية',lr:1.8},{s:'تيبس مفاصل',lr:1.7}],
+      neg: [{s:'خفقان',lr:0.4},{s:'عصبية',lr:0.5},{s:'فقدان وزن',lr:0.3},{s:'تعرق زائد',lr:0.4}],
+      pw: ['fatigue','hormonal','sleep'],
+      test: 'TSH + Free T4 + Free T3 + Anti-TPO + Anti-Thyroglobulin + Thyroid Ultrasound',
+      pearl: 'TSH > ٢.٥ مع أعراض = قصور تحت-سريري. Anti-TPO يكشف هاشيموتو قبل ارتفاع TSH بسنوات. T3 الحر هو الهرمون النشط فعلاً',
+      redFlags: ['تورم رقبة مرئي','صعوبة بلع','بحة مستمرة'],
+      prevalenceNote: 'النساء ٥–٨× أكثر. ما بعد الحمل: ١٠٪. فوق ٦٠ عاماً: ٢٠٪',
+      relatedDx: ['نقص حديد','نقص فيتامين د','متلازمة كوشينغ'] },
+];

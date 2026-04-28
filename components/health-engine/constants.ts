@@ -47,7 +47,7 @@ interface OptionMeta {
     conventionalWeight: number; // 1-3
 }
 
-const OPTION_META: Record<string, OptionMeta> = {
+export const OPTION_META: Record<string, OptionMeta> = {
     // ── FATIGUE options ──────────────────────────────────
     'فجأة بعد مرض أو صدمة': { functional: 'mitochondrial_drain', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 2 },
     'تدريجياً على أشهر': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
@@ -216,6 +216,116 @@ const OPTION_META: Record<string, OptionMeta> = {
     'الجسم ينهار حين أتوقف عن العطاء': { functional: 'adrenal_exhaustion', somatic: 'compassion_fatigue', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
     'المرض هو الطريقة الوحيدة للراحة': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
     'العدوى بعد أحداث مؤلمة': { functional: 'nervous_system_dysreg', somatic: 'grief_unprocessed', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+
+    // ── PROGRESSION options (shared across pathways) ──────
+    'تتحسن تدريجياً': { functional: 'none', somatic: 'none', functionalWeight: 0, somaticWeight: 0, conventionalWeight: 0 },
+    'مستقرة — لا تتغير': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 1, somaticWeight: 1, conventionalWeight: 1 },
+    'تسوء تدريجياً': { functional: 'inflammatory_load', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 1, conventionalWeight: 2 },
+    'متذبذبة — أيام جيدة وأيام سيئة': { functional: 'adrenal_exhaustion', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
+    'تسوء في فترات محددة (دورة/فصل)': { functional: 'hormonal_cascade', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+
+    // ── TRIGGER/RELIEVER options (fatigue) ──────────────────
+    'تتحسن بالراحة والنوم': { functional: 'none', somatic: 'none', functionalWeight: 0, somaticWeight: 0, conventionalWeight: 0 },
+    'تتحسن بالحركة والرياضة': { functional: 'nervous_system_dysreg', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 0 },
+    'تسوء بالضغط النفسي': { functional: 'adrenal_exhaustion', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
+    'تسوء بعد الأكل الثقيل': { functional: 'gut_dysbiosis', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'لا شيء يُحسّنها': { functional: 'mitochondrial_drain', somatic: 'chronic_self_override', functionalWeight: 3, somaticWeight: 2, conventionalWeight: 2 },
+
+    // ── TRIGGER/RELIEVER options (headache) ─────────────────
+    'تخف بالظلام والسكون': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 2, conventionalWeight: 1 },
+    'تتحسن بالضغط على الصدغين': { functional: 'nervous_system_dysreg', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 0 },
+    'تسوء مع الضوء والأصوات': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 2 },
+    'ترتبط بالجوع أو الجفاف': { functional: 'blood_sugar_chaos', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'تظهر بعد الشاشات الطويلة': { functional: 'nervous_system_dysreg', somatic: 'chronic_self_override', functionalWeight: 1, somaticWeight: 1, conventionalWeight: 0 },
+
+    // ── TRIGGER/RELIEVER options (digestion) ────────────────
+    'تتحسن بالأكل البطيء والمضغ': { functional: 'gut_dysbiosis', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 0 },
+    'تسوء مع السفر أو تغير الروتين': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 2, conventionalWeight: 0 },
+    'تتحسن في الإجازات': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 0 },
+    'تسوء في الصباح الباكر': { functional: 'adrenal_exhaustion', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 1, conventionalWeight: 1 },
+
+    // ── TRIGGER/RELIEVER options (sleep) ────────────────────
+    'النوم يتحسن في غرفة باردة ومظلمة': { functional: 'none', somatic: 'none', functionalWeight: 0, somaticWeight: 0, conventionalWeight: 0 },
+    'النوم يسوء بعد أيام العمل الطويلة': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
+    'أحتاج صوتاً أو ضوءاً للنوم': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 2, conventionalWeight: 0 },
+    'النوم يتحسن برفقة شخص آمن': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 0, somaticWeight: 3, conventionalWeight: 0 },
+
+    // ── TRIGGER/RELIEVER options (pain) ─────────────────────
+    'يتحسن بالحركة الخفيفة': { functional: 'inflammatory_load', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 1 },
+    'يسوء بالجلوس الطويل': { functional: 'nervous_system_dysreg', somatic: 'chronic_self_override', functionalWeight: 1, somaticWeight: 1, conventionalWeight: 1 },
+    'يشتد ليلاً ويمنع النوم': { functional: 'inflammatory_load', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 2 },
+    'يتحسن بالتدليك أو اللمس': { functional: 'nervous_system_dysreg', somatic: 'compassion_fatigue', functionalWeight: 1, somaticWeight: 2, conventionalWeight: 0 },
+
+    // ── TRIGGER/RELIEVER options (anxiety) ──────────────────
+    'يسوء في الأماكن المزدحمة': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'يتحسن بوجود شخص آمن': { functional: 'nervous_system_dysreg', somatic: 'childhood_imprint', functionalWeight: 0, somaticWeight: 3, conventionalWeight: 0 },
+    'يسوء قبل النوم': { functional: 'adrenal_exhaustion', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
+    'يخف بالحركة والمشي': { functional: 'nervous_system_dysreg', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 0 },
+
+    // ── TRIGGER/RELIEVER options (hormonal) ─────────────────
+    'الأعراض تسوء مع الإجهاد': { functional: 'adrenal_exhaustion', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
+    'تتحسن مع النوم الكافي': { functional: 'adrenal_exhaustion', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 0 },
+    'ترتبط بتغيرات الوزن': { functional: 'hormonal_cascade', somatic: 'worth_and_belonging', functionalWeight: 2, somaticWeight: 1, conventionalWeight: 1 },
+    'تسوء مع المكملات العشوائية': { functional: 'hormonal_cascade', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+
+    // ── TRIGGER/RELIEVER options (immune) ───────────────────
+    'أمرض بعد كل إجازة أو راحة': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
+    'المناعة تضعف مع قلة النوم': { functional: 'adrenal_exhaustion', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'تتحسن المناعة بالتغذية الجيدة': { functional: 'nutrient_depletion', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 0 },
+    'الأعراض تسوء في المواسم الانتقالية': { functional: 'inflammatory_load', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 1 },
+
+    // ── DEEP INTAKE: Sleep Quality ──────────────────────────
+    'أنام كثيراً لكن أصحى متعباً': { functional: 'adrenal_exhaustion', somatic: 'chronic_self_override', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
+    'أستيقظ بين 2-4 فجراً بشكل متكرر': { functional: 'adrenal_exhaustion', somatic: 'hypervigilance', functionalWeight: 3, somaticWeight: 2, conventionalWeight: 1 },
+    'صعوبة في النوم — ذهني لا يهدأ': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
+    'أحلام مزعجة أو كوابيس متكررة': { functional: 'nervous_system_dysreg', somatic: 'grief_unprocessed', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'نومي جيد عموماً': { functional: 'none', somatic: 'none', functionalWeight: 0, somaticWeight: 0, conventionalWeight: 0 },
+
+    // ── DEEP INTAKE: Inflammation ───────────────────────────
+    'تورم أو احتباس سوائل': { functional: 'inflammatory_load', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 2 },
+    'ألم مفاصل متنقل': { functional: 'inflammatory_load', somatic: 'suppressed_expression', functionalWeight: 2, somaticWeight: 1, conventionalWeight: 2 },
+    'حساسية جلدية أو إكزيما': { functional: 'inflammatory_load', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'انتفاخ الوجه الصباحي': { functional: 'inflammatory_load', somatic: 'none', functionalWeight: 1, somaticWeight: 0, conventionalWeight: 1 },
+
+    // ── DEEP INTAKE: Nutrient Deficiency ────────────────────
+    'تساقط شعر ملحوظ': { functional: 'nutrient_depletion', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 2 },
+    'أظافر هشة أو مُخدّدة': { functional: 'nutrient_depletion', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'تشقق زوايا الفم': { functional: 'nutrient_depletion', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'تنميل أو وخز في الأطراف': { functional: 'nutrient_depletion', somatic: 'none', functionalWeight: 3, somaticWeight: 0, conventionalWeight: 2 },
+    'رغبة ملحّة في الثلج أو الطين': { functional: 'nutrient_depletion', somatic: 'none', functionalWeight: 3, somaticWeight: 0, conventionalWeight: 2 },
+
+    // ── DEEP INTAKE: Autonomic ──────────────────────────────
+    'دوخة عند الوقوف فجأة': { functional: 'nervous_system_dysreg', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 2 },
+    'برودة أطراف دائمة': { functional: 'thyroid_underfunction', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'خفقان بدون سبب واضح': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 2 },
+    'تعرّق مفاجئ أو هبّات حرارة': { functional: 'hormonal_cascade', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'إحساس بعدم القدرة على أخذ نَفَس عميق': { functional: 'nervous_system_dysreg', somatic: 'suppressed_expression', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
+
+    // ── DEEP INTAKE: Med History ────────────────────────────
+    'مضادات حيوية متكررة': { functional: 'gut_dysbiosis', somatic: 'none', functionalWeight: 3, somaticWeight: 0, conventionalWeight: 2 },
+    'مسكنات بشكل يومي أو شبه يومي': { functional: 'inflammatory_load', somatic: 'chronic_self_override', functionalWeight: 2, somaticWeight: 1, conventionalWeight: 2 },
+    'أدوية حموضة لأشهر': { functional: 'gut_dysbiosis', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'كورتيزون لفترات': { functional: 'adrenal_exhaustion', somatic: 'none', functionalWeight: 3, somaticWeight: 0, conventionalWeight: 2 },
+    'مضادات اكتئاب أو قلق': { functional: 'nervous_system_dysreg', somatic: 'suppressed_expression', functionalWeight: 2, somaticWeight: 2, conventionalWeight: 1 },
+
+    // ── DEEP INTAKE: Body-Emotion ───────────────────────────
+    'ثقل في الصدر أو ضيق': { functional: 'nervous_system_dysreg', somatic: 'grief_unprocessed', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'شدّ الفك أو صرير أسنان': { functional: 'nervous_system_dysreg', somatic: 'suppressed_expression', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'ألم رقبة وأكتاف مزمن': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'معدة مضطربة مع التوتر': { functional: 'gut_dysbiosis', somatic: 'control_and_release', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
+    'إحساس بكتلة في الحلق': { functional: 'nervous_system_dysreg', somatic: 'suppressed_expression', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+
+    // ── DEEP INTAKE: Metabolism ─────────────────────────────
+    'وزني يزيد رغم أكلي القليل': { functional: 'thyroid_underfunction', somatic: 'none', functionalWeight: 3, somaticWeight: 0, conventionalWeight: 2 },
+    'أحتاج سكر/كربوهيدرات باستمرار': { functional: 'blood_sugar_chaos', somatic: 'none', functionalWeight: 3, somaticWeight: 0, conventionalWeight: 1 },
+    'طاقتي تنهار بعد الأكل': { functional: 'blood_sugar_chaos', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 1 },
+    'دورة شهرية غير منتظمة': { functional: 'hormonal_cascade', somatic: 'none', functionalWeight: 2, somaticWeight: 0, conventionalWeight: 2 },
+
+    // ── DEEP INTAKE: Trauma Screen ──────────────────────────
+    'أشعر بالخطر حتى في الأمان': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 2, somaticWeight: 3, conventionalWeight: 1 },
+    'جسمي يتجمّد في مواقف بعينها': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'ذكريات تطفو بدون سبب واضح': { functional: 'nervous_system_dysreg', somatic: 'childhood_imprint', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
+    'أتجنب أماكن أو أشخاصاً بسبب شعور داخلي': { functional: 'nervous_system_dysreg', somatic: 'hypervigilance', functionalWeight: 1, somaticWeight: 3, conventionalWeight: 1 },
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -305,6 +415,18 @@ export const PATHWAYS: Pathway[] = [
                     'فقدان الدافع يسبق الإرهاق الجسدي',
                 ],
             },
+            {
+                id: 'fat_progression',
+                text: 'كيف تطورت حالتك خلال الفترة الماضية؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'fat_triggers',
+                text: 'ما الذي يُحسّن أو يُسيء لحالتك؟',
+                type: 'multiple',
+                options: ['تتحسن بالراحة والنوم', 'تتحسن بالحركة والرياضة', 'تسوء بالضغط النفسي', 'تسوء بعد الأكل الثقيل', 'لا شيء يُحسّنها'],
+            },
         ],
     },
     {
@@ -355,6 +477,18 @@ export const PATHWAYS: Pathway[] = [
                     'يخف حين أبكي أو أعبّر',
                     'الكمالية والضغط الداخلي',
                 ],
+            },
+            {
+                id: 'head_progression',
+                text: 'كيف تطور الصداع خلال الفترة الماضية؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'head_triggers',
+                text: 'ما الذي يُخفف أو يُشعل الصداع؟',
+                type: 'multiple',
+                options: ['تخف بالظلام والسكون', 'تتحسن بالضغط على الصدغين', 'تسوء مع الضوء والأصوات', 'ترتبط بالجوع أو الجفاف', 'تظهر بعد الشاشات الطويلة'],
             },
         ],
     },
@@ -408,6 +542,18 @@ export const PATHWAYS: Pathway[] = [
                     'الهضم يتحسن في الأمان العاطفي',
                 ],
             },
+            {
+                id: 'gi_progression',
+                text: 'كيف تطورت مشكلة الهضم لديك؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'gi_triggers',
+                text: 'ما الذي يُحسّن أو يُسيء لهضمك؟',
+                type: 'multiple',
+                options: ['تتحسن بالأكل البطيء والمضغ', 'تسوء مع السفر أو تغير الروتين', 'تتحسن في الإجازات', 'تسوء في الصباح الباكر'],
+            },
         ],
     },
     {
@@ -449,6 +595,18 @@ export const PATHWAYS: Pathway[] = [
                     'المرض يعني التوقف — أرفض',
                     'النوم يتحسن في بيئات أكثر أماناً',
                 ],
+            },
+            {
+                id: 'sleep_progression',
+                text: 'كيف تطورت مشكلة نومك؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'sleep_triggers',
+                text: 'ما الذي يؤثر على نومك بشكل واضح؟',
+                type: 'multiple',
+                options: ['النوم يتحسن في غرفة باردة ومظلمة', 'النوم يسوء بعد أيام العمل الطويلة', 'أحتاج صوتاً أو ضوءاً للنوم', 'النوم يتحسن برفقة شخص آمن'],
             },
         ],
     },
@@ -501,6 +659,18 @@ export const PATHWAYS: Pathway[] = [
                     'الألم يخف بالاعتراف والتقدير',
                 ],
             },
+            {
+                id: 'pain_progression',
+                text: 'كيف تطور الألم خلال الفترة الماضية؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'pain_triggers',
+                text: 'ما الذي يُخفف أو يُشعل الألم؟',
+                type: 'multiple',
+                options: ['يتحسن بالحركة الخفيفة', 'يسوء بالجلوس الطويل', 'يشتد ليلاً ويمنع النوم', 'يتحسن بالتدليك أو اللمس'],
+            },
         ],
     },
     {
@@ -544,6 +714,18 @@ export const PATHWAYS: Pathway[] = [
                     'أخفي مشاعري فتتحول لأعراض',
                 ],
             },
+            {
+                id: 'anx_progression',
+                text: 'كيف تطور القلق خلال الفترة الماضية؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'anx_triggers',
+                text: 'ما الذي يُحسّن أو يُسيء للقلق؟',
+                type: 'multiple',
+                options: ['يسوء في الأماكن المزدحمة', 'يتحسن بوجود شخص آمن', 'يسوء قبل النوم', 'يخف بالحركة والمشي'],
+            },
         ],
     },
     {
@@ -585,6 +767,18 @@ export const PATHWAYS: Pathway[] = [
                     'صورة سلبية عن الجسم',
                     'علاقة غير محلولة مع الأنوثة/الذكورة',
                 ],
+            },
+            {
+                id: 'horm_progression',
+                text: 'كيف تطورت الأعراض الهرمونية؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'horm_triggers',
+                text: 'ما الذي يُحسّن أو يُسيء للأعراض الهرمونية؟',
+                type: 'multiple',
+                options: ['الأعراض تسوء مع الإجهاد', 'تتحسن مع النوم الكافي', 'ترتبط بتغيرات الوزن', 'تسوء مع المكملات العشوائية'],
             },
         ],
     },
@@ -628,6 +822,18 @@ export const PATHWAYS: Pathway[] = [
                     'المرض هو الطريقة الوحيدة للراحة',
                     'العدوى بعد أحداث مؤلمة',
                 ],
+            },
+            {
+                id: 'imm_progression',
+                text: 'كيف تطورت مشكلة المناعة لديك؟',
+                type: 'single',
+                options: ['تتحسن تدريجياً', 'مستقرة — لا تتغير', 'تسوء تدريجياً', 'متذبذبة — أيام جيدة وأيام سيئة', 'تسوء في فترات محددة (دورة/فصل)'],
+            },
+            {
+                id: 'imm_triggers',
+                text: 'ما الذي يُحسّن أو يُضعف مناعتك؟',
+                type: 'multiple',
+                options: ['أمرض بعد كل إجازة أو راحة', 'المناعة تضعف مع قلة النوم', 'تتحسن المناعة بالتغذية الجيدة', 'الأعراض تسوء في المواسم الانتقالية'],
             },
         ],
     },
@@ -733,6 +939,49 @@ export function computeTriage(answers: EngineAnswers): TriageResult {
         if (topFuncScore >= 4) score += 1;
     }
 
+    // ── Layer 4: Progression-aware safety intelligence ──
+    // Read progression answers from any pathway (all use the same option strings)
+    const allAnswerValues = Object.values(answers.clinicalAnswers).flat();
+    const progressionWorsening = allAnswerValues.includes('تسوء تدريجياً');
+    const progressionFluctuating = allAnswerValues.includes('متذبذبة — أيام جيدة وأيام سيئة');
+    const nothingHelps = allAnswerValues.includes('لا شيء يُحسّنها');
+
+    // Worsening symptoms increase urgency
+    if (progressionWorsening) {
+        score += 1.5;
+    }
+    // Fluctuating + chronic = harder to self-manage
+    if (progressionFluctuating && answers.duration === 'months') {
+        score += 0.5;
+    }
+    // "Nothing helps" is a strong signal for medical review
+    if (nothingHelps) {
+        score += 1;
+    }
+
+    // ── Layer 5: Duration × Severity compound ──
+    // High severity + long duration = compound urgency
+    if (answers.severity >= 7 && answers.duration === 'months') {
+        score += 1;
+    }
+    if (answers.severity >= 8 && answers.duration === 'weeks') {
+        score += 0.5;
+    }
+
+    // ── Layer 6: Weighted red-flag detection ──
+    // Emergency-level red flags weigh more than urgent-level
+    const pathway = PATHWAYS.find(p => p.id === answers.pathwayId);
+    if (pathway) {
+        for (const flagId of answers.redFlags) {
+            const flag = pathway.redFlags.find(f => f.id === flagId);
+            if (flag?.level === 'emergency') {
+                score += 2; // Emergency flags are heavily weighted
+            } else if (flag?.level === 'urgent') {
+                score += 1; // Urgent flags are moderately weighted
+            }
+        }
+    }
+
     // Compute top functional pattern
     const topFunctionalPattern = (
         Object.entries(functionalTally).sort(([, a], [, b]) => b - a)[0]?.[0] ?? 'none'
@@ -757,19 +1006,33 @@ export function computeTriage(answers: EngineAnswers): TriageResult {
     else if (score >= 4) level = 'review';
     else level = 'manageable';
 
-    // Generate integrative insight
+    // ── Layer 7: Progression override ──
+    // Worsening + chronic + high severity → force at least needs_doctor
+    if (progressionWorsening && answers.duration === 'months' && answers.severity >= 6 && level === 'review') {
+        level = 'needs_doctor';
+    }
+
+    // Generate integrative insight — enriched with progression context
     const funcInfo = FUNCTIONAL_PATTERN_INFO[topFunctionalPattern];
     const somInfo  = SOMATIC_THEME_INFO[topSomaticTheme];
 
     let integrativeInsight = '';
     if (topFunctionalPattern !== 'none' && topSomaticTheme !== 'none') {
-        integrativeInsight = `النمط الوظيفي الأبرز: ${funcInfo.label}. البُعد الشعوري: ${somInfo.label}. هذا التقاطع يستحق اهتماماً تكاملياً يجمع الطب الاعتيادي مع الجذر الوظيفي والبُعد النفسي.`;
+        integrativeInsight = `النمط الوظيفي الأبرز: ${funcInfo.label} (${funcInfo.summary}). البُعد الشعوري: ${somInfo.label} — ${somInfo.summary}. هذا التقاطع يستحق اهتماماً تكاملياً.`;
     } else if (topFunctionalPattern !== 'none') {
         integrativeInsight = `النمط الوظيفي الأبرز: ${funcInfo.label}. يُنصح بالفحص الوظيفي الموجّه: ${funcInfo.summary}.`;
     } else if (topSomaticTheme !== 'none') {
         integrativeInsight = `البُعد الشعوري الأبرز: ${somInfo.label} — ${somInfo.summary}.`;
     } else {
         integrativeInsight = 'الصورة السريرية مستقرة نسبياً مع أهمية المتابعة الدورية.';
+    }
+
+    // Progression qualifiers
+    if (progressionWorsening) {
+        integrativeInsight += ' ⚠️ الأعراض في تطور سلبي — المتابعة الطبية أولوية.';
+    }
+    if (nothingHelps) {
+        integrativeInsight += ' عدم الاستجابة للعلاج الذاتي يُشير لحاجة تقييم متخصص.';
     }
 
     return { level, score, topFunctionalPattern, topSomaticTheme, functionalScore, somaticScore, integrativeInsight };

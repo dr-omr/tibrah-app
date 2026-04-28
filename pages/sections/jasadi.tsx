@@ -31,6 +31,7 @@ import { haptic } from '@/lib/HapticFeedback';
 import { getActiveCarePlan } from '@/lib/care-plan-store';
 import { getSubdomains, SUBDOMAIN_BY_ID } from '@/lib/domain-routing-map';
 import type { SubdomainId } from '@/components/health-engine/types';
+import { SectionSkeleton } from '@/components/sections/shared/SectionSkeleton';
 
 // Journey components
 import { SectionStatusBar } from '@/components/sections/shared/SectionStatusBar';
@@ -329,7 +330,7 @@ export default function JasadiPage() {
         setActiveSubdomain(id);
     }, []);
 
-    if (loading) return <div className="min-h-screen" style={{ background: 'linear-gradient(168deg, #E8F8FB 0%, #D0F0F8 18%, #F0FAFB 88%)' }} />;
+    if (loading) return <SectionSkeleton color="#0D9488" bg="linear-gradient(168deg, #E8F8FB 0%, #D0F0F8 18%, #F0FAFB 88%)" />;
     if (!user) return <SectionAuthGate section={JASADI} />;
 
     return (

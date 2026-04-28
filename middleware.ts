@@ -9,23 +9,68 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
 import { PROTECTED_ROUTES, ADMIN_ROUTES, AUTH_ONLY_ROUTES } from './lib/routes';
+
+// ============================================
+// Inline HS256 JWT Verifier (Edge Runtime safe)
+// Replaces 'jose' import to avoid CompressionStream/DecompressionStream
+// warnings from jose's JWE module being bundled but never used.
+// Web Crypto (crypto.subtle) is fully supported in Edge Runtime.
+// ============================================
+
+function b64urlToBytes(b64url: string): Uint8Array<ArrayBuffer> {
+    const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64.padEnd(b64.length + (4 - (b64.length % 4)) % 4, '=');
+    const binary = atob(padded);
+    return Uint8Array.from(binary, c => c.charCodeAt(0)) as Uint8Array<ArrayBuffer>;
+}
+
+async function verifyHS256(
+    token: string,
+    secret: Uint8Array<ArrayBuffer>,
+): Promise<Record<string, unknown> | null> {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const [headerB64, payloadB64, signatureB64] = parts;
+
+    try {
+        const key = await crypto.subtle.importKey(
+            'raw', secret,
+            { name: 'HMAC', hash: 'SHA-256' },
+            false, ['verify'],
+        );
+        const messageBytes  = new TextEncoder().encode(`${headerB64}.${payloadB64}`) as Uint8Array<ArrayBuffer>;
+        const signatureBytes = b64urlToBytes(signatureB64);
+        const valid = await crypto.subtle.verify('HMAC', key, signatureBytes, messageBytes);
+        if (!valid) return null;
+
+        const payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(payloadB64)));
+
+        // Check expiry
+        if (payload.exp && typeof payload.exp === 'number' && Date.now() / 1000 > payload.exp) {
+            return null;
+        }
+        // Check issuer
+        if (payload.iss && payload.iss !== 'tibrah') return null;
+
+        return payload;
+    } catch {
+        return null;
+    }
+}
 
 // ============================================
 // Session Verification
 // ============================================
 
-function getSessionSecret(): Uint8Array | null {
+function getSessionSecret(): Uint8Array<ArrayBuffer> | null {
     const secret = process.env.SESSION_SECRET;
     if (!secret || secret.length < 32) {
-        // SEC-4 FIX: We return null here instead of throwing immediately.
-        // This allows development environments without secrets to degrade to client-side auth.
-        // In production, this should always be set.
         console.warn('SESSION_SECRET is missing or too short. Server-side session verification is disabled.');
         return null;
     }
-    return new TextEncoder().encode(secret);
+    return new TextEncoder().encode(secret) as Uint8Array<ArrayBuffer>;
 }
 
 interface AuthResult {
@@ -36,20 +81,19 @@ interface AuthResult {
 }
 
 /**
- * Verify the server-issued session JWT using the shared symmetric secret.
+ * Verify the server-issued session JWT using inline Web Crypto HS256.
  */
 async function verifySessionJWT(token: string): Promise<AuthResult> {
     try {
         const secret = getSessionSecret();
         if (!secret) {
-            // Development fallback: If secret isn't configured, bypass server blocking
             return { authenticated: false, isAdmin: false, email: '', method: 'bypassed' };
         }
-        
-        const { payload } = await jwtVerify(token, secret, {
-            algorithms: ['HS256'],
-            issuer: 'tibrah',
-        });
+
+        const payload = await verifyHS256(token, secret);
+        if (!payload) {
+            return { authenticated: false, isAdmin: false, email: '', method: 'none' };
+        }
 
         const email = (payload.email as string || '').toLowerCase();
         if (!email) {
@@ -62,11 +106,11 @@ async function verifySessionJWT(token: string): Promise<AuthResult> {
             email,
             method: 'session',
         };
-    } catch (error) {
-        // Token is invalid, expired, or tampered
+    } catch {
         return { authenticated: false, isAdmin: false, email: '', method: 'none' };
     }
 }
+
 
 /**
  * Detect a legacy base64 cookie (migration window).

@@ -1,7 +1,7 @@
 // components/health-engine/steps/StepAnalyzing.tsx
 // ════════════════════════════════════════════════════════════════════
-// TIBRAH v8 — Liquid Glass Water Analyzing Screen
-// مائي زجاجي عميق — بدون أي لون أسود
+// TIBRAH v12 — Ultra-Rich Liquid Glass Analyzing Screen
+// DNA helix · AI brain pulse · cinematic glass · water canvas
 // ════════════════════════════════════════════════════════════════════
 'use client';
 import { useEffect, useRef, useState } from 'react';
@@ -12,45 +12,108 @@ import { Check } from 'lucide-react';
    LIGHT WATER GLASS — Premium Medical
    ══════════════════════════════════════════════════════════════════ */
 const W = {
-    pageBg:    'linear-gradient(168deg, #E8F8FB 0%, #D0F0F8 18%, #E2F1FE 42%, #EDF5FF 65%, #F0FAFB 88%, #F5FDFE 100%)',
-    glass:     'rgba(255,255,255,0.55)',
+    pageBg: 'linear-gradient(168deg, #E8F8FB 0%, #D0F0F8 18%, #E2F1FE 42%, #EDF5FF 65%, #F0FAFB 88%, #F5FDFE 100%)',
+    glass: 'rgba(255,255,255,0.55)',
     glassBorder: 'rgba(255,255,255,0.82)',
-    teal:      '#0891B2',
-    tealDeep:  '#0E7490',
+    teal: '#0891B2',
+    tealDeep: '#0E7490',
     tealLight: '#22D3EE',
-    cyan:      '#38BDF8',
-    seafoam:   '#34D399',
-    lavender:  '#818CF8',
+    cyan: '#38BDF8',
+    seafoam: '#34D399',
+    lavender: '#818CF8',
     textPrimary: '#0C4A6E',
-    textSub:     '#0369A1',
-    textMuted:   '#7DD3FC',
+    textSub: '#0369A1',
+    textMuted: '#7DD3FC',
 };
 
 /* ══════════════════════════════════════════════════════ */
 /* STEPS                                                  */
 /* ══════════════════════════════════════════════════════ */
 const STEPS = [
-    { label: 'قراءة الأعراض الرئيسية',    emoji: '🩺', ms: 540 },
-    { label: 'فحص علامات الخطر',           emoji: '⚠️', ms: 480 },
-    { label: 'قياس الشدة والمدة',          emoji: '📊', ms: 560 },
-    { label: 'تحليل الأنماط السريرية',     emoji: '🔬', ms: 620 },
-    { label: 'قراءة السياق العاطفي',       emoji: '🧠', ms: 680 },
-    { label: 'رسم خريطة الأقسام الأربعة',  emoji: '🗺️', ms: 560 },
-    { label: 'تحديد الأدوات المناسبة',     emoji: '🎯', ms: 460 },
-    { label: 'توليد خريطة توجيهك',         emoji: '✨', ms: 580 },
+    { label: 'قراءة الأعراض الرئيسية', emoji: '🩺', ms: 540 },
+    { label: 'فحص علامات الخطر', emoji: '⚠️', ms: 480 },
+    { label: 'قياس الشدة والمدة', emoji: '📊', ms: 560 },
+    { label: 'تحليل الأنماط السريرية', emoji: '🔬', ms: 620 },
+    { label: 'قراءة السياق العاطفي', emoji: '🧠', ms: 680 },
+    { label: 'رسم خريطة الأقسام الأربعة', emoji: '🗺️', ms: 560 },
+    { label: 'تحديد الأدوات المناسبة', emoji: '🎯', ms: 460 },
+    { label: 'توليد خريطة توجيهك', emoji: '✨', ms: 580 },
 ];
 
 /* ══════════════════════════════════════════════════════ */
 /* 4-DOMAIN ORBIT — water glass orbs                      */
 /* ══════════════════════════════════════════════════════ */
 const DOMAIN_ORBS = [
-    { emoji: '🫀', label: 'جسدي',  color: '#0891B2', tint: 'rgba(8,145,178,0.22)',  angle: 0   },
-    { emoji: '🧠', label: 'نفسي',  color: '#7C3AED', tint: 'rgba(124,58,237,0.18)', angle: 90  },
-    { emoji: '📚', label: 'فكري',  color: '#D97706', tint: 'rgba(217,119,6,0.18)',  angle: 180 },
-    { emoji: '✨', label: 'روحي',  color: '#0284C7', tint: 'rgba(2,132,199,0.18)',  angle: 270 },
+    { emoji: '🫀', label: 'جسدي', color: '#0891B2', tint: 'rgba(8,145,178,0.22)', angle: 0 },
+    { emoji: '🧠', label: 'نفسي', color: '#7C3AED', tint: 'rgba(124,58,237,0.18)', angle: 90 },
+    { emoji: '📚', label: 'فكري', color: '#D97706', tint: 'rgba(217,119,6,0.18)', angle: 180 },
+    { emoji: '✨', label: 'روحي', color: '#0284C7', tint: 'rgba(2,132,199,0.18)', angle: 270 },
 ];
 
-function WaterOrbitViz({ activeIdx }: { activeIdx: number }) {
+/* ── DNA Helix ring (new layer) ───────────────────── */
+function DNAHelix() {
+    const strands = Array.from({ length: 12 }, (_, i) => ({
+        y: (i / 12) * 100,
+        delay: i * 0.15,
+    }));
+    return (
+        <motion.svg width="220" height="220" className="absolute inset-0 pointer-events-none"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}>
+            {strands.map((s, i) => {
+                const angle = (i / 12) * Math.PI * 2;
+                const r1 = 95, r2 = 95;
+                const x1 = 110 + r1 * Math.cos(angle);
+                const y1 = 110 + r1 * Math.sin(angle);
+                const x2 = 110 + r2 * Math.cos(angle + Math.PI);
+                const y2 = 110 + r2 * Math.sin(angle + Math.PI);
+                return (
+                    <g key={i}>
+                        <motion.line x1={x1} y1={y1} x2={x2} y2={y2}
+                            stroke="rgba(8,145,178,0.08)" strokeWidth="1"
+                            animate={{ opacity: [0.05, 0.15, 0.05] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: s.delay }}
+                        />
+                        <motion.circle cx={x1} cy={y1} r="2.5"
+                            fill="rgba(34,211,238,0.35)"
+                            animate={{ r: [2, 3.5, 2], opacity: [0.2, 0.5, 0.2] }}
+                            transition={{ duration: 1.8, repeat: Infinity, delay: s.delay }}
+                        />
+                        <motion.circle cx={x2} cy={y2} r="2"
+                            fill="rgba(129,140,248,0.30)"
+                            animate={{ r: [1.5, 3, 1.5], opacity: [0.15, 0.4, 0.15] }}
+                            transition={{ duration: 2.2, repeat: Infinity, delay: s.delay + 0.3 }}
+                        />
+                    </g>
+                );
+            })}
+        </motion.svg>
+    );
+}
+
+/* ── AI Brain Pulse (center enhancement) ─────────── */
+function AIBrainPulse({ done }: { done: boolean }) {
+    return (
+        <motion.div className="absolute inset-0 flex items-center justify-center z-[5] pointer-events-none">
+            {[0, 1, 2, 3].map(i => (
+                <motion.div key={i} className="absolute rounded-full"
+                    style={{
+                        width: 70 + i * 22, height: 70 + i * 22,
+                        border: `1px solid rgba(8,145,178,${0.12 - i * 0.025})`,
+                    }}
+                    animate={done
+                        ? { scale: [1, 1.3], opacity: [0.3, 0] }
+                        : { scale: [0.9, 1.15, 0.9], opacity: [0.05, 0.2, 0.05] }}
+                    transition={done
+                        ? { duration: 0.8, delay: i * 0.1 }
+                        : { duration: 2.5, repeat: Infinity, delay: i * 0.4, ease: 'easeInOut' }}
+                />
+            ))}
+        </motion.div>
+    );
+}
+
+function WaterOrbitViz({ activeIdx, done }: { activeIdx: number; done: boolean }) {
     const R = 78;
     const activated = Math.min(4, Math.floor((activeIdx / STEPS.length) * 5));
 
@@ -87,20 +150,47 @@ function WaterOrbitViz({ activeIdx }: { activeIdx: number }) {
                 </svg>
             </motion.div>
 
+            {/* DNA Helix layer */}
+            <DNAHelix />
+
+            {/* AI Brain Pulse */}
+            <AIBrainPulse done={done} />
+
             {/* Central water glass orb */}
             <div className="absolute inset-0 flex items-center justify-center z-10">
                 <motion.div
-                    animate={{ scale: [1, 1.06, 1] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="w-[68px] h-[68px] rounded-[22px] flex items-center justify-center relative overflow-hidden"
+                    animate={done
+                        ? { scale: [1, 1.15, 1], boxShadow: ['0 8px 32px rgba(52,211,153,0.35)', '0 12px 48px rgba(52,211,153,0.55)', '0 8px 32px rgba(52,211,153,0.35)'] }
+                        : { scale: [1, 1.06, 1] }}
+                    transition={{ duration: done ? 1.5 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-[72px] h-[72px] rounded-[24px] flex items-center justify-center relative overflow-hidden"
                     style={{
-                        background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(186,230,253,0.85) 35%, rgba(34,211,238,0.75) 100%)`,
-                        boxShadow: `0 8px 32px rgba(8,145,178,0.28), 0 2px 0 rgba(255,255,255,0.95) inset`,
-                        border: '1.5px solid rgba(255,255,255,0.85)',
+                        background: done
+                            ? 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(209,250,229,0.90) 35%, rgba(52,211,153,0.80) 100%)'
+                            : 'linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(186,230,253,0.85) 35%, rgba(34,211,238,0.75) 100%)',
+                        boxShadow: done
+                            ? '0 10px 40px rgba(52,211,153,0.35), 0 2px 0 rgba(255,255,255,0.95) inset'
+                            : '0 8px 32px rgba(8,145,178,0.28), 0 2px 0 rgba(255,255,255,0.95) inset',
+                        border: '1.5px solid rgba(255,255,255,0.90)',
                     }}>
                     <div className="absolute top-0 left-0 right-0 h-[48%]"
-                        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)', borderRadius: '22px 22px 0 0' }} />
-                    <span style={{ fontSize: 28, position: 'relative', zIndex: 1 }}>🧬</span>
+                        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.70) 0%, transparent 100%)', borderRadius: '24px 24px 0 0' }} />
+                    {/* Shimmer sweep */}
+                    <motion.div className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)' }}
+                        animate={{ x: ['-120%', '200%'] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'linear', delay: 1 }}
+                    />
+                    <AnimatePresence mode="wait">
+                        <motion.span key={done ? 'done' : 'work'}
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0, rotate: 45 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            style={{ fontSize: 30, position: 'relative', zIndex: 1 }}>
+                            {done ? '✅' : '🧬'}
+                        </motion.span>
+                    </AnimatePresence>
                 </motion.div>
             </div>
 
@@ -262,7 +352,7 @@ function StepItem({ step, index, isCompleted, isActive, delay }: {
                                 initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }}
                                 exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}>
                                 <Check style={{ width: 11, height: 11, color: W.seafoam, strokeWidth: 3 }} />
-                              </motion.div>
+                            </motion.div>
                             : <motion.div key="dot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                 {isActive
                                     ? <motion.div className="w-2 h-2 rounded-full"
@@ -271,7 +361,7 @@ function StepItem({ step, index, isCompleted, isActive, delay }: {
                                         transition={{ duration: 0.65, repeat: Infinity }} />
                                     : <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(8,145,178,0.3)' }} />
                                 }
-                              </motion.div>
+                            </motion.div>
                         }
                     </AnimatePresence>
                 </div>
@@ -328,6 +418,7 @@ export function StepAnalyzing() {
     }, []);
 
     const pct = done ? 100 : Math.round((activeIdx / STEPS.length) * 100);
+    const currentStep = STEPS[activeIdx];
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-start relative overflow-hidden"
@@ -338,60 +429,91 @@ export function StepAnalyzing() {
 
             {/* Ambient water glows */}
             <div className="absolute inset-0 pointer-events-none">
-                <div style={{ position: 'absolute', top: -80, right: -60, width: 320, height: 320,
+                <div style={{
+                    position: 'absolute', top: -80, right: -60, width: 320, height: 320,
                     borderRadius: '50%',
                     background: 'radial-gradient(circle, rgba(34,211,238,0.22) 0%, transparent 70%)',
-                    filter: 'blur(50px)' }} />
-                <div style={{ position: 'absolute', bottom: -60, left: -40, width: 280, height: 280,
+                    filter: 'blur(50px)'
+                }} />
+                <div style={{
+                    position: 'absolute', bottom: -60, left: -40, width: 280, height: 280,
                     borderRadius: '50%',
                     background: 'radial-gradient(circle, rgba(129,140,248,0.16) 0%, transparent 65%)',
-                    filter: 'blur(45px)' }} />
+                    filter: 'blur(45px)'
+                }} />
             </div>
 
             <div className="relative z-10 w-full flex flex-col items-center px-5">
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                     className="text-center mb-7">
-                    <p style={{ fontSize: 9.5, fontWeight: 900, color: W.teal, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>
-                        طِبرَا · محرك التوجيه الرباعي
-                    </p>
+                    {/* Brand watermark */}
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                        <div className="h-px w-8" style={{ background: `linear-gradient(to right, transparent, ${W.teal}40)` }} />
+                        <p style={{ fontSize: 9, fontWeight: 900, color: W.teal, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
+                            طِبرَا · محرك التوجيه الرباعي
+                        </p>
+                        <div className="h-px w-8" style={{ background: `linear-gradient(to left, transparent, ${W.teal}40)` }} />
+                    </div>
                     <AnimatePresence mode="wait">
                         <motion.h2 key={done ? 'done' : 'work'}
                             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}
-                            style={{ fontSize: 24, fontWeight: 900, color: W.textPrimary, letterSpacing: '-0.02em', lineHeight: 1.22 }}>
+                            style={{ fontSize: 26, fontWeight: 900, color: W.textPrimary, letterSpacing: '-0.02em', lineHeight: 1.22 }}>
                             {done
                                 ? <><span style={{ color: W.seafoam }}>✓</span> اكتمل التحليل</>
                                 : 'الذكاء يعمل…'
                             }
                         </motion.h2>
                     </AnimatePresence>
-                    <p style={{ fontSize: 12, color: W.textSub, marginTop: 4, fontWeight: 500 }}>
-                        {done ? 'خريطة توجيهك الشخصية جاهزة' : 'جسدي · نفسي · فكري · إيقاعي'}
-                    </p>
+                    {/* Dynamic subtitle */}
+                    <AnimatePresence mode="wait">
+                        <motion.p key={done ? 'ready' : `step-${activeIdx}`}
+                            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}
+                            style={{ fontSize: 12, color: done ? W.seafoam : W.textSub, marginTop: 4, fontWeight: done ? 700 : 500 }}>
+                            {done ? '🎯 خريطة توجيهك الشخصية جاهزة' : `${currentStep?.emoji} ${currentStep?.label}`}
+                        </motion.p>
+                    </AnimatePresence>
                 </motion.div>
 
                 {/* Orbit viz */}
                 <motion.div initial={{ opacity: 0, scale: 0.86 }} animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.18, type: 'spring', stiffness: 200, damping: 24 }} className="mb-7">
-                    <WaterOrbitViz activeIdx={activeIdx} />
+                    <WaterOrbitViz activeIdx={activeIdx} done={done} />
                 </motion.div>
 
                 {/* Glass steps card */}
                 <motion.div
                     initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.28, type: 'spring', stiffness: 200, damping: 28 }}
-                    className="w-full max-w-sm rounded-[28px] p-4 overflow-hidden"
+                    className="w-full max-w-sm rounded-[28px] p-5 overflow-hidden relative"
                     style={{
-                        background: W.glass,
-                        border: `1.5px solid ${W.glassBorder}`,
-                        backdropFilter: 'blur(28px)',
-                        boxShadow: '0 8px 32px rgba(8,145,178,0.12), 0 2px 0 rgba(255,255,255,0.95) inset',
+                        background: 'linear-gradient(160deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.50) 50%, rgba(255,255,255,0.38) 100%)',
+                        border: `1.5px solid rgba(255,255,255,0.90)`,
+                        backdropFilter: 'blur(30px) saturate(160%)',
+                        boxShadow: '0 10px 40px rgba(8,145,178,0.12), 0 2px 10px rgba(0,0,0,0.04), inset 0 1.5px 0 rgba(255,255,255,0.95)',
                     }}>
-                    <div className="h-px mb-4"
-                        style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), transparent)' }} />
+                    {/* Top sheen */}
+                    <div className="absolute inset-x-0 top-0 pointer-events-none"
+                        style={{ height: '50%', background: 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, transparent 100%)', borderRadius: '28px 28px 0 0' }} />
+                    {/* Accent strip */}
+                    <div className="absolute top-0 left-[12%] right-[12%] h-[2.5px] rounded-b-full pointer-events-none"
+                        style={{ background: done
+                            ? `linear-gradient(90deg, ${W.seafoam}40, ${W.seafoam}, ${W.seafoam}40)`
+                            : `linear-gradient(90deg, ${W.teal}30, ${W.teal}90, ${W.teal}30)`,
+                            boxShadow: done ? `0 2px 10px ${W.seafoam}40` : `0 2px 10px ${W.teal}25` }} />
+                    {/* Shimmer sweep */}
+                    <motion.div className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.15) 50%, transparent 65%)' }}
+                        animate={{ x: ['-120%', '200%'] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: 'linear', delay: 2 }}
+                    />
 
-                    <div className="space-y-3">
+                    <div className="h-px mb-4 relative z-10"
+                        style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.35), transparent)' }} />
+
+                    <div className="space-y-3 relative z-10">
                         {STEPS.map((s, i) => (
                             <StepItem key={i} step={s} index={i}
                                 isCompleted={i < activeIdx || done}
@@ -401,19 +523,27 @@ export function StepAnalyzing() {
                     </div>
 
                     {/* Progress */}
-                    <div className="mt-4 pt-4" style={{ borderTop: `1px solid rgba(8,145,178,0.1)` }}>
+                    <div className="mt-4 pt-4 relative z-10" style={{ borderTop: '1px solid rgba(8,145,178,0.08)' }}>
                         <div className="flex justify-between mb-2">
-                            <span style={{ fontSize: 9, fontWeight: 800, color: W.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>تقدم التحليل</span>
-                            <span style={{ fontSize: 9, fontWeight: 900, color: done ? W.seafoam : W.teal }}>{pct}%</span>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: W.textMuted, textTransform: 'uppercase', letterSpacing: '0.12em' }}>تقدم التحليل</span>
+                            <span style={{ fontSize: 10, fontWeight: 900, color: done ? W.seafoam : W.teal }}>{pct}%</span>
                         </div>
-                        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(8,145,178,0.1)' }}>
+                        <div className="h-2 rounded-full overflow-hidden relative" style={{ background: 'rgba(8,145,178,0.08)' }}>
                             <motion.div className="h-full rounded-full"
-                                style={{ background: done
-                                    ? `linear-gradient(90deg, ${W.seafoam}, ${W.tealLight})`
-                                    : `linear-gradient(90deg, ${W.teal}, ${W.tealLight})`
+                                style={{
+                                    background: done
+                                        ? `linear-gradient(90deg, ${W.seafoam}, ${W.tealLight})`
+                                        : `linear-gradient(90deg, ${W.teal}, ${W.tealLight})`,
+                                    boxShadow: done ? `0 0 10px ${W.seafoam}50` : `0 0 8px ${W.teal}30`,
                                 }}
                                 animate={{ width: `${pct}%` }}
                                 transition={{ duration: 0.4, ease: [0.05, 0.7, 0.1, 1] }}
+                            />
+                            {/* Glow tip */}
+                            <motion.div className="absolute top-0 h-full rounded-full"
+                                animate={{ left: `${pct}%` }}
+                                transition={{ duration: 0.4, ease: [0.05, 0.7, 0.1, 1] }}
+                                style={{ width: 4, background: 'rgba(255,255,255,0.85)', filter: 'blur(1.5px)', marginLeft: -2 }}
                             />
                         </div>
                     </div>

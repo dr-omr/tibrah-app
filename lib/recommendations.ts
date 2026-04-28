@@ -1,4 +1,6 @@
 import { db } from '@/lib/db';
+import { TAYYIBAT_ATTRIBUTION_COPY } from '@/lib/tayyibat/tayyibat-nutrition-policy';
+
 
 export interface Recommendation {
     id: string;
@@ -135,11 +137,11 @@ export const generateRecommendations = async (userId: string): Promise<Recommend
         recs.push({
             id: 'rec_goal_weight',
             type: 'action',
-            title: 'خطة إنقاص الوزن',
-            subtitle: 'نظام صيام متقطع + تغذية',
+            title: 'بروتوكول الطيبات لضبط الوزن',
+            subtitle: 'تحوّل لوقود الدهون بدلاً من السكر — مبادئ الطيبات',
             reason: 'مطابق لهدفك: إنقاص الوزن ⚖️',
-            actionLabel: 'عرض الخطة',
-            actionLink: '/meal-planner',
+            actionLabel: 'اعرف النظام',
+            actionLink: '/tayyibat',
             priority: 75
         });
     }
@@ -174,11 +176,11 @@ export const generateRecommendations = async (userId: string): Promise<Recommend
         recs.push({
             id: 'rec_goal_nutrition',
             type: 'action',
-            title: 'مخطط وجبات مخصص',
-            subtitle: 'وجبات صحية مبنية على حالتك',
+            title: 'نظام الطيبات الغذائي',
+            subtitle: `${TAYYIBAT_ATTRIBUTION_COPY.short} — ابدأ من هنا`,
             reason: 'مطابق لهدفك: أكل صحي 🥗',
-            actionLabel: 'خطط وجباتك',
-            actionLink: '/meal-planner',
+            actionLabel: 'استكشف الطيبات',
+            actionLink: '/tayyibat',
             priority: 72
         });
     }
@@ -213,11 +215,12 @@ export const generateRecommendations = async (userId: string): Promise<Recommend
         recs.push({
             id: 'rec_goal_gut',
             type: 'action',
-            title: 'صحة الأمعاء والميكروبيوم',
-            subtitle: 'دعم البروبيوتيك والألياف',
+            // Tayyibat-aligned: gut health via elimination of fermentation triggers, not generic fiber/probiotic
+            title: 'بروتوكول صحة الأمعاء (الطيبات)',
+            subtitle: 'تخفيف التخمرات والالتهاب — خطوة بخطوة مع الطيبات',
             reason: 'مطابق لهدفك: صحة الأمعاء 🦠',
-            actionLabel: 'اكتشف',
-            actionLink: '/library',
+            actionLabel: 'ابدأ بروتوكول الأمعاء',
+            actionLink: '/tayyibat/assessment',
             priority: 60
         });
     }

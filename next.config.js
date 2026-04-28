@@ -58,11 +58,10 @@ const nextConfig = {
     },
 
     // Experimental features
-    experimental: {
-        // Enable if needed
-    },
+    experimental: {},
 
     // ═══ TOOL LINK REDIRECTS ═══
+
     // Route missing /assess/*, /programs/*, /tools/* to real existing pages
     // Decision: Option B — use real existing pages, not placeholders
     async redirects() {
@@ -93,14 +92,20 @@ const nextConfig = {
             { source: '/programs/success-engineering',  destination: '/courses',    permanent: false },
 
             // ── /tools/* → existing tool pages ──
-            { source: '/tools/gratitude',   destination: '/daily-log',          permanent: false },
+            { source: '/tools/gratitude',   destination: '/tayyibat/tracker',   permanent: false },
             { source: '/tools/grounding',   destination: '/breathe',            permanent: false },
-            { source: '/tools/journal',     destination: '/daily-log',          permanent: false },
+            { source: '/tools/journal',     destination: '/tayyibat/tracker',   permanent: false },
             { source: '/tools/reframe',     destination: '/emotional-medicine', permanent: false },
-            { source: '/tools/vision',      destination: '/daily-log',          permanent: false },
-            { source: '/tools/weekly-plan', destination: '/daily-log',          permanent: false },
+            { source: '/tools/vision',      destination: '/tayyibat/tracker',   permanent: false },
+            { source: '/tools/weekly-plan', destination: '/tayyibat/tracker',   permanent: false },
+
+            // ── Removed old food tracker pages → new Tayyibat system ──
+            { source: '/daily-log',    destination: '/tayyibat/tracker', permanent: true },
+            { source: '/meal-planner', destination: '/tayyibat',         permanent: true },
+
         ];
     },
+
 };
 
 // PWA: Disable for mobile builds (Capacitor handles it natively)

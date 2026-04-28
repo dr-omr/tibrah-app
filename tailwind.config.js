@@ -6,7 +6,8 @@ module.exports = {
         './hooks/**/*.{js,ts,jsx,tsx}',
         './contexts/**/*.{js,ts,jsx,tsx}',
         './lib/**/*.{js,ts,jsx,tsx}',
-        './styles/**/*.{css}',
+        './styles/**/*.css',
+
         './Layout.js',
         './Layout.tsx',
     ],

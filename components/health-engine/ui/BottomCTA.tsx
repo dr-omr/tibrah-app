@@ -42,9 +42,9 @@ export function BottomCTA({ label, onPress, disabled, loading, variant = 'teal',
     const cfg = VARIANTS[variant];
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 px-4"
+        <div className="fixed bottom-0 inset-x-0 z-[900] px-4"
             style={{
-                paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+                paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
                 background: 'linear-gradient(0deg, rgba(232,248,251,0.97) 0%, rgba(224,241,254,0.90) 60%, transparent 100%)',
                 backdropFilter: 'blur(8px)',
                 paddingTop: 18,

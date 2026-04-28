@@ -15,7 +15,16 @@
     "analyze": "ANALYZE=true next build",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:tayyibat": "jest lib/tayyibat/__tests__/tayyibat-integration.test.ts --no-coverage --verbose",
+    "verify:tayyibat": "npx tsx lib/tayyibat/__tests__/verify-tayyibat-integration.ts",
+    "verify:assessment": "npx tsx lib/assessment/__tests__/verify-assessment-lifecycle.ts",
+    "verify:result-model": "npx tsx lib/result-engine/__tests__/verify-result-model.ts",
+    "verify:adaptive": "npx tsx lib/health-engine/__tests__/verify-adaptive-question-orchestrator.ts",
+    "verify:confidence": "npx tsx lib/health-engine/__tests__/verify-confidence-triage.ts",
+    "verify:nutrition-protocols": "npx tsx lib/tayyibat/__tests__/verify-nutrition-protocols.ts"
+
+
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

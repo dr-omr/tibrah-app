@@ -20,6 +20,7 @@ import { haptic } from '@/lib/HapticFeedback';
 import { getActiveCarePlan } from '@/lib/care-plan-store';
 import { SUBDOMAIN_BY_ID } from '@/lib/domain-routing-map';
 import type { SubdomainId } from '@/components/health-engine/types';
+import { SectionSkeleton } from '@/components/sections/shared/SectionSkeleton';
 
 import { SectionStatusBar } from '@/components/sections/shared/SectionStatusBar';
 import { SubdomainRail }    from '@/components/sections/shared/SubdomainRail';
@@ -229,7 +230,7 @@ export default function NafsiPage() {
 
     const handleSubdomainSelect = useCallback((id: SubdomainId | null) => { setActiveSubdomain(id); }, []);
 
-    if (loading) return <div className="min-h-screen" style={{ background: 'linear-gradient(168deg, #F5F3FF 0%, #EDE9FE 50%, #F5F3FF 100%)' }} />;
+    if (loading) return <SectionSkeleton color="#7C3AED" bg="linear-gradient(168deg, #F5F3FF 0%, #EDE9FE 50%, #F5F3FF 100%)" />;
     if (!user) return <SectionAuthGate section={NAFSI} />;
 
     return (

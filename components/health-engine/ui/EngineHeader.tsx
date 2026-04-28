@@ -13,16 +13,18 @@ const LABELS: Record<StepId, string> = {
     pathway:   'اختر شكواك',
     clinical:  'تفاصيل الحالة',
     emotional: 'البعد العاطفي',
+    nutrition: 'نظام الطيبات',
     analyzing: 'جاري التحليل',
     result:    'نتيجة تحليلك',
 };
 
-const PROGRESS_STEPS: StepId[] = ['pathway', 'clinical', 'emotional'];
+const PROGRESS_STEPS: StepId[] = ['pathway', 'clinical', 'emotional', 'nutrition'];
 
 const STEP_COLOR: Partial<Record<StepId, string>> = {
     pathway:   '#0891B2',
     clinical:  '#D97706',
     emotional: '#818CF8',
+    nutrition: '#059669',
 };
 
 export function EngineHeader({ step, onBack, canGoBack }: {

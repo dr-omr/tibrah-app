@@ -25,12 +25,15 @@ export const staticIndex: SearchItem[] = [
     { id: 'profile', title: 'الملف الشخصي', description: 'تعديل بياناتك', icon: Settings, href: '/profile', category: 'pages', keywords: ['حساب', 'ملف', 'profile', 'بيانات'], color: '#64748B' },
 
     // === Health Tools ===
-    { id: 'health-tracker', title: 'المتابع الصحي', description: 'تتبع صحتك يومياً بالذكاء الاصطناعي', icon: Activity, href: '/health-tracker', category: 'health', keywords: ['صحة', 'تتبع', 'health', 'tracker', 'متابعة'], color: '#10B981', badge: '⭐' },
-    { id: 'daily-log', title: 'السجل اليومي', description: 'تسجيل قراءاتك الصحية', icon: Calendar, href: '/daily-log', category: 'health', keywords: ['يوميات', 'سجل', 'daily', 'تسجيل'], color: '#14B8A6' },
+    { id: 'tayyibat', title: 'نظام الطيبات الغذائي', description: 'النظام الغذائي الصحي الكامل', icon: Activity, href: '/tayyibat', category: 'health', keywords: ['طيبات', 'غذاء', 'tayyibat', 'أكل', 'طعام', 'حمية', 'صحي'], color: '#10B981', badge: '⭐' },
+    { id: 'tayyibat-tracker', title: 'متتبع الطيبات', description: 'سجّل وجباتك اليومية', icon: Calendar, href: '/tayyibat/tracker', category: 'health', keywords: ['يوميات', 'وجبات', 'سجل', 'daily', 'تسجيل', 'متتبع'], color: '#14B8A6' },
+    { id: 'tayyibat-assessment', title: 'تقييم الطيبات', description: 'اكتشف مستوى التزامك الغذائي', icon: Activity, href: '/tayyibat/assessment', category: 'health', keywords: ['تقييم', 'التزام', 'طيبات', 'غذائي', 'نتيجة'], color: '#7C3AED' },
+    { id: 'health-tracker', title: 'متابعة الصحة', description: 'نوم، ماء، دواء، لياقة، وزن — كل مؤشراتك', icon: Activity, href: '/health-tracker', category: 'health', keywords: ['صحة', 'تتبع', 'health', 'tracker', 'نوم', 'ماء', 'وزن', 'لياقة'], color: '#2563EB', badge: '⭐' },
     { id: 'record-health', title: 'تسجيل المؤشرات الحيوية', description: 'تسجيل السكر، الضغط، والنبض', icon: Activity, href: '/record-health', category: 'health', keywords: ['سكر', 'ضغط', 'قياس', 'مؤشرات'], color: '#F43F5E' },
+
     { id: 'quick-check-in', title: 'الفحص السريع', description: 'التقييم اليومي لحالتك', icon: Brain, href: '/quick-check-in', category: 'health', keywords: ['فحص', 'سريع', 'check'], color: '#0EA5E9' },
-    { id: 'meal-planner', title: 'تخطيط الوجبات', description: 'خطة غذائية مخصصة لحالتك', icon: BookOpen, href: '/meal-planner', category: 'health', keywords: ['وجبات', 'غذاء', 'meal', 'أكل', 'طعام', 'حمية'], color: '#22C55E' },
     { id: 'medical-file', title: 'ملفي الطبي', description: 'بياناتك الصحية في مكان واحد', icon: FileText, href: '/medical-file', category: 'health', keywords: ['ملف', 'طبي', 'medical', 'سجل', 'بيانات'], color: '#3B82F6' },
+
     { id: 'my-care', title: 'خطة العناية', description: 'برنامجك العلاجي الشامل', icon: Heart, href: '/my-care', category: 'health', keywords: ['عناية', 'خطة', 'care', 'علاج'], color: '#8B5CF6' },
     { id: 'symptom-analysis', title: 'تحليل الأعراض', description: 'تحليل ذكي لأعراضك الصحية', icon: Stethoscope, href: '/symptom-analysis', category: 'health', keywords: ['أعراض', 'تحليل', 'symptom', 'تشخيص', 'مرض'], color: '#EF4444' },
     { id: 'body-map', title: 'خريطة الجسم', description: 'حدد مكان الألم بدقة', icon: Heart, href: '/body-map', category: 'health', keywords: ['جسم', 'body', 'ألم', 'map', 'خريطة'], color: '#F43F5E' },

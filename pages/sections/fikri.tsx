@@ -20,6 +20,7 @@ import { haptic } from '@/lib/HapticFeedback';
 import { getActiveCarePlan } from '@/lib/care-plan-store';
 import { SUBDOMAIN_BY_ID } from '@/lib/domain-routing-map';
 import type { SubdomainId } from '@/components/health-engine/types';
+import { SectionSkeleton } from '@/components/sections/shared/SectionSkeleton';
 
 import { SectionStatusBar } from '@/components/sections/shared/SectionStatusBar';
 import { SubdomainRail }    from '@/components/sections/shared/SubdomainRail';
@@ -235,7 +236,7 @@ export default function FikriPage() {
 
     const handleSubdomainSelect = useCallback((id: SubdomainId | null) => { setActiveSubdomain(id); }, []);
 
-    if (loading) return <div className="min-h-screen" style={{ background: 'linear-gradient(168deg, #FFFBEB 0%, #FEF3C7 50%, #FFFBEB 100%)' }} />;
+    if (loading) return <SectionSkeleton color="#D97706" bg="linear-gradient(168deg, #FFFBEB 0%, #FEF3C7 50%, #FFFBEB 100%)" />;
     if (!user) return <SectionAuthGate section={FIKRI} />;
 
     return (

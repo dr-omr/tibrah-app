@@ -13,6 +13,8 @@ import { SeveritySlider } from '../ui/SeveritySlider';
 import { BottomCTA } from '../ui/BottomCTA';
 import { haptic } from '@/lib/HapticFeedback';
 import type { AnswerValue } from '../types';
+import { getDeepQuestionsForPathway } from '@/lib/clinical/deep-intake-questions';
+import { getAdaptiveFoodQuestions, hasFoodRelevantSignals } from '@/lib/clinical/tayyibat-adaptive-screening';
 
 /* ══════════════════════════════════════════════════════════════════
    LIGHT WATER GLASS — Premium Medical
@@ -163,14 +165,23 @@ export function StepClinical({ pathwayId, severity, duration, clinicalAnswers, o
         onAnswer(qId, cur.includes(opt) ? cur.filter(o => o !== opt) : [...cur, opt]);
     };
 
+    const deepQs  = getDeepQuestionsForPathway(pathwayId, severity);
+    const foodQs  = hasFoodRelevantSignals(pathwayId, severity, clinicalAnswers)
+        ? getAdaptiveFoodQuestions(pathwayId, severity, clinicalAnswers, 3)
+        : [];
+
     const filled = [
         severity > 0, !!duration,
         ...pathway.clinicalQuestions.map(q => {
             const v = clinicalAnswers[q.id];
             return Array.isArray(v) ? v.length > 0 : !!v;
         }),
+        ...deepQs.map(q => {
+            const v = clinicalAnswers[q.id];
+            return Array.isArray(v) ? v.length > 0 : !!v;
+        }),
     ].filter(Boolean).length;
-    const total = 2 + pathway.clinicalQuestions.length;
+    const total = 2 + pathway.clinicalQuestions.length + deepQs.length;
     const pct   = Math.round((filled / total) * 100);
 
     return (
@@ -189,7 +200,7 @@ export function StepClinical({ pathwayId, severity, duration, clinicalAnswers, o
                     filter: 'blur(48px)' }} />
             </div>
 
-            <div className="relative z-10 px-4 pt-2 pb-32">
+            <div className="relative z-10 px-4 pt-2 pb-44">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 14 }}
@@ -309,6 +320,82 @@ export function StepClinical({ pathwayId, severity, duration, clinicalAnswers, o
                         </motion.div>
                     );
                 })}
+                {/* Deep intake questions */}
+                {deepQs.length > 0 && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="my-3 flex items-center gap-2 px-1">
+                            <div style={{ flex: 1, height: 1, background: 'rgba(5,150,105,0.12)' }} />
+                            <span style={{ fontSize: 9, fontWeight: 700, color: '#059669', letterSpacing: '0.05em' }}>تعميق التحليل</span>
+                            <div style={{ flex: 1, height: 1, background: 'rgba(5,150,105,0.12)' }} />
+                        </motion.div>
+                        {deepQs.map((q, qi) => {
+                            const val = clinicalAnswers[q.id];
+                            const cnt = Array.isArray(val) ? val.length : val ? 1 : 0;
+                            return (
+                                <motion.div key={q.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.32 + qi * 0.04 }}>
+                                    <WaterCard title={q.text} accent="#059669"
+                                        badge={cnt > 0 ? `${cnt} محدد` : undefined}
+                                        defaultOpen={qi === 0}>
+                                        <div className="flex flex-wrap gap-2">
+                                            {q.options.map(opt => {
+                                                const isSel = Array.isArray(val) ? val.includes(opt) : val === opt;
+                                                return (
+                                                    <OptionChip key={opt} label={opt} selected={isSel} color="#059669"
+                                                        onToggle={() => q.type === 'multiple' ? togN(q.id, opt) : tog1(q.id, opt)} />
+                                                );
+                                            })}
+                                        </div>
+                                    </WaterCard>
+                                </motion.div>
+                            );
+                        })}
+                    </>
+                )}
+
+                {/* Adaptive Tayyibat food questions — only when food signals exist */}
+                {foodQs.length > 0 && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            transition={{ delay: 0.45 }}
+                            className="my-3 flex items-center gap-2 px-1">
+                            <div style={{ flex: 1, height: 1, background: 'rgba(5,150,105,0.12)' }} />
+                            <span style={{ fontSize: 9, fontWeight: 700, color: '#059669', letterSpacing: '0.05em' }}>🌿 الجانب الغذائي</span>
+                            <div style={{ flex: 1, height: 1, background: 'rgba(5,150,105,0.12)' }} />
+                        </motion.div>
+                        {foodQs.map((q, qi) => {
+                            const val = clinicalAnswers[q.id];
+                            const selected = typeof val === 'string' ? val : '';
+                            return (
+                                <motion.div key={q.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.47 + qi * 0.04 }}>
+                                    <WaterCard title={q.text} accent="#059669"
+                                        badge={selected ? '✓' : undefined}
+                                        defaultOpen={qi === 0}>
+                                        {q.subtext && (
+                                            <p style={{ fontSize: 10, color: W.textMuted, marginBottom: 8 }}>{q.subtext}</p>
+                                        )}
+                                        <div className="flex flex-wrap gap-2">
+                                            {q.options.map(opt => (
+                                                <OptionChip key={opt.value}
+                                                    label={`${opt.emoji ?? ''} ${opt.label}`.trim()}
+                                                    selected={selected === opt.value}
+                                                    color="#059669"
+                                                    onToggle={() => tog1(q.id, opt.value)} />
+                                            ))}
+                                        </div>
+                                    </WaterCard>
+                                </motion.div>
+                            );
+                        })}
+                    </>
+                )}
             </div>
 
             <BottomCTA label="التالي — البعد العاطفي" onPress={onNext} variant="teal" />
