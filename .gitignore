@@ -47,3 +47,5 @@ public/sw.js.map
 public/workbox-*.js
 public/worker-*.js
 .env*.local
+
+public/fallback-*.js
