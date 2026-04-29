@@ -35,6 +35,13 @@ const AiPlanSheet = dynamic(() => import('@/components/meal-planner/AiPlanSheet'
 
 import { mealTypes } from '@/components/meal-planner/MealPlanTab';
 
+export const getServerSideProps = async () => ({
+    redirect: {
+        destination: '/tayyibat',
+        permanent: true,
+    },
+});
+
 export default function MealPlanner() {
     const queryClient = useQueryClient();
     const [selectedDate, setSelectedDate] = useState(new Date());

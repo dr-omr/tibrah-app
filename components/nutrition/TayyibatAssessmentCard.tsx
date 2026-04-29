@@ -1,319 +1,294 @@
 // components/nutrition/TayyibatAssessmentCard.tsx
-// ════════════════════════════════════════════════════════════════════════
-// TIBRAH — Tayyibat Assessment Step Card
-// ════════════════════════════════════════════════════════════════════════
-//
-// Renders the Tayyibat gate questions + conditional deep flow
-// inside the assessment engine's step system.
-//
-// Flow:
-//   1. Show gate questions (mandatory)
-//   2. Evaluate shouldTriggerDeepFlow()
-//   3. If triggered → show deep questions one by one
-//   4. If not → skip to submit
-// ════════════════════════════════════════════════════════════════════════
+'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Leaf, ChevronLeft, Check, AlertTriangle } from 'lucide-react';
-
-import {
-    TAYYIBAT_GATE_QUESTIONS,
-    TAYYIBAT_DEEP_QUESTIONS,
-    shouldTriggerDeepFlow,
-    type TayyibatQuestion,
-    type TayyibatKnowledgeLevel,
-    type TayyibatAdherenceLevel,
-} from '@/lib/nutrition/tayyibat-assessment-flow';
+import { Check, Leaf, Sparkles } from 'lucide-react';
+import { BottomCTA } from '@/components/health-engine/ui/BottomCTA';
 import { haptic } from '@/lib/HapticFeedback';
 
-/* ── Design Tokens (Water Glass) ── */
-const W = {
-    glass:       'rgba(255,255,255,0.58)',
-    glassHigh:   'rgba(255,255,255,0.72)',
-    glassBorder: 'rgba(255,255,255,0.85)',
-    glassShadow: '0 8px 32px rgba(8,145,178,0.10), 0 2px 8px rgba(0,0,0,0.04), inset 0 1.5px 0 rgba(255,255,255,0.92)',
-    teal:        '#0891B2',
-    textPrimary: '#0C4A6E',
-    textSub:     '#0369A1',
-    textMuted:   '#7DD3FC',
-    green:       '#059669',
-    greenLight:  'rgba(5,150,105,0.10)',
-    greenBorder: 'rgba(5,150,105,0.25)',
-    sheen:       'linear-gradient(180deg, rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.15) 45%, transparent 100%)',
-};
+type Knowledge = 'dont_know' | 'know_not_following' | 'yes_partial' | 'yes_following';
 
 interface Props {
-    pathwayId: string;
-    clinicalAnswers: Record<string, unknown>;
-    onComplete: (answers: {
-        gateAnswers: Record<string, string>;
-        deepAnswers: Record<string, string>;
-        deepTriggered: boolean;
-    }) => void;
+  pathwayId: string;
+  clinicalAnswers: Record<string, unknown>;
+  onComplete: (answers: {
+    gateAnswers: Record<string, string>;
+    deepAnswers: Record<string, string>;
+    deepTriggered: boolean;
+  }) => void;
 }
 
-export function TayyibatAssessmentCard({ pathwayId, clinicalAnswers, onComplete }: Props) {
-    const [phase, setPhase]        = useState<'gate' | 'deep' | 'done'>('gate');
-    const [gateIdx, setGateIdx]    = useState(0);
-    const [deepIdx, setDeepIdx]    = useState(0);
-    const [gateAnswers, setGateAnswers]  = useState<Record<string, string>>({});
-    const [deepAnswers, setDeepAnswers]  = useState<Record<string, string>>({});
-    const [textInput, setTextInput]      = useState('');
+const C = {
+  bg: 'linear-gradient(168deg, #E8F8FB 0%, #E6F7EF 34%, #EEF7FF 68%, #F8FCFD 100%)',
+  ink: '#073B52',
+  sub: '#0F6F8F',
+  muted: '#639CAF',
+  green: '#059669',
+  teal: '#0787A5',
+  amber: '#D97706',
+  glass: 'rgba(255,255,255,0.68)',
+  border: 'rgba(255,255,255,0.90)',
+};
 
-    // Current question
-    const currentQuestion = useMemo((): TayyibatQuestion | null => {
-        if (phase === 'gate') return TAYYIBAT_GATE_QUESTIONS[gateIdx] ?? null;
-        if (phase === 'deep') return TAYYIBAT_DEEP_QUESTIONS[deepIdx] ?? null;
-        return null;
-    }, [phase, gateIdx, deepIdx]);
+const KNOWLEDGE_OPTIONS: Array<{ id: Knowledge; title: string; sub: string; color: string }> = [
+  { id: 'dont_know', title: 'لا أعرفه', sub: 'لن نقيّم التزامك؛ سنعرض مدخلًا تعريفيًا فقط', color: '#64748B' },
+  { id: 'know_not_following', title: 'أعرفه ولا أطبقه', sub: 'نبدأ بخطوة بسيطة', color: '#D97706' },
+  { id: 'yes_partial', title: 'أطبقه جزئياً', sub: 'نبحث عن الثغرات', color: '#0787A5' },
+  { id: 'yes_following', title: 'أطبقه غالباً', sub: 'نرفع الدقة بالمتابعة', color: '#059669' },
+];
 
-    // Total progress
-    const totalGate = TAYYIBAT_GATE_QUESTIONS.length;
-    const totalDeep = TAYYIBAT_DEEP_QUESTIONS.length;
+const UNKNOWN_FOOD_QUESTIONS = [
+  { id: 'food_after_meals', text: 'هل تزيد الأعراض بعد الأكل؟', options: ['نعم', 'أحياناً', 'لا أعرف', 'لا'] },
+  { id: 'food_digestive_symptoms', text: 'هل يحدث انتفاخ/غازات/حموضة؟', options: ['نعم', 'أحياناً', 'لا أعرف', 'لا'] },
+  { id: 'food_energy_crash', text: 'هل يحدث هبوط طاقة أو رغبة سكر بعد الوجبات؟', options: ['نعم', 'أحياناً', 'لا أعرف', 'لا'] },
+];
 
-    const handleOptionSelect = useCallback((questionId: string, optionId: string) => {
-        haptic.selection();
+const KNOWN_QUESTIONS = [
+  { id: 'tay_adherence_detail', text: 'ما مستوى الالتزام؟', options: ['لا أطبقه الآن', 'أطبقه أحياناً', 'أطبقه غالباً', 'أحتاج متابعة'] },
+  { id: 'tay_hardest_part', text: 'ما أصعب شيء في التطبيق؟', options: ['الخبز/القمح', 'الألبان/البيض', 'السكر', 'الروتين والوقت', 'الأسرة والمناسبات'] },
+  { id: 'tay_first_step_preference', text: 'ما الخطوة الصغيرة التي تفضّل البدء بها؟', options: ['تبديل الخبز', 'تقليل السكر', 'تنظيم وقت الوجبات', 'تسجيل ما آكل', 'لا أعرف بعد'] },
+  { id: 'tay_symptom_difference', text: 'هل لاحظت فرقاً في الأعراض مع الالتزام؟', options: ['فرق واضح', 'فرق بسيط', 'لم ألاحظ', 'لم أتابع بما يكفي'] },
+  { id: 'tay_disruptive_habit', text: 'ما أكثر وجبة أو عادة تربك جسمك؟', options: ['وجبة متأخرة', 'حلويات', 'قهوة كثيرة', 'أكل سريع', 'لا أعرف'] },
+];
 
-        if (phase === 'gate') {
-            const updated = { ...gateAnswers, [questionId]: optionId };
-            setGateAnswers(updated);
+function GlassCard({ children, accent = C.green }: { children: ReactNode; accent?: string }) {
+  return (
+    <div className="relative overflow-hidden rounded-[26px]"
+      style={{ background: C.glass, border: `1.5px solid ${C.border}`, backdropFilter: 'blur(26px)', boxShadow: '0 12px 36px rgba(8,145,178,0.08), inset 0 1.5px 0 rgba(255,255,255,0.92)' }}>
+      <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.68), transparent)' }} />
+      <div className="absolute top-0 left-[18%] right-[18%] h-[3px] rounded-b-full" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
 
-            // Auto-advance after short delay
-            setTimeout(() => {
-                if (gateIdx < totalGate - 1) {
-                    setGateIdx(gateIdx + 1);
-                } else {
-                    // Gate complete — check if deep flow needed
-                    const knowledge = (updated['tay_know'] || 'dont_know') as TayyibatKnowledgeLevel;
-                    const adherence = (updated['tay_level'] || 'unknown') as TayyibatAdherenceLevel;
-                    const needsDeep = shouldTriggerDeepFlow(knowledge, adherence, pathwayId, clinicalAnswers);
+function ChoiceCard({ title, sub, selected, color, onClick }: {
+  title: string;
+  sub: string;
+  selected: boolean;
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="w-full rounded-[22px] p-4 text-right relative overflow-hidden"
+      style={{
+        background: selected ? `linear-gradient(145deg, rgba(255,255,255,0.92), ${color}12)` : 'rgba(255,255,255,0.54)',
+        border: `1.5px solid ${selected ? `${color}35` : 'rgba(255,255,255,0.82)'}`,
+        boxShadow: selected ? `0 10px 28px ${color}14` : 'inset 0 1px 0 rgba(255,255,255,0.90)',
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <span className="rounded-[15px] flex items-center justify-center shrink-0" style={{ width: 38, height: 38, background: `${color}10`, border: `1px solid ${color}22` }}>
+          {selected ? <Check style={{ width: 17, height: 17, color }} /> : <Leaf style={{ width: 17, height: 17, color }} />}
+        </span>
+        <span className="flex-1">
+          <span style={{ display: 'block', fontSize: 14.5, fontWeight: 950, color: C.ink }}>{title}</span>
+          <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.7, color: C.sub, fontWeight: 650, marginTop: 3 }}>{sub}</span>
+        </span>
+      </div>
+    </motion.button>
+  );
+}
 
-                    if (needsDeep) {
-                        setPhase('deep');
-                    } else {
-                        onComplete({ gateAnswers: updated, deepAnswers: {}, deepTriggered: false });
-                    }
-                }
-            }, 350);
-        } else if (phase === 'deep') {
-            const updated = { ...deepAnswers, [questionId]: optionId };
-            setDeepAnswers(updated);
-            setTimeout(() => advanceDeep(updated), 350);
-        }
-    }, [phase, gateIdx, gateAnswers, deepAnswers, pathwayId, clinicalAnswers, onComplete, totalGate]);
+export function TayyibatAssessmentCard({ pathwayId: _pathwayId, clinicalAnswers: _clinicalAnswers, onComplete }: Props) {
+  const [knowledge, setKnowledge] = useState<Knowledge | null>(null);
+  const [phase, setPhase] = useState<'gate' | 'unknown_choice' | 'unknown_food' | 'known_questions'>('gate');
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
-    const handleTextSubmit = useCallback(() => {
-        if (!currentQuestion || !textInput.trim()) return;
-        haptic.selection();
+  const selectedMeta = useMemo(() => KNOWLEDGE_OPTIONS.find(option => option.id === knowledge), [knowledge]);
+  const knownQuestionsComplete = KNOWN_QUESTIONS.every(q => answers[q.id]);
+  const unknownQuestionsComplete = UNKNOWN_FOOD_QUESTIONS.every(q => answers[q.id]);
 
-        if (phase === 'deep') {
-            const updated = { ...deepAnswers, [currentQuestion.id]: textInput.trim() };
-            setDeepAnswers(updated);
-            setTextInput('');
-            advanceDeep(updated);
-        }
-    }, [phase, currentQuestion, textInput, deepAnswers]);
+  const baseGate = (level: Knowledge) => ({
+    tay_know: level,
+    tay_level: level === 'yes_following'
+      ? 'full'
+      : level === 'yes_partial'
+        ? 'partial'
+        : level === 'know_not_following'
+          ? 'not_following'
+          : 'unknown',
+  });
 
-    const advanceDeep = useCallback((updated: Record<string, string>) => {
-        if (deepIdx < totalDeep - 1) {
-            setDeepIdx(deepIdx + 1);
-        } else {
-            onComplete({ gateAnswers, deepAnswers: updated, deepTriggered: true });
-        }
-    }, [deepIdx, totalDeep, gateAnswers, onComplete]);
+  const finishUnknown = (deepTriggered: boolean) => {
+    onComplete({
+      gateAnswers: baseGate('dont_know'),
+      deepAnswers: deepTriggered ? { ...answers, tay_mode: 'educational_with_food_signals' } : { tay_mode: 'educational_only' },
+      deepTriggered,
+    });
+  };
 
-    // Progress calculation
-    const progressPercent = useMemo(() => {
-        if (phase === 'gate') return ((gateIdx) / (totalGate + (phase === 'gate' ? 0 : totalDeep))) * 100;
-        if (phase === 'deep') return ((totalGate + deepIdx) / (totalGate + totalDeep)) * 100;
-        return 100;
-    }, [phase, gateIdx, deepIdx, totalGate, totalDeep]);
+  const finishKnown = () => {
+    if (!knowledge || knowledge === 'dont_know') return;
+    onComplete({
+      gateAnswers: baseGate(knowledge),
+      deepAnswers: { ...answers, tay_mode: 'known_system_followup' },
+      deepTriggered: true,
+    });
+  };
 
-    if (!currentQuestion) return null;
+  const setAnswer = (id: string, value: string) => {
+    haptic.selection();
+    setAnswers(prev => ({ ...prev, [id]: value }));
+  };
 
-    return (
-        <div className="px-4 pt-6 pb-20" style={{ direction: 'rtl' }}>
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 mb-6"
-            >
-                <div style={{
-                    width: 44, height: 44, borderRadius: 16,
-                    background: 'linear-gradient(145deg, rgba(5,150,105,0.12), rgba(34,211,153,0.08))',
-                    border: '1px solid rgba(5,150,105,0.25)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                    <Leaf style={{ width: 22, height: 22, color: W.green }} />
-                </div>
-                <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 900, color: W.textPrimary, lineHeight: 1.2 }}>
-                        نظام الطيبات
-                    </h2>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: W.textMuted }}>
-                        {phase === 'gate' ? 'أسئلة تمهيدية' : 'تفاصيل الالتزام الغذائي'}
-                    </p>
-                </div>
-            </motion.div>
+  return (
+    <div className="relative min-h-screen overflow-hidden" dir="rtl" style={{ background: C.bg }}>
+      <div className="fixed inset-0 pointer-events-none">
+        <motion.div
+          animate={{ scale: [1, 1.12, 1], opacity: [0.38, 0.68, 0.38] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ position: 'absolute', top: -80, right: -80, width: 340, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(5,150,105,0.18), transparent 64%)', filter: 'blur(54px)' }}
+        />
+        <div style={{ position: 'absolute', bottom: 80, left: -80, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,211,238,0.13), transparent 64%)', filter: 'blur(52px)' }} />
+      </div>
 
-            {/* Progress bar */}
-            <div className="mb-8" style={{
-                height: 4, borderRadius: 2,
-                background: 'rgba(8,145,178,0.08)',
-                overflow: 'hidden',
-            }}>
-                <motion.div
-                    animate={{ width: `${progressPercent}%` }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    style={{
-                        height: '100%', borderRadius: 2,
-                        background: `linear-gradient(90deg, ${W.green}, ${W.teal})`,
-                    }}
+      <div className="relative z-10 px-4 pt-4 pb-44">
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 28 }} className="mb-5">
+          <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 mb-4"
+            style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.18)', backdropFilter: 'blur(16px)' }}>
+            <Leaf style={{ width: 13, height: 13, color: C.green }} />
+            <span style={{ fontSize: 11, fontWeight: 900, color: C.green }}>الغذاء والإيقاع ضمن تقييمك</span>
+          </div>
+          <h2 style={{ fontSize: 26, fontWeight: 900, lineHeight: 1.2, color: C.ink, letterSpacing: '-0.02em', marginBottom: 9 }}>
+            الغذاء والإيقاع
+          </h2>
+          <p style={{ fontSize: 13, lineHeight: 1.75, fontWeight: 500, color: C.sub }}>
+            الغذاء ليس دائماً السبب، لكنه قد يغيّر شدة الأعراض أو توقيتها. سنسأل فقط بالقدر الذي يساعدنا نفهم النمط.
+          </p>
+        </motion.div>
+
+        <GlassCard accent={selectedMeta?.color ?? C.green}>
+          <div className="p-5">
+            <p style={{ fontSize: 18, fontWeight: 950, color: C.ink, marginBottom: 4 }}>هل تعرف نظام الطيبات؟</p>
+            <p style={{ fontSize: 12.5, lineHeight: 1.75, color: C.sub, fontWeight: 650, marginBottom: 16 }}>
+              هذا الجزء ليس اختبار التزام. نستخدمه كطبقة فهم مساعدة فقط.
+            </p>
+
+            <div className="space-y-3">
+              {KNOWLEDGE_OPTIONS.map(option => (
+                <ChoiceCard
+                  key={option.id}
+                  title={option.title}
+                  sub={option.sub}
+                  color={option.color}
+                  selected={knowledge === option.id}
+                  onClick={() => {
+                    haptic.selection();
+                    setKnowledge(option.id);
+                    setAnswers({});
+                    setPhase(option.id === 'dont_know' ? 'unknown_choice' : 'known_questions');
+                  }}
                 />
+              ))}
             </div>
+          </div>
+        </GlassCard>
 
-            {/* Question Card */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentQuestion.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        <AnimatePresence mode="wait">
+          {phase === 'unknown_choice' && knowledge === 'dont_know' && (
+            <motion.div key="unknown-choice" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mt-4">
+              <GlassCard accent="#64748B">
+                <div className="p-5">
+                  <div className="rounded-[18px] px-4 py-3 mb-4"
+                    style={{ background: 'rgba(8,145,178,0.06)', border: '1px solid rgba(8,145,178,0.14)', backdropFilter: 'blur(12px)' }}>
+                    <p style={{ fontSize: 13, lineHeight: 1.75, fontWeight: 500, color: C.ink }}>
+                      ✅ <strong>تمام.</strong> لن نحكم على التزامك بشيء لا تعرفه. سنستخدم الغذاء كطبقة فهم عامة فقط.
+                    </p>
+                  </div>
+                  <p style={{ fontSize: 14.5, fontWeight: 900, color: C.ink, marginBottom: 12 }}>
+                    هل تريد إضافة 3 أسئلة عن علاقة الأكل بالأعراض؟
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setPhase('unknown_food')} className="rounded-[18px] py-3 px-3" style={{ background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.24)', color: C.green, fontWeight: 950 }}>
+                      نعم، اسألني
+                    </button>
+                    <button type="button" onClick={() => finishUnknown(false)} className="rounded-[18px] py-3 px-3" style={{ background: 'rgba(100,116,139,0.10)', border: '1px solid rgba(100,116,139,0.20)', color: '#64748B', fontWeight: 950 }}>
+                      تخطَّ هذا الجزء الآن
+                    </button>
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
+          {phase === 'unknown_food' && (
+            <motion.div key="unknown-food" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mt-4 space-y-3">
+              {UNKNOWN_FOOD_QUESTIONS.map((question, index) => (
+                <QuestionBlock key={question.id} question={question} value={answers[question.id]} index={index} onSelect={setAnswer} />
+              ))}
+            </motion.div>
+          )}
+
+          {phase === 'known_questions' && knowledge && knowledge !== 'dont_know' && (
+            <motion.div key="known-questions" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mt-4 space-y-3">
+              <div className="rounded-[22px] p-4" style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.18)' }}>
+                <div className="flex items-start gap-3">
+                  <Sparkles style={{ width: 17, height: 17, color: C.green, marginTop: 3 }} />
+                  <p style={{ fontSize: 12.5, lineHeight: 1.75, color: C.sub, fontWeight: 700 }}>
+                    سنقرأ النمط لا نحكم عليك. الهدف خطوة عملية صغيرة يمكن متابعتها.
+                  </p>
+                </div>
+              </div>
+              {KNOWN_QUESTIONS.map((question, index) => (
+                <QuestionBlock key={question.id} question={question} value={answers[question.id]} index={index} onSelect={setAnswer} />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {phase === 'unknown_food' ? (
+        <BottomCTA label="إنهاء الغذاء كطبقة تعريفية" onPress={() => finishUnknown(true)} disabled={!unknownQuestionsComplete} variant="teal" sublabel="لن تظهر درجة التزام لأنك اخترت أنك لا تعرف النظام بعد." />
+      ) : phase === 'known_questions' ? (
+        <BottomCTA label="إنهاء الغذاء والإيقاع" onPress={finishKnown} disabled={!knownQuestionsComplete} variant="teal" sublabel="الغذاء طبقة مساعدة، وليس التفسير الوحيد." />
+      ) : null}
+    </div>
+  );
+}
+
+function QuestionBlock({ question, value, index, onSelect }: {
+  question: { id: string; text: string; options: string[] };
+  value?: string;
+  index: number;
+  onSelect: (id: string, value: string) => void;
+}) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
+      <GlassCard accent={C.green}>
+        <div className="p-4">
+          <p style={{ fontSize: 15, fontWeight: 950, color: C.ink, lineHeight: 1.6, marginBottom: 12 }}>{question.text}</p>
+          <div className="flex flex-wrap gap-2">
+            {question.options.map(option => {
+              const selected = value === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => onSelect(question.id, option)}
+                  className="rounded-full px-3.5 py-2 flex items-center gap-1.5"
+                  style={{
+                    background: selected ? 'rgba(5,150,105,0.14)' : 'rgba(255,255,255,0.62)',
+                    border: `1.5px solid ${selected ? 'rgba(5,150,105,0.30)' : 'rgba(255,255,255,0.82)'}`,
+                    color: selected ? C.green : C.sub,
+                    fontSize: 12,
+                    fontWeight: 850,
+                  }}
                 >
-                    {/* Question text */}
-                    <motion.div
-                        className="rounded-[24px] p-5 mb-4"
-                        style={{
-                            background: W.glassHigh,
-                            border: `1px solid ${W.glassBorder}`,
-                            boxShadow: W.glassShadow,
-                            position: 'relative', overflow: 'hidden',
-                        }}
-                    >
-                        <div style={{ position: 'absolute', inset: 0, background: W.sheen, pointerEvents: 'none' }} />
-                        <p style={{
-                            fontSize: 16, fontWeight: 800, color: W.textPrimary,
-                            lineHeight: 1.7, position: 'relative', zIndex: 1,
-                        }}>
-                            {currentQuestion.text}
-                        </p>
-                        {currentQuestion.hint && (
-                            <p style={{
-                                fontSize: 11, fontWeight: 500, color: W.textMuted,
-                                marginTop: 8, lineHeight: 1.6, position: 'relative', zIndex: 1,
-                            }}>
-                                {currentQuestion.hint}
-                            </p>
-                        )}
-                    </motion.div>
-
-                    {/* Options (single select) */}
-                    {currentQuestion.type === 'single' && currentQuestion.options && (
-                        <div className="space-y-2.5">
-                            {currentQuestion.options.map((opt, i) => {
-                                const isSelected = (phase === 'gate' ? gateAnswers : deepAnswers)[currentQuestion!.id] === opt.id;
-                                return (
-                                    <motion.button
-                                        key={opt.id}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.06 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        onClick={() => handleOptionSelect(currentQuestion!.id, opt.id)}
-                                        className="w-full rounded-[20px] px-5 py-4 flex items-center gap-3.5 text-right"
-                                        style={{
-                                            background: isSelected
-                                                ? 'linear-gradient(145deg, rgba(5,150,105,0.12), rgba(34,211,153,0.08))'
-                                                : W.glass,
-                                            border: `1.5px solid ${isSelected ? W.greenBorder : W.glassBorder}`,
-                                            boxShadow: isSelected
-                                                ? '0 4px 16px rgba(5,150,105,0.12)'
-                                                : '0 2px 8px rgba(0,0,0,0.02)',
-                                            transition: 'all 0.2s ease',
-                                        }}
-                                    >
-                                        {opt.emoji && <span style={{ fontSize: 20 }}>{opt.emoji}</span>}
-                                        <span style={{
-                                            fontSize: 14, fontWeight: 700,
-                                            color: isSelected ? W.green : W.textSub,
-                                            flex: 1,
-                                        }}>
-                                            {opt.label}
-                                        </span>
-                                        {isSelected && (
-                                            <motion.div
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                style={{
-                                                    width: 22, height: 22, borderRadius: '50%',
-                                                    background: W.greenLight,
-                                                    border: `1.5px solid ${W.greenBorder}`,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                }}
-                                            >
-                                                <Check style={{ width: 12, height: 12, color: W.green }} />
-                                            </motion.div>
-                                        )}
-                                    </motion.button>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    {/* Text input */}
-                    {currentQuestion.type === 'text' && (
-                        <div className="space-y-3">
-                            <textarea
-                                value={textInput}
-                                onChange={e => setTextInput(e.target.value)}
-                                placeholder={currentQuestion.hint || 'اكتب هنا...'}
-                                rows={3}
-                                className="w-full rounded-[18px] p-4 resize-none"
-                                style={{
-                                    background: W.glass,
-                                    border: `1.5px solid ${W.glassBorder}`,
-                                    fontSize: 14, fontWeight: 600, color: W.textPrimary,
-                                    outline: 'none', direction: 'rtl',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                                }}
-                            />
-                            <motion.button
-                                whileTap={{ scale: 0.97 }}
-                                onClick={handleTextSubmit}
-                                disabled={!textInput.trim()}
-                                className="w-full rounded-[20px] py-4 flex items-center justify-center gap-2"
-                                style={{
-                                    background: textInput.trim()
-                                        ? 'linear-gradient(145deg, rgba(5,150,105,0.15), rgba(34,211,153,0.10))'
-                                        : 'rgba(200,200,200,0.15)',
-                                    border: `1.5px solid ${textInput.trim() ? W.greenBorder : 'rgba(200,200,200,0.3)'}`,
-                                    opacity: textInput.trim() ? 1 : 0.5,
-                                }}
-                            >
-                                <span style={{ fontSize: 14, fontWeight: 800, color: textInput.trim() ? W.green : W.textMuted }}>
-                                    التالي
-                                </span>
-                                <ChevronLeft style={{ width: 16, height: 16, color: textInput.trim() ? W.green : W.textMuted }} />
-                            </motion.button>
-                        </div>
-                    )}
-                </motion.div>
-            </AnimatePresence>
-
-            {/* Phase indicator */}
-            <div className="mt-6 flex items-center justify-center gap-2">
-                <div style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: phase === 'gate' ? W.green : 'rgba(8,145,178,0.15)',
-                }} />
-                <div style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: phase === 'deep' ? W.green : 'rgba(8,145,178,0.15)',
-                }} />
-            </div>
+                  {selected && <Check style={{ width: 13, height: 13 }} />}
+                  {option}
+                </button>
+              );
+            })}
+          </div>
         </div>
-    );
+      </GlassCard>
+    </motion.div>
+  );
 }

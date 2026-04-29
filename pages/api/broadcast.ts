@@ -1,5 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminFirestore, getAdminMessaging } from '@/lib/firebaseAdmin';
+import { requireAdmin } from '@/lib/verifySession';
+
+function hasValidServerSecret(req: NextApiRequest): boolean {
+  const expected = process.env.ADMIN_API_SECRET?.trim();
+  if (!expected) return false;
+
+  const headerSecret = req.headers['x-admin-secret'];
+  const authorization = req.headers.authorization;
+  const bearerSecret = authorization?.startsWith('Bearer ') ? authorization.slice(7) : undefined;
+  const candidate = Array.isArray(headerSecret) ? headerSecret[0] : headerSecret || bearerSecret;
+
+  return candidate === expected;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,6 +23,13 @@ export default async function handler(
   }
 
   try {
+    if (!hasValidServerSecret(req)) {
+      const session = await requireAdmin(req);
+      if (!session) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    }
+
     const { title, body, segment } = req.body;
 
     if (!title || !body) {
@@ -57,7 +77,7 @@ export default async function handler(
     });
 
   } catch (error: any) {
-    console.error('Broadcast Error:', error);
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    console.error('Broadcast Error:', error instanceof Error ? error.message : 'unknown');
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }

@@ -145,8 +145,7 @@ export function SearchResults({
                         {[ 
                             { title: 'المتابع الصحي', desc: 'تتبع بياناتك الحيوية', icon: Activity, href: '/health-tracker', color: '#10B981' },
                             { title: 'الصيدلية', desc: 'تسوق منتجاتنا', icon: ShoppingBag, href: '/shop', color: '#EC4899' },
-                            { title: 'حجز موعد', desc: 'استشارة متخصصة', icon: Calendar, href: '/book-appointment', color: '#2D9B83' },
-                            { title: 'المساعد الذكي', desc: 'الذكاء الاصطناعي', icon: Sparkles, href: '/ai-assistant', color: '#8B5CF6' }
+                            { title: 'حجز موعد', desc: 'استشارة متخصصة', icon: Calendar, href: '/book-appointment', color: '#2D9B83' }
                         ].map((item) => {
                             itemIndex++;
                             const actualIdx = itemIndex; 

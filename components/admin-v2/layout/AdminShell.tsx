@@ -1,7 +1,7 @@
 // components/admin-v2/layout/AdminShell.tsx
 // Main admin layout wrapper: sidebar + header + content area
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
@@ -26,8 +26,14 @@ export default function AdminShell({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) {
+      router.replace(`/login?redirect=${encodeURIComponent(router.asPath)}&reason=admin`);
+    }
+  }, [loading, user, isAdmin, router]);
+
   // Auth guard — redirect non-admins
-  if (false && loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden" dir="rtl">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-teal-500/10 animate-pulse"></div>
@@ -39,10 +45,7 @@ export default function AdminShell({
     );
   }
 
-  if (false && (!user || !isAdmin)) {
-    if (typeof window !== 'undefined') {
-      router.replace(`/login?redirect=${router.asPath}&reason=admin`);
-    }
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden" dir="rtl">
         {/* Animated Background Gradients */}

@@ -142,15 +142,6 @@ export default function FloatingActionButton() {
 
             {/* ═══ FAB Container ═══ */}
             <div className="fixed bottom-24 left-4 z-[999] flex flex-col-reverse items-center gap-4">
-                {/* Scroll to top — shows only when scrolled down and FAB is collapsed */}
-                {showScrollTop && !isExpanded && (
-                    <button
-                        onClick={scrollToTop}
-                        className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 animate-ios-scale-in tap-feedback mb-1"
-                    >
-                        <ArrowUp className="w-4 h-4" />
-                    </button>
-                )}
 
                 {/* Action Items — expand upward */}
                 {isExpanded && actions.map((action, idx) => (

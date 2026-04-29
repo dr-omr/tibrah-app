@@ -151,6 +151,19 @@ export function refineTriage(
         dominantSignals.push('علامة خطر مرتفعة الأهمية');
     }
 
+    /* ── Rule 3b: Chronic moderate symptoms without true red flags → doctor review, not urgent ── */
+    if (
+        level === 'urgent' &&
+        !hasHighRiskSignal &&
+        explicitRedFlags.length === 0 &&
+        ((answers as Record<string, unknown>).duration === 'months' || (answers as Record<string, unknown>).duration === 'years') &&
+        severity <= 7
+    ) {
+        level      = 'needs_doctor';
+        wasRefined = true;
+        dominantSignals.push('أعراض مزمنة متوسطة أو مرتفعة بدون علامات خطر حقيقية');
+    }
+
     /* ── Rule 4: Major contradiction + review → needs_doctor ── */
     if (hasMajorContradiction && level === 'review') {
         level      = 'needs_doctor';

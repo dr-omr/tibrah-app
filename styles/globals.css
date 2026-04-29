@@ -7,12 +7,12 @@
 
 @layer base {
     html, body {
-        /* This applies the elite Canvas & Obsidian colors instantly to all pages */
         @apply bg-tibrah-canvas text-tibrah-obsidian font-sans overflow-x-hidden antialiased;
     }
     
     ::selection {
-        @apply bg-tibrah-teal text-white;
+        background-color: #0891B2;
+        color: white;
     }
 }
 

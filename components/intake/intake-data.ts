@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
+const EMERGENCY_PHONE = process.env.NEXT_PUBLIC_EMERGENCY_PHONE?.trim();
+const EMERGENCY_HREF = EMERGENCY_PHONE ? `tel:${EMERGENCY_PHONE}` : '#';
+
 /* ─── Types ──────────────────────────────────── */
 export type TriageLevel = 'emergency' | 'needs_doctor' | 'suitable_for_review' | 'manageable';
 export type StepId = 'welcome' | 'complaint' | 'severity' | 'modifiers' | 'history' | 'analyzing' | 'result';
@@ -77,7 +80,7 @@ export function getResultConfig(level: TriageLevel) {
       iconColor: '#ef4444', icon: AlertTriangle, badge: 'طارئ', badgeBg: '#ef4444',
       title: 'يرجى طلب المساعدة الطبية فوراً',
       subtitle: 'الأعراض التي وصفتها تستدعي تدخلاً طبياً عاجلاً. رجاءً لا تتأخر.',
-      primaryAction: { label: 'اتصل بالإسعاف', href: 'tel:911', icon: Phone },
+      primaryAction: { label: EMERGENCY_PHONE ? 'اتصل بالطوارئ' : 'توجه لأقرب طوارئ فوراً', href: EMERGENCY_HREF, icon: Phone },
       secondaryAction: null,
     },
     needs_doctor: {

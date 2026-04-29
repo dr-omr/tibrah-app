@@ -187,6 +187,7 @@ export function saveAssessmentSession(
         resultViewModel,
         carePlanId,
         tayyibatSnapshot,   // ← always persisted when available
+        adaptiveQuestionPlanSnapshot: answers.adaptiveQuestionPlanSnapshot,
     };
 
     // Mark previous latest session as superseded

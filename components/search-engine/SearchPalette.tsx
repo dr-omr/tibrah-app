@@ -270,8 +270,7 @@ export function SearchPalette() {
                         const quickActions = [
                             { href: '/health-tracker', title: 'المتابع' },
                             { href: '/shop', title: 'الصيدلية' },
-                            { href: '/book-appointment', title: 'حجز' },
-                            { href: '/ai-assistant', title: 'المساعد' }
+                            { href: '/book-appointment', title: 'حجز' }
                         ];
                         const qaIndex = selectedIndex - totalRecent;
                         if (quickActions[qaIndex]) {

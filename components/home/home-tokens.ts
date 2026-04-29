@@ -4,9 +4,9 @@
 
 export const T = {
     // ── Single accent (the ONLY brand color used prominently) ──────
-    accent: '#0D9488',      // Tibrah Teal
-    accentDim: '#0F766E',   // pressed / deeper state
-    accentGlow: 'rgba(13,148,136,0.22)',
+    accent: '#0891B2',      // Tibrah Cyan
+    accentDim: '#0E7490',   // pressed / deeper state
+    accentGlow: 'rgba(8,145,178,0.22)',
 
     // ── Neutral scale (Apple-grade) ───────────────────────────────
     n: {
@@ -53,11 +53,11 @@ export const T = {
     // Legacy aliases for components that still use T.card / T.sh
     card:   { bg: 'rgba(255,255,255,0.97)', blur: 'blur(32px) saturate(200%)', border: 'rgba(0,0,0,0.06)', borderLight: 'rgba(0,0,0,0.04)', shadow: '0 4px 16px rgba(0,0,0,0.09)', shadowLg: '0 16px 48px rgba(0,0,0,0.13)' },
     sh:     { sm: '0 2px 8px rgba(0,0,0,0.08)', md: '0 4px 16px rgba(0,0,0,0.09)', lg: '0 8px 28px rgba(0,0,0,0.11)', xl: '0 16px 48px rgba(0,0,0,0.13)' },
-    primary: '#0D9488',
+    primary: '#0891B2',
     soul:    '#6D4AFF',
     warm:    '#D97706',
-    grad:    { primary: 'linear-gradient(135deg, #0F766E, #0D9488)', accent: 'linear-gradient(135deg, #0D9488, #14B8A6)', hero: '', glass: 'rgba(255,255,255,0.08)' },
-    glow:    { primary: 'rgba(13,148,136,0.22)', accent: 'rgba(13,148,136,0.22)', soul: 'rgba(109,74,255,0.22)', warm: 'rgba(217,119,6,0.22)' },
+    grad:    { primary: 'linear-gradient(135deg, #0E7490, #0891B2)', accent: 'linear-gradient(135deg, #0891B2, #22D3EE)', hero: '', glass: 'rgba(255,255,255,0.08)' },
+    glow:    { primary: 'rgba(8,145,178,0.22)', accent: 'rgba(8,145,178,0.22)', soul: 'rgba(109,74,255,0.22)', warm: 'rgba(217,119,6,0.22)' },
     dark:    { bg: '', glass: '', border: '', text: '', muted: '' },
     font:    { display: '', mono: '' },
 };
@@ -65,7 +65,7 @@ export const T = {
 // Score → semantic color
 export function scoreColor(s: number): string {
     if (s >= 80) return '#16A34A';
-    if (s >= 65) return '#0D9488';
+    if (s >= 65) return '#0891B2';
     if (s >= 50) return '#D97706';
     return '#DC2626';
 }

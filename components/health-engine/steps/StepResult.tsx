@@ -130,7 +130,7 @@ export function StepResult({
                     if (triageResult.level === 'manageable' || triageResult.level === 'review') {
                         confetti({
                             particleCount: 80, spread: 88, origin: { y: 0.3 },
-                            colors: ['#22D3EE', '#FFFFFF', '#818CF8', '#34D399', '#38BDF8'],
+                            colors: ['#28C7E8', '#FFFFFF', '#818CF8', '#34D399', '#38BDF8'],
                             ticks: 180,
                         });
                     }
@@ -210,10 +210,10 @@ export function StepResult({
                     style={{
                         width: 56, height: 56, borderRadius: '50%', margin: '0 auto 20px',
                         border: '3.5px solid rgba(8,145,178,0.15)',
-                        borderTopColor: '#0891B2',
+                        borderTopColor: '#0787A5',
                     }}
                 />
-                <p style={{ fontSize: 15, fontWeight: 800, color: '#0C4A6E' }}>
+                <p style={{ fontSize: 15, fontWeight: 800, color: '#073B52' }}>
                     {saveState === 'redirecting' ? 'جارٍ الانتقال لنتيجتك…' : 'جارٍ تحليل بياناتك…'}
                 </p>
             </motion.div>

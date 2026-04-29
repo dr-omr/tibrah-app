@@ -430,7 +430,7 @@ export default function JasadiPage() {
                 <EscalationCard
                     color={C}
                     hints={JASADI_ESCALATION}
-                    bookingHref="/booking"
+                    bookingHref="/book-appointment"
                 />
 
                 {/* Footer */}

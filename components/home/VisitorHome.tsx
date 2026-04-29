@@ -7,7 +7,6 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import VisitorHeroSection from './visitor/VisitorHeroSection';
-import VisitorFloatingCTA from './visitor/VisitorFloatingCTA';
 
 // Intelligence layer
 const VisitorSmartGuide = dynamic(() => import('./visitor/VisitorSmartGuide'));
@@ -93,8 +92,6 @@ export default function VisitorHome() {
             {/* ⑫ Final CTA — Book or WhatsApp */}
             <VisitorFinalCTA />
 
-            {/* ⑬ Floating pill — Persistent after scroll */}
-            <VisitorFloatingCTA />
         </div>
     );
 }

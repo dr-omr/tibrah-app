@@ -108,7 +108,6 @@ const HREF_MAP: Record<string, ServiceIconData> = {
 
     /* ─────────────────────────────── فكري: الأدوات ─── */
     '/tools/weekly-plan':           { icon: '🗓️', color: '#D97706' }, // Calendar Gold
-    '/tools/annual-plan':           { icon: '🎯', color: '#EA580C' }, // Year Target
     '/rewards':                     { icon: '🏅', color: '#FBBF24' }, // Gold Medal
     '/tools/vision':                { icon: '🌅', color: '#F59E0B' }, // Vision Amber
 

@@ -67,7 +67,7 @@ async function verifyHS256(
 function getSessionSecret(): Uint8Array<ArrayBuffer> | null {
     const secret = process.env.SESSION_SECRET;
     if (!secret || secret.length < 32) {
-        console.warn('SESSION_SECRET is missing or too short. Server-side session verification is disabled.');
+        console.warn('SESSION_SECRET is missing or too short. Server-side session verification is denied.');
         return null;
     }
     return new TextEncoder().encode(secret) as Uint8Array<ArrayBuffer>;
@@ -77,7 +77,7 @@ interface AuthResult {
     authenticated: boolean;
     isAdmin: boolean;
     email: string;
-    method: 'session' | 'legacy' | 'bypassed' | 'none';
+    method: 'session' | 'legacy' | 'none';
 }
 
 /**
@@ -87,7 +87,7 @@ async function verifySessionJWT(token: string): Promise<AuthResult> {
     try {
         const secret = getSessionSecret();
         if (!secret) {
-            return { authenticated: false, isAdmin: false, email: '', method: 'bypassed' };
+            return { authenticated: false, isAdmin: false, email: '', method: 'none' };
         }
 
         const payload = await verifyHS256(token, secret);
@@ -144,31 +144,10 @@ async function resolveAuth(req: NextRequest): Promise<AuthResult> {
     const sessionCookie = req.cookies.get('tibrah_session')?.value;
     const legacyCookie = req.cookies.get('tibrah_auth')?.value;
 
-    // Development fallback check: if secret is completely missing from env
-    const secretMode = getSessionSecret();
-    
-    let hasServiceAccount = false;
-    try {
-        const sa = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-        if (sa && sa.trim().startsWith('{')) {
-            JSON.parse(sa); // Test if it's actually valid JSON, not just a dummy string
-            hasServiceAccount = true;
-        }
-    } catch {
-        hasServiceAccount = false;
-        console.warn('FIREBASE_SERVICE_ACCOUNT_KEY is present but invalid JSON. Server auth is disabled.');
-    }
-    
-    // Bypass if either the SESSION_SECRET is missing OR the Firebase Admin privileges are missing/invalid
-    // Since missing Firebase Admin means /api/auth/session will ALWAYS return 503 and never set the cookie.
-    if (!secretMode || !hasServiceAccount) {
-        return { authenticated: false, isAdmin: false, email: '', method: 'bypassed' };
-    }
-
     // 1. Try verifiable server session first (Highest priority and most secure)
     if (sessionCookie) {
         const result = await verifySessionJWT(sessionCookie);
-        if (result.authenticated || result.method === 'bypassed') {
+        if (result.authenticated) {
             return result;
         }
     }
@@ -193,18 +172,14 @@ export async function middleware(request: NextRequest) {
     // Resolve authentication from the incoming request cookies
     const auth = await resolveAuth(request);
 
-    // Bypassed method means the development environment lacks secrets.
-    // Allow the client-side AuthContext and ProtectedRoute to manage auth instead.
-    const isBypassed = auth.method === 'bypassed';
-
     // Check admin routes — must be authenticated AND have admin role
     if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-        if (!isBypassed && (!auth.authenticated || auth.method !== 'session')) {
+        if (!auth.authenticated || auth.method !== 'session') {
             const loginUrl = new URL('/login', request.url);
             loginUrl.searchParams.set('redirect', pathname);
             return NextResponse.redirect(loginUrl);
         }
-        if (!isBypassed && !auth.isAdmin) {
+        if (!auth.isAdmin) {
             // Authenticated but not admin — redirect to home (403-like)
             return NextResponse.redirect(new URL('/', request.url));
         }
@@ -212,7 +187,7 @@ export async function middleware(request: NextRequest) {
 
     // Check protected routes — must have valid server session
     if (PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
-        if (!isBypassed && (!auth.authenticated || auth.method !== 'session')) {
+        if (!auth.authenticated || auth.method !== 'session') {
             const loginUrl = new URL('/login', request.url);
             loginUrl.searchParams.set('redirect', pathname);
             return NextResponse.redirect(loginUrl);

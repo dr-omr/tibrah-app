@@ -295,7 +295,7 @@ export default function NafsiPage() {
                     <FilteredSubsections activeSubdomain={activeSubdomain} />
                 </div>
 
-                <EscalationCard color={C} hints={NAFSI_ESCALATION} bookingHref="/booking" />
+                <EscalationCard color={C} hints={NAFSI_ESCALATION} bookingHref="/book-appointment" />
 
                 <div className="flex flex-col items-center gap-2 pb-8">
                     <div className="w-16 h-[1.5px] rounded-full"

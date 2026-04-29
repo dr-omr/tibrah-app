@@ -191,9 +191,11 @@ export function analyzeTayyibatFromAssessment(
         'غازات', 'هضم', 'وجبات سريعة', 'مقلي',
     ].some(kw => allClinicalText.includes(kw));
 
-    // If user explicitly said "لا أعرفه" AND no food signals → educational card only
+    // If user explicitly said "لا أعرفه" → educational card only.
+    // Food-symptom signals may be noted later, but never converted into an
+    // adherence score, "excellent" label, or high confidence.
     const isCompletelyUnknown = knowledgeLevel === 'dont_know';
-    if (isCompletelyUnknown && !hasFoodSignals) {
+    if (isCompletelyUnknown) {
         return {
             isRelevant:            true,
             adherenceSignal:       'unknown',
@@ -202,7 +204,9 @@ export function analyzeTayyibatFromAssessment(
             pathwayRecommendations: [],
             relevantNotes:         [],
             substitutions:         [],
-            summaryArabic:         'اخترت أنك لا تعرف نظام الطيبات بعد، لذلك لا نعرض درجة التزام أو حكمًا غذائيًا. هذه البطاقة تعطيك مدخلًا أوليًا وتساعد طِبرا على تحسين الدقة عندما تضيف بيانات غذائية لاحقًا.',
+            summaryArabic:         hasFoodSignals
+                ? 'اخترت أنك لا تعرف نظام الطيبات بعد، لذلك لا نعرض درجة التزام أو حكمًا غذائيًا. توجد إشارات غذائية عامة يمكن متابعتها لاحقًا دون تحويلها إلى تقييم التزام.'
+                : 'اخترت أنك لا تعرف نظام الطيبات بعد، لذلك لا نعرض درجة التزام أو حكمًا غذائيًا. هذه البطاقة تعطيك مدخلًا أوليًا وتساعد طِبرا على تحسين الدقة عندما تضيف بيانات غذائية لاحقًا.',
             primaryPattern:        null,
             primaryPatternLabel:   'رؤية تعريفية',
             secondaryPatterns:     [],
@@ -639,7 +643,7 @@ export function computeAntiInflammatoryScore(
     else level = 'poor';
 
     const guidanceMap: Record<typeof level, string> = {
-        excellent: 'تغذيتك مضادة للالتهاب بشكل ممتاز — استمر',
+        excellent: 'تغذيتك تميل لنمط مضاد للالتهاب بقوة — استمر وراقب الأعراض',
         good: 'تغذيتك جيدة — ضبط بسيط قد يُحسّن النتائج',
         moderate: 'بعض الأطعمة الالتهابية في نظامك — التعديل مطلوب',
         poor: 'نظامك الغذائي يرفع الالتهاب — مراجعة فورية لنظام الطيبات',

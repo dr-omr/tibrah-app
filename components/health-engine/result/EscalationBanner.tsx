@@ -158,8 +158,9 @@ export function EscalationBanner({ block, on }: Props) {
                     </div>
 
                     {/* CTA button */}
-                    <Link href={block.ctaHref}
-                        onClick={() => {
+                    <Link href={block.ctaHref ?? '#'}
+                        onClick={(event) => {
+                            if (!block.ctaHref) event.preventDefault();
                             haptic.impact();
                             trackEvent('booking_from_routing', {
                                 triage_level: block.level,

@@ -3,7 +3,21 @@
 // World's first three-dimensional health pattern engine
 
 export type TriageLevel = 'emergency' | 'urgent' | 'needs_doctor' | 'review' | 'manageable';
-export type StepId = 'welcome' | 'pathway' | 'clinical' | 'emotional' | 'nutrition' | 'analyzing' | 'result';
+export type StepId =
+    | 'welcome'
+    | 'personalHistory'
+    | 'chiefComplaint'
+    | 'hopi'
+    | 'redflags'
+    | 'relatedSymptoms'
+    | 'lifestyle'
+    | 'emotional'
+    | 'nutrition'
+    | 'review'
+    | 'analyzing'
+    | 'result'
+    | 'pathway'
+    | 'clinical';
 
 /* ── Functional Medicine Patterns (Root Causes) ── */
 export type FunctionalPattern =
@@ -91,6 +105,54 @@ export interface Pathway {
     clinicalQuestions: ClinicalQuestion[];
 }
 
+export type AssessmentConfidenceReadiness = 'enough' | 'preliminary' | 'weak';
+
+export interface AssessmentFlowSnapshot {
+    visibleStages: string[];
+    skippedStages: { stage: string; reason: string }[];
+    adaptiveTriggers: { trigger: string; caused: string }[];
+    questionImpactMap: Record<string, string>;
+    missingImportantData: string[];
+    confidenceReadiness: AssessmentConfidenceReadiness;
+    userWasUnsureOfPathway: boolean;
+}
+
+export interface PersonalHistoryAnswers {
+    age?: string;
+    sex?: 'male' | 'female' | 'other' | 'unknown' | '';
+    weight?: string;
+    height?: string;
+    pregnant?: 'no' | 'yes' | 'possible' | 'not_applicable' | 'unknown' | '';
+    allergies?: string;
+    chronicConditions: string[];
+    medicationUse?: 'no' | 'yes' | 'unknown_names' | '';
+    medicationsText?: string;
+    surgeryHistory?: 'no' | 'yes' | 'not_remember' | '';
+    surgeryText?: string;
+    familyHistory: string[];
+}
+
+export interface ChiefComplaintAnswers {
+    system: string;
+    systemLabel: string;
+    complaint: string;
+    complaintLabel: string;
+    secondaryComplaints: string[];
+}
+
+export interface HopiAnswers {
+    onset?: string;
+    course?: string;
+    severity?: number;
+    location?: string;
+    character?: string;
+    radiation?: string;
+    aggravating: string[];
+    relieving: string[];
+    associated: string[];
+    functionalImpact?: string;
+}
+
 export interface EngineAnswers {
     pathwayId: string;
     severity: number;
@@ -102,6 +164,11 @@ export interface EngineAnswers {
     emotionalContext: string[];
     emotionalNote: string;
     freeText: string;
+    personalHistory?: PersonalHistoryAnswers;
+    chiefComplaint?: ChiefComplaintAnswers;
+    hopi?: HopiAnswers;
+    relatedSymptoms?: string[];
+    lifestyleContext?: Record<string, string | string[]>;
     /** Tayyibat nutrition answers (gate + deep flow) — additive, optional */
     nutritionAnswers?: {
         gateAnswers: Record<string, string>;
@@ -121,6 +188,26 @@ export interface EngineAnswers {
         burdenMinimized:   boolean;
         reasons:           string[];
         triageRiskHint:    string;
+    };
+    /** Visible assessment conductor snapshot persisted for review/result handoff. */
+    assessmentFlowSnapshot?: AssessmentFlowSnapshot;
+    /** What the assessment director showed before analysis. */
+    assessmentReviewSnapshot?: {
+        pathwayLabel: string;
+        keyAnsweredSignals: string[];
+        adaptiveReasonsShown: string[];
+        skippedSections: string[];
+        unknowns: string[];
+        tayyibatMode: 'none' | 'educational_only' | 'beginner' | 'pattern_followup';
+        chiefComplaintLabel?: string;
+        hopiSummary?: string[];
+        personalHistorySignals?: string[];
+        relatedSymptoms?: string[];
+        lifestyleSignals?: string[];
+        confidenceReadiness?: AssessmentConfidenceReadiness;
+        userWasUnsureOfPathway?: boolean;
+        flowSnapshot?: AssessmentFlowSnapshot;
+        reviewedAt: string;
     };
 }
 
@@ -399,9 +486,70 @@ export interface EscalationBannerBlock {
     title: string;
     body: string;
     ctaLabel: string;
-    ctaHref: string;
+    ctaHref?: string;
     isEmergency: boolean;
 }
+
+export type ResultStoryAction = {
+    label: string;
+    href?: string;
+    reason: string;
+    tone: 'stable' | 'watch' | 'urgent' | 'low_data' | 'nutrition';
+};
+
+export type ResultStorySignal = {
+    label: string;
+    value: string;
+    meaning: string;
+    source?: 'chief_complaint' | 'hopi' | 'red_flags' | 'related_symptoms' | 'lifestyle' | 'nutrition' | 'confidence' | 'domain';
+};
+
+export type ResultStoryTimelineItem = {
+    label: string;
+    value: string;
+    meaning: string;
+};
+
+export type ResultStoryNutritionState = {
+    mode: 'hidden' | 'educational' | 'beginner' | 'pattern' | 'suppressed';
+    title: string;
+    sentence: string;
+    ctas: Array<{ label: string; href: string }>;
+    showScore: boolean;
+};
+
+export type ResultStoryClarity = {
+    label: string;
+    sentence: string;
+    missing: string[];
+    improveAction?: ResultStoryAction;
+};
+
+export type ResultStoryDeepDetails = {
+    labs: Array<{ name: string; why: string; priority: string; note: string }>;
+    tools: RecommendationGroup[];
+    domainCompass?: DomainCompassBlock;
+    medicalHistory?: import('@/lib/medical-history-bridge').MedicalHistoryVerdict;
+};
+
+export type ResultStory = {
+    primaryStorySentence: string;
+    statusQuestionAnswer: string;
+    immediateWhy: string;
+    primaryAction: ResultStoryAction;
+    chiefComplaintStory?: string;
+    hopiTimeline: ResultStoryTimelineItem[];
+    topSignals: ResultStorySignal[];
+    reasoningNarrative: string[];
+    clarityNarrative: ResultStoryClarity;
+    influencingFactors: ResultStorySignal[];
+    nutritionStoryState?: ResultStoryNutritionState;
+    todayPlan: string;
+    weekPlan: string[];
+    seekCareIf: string[];
+    reassessment: string;
+    deepDetails: ResultStoryDeepDetails;
+};
 
 /** Full ResultViewModel — assembled by build-result-view-model.ts */
 export interface ResultViewModel {
@@ -480,11 +628,22 @@ export interface ResultViewModel {
      */
     refinedTriage?: {
         level:             string;
+        reason?:           string;
+        dominantSignals?:  string[];
         safetyMessage:     string | null;
         lifestyleAllowed:  boolean;
         nutritionAllowed:  boolean;
         recommendedAction: string;
         wasRefined:        boolean;
+        baseLevelWas?:     string;
+    };
+
+    /** Safety-first user summary derived from refined triage. */
+    safetySummary?: {
+        message: string | null;
+        recommendedAction: string;
+        nutritionSuppressed: boolean;
+        lifestyleSuppressed: boolean;
     };
 
     /**
@@ -493,4 +652,23 @@ export interface ResultViewModel {
      * Phrased as "لرفع الدقة، أجب عن…"
      */
     whatWeDoNotKnowYet?: string[];
+    /** Phase A story layer: one coherent clinical story for future UI rendering. */
+    resultStory?: ResultStory;
+    /** Assessment journey explanation used by the result to feel earned. */
+    assessmentHandoff?: {
+        pathwayLabel: string;
+        keyAnsweredSignals: string[];
+        adaptiveReasonsShown: string[];
+        skippedSections: string[];
+        unknowns: string[];
+        tayyibatMode: 'none' | 'educational_only' | 'beginner' | 'pattern_followup';
+        chiefComplaintLabel?: string;
+        hopiSummary?: string[];
+        personalHistorySignals?: string[];
+        relatedSymptoms?: string[];
+        lifestyleSignals?: string[];
+        confidenceReadiness?: AssessmentConfidenceReadiness;
+        userWasUnsureOfPathway?: boolean;
+        flowSnapshot?: AssessmentFlowSnapshot;
+    };
 }

@@ -218,7 +218,7 @@ export default function TayyibatPage() {
                                         <Star style={{width:20,height:20,color:W.green}} />
                                         <div>
                                             <p style={{fontSize:10,fontWeight:800,color:W.green}}>نتيجة التقييم</p>
-                                            <p style={{fontSize:16,fontWeight:900,color:W.textPrimary}}>{scoreData.score}/١٠٠ — {scoreData.level === 'elite' ? 'ممتاز' : scoreData.level === 'good' ? 'جيد' : scoreData.level === 'moderate' ? 'متوسط' : 'يحتاج تحسين'}</p>
+                                            <p style={{fontSize:16,fontWeight:900,color:W.textPrimary}}>{scoreData.score}/١٠٠ — {scoreData.level === 'elite' ? 'نمط متقدم' : scoreData.level === 'good' ? 'جيد' : scoreData.level === 'moderate' ? 'متوسط' : 'يحتاج بناء'}</p>
                                         </div>
                                     </div>
                                 )}

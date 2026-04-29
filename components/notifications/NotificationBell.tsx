@@ -199,11 +199,9 @@ export default function NotificationBell({ variant = 'header', className = '' }:
                     {/* Footer */}
                     {notifications.length > 20 && (
                         <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
-                            <Link href="/notifications">
-                                <span className="text-sm text-primary hover:underline">
-                                    عرض كل الإشعارات ({notifications.length})
-                                </span>
-                            </Link>
+                            <span className="text-sm text-slate-400">
+                                تظهر أحدث {Math.min(notifications.length, 20)} إشعاراً هنا
+                            </span>
                         </div>
                     )}
                 </div>

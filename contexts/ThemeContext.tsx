@@ -4,6 +4,12 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 // Theme color presets
 export const themePresets = {
+    cyan: {
+        name: 'السماوي',
+        primary: '#0891B2',
+        primaryLight: '#22D3EE',
+        primaryDark: '#0E7490',
+    },
     emerald: {
         name: 'الزمردي',
         primary: '#2D9B83',
@@ -36,9 +42,9 @@ export const themePresets = {
     },
     teal: {
         name: 'الأزرق الفيروزي',
-        primary: '#0d9488',
-        primaryLight: '#14b8a6',
-        primaryDark: '#0f766e',
+        primary: '#0891B2',
+        primaryLight: '#22D3EE',
+        primaryDark: '#0E7490',
     },
 };
 
@@ -93,7 +99,7 @@ function adjustColor(hex: string, percent: number): string {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setThemeState] = useState<ThemeConfig>({
-        preset: 'emerald',
+        preset: 'cyan',
         useCustom: false,
     });
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -139,7 +145,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
                 primaryDark: adjustColor(theme.customPrimary, -15),
             };
         }
-        return themePresets[theme.preset] || themePresets.emerald;
+        return themePresets[theme.preset] || themePresets.cyan;
     }, [theme]);
 
     // Apply theme CSS variables and override hardcoded colors
@@ -165,16 +171,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             document.head.appendChild(styleEl);
         }
 
-        // Override all hardcoded emerald colors with current theme
+        // Override ALL old hardcoded teal/cyan colors with current theme
         styleEl.textContent = `
+            /* Old #2D9B83 emerald teal */
             .bg-\\[\\#2D9B83\\], .bg-\\[\\#2d9b83\\] { background-color: ${currentColors.primary} !important; }
-            .bg-\\[\\#3FB39A\\], .bg-\\[\\#3fb39a\\] { background-color: ${currentColors.primaryLight} !important; }
-            .bg-\\[\\#1E7A66\\], .bg-\\[\\#1e7a66\\] { background-color: ${currentColors.primaryDark} !important; }
             .text-\\[\\#2D9B83\\], .text-\\[\\#2d9b83\\] { color: ${currentColors.primary} !important; }
-            .text-\\[\\#3FB39A\\], .text-\\[\\#3fb39a\\] { color: ${currentColors.primaryLight} !important; }
             .border-\\[\\#2D9B83\\], .border-\\[\\#2d9b83\\] { border-color: ${currentColors.primary} !important; }
             .from-\\[\\#2D9B83\\], .from-\\[\\#2d9b83\\] { --tw-gradient-from: ${currentColors.primary} !important; }
             .to-\\[\\#3FB39A\\], .to-\\[\\#3fb39a\\] { --tw-gradient-to: ${currentColors.primaryLight} !important; }
+            .bg-\\[\\#3FB39A\\], .bg-\\[\\#3fb39a\\] { background-color: ${currentColors.primaryLight} !important; }
             .ring-\\[\\#2D9B83\\], .ring-\\[\\#2d9b83\\] { --tw-ring-color: ${currentColors.primary} !important; }
             .bg-\\[\\#2D9B83\\]\\/5 { background-color: ${currentColors.primary}0d !important; }
             .bg-\\[\\#2D9B83\\]\\/10 { background-color: ${currentColors.primary}1a !important; }
@@ -184,6 +189,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             .hover\\:text-\\[\\#2D9B83\\]:hover { color: ${currentColors.primary} !important; }
             .shadow-\\[\\#2D9B83\\]\\/25 { --tw-shadow-color: ${currentColors.primary}40 !important; }
             .shadow-\\[\\#2D9B83\\]\\/40 { --tw-shadow-color: ${currentColors.primary}66 !important; }
+            /* Old #0d9488 teal */
+            .bg-\\[\\#0d9488\\], .bg-\\[\\#0D9488\\] { background-color: ${currentColors.primary} !important; }
+            .text-\\[\\#0d9488\\], .text-\\[\\#0D9488\\] { color: ${currentColors.primary} !important; }
+            .border-\\[\\#0d9488\\], .border-\\[\\#0D9488\\] { border-color: ${currentColors.primary} !important; }
+            .from-\\[\\#0d9488\\], .from-\\[\\#0D9488\\] { --tw-gradient-from: ${currentColors.primary} !important; }
+            .to-\\[\\#0d9488\\], .to-\\[\\#0D9488\\] { --tw-gradient-to: ${currentColors.primary} !important; }
+            .bg-\\[\\#0d9488\\]\\/10 { background-color: ${currentColors.primary}1a !important; }
+            .bg-\\[\\#0d9488\\]\\/20 { background-color: ${currentColors.primary}33 !important; }
+            /* Old #0f766e dark teal */
+            .bg-\\[\\#0f766e\\], .to-\\[\\#0f766e\\], .from-\\[\\#0f766e\\] { background-color: ${currentColors.primaryDark} !important; }
+            /* Old #14b8a6 light teal */
+            .bg-\\[\\#14b8a6\\], .text-\\[\\#14b8a6\\] { color: ${currentColors.primaryLight} !important; }
+            /* Tailwind teal-600 / teal-700 */
+            .bg-teal-600 { background-color: ${currentColors.primary} !important; }
+            .bg-teal-700 { background-color: ${currentColors.primaryDark} !important; }
+            .text-teal-600 { color: ${currentColors.primary} !important; }
+            .text-teal-700 { color: ${currentColors.primaryDark} !important; }
+            .border-teal-600 { border-color: ${currentColors.primary} !important; }
+            .ring-teal-600 { --tw-ring-color: ${currentColors.primary} !important; }
+            .from-teal-600 { --tw-gradient-from: ${currentColors.primary} !important; }
+            .to-teal-600 { --tw-gradient-to: ${currentColors.primary} !important; }
+            .hover\\:bg-teal-700:hover { background-color: ${currentColors.primaryDark} !important; }
         `;
     }, [currentColors, mounted]);
 

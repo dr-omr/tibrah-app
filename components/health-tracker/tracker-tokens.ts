@@ -5,7 +5,7 @@
 export const METRIC = {
     water:    { color: '#2563eb', bg: 'rgba(37,99,235,0.07)',   border: 'rgba(37,99,235,0.15)',  g: 'linear-gradient(135deg,#2563eb,#3b82f6)', label: 'الماء',     emoji: '💧' },
     sleep:    { color: '#7c3aed', bg: 'rgba(124,58,237,0.07)',  border: 'rgba(124,58,237,0.15)', g: 'linear-gradient(135deg,#7c3aed,#8b5cf6)', label: 'النوم',     emoji: '🌙' },
-    activity: { color: '#0d9488', bg: 'rgba(13,148,136,0.07)',  border: 'rgba(13,148,136,0.15)', g: 'linear-gradient(135deg,#0d9488,#14b8a6)', label: 'النشاط',    emoji: '🏃' },
+    activity: { color: '#0891B2', bg: 'rgba(8,145,178,0.07)',  border: 'rgba(8,145,178,0.15)', g: 'linear-gradient(135deg,#0891B2,#22D3EE)', label: 'النشاط',    emoji: '🏃' },
     mood:     { color: '#d97706', bg: 'rgba(217,119,6,0.07)',   border: 'rgba(217,119,6,0.15)',  g: 'linear-gradient(135deg,#d97706,#f59e0b)', label: 'المزاج',    emoji: '😊' },
     meds:     { color: '#dc2626', bg: 'rgba(220,38,38,0.07)',   border: 'rgba(220,38,38,0.15)',  g: 'linear-gradient(135deg,#dc2626,#ef4444)', label: 'الأدوية',   emoji: '💊' },
     weight:   { color: '#64748b', bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.15)',g: 'linear-gradient(135deg,#64748b,#94a3b8)', label: 'الوزن',     emoji: '⚖️' },

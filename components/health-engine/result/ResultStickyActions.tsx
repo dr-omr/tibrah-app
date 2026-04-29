@@ -28,14 +28,16 @@ interface Props {
 export function ResultStickyActions({ vm, vis, on, onRestart, sessionId }: Props) {
     const primary     = DOMAIN_BY_ID[vm.domainId];
     const isEmergency = vm.hero.triageLevel === 'emergency';
+    const emergencyPhone = process.env.NEXT_PUBLIC_EMERGENCY_PHONE?.trim();
+    const emergencyHref = emergencyPhone ? `tel:${emergencyPhone}` : '#';
 
     // Determine primary CTA
     const primaryHref = vm.escalationNeeded
-        ? (isEmergency ? 'tel:911' : createPageUrl('BookAppointment'))
+        ? (isEmergency ? emergencyHref : createPageUrl('BookAppointment'))
         : vm.primarySectionHref;
 
     const primaryLabel = vm.escalationNeeded
-        ? (isEmergency ? 'اتصل بالإسعاف فوراً' : 'احجز مع د. عمر الآن')
+        ? (isEmergency ? (emergencyPhone ? 'اتصل بالطوارئ' : 'توجه لأقرب طوارئ فوراً') : 'احجز مع د. عمر الآن')
         : `ادخل قسم ${primary?.arabicName ?? ''}`;
 
     const primaryIcon = vm.escalationNeeded
@@ -62,7 +64,8 @@ export function ResultStickyActions({ vm, vis, on, onRestart, sessionId }: Props
 
     const primaryTextColor = vm.escalationNeeded && isEmergency ? '#7F1D1D' : W.textPrimary;
 
-    const handlePrimary = () => {
+    const handlePrimary = (event?: React.MouseEvent<HTMLAnchorElement>) => {
+        if (isEmergency && !emergencyPhone) event?.preventDefault();
         haptic.impact();
         if (vm.escalationNeeded) {
             trackEvent('booking_suggested', { triage_level: vm.hero.triageLevel, from: 'sticky_cta' });

@@ -82,7 +82,7 @@ const WEEK_COLORS = ['#0D9488', '#6366F1', '#F59E0B', '#EC4899'];
 function AntiInflamRing({ score, color }: { score: number; color: string }) {
     const r = 36;
     const circ = 2 * Math.PI * r;
-    const label = score >= 80 ? 'ممتاز' : score >= 60 ? 'جيد' : score >= 40 ? 'متوسط' : 'ضعيف';
+    const label = score >= 80 ? 'مرتفع' : score >= 60 ? 'جيد' : score >= 40 ? 'متوسط' : 'منخفض';
 
     return (
         <div className="flex items-center gap-3 p-3 rounded-xl"
@@ -374,7 +374,7 @@ export function TayyibatVerdictCard({ data, vis, on }: Props) {
                                 تعرّف على نظام الطيبات
                             </span>
                         </Link>
-                        <Link href="/tayyibat/daily-log"
+                        <Link href="/tayyibat/tracker"
                             className="flex items-center justify-center gap-2 py-2.5 rounded-2xl"
                             style={{ background: 'rgba(148,163,184,0.08)', border: '1px solid rgba(148,163,184,0.18)' }}>
                             <Clock style={{ width: 12, height: 12, color: W.textSub }} />
@@ -406,7 +406,7 @@ export function TayyibatVerdictCard({ data, vis, on }: Props) {
                         <div>
                             <SectionLabel text="تحليل نظام الطيبات" color="#059669" />
                             <p style={{ fontSize: 9, color: W.textSub, marginTop: -2 }}>
-                                تشخيص غذائي حتمي — بدون ذكاء اصطناعي
+                                قراءة غذائية مساعدة — ليست تشخيصاً طبياً
                             </p>
                         </div>
                     </div>

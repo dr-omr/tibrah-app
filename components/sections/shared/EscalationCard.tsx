@@ -28,7 +28,7 @@ const DEFAULT_HINTS = [
 
 export function EscalationCard({
     color,
-    bookingHref = '/booking',
+    bookingHref = '/book-appointment',
     hints = DEFAULT_HINTS,
 }: EscalationCardProps) {
     return (

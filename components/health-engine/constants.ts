@@ -367,6 +367,40 @@ export const SOMATIC_THEME_INFO: Record<SomaticTheme, { label: string; color: st
    ══════════════════════════════════════════════════════════ */
 export const PATHWAYS: Pathway[] = [
     {
+        id: 'general_uncertain',
+        label: 'لست متأكدًا — سنبدأ من الأعراض العامة',
+        emoji: '؟',
+        color: '#0f766e',
+        gradient: ['#0f766e', '#22d3ee'],
+        description: 'مدخل عام عندما تكون الأعراض متداخلة',
+        subtitle: 'نبدأ بصورة عامة ثم نضيّق المسار حسب الشدة والمدة والإشارات التي تذكرها',
+        redFlags: [
+            { id: 'rf_gen_1', text: 'ألم صدر شديد أو ضيق تنفس شديد', level: 'emergency', actionMessage: 'قد تكون هذه علامة تحتاج رعاية عاجلة — توجّه لأقرب طوارئ فورًا' },
+            { id: 'rf_gen_2', text: 'إغماء أو تشوش شديد أو ضعف مفاجئ في طرف أو اضطراب كلام', level: 'emergency', actionMessage: 'علامة عصبية أو دورانية محتملة — الطوارئ فورًا' },
+            { id: 'rf_gen_3', text: 'قيء مستمر أو جفاف شديد أو ألم شديد لا يحتمل', level: 'urgent', actionMessage: 'هذه إشارة تحتاج مراجعة طبية قريبة وعدم الاكتفاء بخطة منزلية' },
+        ],
+        clinicalQuestions: [
+            {
+                id: 'general_main_area',
+                text: 'ما المنطقة الأقرب لما يحدث الآن؟',
+                type: 'single',
+                options: ['طاقة وتعب', 'هضم وانتفاخ', 'نوم وإيقاع', 'ألم وحركة', 'ضغط أو قلق', 'جلد أو مناعة', 'لا أعرف بعد'],
+            },
+            {
+                id: 'general_pattern',
+                text: 'أي إشارة تبدو واضحة في نمط الأعراض؟',
+                type: 'multiple',
+                options: ['تزيد بعد الأكل', 'تزيد مع قلة النوم', 'تزيد مع الضغط', 'تتكرر على فترات', 'بدأت فجأة', 'لا توجد إشارة واضحة'],
+            },
+            {
+                id: 'general_life_effect',
+                text: 'كيف أثرت الأعراض على يومك؟',
+                type: 'single',
+                options: ['لا تؤثر كثيرًا', 'تبطئ يومي قليلًا', 'تمنعني من بعض المهام', 'توقف نشاطي بوضوح'],
+            },
+        ],
+    },
+    {
         id: 'fatigue',
         label: 'طاقة وحيوية',
         emoji: '⚡',
@@ -1056,4 +1090,3 @@ export const DEFAULT_ANSWERS: EngineAnswers = {
    ══════════════════════════════════════════════════════════ */
 export { computeRouting } from '@/lib/domain-scoring-engine';
 export type { RoutingResult } from './types';
-

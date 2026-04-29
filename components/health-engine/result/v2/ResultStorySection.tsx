@@ -11,6 +11,7 @@ import type {
   ResultInsightBlock,
   ConfidencePhenotypeBlock,
   KeySignalPresentation,
+  ResultViewModel,
 } from '../../types';
 import type { DomainVisConfig } from '../shared/design-tokens';
 import { W } from '../shared/design-tokens';
@@ -18,6 +19,8 @@ import { W } from '../shared/design-tokens';
 interface Props {
   explanation: ResultInsightBlock;
   confidencePhenotype: ConfidencePhenotypeBlock;
+  confidenceExplanation?: ResultViewModel['confidenceExplanation'];
+  contradictionSummary?: ResultViewModel['contradictionSummary'];
   keySignals?: KeySignalPresentation[];
   vis: DomainVisConfig;
   on: boolean;
@@ -283,6 +286,60 @@ function ConfPhenoCard({ block, vis, delay, on }: {
 /* ═══════════════════════════════════════════════════════
    ③ Key Signals Card
    ═══════════════════════════════════════════════════════ */
+function SafetyConfidenceCard({ confidenceExplanation, contradictionSummary, vis, delay, on }: {
+  confidenceExplanation?: ResultViewModel['confidenceExplanation'];
+  contradictionSummary?: ResultViewModel['contradictionSummary'];
+  vis: DomainVisConfig;
+  delay: number;
+  on: boolean;
+}) {
+  if (!confidenceExplanation && !contradictionSummary) return null;
+
+  const hasContradictions = !!contradictionSummary && contradictionSummary.count > 0;
+  const accent = hasContradictions ? '#DC2626' : vis.particleColor;
+
+  return (
+    <GlassCard delay={delay} on={on} accentColor={accent} accentPos="top">
+      <div className="p-6 relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <IconOrb emoji="⚖️" color={accent} size={42} />
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.14em' }}>
+              Safety check
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 900, color: W.textPrimary }}>ثقة النتيجة واتساق الإجابات</p>
+          </div>
+        </div>
+
+        {confidenceExplanation && (
+          <div className="rounded-[18px] p-4 mb-3"
+            style={{ background: `${vis.particleColor}08`, border: `1px solid ${vis.particleColor}16` }}>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: W.textPrimary, lineHeight: 1.7 }}>
+              {confidenceExplanation.userNote}
+            </p>
+            {confidenceExplanation.missingData.length > 0 && (
+              <p style={{ fontSize: 11.5, fontWeight: 600, color: W.textSub, lineHeight: 1.7, marginTop: 8 }}>
+                لرفع الدقة: {confidenceExplanation.missingData.slice(0, 2).join('، ')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {contradictionSummary && contradictionSummary.userMessages.length > 0 && (
+          <div className="rounded-[18px] p-4"
+            style={{ background: 'rgba(254,242,242,0.72)', border: '1px solid rgba(248,113,113,0.22)' }}>
+            {contradictionSummary.userMessages.slice(0, 3).map((message, index) => (
+              <p key={index} style={{ fontSize: 12, fontWeight: 650, color: '#991B1B', lineHeight: 1.7, marginTop: index === 0 ? 0 : 6 }}>
+                {message}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    </GlassCard>
+  );
+}
+
 function SignalsCard({ signals, vis, delay, on }: {
   signals: KeySignalPresentation[]; vis: DomainVisConfig; delay: number; on: boolean;
 }) {
@@ -346,13 +403,20 @@ function SignalsCard({ signals, vis, delay, on }: {
 /* ═══════════════════════════════════════════════════════
    MAIN EXPORT
    ═══════════════════════════════════════════════════════ */
-export function ResultStorySection({ explanation, confidencePhenotype, keySignals, vis, on }: Props) {
+export function ResultStorySection({ explanation, confidencePhenotype, confidenceExplanation, contradictionSummary, keySignals, vis, on }: Props) {
   return (
     <>
       <SectionDivider label="ما فهمناه عنك" color={vis.particleColor} delay={0.04} on={on} />
       <ExplanationCard block={explanation} vis={vis} delay={0.08} on={on} />
       <ConfPhenoCard block={confidencePhenotype} vis={vis} delay={0.18} on={on} />
-      {keySignals && <SignalsCard signals={keySignals} vis={vis} delay={0.28} on={on} />}
+      <SafetyConfidenceCard
+        confidenceExplanation={confidenceExplanation}
+        contradictionSummary={contradictionSummary}
+        vis={vis}
+        delay={0.28}
+        on={on}
+      />
+      {keySignals && <SignalsCard signals={keySignals} vis={vis} delay={0.38} on={on} />}
     </>
   );
 }

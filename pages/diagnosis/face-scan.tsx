@@ -1,14 +1,13 @@
 import React, { useState, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Camera as LucideCamera, Upload, ArrowRight, ScanFace, Sparkles, AlertCircle, RefreshCw, ChevronRight, Waves, Zap, Activity } from 'lucide-react';
+import { Camera as LucideCamera, Upload, ArrowRight, ScanFace, Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { aiClient } from '@/components/ai/aiClient';
 import { toast } from '@/components/notification-engine';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
-import { createPageUrl } from '../../utils';
 
 export default function FaceScanPage() {
     const [image, setImage] = useState<string | null>(null);
@@ -97,7 +96,7 @@ export default function FaceScanPage() {
 
             {/* Header */}
             <div className="relative z-10 p-6 flex items-center justify-between">
-                <Link href="/Dashboard" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
+                <Link href="/home" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
                     <ArrowRight className="w-5 h-5" />
                     <span>عودة</span>
                 </Link>
@@ -112,9 +111,9 @@ export default function FaceScanPage() {
                 {/* Intro Text */}
                 {!image && (
                     <div className="text-center max-w-md mx-auto mb-10 animate-in slide-in-from-bottom-5 duration-700">
-                        <h1 className="text-2xl font-bold text-slate-900 mb-3">اكشف أسرار صحتك من وجهك</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 mb-3">ملاحظات عافية غير تشخيصية من الصورة</h1>
                         <p className="text-slate-500 leading-relaxed">
-                            الوجه مرآة الجسد. الذكاء الاصطناعي سيحلل لون البشرة، العيون، واللسان ليكتشف نقص الفيتامينات أو إرهاق الأعضاء حسب الطب الشمولي.
+                            تحليل الصورة ليس تشخيصًا طبيًا ولا يكشف أمراض الأعضاء. يمكنه فقط وصف ملاحظات ظاهرة عامة مثل وضوح الصورة أو الجفاف الظاهري أو علامات الإرهاق العام.
                         </p>
                     </div>
                 )}
@@ -192,10 +191,13 @@ export default function FaceScanPage() {
 
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                                <h3 className="font-bold text-slate-800">نتيجة التحليل الشمولي</h3>
+                                <h3 className="font-bold text-slate-800">ملاحظات الصورة غير التشخيصية</h3>
                             </div>
 
                             <div className="prose prose-sm text-slate-600 leading-relaxed max-w-none font-medium">
+                                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 mb-3">
+                                    تحليل الصورة ليس تشخيصًا طبيًا ولا يكشف أمراض الأعضاء.
+                                </p>
                                 <div dangerouslySetInnerHTML={{ __html: result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }} />
                             </div>
 
@@ -204,45 +206,6 @@ export default function FaceScanPage() {
                                 فحص جديد
                             </Button>
                         </div>
-
-                        {/* Frequency Suggestion */}
-                        {(() => {
-                            const suggestions = [
-                                { keywords: ['كبد', 'سموم', 'يرقان'], id: '21', label: 'تردد تجديد الكبد', icon: Activity },
-                                { keywords: ['كلى', 'الكلى', 'احتباس'], id: '22', label: 'تردد دعم الكلى', icon: RefreshCw },
-                                { keywords: ['معدة', 'هضم', 'غازات'], id: '4', label: 'تردد بكتيريا المعدة', icon: AlertCircle },
-                                { keywords: ['قولون', 'بكتيريا'], id: '1', label: 'تردد تنظيف القولون', icon: AlertCircle },
-                                { keywords: ['طاقة', 'خمول', 'تعب'], id: '8', label: 'تردد الطاقة (EBV)', icon: Zap },
-                            ];
-
-                            const suggestion = suggestions.find(s => s.keywords.some(k => result.includes(k)));
-
-                            if (suggestion) {
-                                return (
-                                    <div className="glass rounded-3xl p-6 border border-purple-200 shadow-xl bg-purple-50/50">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                                <Waves className="w-5 h-5 text-purple-600" />
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-slate-800">علاج مقترح بالترددات</h4>
-                                                <p className="text-xs text-slate-500">من صيدلية رايف الرقمية</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-slate-600 mb-4">
-                                            بناءً على نتيجة الفحص، نقترح الاستماع لـ <strong>{suggestion.label}</strong>.
-                                        </p>
-                                        <Link href={createPageUrl(`RifeFrequencies?id=${suggestion.id}`)}>
-                                            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-lg shadow-purple-200">
-                                                <Waves className="w-4 h-4 ml-2" />
-                                                استمع للجلسة الآن
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                )
-                            }
-                            return null;
-                        })()}
                     </div>
                 )}
             </main>

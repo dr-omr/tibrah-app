@@ -6,13 +6,13 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { Alexandria, Outfit } from 'next/font/google';
 
-const alexandria = Alexandria({ 
+const alexandria = Alexandria({
     subsets: ['arabic', 'latin'],
     variable: '--font-alexandria',
     display: 'swap',
 });
 
-const outfit = Outfit({ 
+const outfit = Outfit({
     subsets: ['latin'],
     variable: '--font-outfit',
     display: 'swap',
@@ -97,7 +97,7 @@ export default function App({ Component, pageProps }: AppProps) {
     const currentPageName = getPageName(router.pathname);
     const [isRouteChanging, setIsRouteChanging] = useState(false);
     const [deferredReady, setDeferredReady] = useState(false);
-    
+
     // PERF-5 FIX: QueryClient created inside state to avoid shared instance bugs
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
@@ -144,7 +144,7 @@ export default function App({ Component, pageProps }: AppProps) {
     useEffect(() => {
         if (!bridge.isNative) return;
         // إعداد StatusBar الديناميكي عند بداية التطبيق
-        bridge.setStatusBarStyle('dark', '#FEFCF5').catch(() => {});
+        bridge.setStatusBarStyle('dark', '#FEFCF5').catch(() => { });
 
         // Deep Link handler
         const cleanup: (() => void)[] = [];
@@ -153,7 +153,7 @@ export default function App({ Component, pageProps }: AppProps) {
             try {
                 const parsed = new URL(url);
                 const path = parsed.pathname || parsed.hostname;
-                router.push(path).catch(() => {});
+                router.push(path).catch(() => { });
             } catch { /* رابط غير صالح */ }
         }).then(handle => {
             if (handle) cleanup.push(() => handle.remove());
@@ -178,55 +178,55 @@ export default function App({ Component, pageProps }: AppProps) {
             <RouteProgressBar isLoading={isRouteChanging} />
             {/* NativeProvider يجب أن يكون الأول — يُهيّئ Safe Area وApp Lifecycle */}
             <NativeProvider>
-            <QueryClientProvider client={queryClient}>
-                <ErrorBoundary>
-                    <AuthProvider>
-                        <ThemeProvider>
-                            <LanguageProvider>
-                                <NotificationEngineProvider>
-                                    <SearchEngineProvider>
-                                        <AudioProvider>
-                                            <CartProvider>
-                                                <main className={`${alexandria.variable} ${outfit.variable} font-sans`}>
-                                                    {isAuthRoute ? (
-                                                        <PageTransition>
-                                                            <Component {...pageProps} />
-                                                        </PageTransition>
-                                                    ) : (
-                                                        <Layout currentPageName={currentPageName}>
+                <QueryClientProvider client={queryClient}>
+                    <ErrorBoundary>
+                        <AuthProvider>
+                            <ThemeProvider>
+                                <LanguageProvider>
+                                    <NotificationEngineProvider>
+                                        <SearchEngineProvider>
+                                            <AudioProvider>
+                                                <CartProvider>
+                                                    <main className={`${alexandria.variable} ${outfit.variable} font-sans`}>
+                                                        {isAuthRoute ? (
                                                             <PageTransition>
                                                                 <Component {...pageProps} />
                                                             </PageTransition>
-                                                        </Layout>
-                                                    )}
-                                                    
-                                                    <NotificationToastProvider />
-                                                    <SearchPalette />
-                                                
-                                                {!isAuthRoute && (
-                                                    <>
-                                                        {/* Premium unified FAB — always available */}
-                                                        <FloatingActionButton />
-                                                        {/* Deferred overlays — load after page settles */}
-                                                        {deferredReady && (
+                                                        ) : (
+                                                            <Layout currentPageName={currentPageName}>
+                                                                <PageTransition>
+                                                                    <Component {...pageProps} />
+                                                                </PageTransition>
+                                                            </Layout>
+                                                        )}
+
+                                                        <NotificationToastProvider />
+                                                        <SearchPalette />
+
+                                                        {!isAuthRoute && (
                                                             <>
-                                                                <SmartHealthReminder />
-                                                                <OnboardingTour />
-                                                                <CompanionBot />
+                                                                {/* Premium unified FAB — always available */}
+                                                                <FloatingActionButton />
+                                                                {/* Deferred overlays — load after page settles */}
+                                                                {deferredReady && (
+                                                                    <>
+                                                                        <SmartHealthReminder />
+                                                                        <OnboardingTour />
+                                                                        <CompanionBot />
+                                                                    </>
+                                                                )}
                                                             </>
                                                         )}
-                                                    </>
-                                                )}
-                                                </main>
-                                            </CartProvider>
-                                        </AudioProvider>
-                                    </SearchEngineProvider>
-                                </NotificationEngineProvider>
-                            </LanguageProvider>
-                        </ThemeProvider>
-                    </AuthProvider>
-                </ErrorBoundary>
-            </QueryClientProvider>
+                                                    </main>
+                                                </CartProvider>
+                                            </AudioProvider>
+                                        </SearchEngineProvider>
+                                    </NotificationEngineProvider>
+                                </LanguageProvider>
+                            </ThemeProvider>
+                        </AuthProvider>
+                    </ErrorBoundary>
+                </QueryClientProvider>
             </NativeProvider>
         </>
     );

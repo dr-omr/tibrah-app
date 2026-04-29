@@ -10,21 +10,35 @@ import type { StepId } from '../types';
 
 const LABELS: Record<StepId, string> = {
     welcome:   'طِبرَا',
+    personalHistory: 'معلومات عنك',
+    chiefComplaint: 'إيش يضايقك؟',
+    hopi: 'تفاصيل العرض',
     pathway:   'اختر شكواك',
+    redflags:  'فحص السلامة',
     clinical:  'تفاصيل الحالة',
+    relatedSymptoms: 'أعراض مرافقة',
+    lifestyle: 'الأكل والنوم',
     emotional: 'البعد العاطفي',
     nutrition: 'نظام الطيبات',
+    review:    'مراجعة الخريطة',
     analyzing: 'جاري التحليل',
     result:    'نتيجة تحليلك',
 };
 
-const PROGRESS_STEPS: StepId[] = ['pathway', 'clinical', 'emotional', 'nutrition'];
+const PROGRESS_STEPS: StepId[] = ['personalHistory', 'chiefComplaint', 'hopi', 'redflags', 'relatedSymptoms', 'lifestyle', 'emotional', 'nutrition', 'review'];
 
 const STEP_COLOR: Partial<Record<StepId, string>> = {
-    pathway:   '#0891B2',
+    personalHistory: '#0EA5E9',
+    chiefComplaint: '#0787A5',
+    hopi: '#D97706',
+    pathway:   '#0787A5',
+    redflags:  '#DC2626',
     clinical:  '#D97706',
+    relatedSymptoms: '#059669',
+    lifestyle: '#0EA5E9',
     emotional: '#818CF8',
     nutrition: '#059669',
+    review:    '#0787A5',
 };
 
 export function EngineHeader({ step, onBack, canGoBack }: {
@@ -33,7 +47,7 @@ export function EngineHeader({ step, onBack, canGoBack }: {
     const idx         = PROGRESS_STEPS.indexOf(step);
     const showProgress = idx !== -1;
     const pct         = showProgress ? ((idx + 1) / PROGRESS_STEPS.length) * 100 : 0;
-    const accent      = STEP_COLOR[step] ?? '#0891B2';
+    const accent      = STEP_COLOR[step] ?? '#0787A5';
 
     return (
         <div className="fixed top-0 inset-x-0 z-40 flex flex-col"
@@ -68,7 +82,7 @@ export function EngineHeader({ step, onBack, canGoBack }: {
                             background: 'rgba(255,255,255,0.60)',
                             border: '1px solid rgba(255,255,255,0.85)',
                             backdropFilter: 'blur(12px)',
-                            color: '#0E7490',
+                            color: '#0F6F8F',
                             boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.90), 0 3px 10px rgba(0,0,0,0.04)',
                         }}
                         aria-label="رجوع">
@@ -83,7 +97,7 @@ export function EngineHeader({ step, onBack, canGoBack }: {
                             boxShadow: '0 3px 12px rgba(8,145,178,0.22), inset 0 1.5px 0 rgba(255,255,255,0.95)',
                         }}>
                         <div className="absolute inset-x-0 top-0" style={{ height: '45%', background: 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)', borderRadius: 99 }} />
-                        <span style={{ fontSize: 14, fontWeight: 900, color: '#0E7490', position: 'relative', zIndex: 1 }}>ط</span>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#0F6F8F', position: 'relative', zIndex: 1 }}>ط</span>
                     </div>
                 )}
 
@@ -94,7 +108,7 @@ export function EngineHeader({ step, onBack, canGoBack }: {
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-                        style={{ fontSize: 15.5, fontWeight: 900, color: '#0C4A6E', letterSpacing: '-0.01em' }}>
+                        style={{ fontSize: 15.5, fontWeight: 900, color: '#073B52', letterSpacing: '-0.01em' }}>
                         {LABELS[step]}
                     </motion.span>
                 </div>

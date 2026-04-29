@@ -4,10 +4,11 @@ import { verifyApiSession } from '@/lib/verifySession';
 import { db } from '@/lib/db';
 import { SignJWT } from 'jose';
 
-// Secure secret string matching the overall auth pipeline
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.COOKIE_SECRET || 'a_very_long_and_secure_secret_key_for_development'
-);
+function getJwtSecret(): Uint8Array | null {
+    const secret = process.env.COOKIE_SECRET;
+    if (!secret || secret.length < 32) return null;
+    return new TextEncoder().encode(secret);
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
@@ -21,6 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+        const jwtSecret = getJwtSecret();
+        if (!jwtSecret) {
+            return res.status(503).json({ error: 'Emergency sharing is not configured' });
+        }
+
         const session = await verifyApiSession(req);
         if (!session) {
             return res.status(401).json({ error: 'Unauthorized' });
@@ -49,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setExpirationTime('24h') // strict 24 expiry
-            .sign(JWT_SECRET);
+            .sign(jwtSecret);
 
         // Return a URL pointing to the app's sharing landing page
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

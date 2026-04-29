@@ -64,7 +64,7 @@ export default function BreathingSanctuary() {
             {/* Header Content */}
             <div className="relative z-10 w-full max-w-md px-6 text-center mb-10">
                 <div className="flex items-center justify-between mb-8">
-                    <Link href="/Dashboard">
+                    <Link href="/home">
                         <Button variant="ghost" size="icon" className="text-white/50 hover:text-white hover:bg-white/10 rounded-full">
                             <X className="w-6 h-6" />
                         </Button>

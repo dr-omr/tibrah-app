@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, ChevronDown, ArrowRight, ExternalLink, Utensils, RotateCcw } from 'lucide-react';
+import { ChevronDown, ArrowRight, ExternalLink, Utensils, RotateCcw } from 'lucide-react';
 
 import { computeTayyibatScore }   from '@/lib/tayyibat/tayyibat-scoring-engine';
 import { detectPatterns, detectContradictions, computeConfidence, PATTERN_DESCRIPTIONS }
@@ -135,19 +135,19 @@ export default function TayyibatResultPage() {
                 {isSafe && (
                     <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}}
                         className="rounded-[22px] p-5"
-                        style={{background:'rgba(220,38,38,0.07)',border:'1.5px solid rgba(220,38,38,0.30)'}}>
+                        style={{background:'rgba(8,145,178,0.07)',border:'1.5px solid rgba(8,145,178,0.22)' }}>
                         <div className="flex items-center gap-3 mb-3">
-                            <AlertTriangle style={{width:22,height:22,color:W.red,flexShrink:0}} />
-                            <p style={{fontSize:15,fontWeight:900,color:'#7F1D1D'}}>تقييم طبي أولاً</p>
+                            <span style={{fontSize:18}}>🩺</span>
+                            <p style={{fontSize:15,fontWeight:900,color:W.textPrimary}}>تقييم طبي مقترح أولاً</p>
                         </div>
-                        <p style={{fontSize:12,fontWeight:600,color:'#991B1B',lineHeight:1.8,marginBottom:12}}>
+                        <p style={{fontSize:12,fontWeight:600,color:W.textSub,lineHeight:1.8,marginBottom:12}}>
                             {RED_FLAG_DISCLAIMER}
                         </p>
                         <motion.button whileTap={{scale:0.97}} onClick={()=>setShowFlags(!showFlags)}
                             className="flex items-center gap-2 mb-3">
-                            <span style={{fontSize:11,fontWeight:700,color:W.red}}>علامات الخطر التفصيلية</span>
+                            <span style={{fontSize:11,fontWeight:700,color:W.teal}}>التفاصيل</span>
                             <motion.div animate={{rotate:showFlags?180:0}}>
-                                <ChevronDown style={{width:14,height:14,color:W.red}} />
+                                <ChevronDown style={{width:14,height:14,color:W.teal}} />
                             </motion.div>
                         </motion.button>
                         <AnimatePresence>
@@ -155,8 +155,8 @@ export default function TayyibatResultPage() {
                                 <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}}>
                                     {result.fullOutput.medicalRedFlags.map((f,i)=>(
                                         <div key={i} className="flex items-center gap-2 py-1">
-                                            <span style={{fontSize:8,color:W.red}}>●</span>
-                                            <p style={{fontSize:11,fontWeight:600,color:'#7F1D1D'}}>{f}</p>
+                                            <span style={{fontSize:8,color:W.teal}}>●</span>
+                                            <p style={{fontSize:11,fontWeight:600,color:W.textSub}}>{f}</p>
                                         </div>
                                     ))}
                                 </motion.div>
@@ -164,8 +164,8 @@ export default function TayyibatResultPage() {
                         </AnimatePresence>
                         <motion.button whileTap={{scale:0.97}} onClick={()=>router.push('/book-appointment')}
                             className="w-full rounded-[18px] py-4 mt-2"
-                            style={{background:'linear-gradient(135deg,#DC2626,#B91C1C)',border:'none'}}>
-                            <span style={{fontSize:14,fontWeight:900,color:'#fff'}}>راجع طبيبًا أولًا</span>
+                            style={{background:'linear-gradient(135deg,#0891B2,#0E7490)',border:'none'}}>
+                            <span style={{fontSize:14,fontWeight:900,color:'#fff'}}>احجز استشارة</span>
                         </motion.button>
                     </motion.div>
                 )}

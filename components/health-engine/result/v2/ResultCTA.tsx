@@ -243,7 +243,7 @@ export function ResultCTA({ vis, sessionId, planHandoffText, revisitNote, reasse
 
       {/* ═══ Booking CTA ═══ */}
       {showBookingCta && (
-        <Link href="/booking"
+            <Link href="/book-appointment"
           onClick={() => { haptic.impact(); trackEvent('booking_from_result', { session_id: sessionId }); }}>
           <motion.div whileTap={{ scale: 0.97 }}
             className="flex items-center justify-center gap-3 py-4 rounded-[22px] mb-5 relative overflow-hidden"
@@ -256,7 +256,7 @@ export function ResultCTA({ vis, sessionId, planHandoffText, revisitNote, reasse
             <div className="absolute inset-x-0 top-0 h-[48%] pointer-events-none"
               style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, transparent 100%)', borderRadius: '22px 22px 0 0' }} />
             <span style={{ fontSize: 16, position: 'relative', zIndex: 1 }}>🏥</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', position: 'relative', zIndex: 1 }}>احجز موعد مع طبيب</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', position: 'relative', zIndex: 1 }}>احجز استشارة</span>
           </motion.div>
         </Link>
       )}

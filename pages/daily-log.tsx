@@ -24,6 +24,13 @@ import {
 } from '@/components/daily-log/daily-log-data';
 import { GlassCard, StepDots, MetalDial, NavButtons } from '@/components/daily-log/daily-log-ui';
 
+export const getServerSideProps = async () => ({
+  redirect: {
+    destination: '/tayyibat/tracker',
+    permanent: true,
+  },
+});
+
 export default function DailyLog() {
   const router = useRouter();
   const { user } = useAuth();

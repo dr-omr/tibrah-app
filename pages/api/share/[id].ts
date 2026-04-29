@@ -1,6 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { jwtVerify } from 'jose';
 
+function getShareSecret(): Uint8Array | null {
+    const secret = process.env.COOKIE_SECRET;
+    if (!secret || secret.length < 32) return null;
+    return new TextEncoder().encode(secret);
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -13,43 +19,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const secret = new TextEncoder().encode(process.env.COOKIE_SECRET || 'a_very_long_and_secure_secret_key_for_development');
+        const secret = getShareSecret();
+        if (!secret) {
+            return res.status(503).json({ valid: false, profile: null, error: 'Share access is not configured' });
+        }
         
         // Decode and verify expiration strictly
         const { payload } = await jwtVerify(id, secret);
         
         const targetId = payload.id;
         const guardianId = payload.guardianId;
+        const type = payload.type;
 
-        // Fetch user data via admin logic to bypass client auth
-        // Because this is an API route, we run in Node context
-        // Real-app: fetch from Firestore Admin
-        
-        // Mock data for the targetId profile
-        const emergencyData = {
-            name: 'سجل طبي للطوارئ',
-            age: 'مجهول',
-            blood_type: 'O+',
-            allergies: ['البنسلين'],
-            chronic_conditions: ['الربو'],
-            current_medications: [
-                { name: 'Ventolin HFA', dosage: '2 puffs', timing: 'عند الحاجة' }
-            ],
-            emergency_contact: '050xxxxxxx'
-        };
+        if (type !== 'emergency_share' || typeof targetId !== 'string' || typeof guardianId !== 'string') {
+            return res.status(401).json({ valid: false, profile: null, error: 'Invalid share token' });
+        }
 
-        return res.status(200).json({
-            valid: true,
-            profile: emergencyData,
-            guardianId
-        });
+        return res.status(404).json({ valid: false, profile: null, guardianId, error: 'Emergency record not found' });
 
     } catch (err: any) {
-        console.error('[Share JWT Error]', err.message);
+        console.error('[Share JWT Error]', err instanceof Error ? err.message : 'invalid token');
         return res.status(401).json({
             valid: false,
             profile: null,
-            error: err.message
+            error: 'Invalid or expired share link'
         });
     }
 }

@@ -3,7 +3,6 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 
 export type AdminRole = 'super_admin' | 'doctor' | 'operator' | 'support' | 'viewer';
 
@@ -25,13 +24,14 @@ export function useAdminAuth() {
   const { user, isAdmin, loading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  const adminUser: AdminUser | null = {
-    id: 'mock-admin',
-    email: 'dr.omar@tibrah.com',
-    name: 'الدكتور عمر (معاينة)',
+  const adminUser: AdminUser | null = isAuthenticated && isAdmin && user ? {
+    id: user.id,
+    email: user.email,
+    name: user.name || user.displayName || user.email,
     role: 'super_admin' as AdminRole,
+    photoURL: user.photoURL,
     isAuthenticated: true,
-  };
+  } : null;
 
   // Permission check helper
   const hasPermission = (module: string, action: 'read' | 'create' | 'update' | 'delete' | 'export' = 'read'): boolean => {
@@ -44,10 +44,9 @@ export function useAdminAuth() {
 
   // Require admin — redirect if not authorized
   const requireAdmin = () => {
-    // Bypass check for local preview:
-    // if (!loading && (!isAuthenticated || !isAdmin)) {
-    //   router.replace(`/login?redirect=${router.asPath}&reason=admin`);
-    // }
+    if (!loading && (!isAuthenticated || !isAdmin)) {
+      router.replace(`/login?redirect=${encodeURIComponent(router.asPath)}&reason=admin`);
+    }
   };
 
   return {

@@ -5,11 +5,11 @@
 
 :root {
     /* === Colors === */
-    --primary: #2D9B83;
-    --primary-light: #3FB39A;
-    --primary-dark: #1E7A66;
-    --gradient-start: #2D9B83;
-    --gradient-end: #3FB39A;
+    --primary: #0891B2;
+    --primary-light: #22D3EE;
+    --primary-dark: #0E7490;
+    --gradient-start: #0891B2;
+    --gradient-end: #0E7490;
     --gold: #D4AF37;
     --gold-light: #F4D03F;
 
@@ -18,8 +18,8 @@
     --triage-urgent: #f97316;
     --triage-review: #eab308;
     --triage-routine: #22c55e;
-    --shadow-triage: 0 4px 20px -4px rgba(45, 155, 131, 0.25);
-    --gradient-trust: linear-gradient(135deg, #0d9488 0%, #2D9B83 50%, #10b981 100%);
+    --shadow-triage: 0 4px 20px -4px rgba(8, 145, 178, 0.25);
+    --gradient-trust: linear-gradient(135deg, #0891B2 0%, #0E7490 50%, #22D3EE 100%);
 
     /* === Typography === */
     --font-family: 'Tajawal', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -89,7 +89,7 @@
     --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.06), 0 4px 12px -4px rgba(0, 0, 0, 0.04);
     --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.08), 0 12px 24px -8px rgba(0, 0, 0, 0.05);
     --shadow-soft: 0 4px 30px rgba(0, 0, 0, 0.03);
-    --shadow-glow: 0 0 40px rgba(45, 155, 131, 0.12);
+    --shadow-glow: 0 0 40px rgba(8, 145, 178, 0.14);
 
     /* === Card Shadows (Unified 3-Tier Apple Style) === 
        Using multi-layer shadows for depth without harsh lines */
@@ -111,7 +111,7 @@
     --space-card-inner: 1.25rem; /* 20px — spacious card internal padding */
 
     /* === Section Accent Colors === */
-    --section-health: #0d9488;
+    --section-health: #0891B2;
     --section-medical: #3b82f6;
     --section-services: #d97706;
     --section-shop: #ea580c;
@@ -154,16 +154,16 @@
        ═══════════════════════════════════════════════ */
 
     /* Brand Teal — من تحليل الهوية */
-    --tibrah-900: #0a3d35;
-    --tibrah-700: #0d6b5a;
-    --tibrah-600: #0d9488;   /* primary main */
-    --tibrah-500: #14b8a6;   /* primary light */
-    --tibrah-200: #99f6e4;
-    --tibrah-100: #ccfbf1;
-    --tibrah-50:  #f0fdfa;
+    --tibrah-900: #083D4F;
+    --tibrah-700: #0E7490;
+    --tibrah-600: #0891B2;   /* primary main */
+    --tibrah-500: #22D3EE;   /* primary light */
+    --tibrah-200: #A5F3FC;
+    --tibrah-100: #CFFAFE;
+    --tibrah-50:  #ECFEFF;
 
     /* Health Semantic */
-    --health-excellent: #0d9488;
+    --health-excellent: #0891B2;
     --health-good:      #22c55e;
     --health-warning:   #f59e0b;
     --health-critical:  #ef4444;

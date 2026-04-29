@@ -144,6 +144,8 @@ export default function MyPlanPage() {
     const scores       = plan.routing.domain_scores;
     const completionRate = getCompletionRate(plan);
     const needsEsc     = summary.escalation === 'emergency' || summary.escalation === 'urgent' || summary.escalation === 'needs_doctor';
+    const emergencyPhone = process.env.NEXT_PUBLIC_EMERGENCY_PHONE?.trim();
+    const emergencyHref = emergencyPhone ? `tel:${emergencyPhone}` : '#';
 
     // Booking CTA ذكي بناءً على الحالة
     const getSmartBookingMsg = () => {
@@ -369,8 +371,9 @@ export default function MyPlanPage() {
                                             </p>
                                         </div>
                                         <Link
-                                            href={summary.escalation === 'emergency' ? 'tel:911' : createPageUrl('BookAppointment')}
-                                            onClick={() => {
+                                            href={summary.escalation === 'emergency' ? emergencyHref : createPageUrl('BookAppointment')}
+                                            onClick={(event) => {
+                                                if (summary.escalation === 'emergency' && !emergencyPhone) event.preventDefault();
                                                 haptic.impact();
                                                 trackEvent('booking_from_routing', { triage_level: summary.triageLevel, from: 'my_plan' });
                                             }}
@@ -385,7 +388,7 @@ export default function MyPlanPage() {
                                                     ? <Phone style={{ width: 12, height: 12, color: '#fff' }} />
                                                     : <Calendar style={{ width: 12, height: 12, color: '#fff' }} />}
                                                 <span style={{ fontSize: 11, fontWeight: 900, color: '#fff' }}>
-                                                    {summary.escalation === 'emergency' ? 'اتصل الآن' : 'احجز'}
+                                                    {summary.escalation === 'emergency' ? (emergencyPhone ? 'اتصل الآن' : 'طوارئ الآن') : 'احجز'}
                                                 </span>
                                             </motion.div>
                                         </Link>

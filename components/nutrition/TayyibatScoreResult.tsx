@@ -27,11 +27,11 @@ export interface TayyibatScoreData {
 const LEVELS: Record<string, {
     label:string; emoji:string; color:string; bg:string; border:string; desc:string;
 }> = {
-    elite:    { label:'ممتاز', emoji:'🏆', color:'#059669', bg:'rgba(5,150,105,0.08)',  border:'rgba(5,150,105,0.25)',  desc:'أنت تعيش نظام الطيبات. استمر وانتقل للتحسينات الدقيقة.' },
-    good:     { label:'جيد',   emoji:'✅', color:'#0891B2', bg:'rgba(8,145,178,0.08)',  border:'rgba(8,145,178,0.22)',  desc:'الأساس ممتاز. بعض الثغرات تحتاج سدّاً لتحصل على النتائج الكاملة.' },
-    moderate: { label:'متوسط', emoji:'🔶', color:'#D97706', bg:'rgba(217,119,6,0.07)',  border:'rgba(217,119,6,0.22)',  desc:'معك جزء من النظام لكن الانتقال الكامل سيُضاعف نتائجك خلال ٢١ يوم.' },
-    poor:     { label:'ضعيف',  emoji:'⚠️', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.20)',  desc:'نظامك الغذائي الحالي يُغذّي الالتهاب. التحول للطيبات هو الأولوية القصوى.' },
-    critical: { label:'حرج',   emoji:'🚨', color:'#DC2626', bg:'rgba(220,38,38,0.10)', border:'rgba(220,38,38,0.30)',  desc:'الغذاء يُعيق شفاءك بشكل مباشر. يجب البدء بالطيبات الأسبوع الحالي.' },
+    elite:    { label:'نمط متقدم',    emoji:'🌿', color:'#059669', bg:'rgba(5,150,105,0.08)',  border:'rgba(5,150,105,0.25)',  desc:'إجاباتك تعكس نمطاً غذائياً متقدماً. انتقل للتحسينات الدقيقة.' },
+    good:     { label:'جيد',          emoji:'✅', color:'#0891B2', bg:'rgba(8,145,178,0.08)',  border:'rgba(8,145,178,0.22)',  desc:'الأساس موجود. بعض الثغرات تستحق المتابعة لتحصل على النتائج الكاملة.' },
+    moderate: { label:'متوسط',        emoji:'🔶', color:'#D97706', bg:'rgba(217,119,6,0.07)',  border:'rgba(217,119,6,0.22)',  desc:'معك جزء من النظام لكن الانتقال الكامل سيُحسّن نتائجك خلال ٢١ يوم.' },
+    poor:     { label:'يحتاج بناء',   emoji:'📋', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.20)',  desc:'نظامك الغذائي الحالي يحتاج تغييرات. التحول للطيبات هو نقطة البداية.' },
+    critical: { label:'نقطة البداية', emoji:'📋', color:'#D97706', bg:'rgba(217,119,6,0.08)', border:'rgba(217,119,6,0.25)',  desc:'يُنصح بتغيير الأنماط الغذائية تدريجياً — الطيبات خطوة أولى عملية.' },
 };
 
 interface Props { data: TayyibatScoreData; onViewPlan?: () => void; }
@@ -120,8 +120,8 @@ export function TayyibatScoreResult({ data, onViewPlan }: Props) {
                     className="rounded-[20px] p-4"
                     style={{ background:'rgba(220,38,38,0.06)', border:'1px solid rgba(220,38,38,0.18)' }}>
                     <div className="flex items-center gap-1.5 mb-3">
-                        <AlertTriangle style={{ width:14, height:14, color:W.red }} />
-                        <span style={{ fontSize:11, fontWeight:800, color:W.red }}>الثغرات</span>
+                        <AlertTriangle style={{ width:14, height:14, color:W.amber }} />
+                        <span style={{ fontSize:11, fontWeight:800, color:W.amber }}>نقاط للتحسين</span>
                     </div>
                     <div className="space-y-2">
                         {data.gaps.slice(0,4).map((g,i) => (

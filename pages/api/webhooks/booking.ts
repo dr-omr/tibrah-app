@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import nodemailer from 'nodemailer';
+import { checkRateLimit, getClientIp } from '@/lib/apiMiddleware';
 
 // ══════════════════════════════════════════════
 // TIBRAH Booking Notification System
@@ -11,6 +12,41 @@ const DOCTOR_PHONE   = '967771447111';
 const DOCTOR_IG      = 'dr.omr369';
 const DOCTOR_TIKTOK  = 'dr.omr369';
 const APP_NAME       = 'طِبرَا - العيادة الرقمية';
+
+function getWebhookSecret(req: NextApiRequest): string | undefined {
+    const headerSecret = req.headers['x-booking-secret'];
+    const authorization = req.headers.authorization;
+    const bearerSecret = authorization?.startsWith('Bearer ') ? authorization.slice(7) : undefined;
+    return Array.isArray(headerSecret) ? headerSecret[0] : headerSecret || bearerSecret;
+}
+
+function cleanText(input: unknown, maxLength = 500): string {
+    if (typeof input !== 'string') return '';
+    return input.replace(/<[^>]*>/g, '').trim().slice(0, maxLength);
+}
+
+function escapeHtml(input: unknown, maxLength = 500): string {
+    return cleanText(input, maxLength).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[char] ?? char));
+}
+
+function sanitizeBookingData(body: Record<string, unknown>) {
+    return {
+        patient_name: escapeHtml(body.patient_name, 120),
+        patient_phone: cleanText(body.patient_phone, 40),
+        patient_email: escapeHtml(body.patient_email, 160),
+        session_type_label: escapeHtml(body.session_type_label, 120),
+        date: escapeHtml(body.date, 80),
+        time_slot: escapeHtml(body.time_slot, 80),
+        health_concern: escapeHtml(body.health_concern, 2000),
+        emotional_context: escapeHtml(body.emotional_context, 2000),
+    };
+}
 
 function buildWhatsAppLink(phone: string, message: string) {
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -147,8 +183,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
-    const data = req.body;
-    console.log('[Tibrah Booking] New appointment:', data);
+    const ip = getClientIp(req);
+    const limit = await checkRateLimit(`booking_webhook_${ip}`, 20, 60 * 1000);
+    if (limit.limited) {
+        return res.status(429).json({ error: 'Too many requests' });
+    }
+
+    const expectedSecret = process.env.BOOKING_WEBHOOK_SECRET?.trim() || process.env.ADMIN_API_SECRET?.trim();
+    if (!expectedSecret) {
+        return res.status(503).json({ error: 'Booking webhook is not configured' });
+    }
+
+    if (getWebhookSecret(req) !== expectedSecret) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const data = sanitizeBookingData(req.body ?? {});
+    console.log('[Tibrah Booking] New appointment notification received');
 
     // ── Email via Nodemailer (Gmail SMTP) ──────────────────────────
     try {

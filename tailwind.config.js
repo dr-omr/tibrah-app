@@ -18,34 +18,33 @@ module.exports = {
             // ============================================
             colors: {
                 primary: {
-                    DEFAULT: '#2B9A89',
-                    light: '#3AC4AE',
-                    dark: '#1F7063',
+                    DEFAULT: '#0891B2',
+                    light: '#22D3EE',
+                    dark: '#0E7490',
                 },
                 tibrah: {
                     // Global Medical Canvas
-                    canvas: '#FBFDFD', // Pearly Alabaster/Swiss Ceramic
+                    canvas: '#F0FBFE', // Light cyan canvas
                     
-                    // Clinical Teal (Brand Core)
-                    teal: '#2B9A89', // Life + Tech
+                    // Clinical Cyan (Brand Core)
+                    teal: '#0891B2', // The chosen color
                     
                     // Dark Authority Typography
-                    obsidian: '#101822', // Massive clinical authority
+                    obsidian: '#083D4F',
                     
                     // The Compassionate Accents
-                    rose: '#F43F5E', // Warm blood, warnings, humanity
-                    azure: '#3B82F6', // Oxygen, tech fluids, clinical 
-                    amber: '#FBBF24', // Optimum status, sunlight
+                    rose: '#F43F5E',
+                    azure: '#3B82F6',
+                    amber: '#FBBF24',
                     
                     // Structural Shades
-                    muted: '#64748B', // Unobstructive reading slate
-                    surface: '#FFFFFF', // For pure glass overlaps
+                    muted: '#64748B',
+                    surface: '#FFFFFF',
                 },
-                // Legacy support maps
                 medical: {
-                    canvas: '#FBFDFD',
-                    teal: '#2B9A89',
-                    heading: '#101822',
+                    canvas: '#F0FBFE',
+                    teal: '#0891B2',
+                    heading: '#083D4F',
                     muted: '#64748B',
                 }
             },
@@ -106,7 +105,7 @@ module.exports = {
                 'lux-sm': '0 4px 12px rgba(16, 24, 34, 0.03), inset 0 2px 4px rgba(255,255,255,1)',
                 'lux-md': '0 12px 32px rgba(16, 24, 34, 0.05), inset 0 2px 4px rgba(255,255,255,0.8)',
                 'lux-lg': '0 24px 64px rgba(16, 24, 34, 0.06), inset 0 1px 2px rgba(255,255,255,0.5)',
-                'glass-glow': '0 0 50px rgba(43, 154, 137, 0.15)',
+                'glass-glow': '0 0 50px rgba(8, 145, 178, 0.18)',
             },
             
             // Z-Index

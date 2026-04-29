@@ -57,8 +57,10 @@ const nextConfig = {
         return config;
     },
 
-    // Experimental features
-    experimental: {},
+    // Keep static generation deterministic on Windows/OneDrive after dependency updates.
+    experimental: {
+        cpus: 1,
+    },
 
     // ═══ TOOL LINK REDIRECTS ═══
 
